@@ -99,6 +99,7 @@ void hermes::runFullOptimizationPasses(Module &M) {
 #endif // HERMES_RUN_WASM
 
   // Run the optimizations.
+  PM.addTaintAnalysis();
   PM.run(&M);
 }
 
@@ -120,6 +121,7 @@ void hermes::runDebugOptimizationPasses(Module &M) {
 #endif // HERMES_RUN_WASM
 
   // Run the optimizations.
+  PM.addTaintAnalysis();
   PM.run(&M);
 }
 
@@ -131,6 +133,7 @@ void hermes::runNoOptimizationPasses(Module &M) {
   if (M.getContext().getUseUnsafeIntrinsics()) {
     PassManager PM{M.getContext().getCodeGenerationSettings()};
     PM.addPass<EmitWasmIntrinsics>();
+    PM.addTaintAnalysis();
     PM.run(&M);
   }
 }
