@@ -33,6 +33,10 @@ add_hermes_library(hermesOptimizer
   IR/Analysis.cpp
   IR/IREval.cpp
   Optimizer/Taint/TaintAnalysis.cpp
+  Optimizer/Taint/DefUseAnalyzer.cpp
+  Optimizer/Taint/ClosureAnalyzer.cpp
+  Optimizer/Taint/SourceDefinitions.cpp
+  Optimizer/Taint/SinkDefinitions.cpp
 )
 
 add_hermes_library(hermesFrontend
