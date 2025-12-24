@@ -9,8 +9,10 @@
 #include "hermes/Optimizer/Taint/SinkDefinitions.h"
 #include "llvh/ADT/DenseMap.h"
 #include "llvh/ADT/SmallVector.h"
+#include "llvh/ADT/StringRef.h"
 #include <vector>
 #include <string>
+#include <memory>
 
 namespace hermes {
 
@@ -113,10 +115,12 @@ private:
       const llvh::SmallVectorImpl<Instruction *> &sinks);
 
   /// Report all found vulnerabilities
-  void reportVulnerabilities();
+  void reportVulnerabilities(llvh::StringRef targetFilename);
 
   /// Get human-readable sink type name
   const char *getSinkTypeName(SinkType type);
+
+  bool returnsTaintedValue(Function *F);
 
 public:
   explicit TaintAnalysis()
@@ -134,6 +138,8 @@ public:
     return reports_;
   }
 };
+
+std::unique_ptr<Pass> createTaintAnalysis();
 
 } // namespace hermes
 

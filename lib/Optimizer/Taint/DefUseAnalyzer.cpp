@@ -6,7 +6,6 @@
  */
 
 #include "hermes/Optimizer/Taint/DefUseAnalyzer.h"
-
 #include "llvh/Support/Debug.h"
 
 #define DEBUG_TYPE "taint-defuse"
@@ -569,7 +568,8 @@ void DefUseAnalyzer::checkPropertyTaintConnections() {
               std::string propName = propLiteral->getValue().str().str();
               Value *object = loadProp->getObject();
               
-              outs() << "[DEBUG] Checking LoadPropertyInst for property: " << propName << "\n";
+              // 로그 다이어트
+              //outs() << "[DEBUG] Checking LoadPropertyInst for property: " << propName << "\n";
               
               // If property is tainted but the load instruction isn't, propagate taint
               if (isPropertyTainted(object, propName) && !isTainted(loadProp)) {
@@ -664,7 +664,8 @@ void DefUseAnalyzer::checkFrameTaintConnections() {
                Variable *variable = loadFrame->getLoadVariable();
                Value *environment = loadFrame->getEnvironment();
                
-               outs() << "[DEBUG] Checking LoadFrameInst for variable: " << variable->getName().str().str() << "\n";
+               //디버깅 로그 다이어트
+               //outs() << "[DEBUG] Checking LoadFrameInst for variable: " << variable->getName().str().str() << "\n";
                
                // Check if this variable is tainted in the environment
                if (isFrameTainted(environment, variable) && !isTainted(loadFrame)) {

@@ -37,6 +37,7 @@ add_hermes_library(hermesOptimizer
   Optimizer/Taint/ClosureAnalyzer.cpp
   Optimizer/Taint/SourceDefinitions.cpp
   Optimizer/Taint/SinkDefinitions.cpp
+  Optimizer/Taint/CallGraphAnalyzer.cpp
 )
 
 add_hermes_library(hermesFrontend
