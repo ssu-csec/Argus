@@ -1,0 +1,146 @@
+
+========================================
+=== Taint Analysis for Hermes IR
+    Target: /mnt/d/repository/build/lib/InternalBytecode/InternalBytecode.js
+    Output: InternalBytecode_report.txt
+========================================
+
+[Phase 1] Analyzing closures...
+  Closure analysis complete.
+
+[Phase 2] Identifying taint sources...
+  Found 0 source(s).
+
+[Phase 3] Identifying taint sinks...
+  Found 1 sink(s).
+
+[Phase 4] Analyzing function calls...
+
+=== [Feature Flow Extraction: Call Graph] ===
+Function [] calls:
+  -> hasPromise
+  -> hasPromise
+  -> hasES6Class
+Function [ 1#] calls:
+  -> apply
+Function [ 11#] calls:
+  -> clearTimeout
+Function [ 12#] calls:
+  -> bind
+  -> setTimeout
+Function [ 13#] calls:
+  -> warn
+Function [ 16#] calls:
+  -> bind
+Function [ 22#] calls:
+  -> map
+  -> all
+Function [ 26#] calls:
+  -> forEach
+Function [ 27#] calls:
+  -> resolve
+  -> then
+Function [ 28#] calls:
+  -> then
+Function [ 29#] calls:
+  -> forEach
+Function [ 3#] calls:
+  -> next
+Function [ 30#] calls:
+  -> resolve
+  -> then
+Function [ 31#] calls:
+  -> then
+Function [ 32#] calls:
+  -> resolve
+  -> then
+Function [ 34#] calls:
+  -> resolve
+  -> then
+Function [ 36#] calls:
+  -> Error
+Function [ 5#] calls:
+  -> throw
+Function [ 6#] calls:
+  -> next
+Function [ 7#] calls:
+  -> then
+Function [Promise] calls:
+  -> TypeError
+  -> TypeError
+Function [getAggregateError] calls:
+  -> AggregateError
+  -> Error
+Function [handle] calls:
+  -> _l
+  -> push
+Function [initAsyncFn] calls:
+  -> bind
+Function [initES6Class] calls:
+  -> freeze
+Function [initPromise] calls:
+  -> useEngineQueue
+  -> setPromiseRejectionTrackingHook
+Function [iterableToArray] calls:
+  -> from
+  -> call
+Function [iterableToArray 1#] calls:
+  -> call
+Function [logError] calls:
+  -> warn
+  -> split
+  -> forEach
+Function [mapAllSettled] calls:
+  -> then
+  -> bind
+  -> then
+Function [matchWhitelist] calls:
+  -> some
+Function [onHandled] calls:
+  -> onHandled
+  -> warn
+  -> warn
+Function [onUnhandled] calls:
+  -> onUnhandled
+Function [reject] calls:
+  -> _m
+Function [rejectionCheck] calls:
+  -> push
+Function [res] calls:
+  -> then
+  -> bind
+  -> then
+Function [resolve] calls:
+  -> TypeError
+  -> bind
+Function [safeThen] calls:
+  -> constructor
+Function [step] calls:
+  -> then
+=============================================
+  [Inter-procedural] Link created: onUnhandled -> onUnhandled
+  [Inter-procedural] Link created: onHandled -> onHandled
+  [Inter-procedural] Link created:  27# -> resolve
+  [Inter-procedural] Link created:  30# -> resolve
+  [Inter-procedural] Link created:  32# -> resolve
+  [Inter-procedural] Link created:  34# -> resolve
+  Call Graph extraction complete.
+
+[Phase 5] Creating inter-procedural taint links...
+  Inter-procedural links created (6 links).
+
+[Phase 6] Analyzing taint propagation...
+  Taint flow analysis complete.
+
+[Phase 7] Generating vulnerability report...
+
+========================================
+=== [Final Vulnerability Report] ===
+========================================
+
+  ✓ No taint flows detected.
+
+========================================
+=== Taint Analysis Complete
+========================================
+
