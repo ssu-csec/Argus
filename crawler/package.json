@@ -1,0 +1,29 @@
+{
+  "name": "crawler",
+  "version": "1.0.0",
+  "description": "",
+  "main": "crawler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/core": "^7.28.5",
+    "@babel/preset-env": "^7.28.5",
+    "iconv-lite": "^0.7.2",
+    "js-beautify": "^1.15.4",
+    "puppeteer": "^24.34.0",
+    "puppeteer-cluster": "^0.25.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "restringer": "^2.1.0"
+  },
+  "devDependencies": {
+    "@babel/plugin-transform-async-generator-functions": "^7.28.0",
+    "@babel/plugin-transform-class-properties": "^7.27.1",
+    "@babel/plugin-transform-private-methods": "^7.27.1",
+    "@babel/plugin-transform-private-property-in-object": "^7.27.1"
+  }
+}

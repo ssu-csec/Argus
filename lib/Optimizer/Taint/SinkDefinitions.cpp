@@ -174,6 +174,22 @@ void SinkRegistry::initializeSinks() {
       true,
       "window",
       "open"));
+   addSink(SinkDefinition(
+      "src", 
+      SinkType::Network, 
+      -1, 
+      0 /* value */, 
+      false));
+
+  // [추가] WebSocket (실시간 데이터 유출 통로)
+   addSink(SinkDefinition(
+      "WebSocket.send",
+      SinkType::Network,
+      -1,
+      0 /* data */,
+      true,
+      "WebSocket",
+      "send"));   
 }
 
 void SinkRegistry::addSink(SinkDefinition sink) {

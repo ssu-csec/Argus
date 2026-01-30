@@ -135,10 +135,9 @@ Function [step] calls:
 [Phase 7] Generating vulnerability report...
 
 ========================================
-=== [Final Vulnerability Report] ===
+=== Vulnerability Report (Categorized)
 ========================================
-
-  ✓ No taint flows detected.
+  No vulnerabilities found.
 
 ========================================
 === Taint Analysis Complete

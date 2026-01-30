@@ -34,3 +34,10 @@ android/intltest/java/com/facebook/hermes/test/assets/**
 
 # clangd cache
 .cache/
+
+# test code
+crawler/collected_scripts
+crawler/target_you.txt
+crawler/targetx.txt
+node_modules/
+crawler/node_modules/
