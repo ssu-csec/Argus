@@ -17,6 +17,7 @@
 
 #include "hermes/IR/IR.h"
 #include "hermes/Optimizer/PassManager/Pass.h"
+#include "hermes/Optimizer/Taint/CallGraphAnalyzer.h"
 #include "hermes/Optimizer/Taint/ClosureAnalyzer.h"
 #include "hermes/Optimizer/Taint/DefUseAnalyzer.h"
 #include "hermes/Optimizer/Taint/SinkDefinitions.h"
@@ -36,9 +37,15 @@ class TaintAnalysis : public ModulePass {
 
   std::ofstream reportFile_;
 
+
+  bool isTainted(Value *V); 
+
+  bool isSourceInstruction(Instruction *I, std::string &sourceAPI);
+  bool isSinkInstruction(Instruction *I, std::string &sinkAPI, SinkType &type);
+
+
   void log(const std::string &msg);
 
-  // ★ [수정] .cpp 파일에서 사용하는 구조체 이름과 변수명으로 통일
   struct Vulnerability {
     Instruction *source;
     Instruction *sink;
@@ -69,20 +76,14 @@ class TaintAnalysis : public ModulePass {
   // ★ [핵심] .cpp 파일이 찾던 그 변수명 (reports_ 대신 vulnerabilities_ 사용)
   std::vector<Vulnerability> vulnerabilities_;
 
-  struct FunctionCallInfo {
-    CallInst *callSite;
-    Function *targetFunction;
-    std::vector<Value *> arguments;
-  };
-  std::vector<FunctionCallInfo> functionCalls_;
+
 
   // 내부 분석 함수들
   llvh::SmallVector<Instruction *, 32> identifySources(Module *M);
   llvh::SmallVector<Instruction *, 32> identifySinks(Module *M);
-  void analyzeFunctionCalls(Module *M);
-  bool shouldAnalyzeFunction(Function *F);
-  bool isSourceInstruction(Instruction *I, std::string &sourceAPI);
-  bool isSinkInstruction(Instruction *I, std::string &sinkAPI, SinkType &type);
+
+  // void analyzeFunctionCalls(Module *M); // Moved to CallGraphAnalyzer
+  // bool shouldAnalyzeFunction(Function *F); // Moved to CallGraphAnalyzer
   std::string extractObjectName(Value *object);
   void analyzeTaintFlow(
       const llvh::SmallVectorImpl<Instruction *> &sources,

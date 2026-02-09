@@ -11,19 +11,41 @@
 
 namespace hermes {
 
+class DefUseAnalyzer; // Forward declaration
+
 class CallGraphAnalyzer {
 public:
+    struct FunctionCallInfo {
+        CallInst *callSite;
+        Function *targetFunction;
+        std::vector<Value *> arguments;
+    };
+
     explicit CallGraphAnalyzer(Module *M) : M_(M) {}
 
-    void analyze();
+    /// Main analysis entry point.
+    /// \param defUseAnalyzer Pointer to DefUseAnalyzer for taint queries
+    /// \param logger Callback for logging messages
+    void analyze(DefUseAnalyzer *defUseAnalyzer, std::function<void(const std::string&)> logger = nullptr);
+
+    /// Get the results of the analysis
+    const std::vector<FunctionCallInfo>& getFunctionCalls() const {
+        return functionCalls_;
+    }
+
+    /// Try to backtrack property name from a LoadPropertyInst
+    static std::string tryBacktrackPropertyName(LoadPropertyInst *LPI);
 
     void dump(llvh::raw_ostream &OS);
 
 private:
     Module *M_;
-    std::map<std::string, std::vector<std::string>> callGraph_;
+    std::vector<FunctionCallInfo> functionCalls_;
+
+    // Internal helpers
+    bool shouldAnalyzeFunction(Function *F);
 };
 
-}
+} // namespace hermes
 
 #endif

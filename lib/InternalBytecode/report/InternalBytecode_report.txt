@@ -2,7 +2,7 @@
 ========================================
 === Taint Analysis for Hermes IR
     Target: /mnt/d/repository/build/lib/InternalBytecode/InternalBytecode.js
-    Output: InternalBytecode_report.txt
+    Output: report/InternalBytecode_report.txt
 ========================================
 
 [Phase 1] Analyzing closures...
