@@ -510,9 +510,12 @@ void TaintAnalysis::analyzeTaintFlow(
   defUseAnalyzer_.analyzeTaintFlow(sourceVec, sinkVec, &closureAnalyzer_);
 
   // 4. 결과 경로 가져오기
+  // 4. 결과 경로 가져오기
   const auto &sinkPaths = defUseAnalyzer_.getSinkReachingPaths();
+  log("  [Phase 6] Found " + std::to_string(sinkPaths.size()) + " potential taint path(s).\n");
 
   // 5. 결과 처리 loop
+  int pathCount = 0;
   for (const auto &pathStruct :
        sinkPaths) { // 이름을 pathStruct로 명확하게 변경
     std::string sourceAPI;
@@ -536,6 +539,8 @@ void TaintAnalysis::analyzeTaintFlow(
 
       vulnerabilities_.emplace_back(
           source, sink, sourceAPI, sinkAPI, sinkType, pathVec);
+      
+      log("    Path #" + std::to_string(++pathCount) + ": " + sourceAPI + " -> " + sinkAPI + "\n");
     }
   }
 }

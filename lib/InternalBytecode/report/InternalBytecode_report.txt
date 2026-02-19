@@ -27,6 +27,7 @@
   Inter-procedural links created (6 links).
 
 [Phase 6] Analyzing taint propagation...
+  [Phase 6] Found 0 potential taint path(s).
   Taint flow analysis complete.
 
 [Phase 7] Generating vulnerability report...
