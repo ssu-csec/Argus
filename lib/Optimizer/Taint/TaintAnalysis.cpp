@@ -57,12 +57,10 @@ bool TaintAnalysis::runOnModule(Module *M) {
   llvh::StringRef fileName =
       llvh::sys::path::filename(fullPath); // 전체 경로에서 파일명만 추출
 
-  // 만약 분석 대상이 'wholepage.js'라면, 상위 디렉토리 이름(보통 도메인명으로
-  // 설정됨)을 가져옵니다.
+  // 만약 분석 대상이 'wholepage.js'라면, 상위 디렉토리 이름(보통 도메인명으로 설정됨)을 가져옵니다.
   std::string prefix = "";
   if (fileName.equals("wholepage.js")) {
-    // 경로의 부모 디렉토리 이름을 도메인으로 간주 (예:
-    // /crawler/output/naver.com/wholepage.js)
+    // 경로의 부모 디렉토리 이름을 도메인으로 간주 (예: /crawler/output/naver.com/wholepage.js)
     llvh::StringRef parentDir = llvh::sys::path::parent_path(fullPath);
     prefix = llvh::sys::path::filename(parentDir).str();
     if (!prefix.empty())
@@ -507,9 +505,11 @@ void TaintAnalysis::analyzeTaintFlow(
   // (defUseAnalyzer_.setFunctionCalls 호출 완료)
 
   // 3. 오염 흐름 분석 실행
+  defUseAnalyzer_.setLogger([this](const std::string &msg) {
+      log(msg);
+  });
   defUseAnalyzer_.analyzeTaintFlow(sourceVec, sinkVec, &closureAnalyzer_);
 
-  // 4. 결과 경로 가져오기
   // 4. 결과 경로 가져오기
   const auto &sinkPaths = defUseAnalyzer_.getSinkReachingPaths();
   log("  [Phase 6] Found " + std::to_string(sinkPaths.size()) + " potential taint path(s).\n");
@@ -541,6 +541,9 @@ void TaintAnalysis::analyzeTaintFlow(
           source, sink, sourceAPI, sinkAPI, sinkType, pathVec);
       
       log("    Path #" + std::to_string(++pathCount) + ": " + sourceAPI + " -> " + sinkAPI + "\n");
+      for(auto *I : pathVec) {
+          log("      -> " + I->getKindStr().str() + "\n");
+      }
     }
   }
 }

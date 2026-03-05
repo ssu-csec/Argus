@@ -86,7 +86,10 @@ void CallGraphAnalyzer::analyze(DefUseAnalyzer *defUseAnalyzer, std::function<vo
             callInfo.callSite = CI;
             callInfo.targetFunction = targetFunc;
             for (unsigned i = 0; i < CI->getNumArguments(); ++i) {
-              callInfo.arguments.push_back(CI->getArgument(i));
+              Value *arg = CI->getArgument(i);
+              callInfo.arguments.push_back(arg);
+              
+              callInfo.arguments.push_back(arg);
             }
             functionCalls_.push_back(callInfo);
 

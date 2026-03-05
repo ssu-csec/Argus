@@ -104,7 +104,20 @@ class DefUseAnalyzer {
     functionCalls_ = calls;
   }
 
+  /// Set logger for reporting
+  void setLogger(std::function<void(const std::string&)> logger) {
+    logger_ = logger;
+  }
+
+  /// Mark a Value as tainted and record the path
+  void markTainted(
+      Value *v,
+      Instruction *source,
+      const std::vector<Instruction *> &path);
+
  private:
+  std::function<void(const std::string&)> logger_; 
+
   //===--------------------------------------------------------------------===//
   // Worklist algorithm
   //===--------------------------------------------------------------------===//
@@ -181,12 +194,6 @@ class DefUseAnalyzer {
   //===--------------------------------------------------------------------===//
   // Utility methods
   //===--------------------------------------------------------------------===//
-
-  /// Mark a Value as tainted and record the path
-  void markTainted(
-      Value *v,
-      Instruction *source,
-      const std::vector<Instruction *> &path);
 
   /// Check if we should continue propagating to this value
   /// (Returns false if already fully analyzed)

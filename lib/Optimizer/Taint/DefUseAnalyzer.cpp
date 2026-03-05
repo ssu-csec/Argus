@@ -256,7 +256,11 @@ void DefUseAnalyzer::handleCallInst(
          
          // If argument is tainted, propagate to parameter
          if (isTainted(arg)) {
-          outs() << "    ✓ Argument " << i << " is tainted! Propagating to parameter.\n";
+          std::string msg = "    [Taint Propagation] Tainted value passed to '" + 
+                            funcCall.targetFunction->getInternalNameStr().str() + 
+                            "' at argument #" + std::to_string(i-1) + "\n";
+          if (logger_) logger_(msg);
+          else outs() << msg;
           
           // Create new path through the function call
           std::vector<Instruction *> paramPath = getTaintInfo(arg).paths[0].path;
@@ -266,7 +270,7 @@ void DefUseAnalyzer::handleCallInst(
           markTainted(param, getTaintInfo(arg).paths[0].source, paramPath);
           addToWorklist(param, paramPath);
         } else {
-          outs() << "    ✗ Argument " << i << " is NOT tainted.\n";
+          // outs() << "    ✗ Argument " << i << " is NOT tainted.\n";
         }
       }
       

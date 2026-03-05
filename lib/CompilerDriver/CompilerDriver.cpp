@@ -631,6 +631,181 @@ static CLFlag UseUnsafeIntrinsics(
 
 namespace {
 
+// =================================================================
+// [Hephaistos] wholepage.js 전용 JSON 파싱 에러 방지 전처리기
+// =================================================================
+std::unique_ptr<llvh::MemoryBuffer> sanitizeWholePageJS(
+    std::unique_ptr<llvh::MemoryBuffer> buffer) {
+  if (!buffer) return nullptr;
+  llvh::StringRef filename = buffer->getBufferIdentifier();
+  if (!filename.endswith("wholepage.js")) return buffer;
+  
+  std::string newContent = buffer->getBuffer().str();
+
+  // [핵심 무기] '{ "...' 형태의 JSON 블록인지 확인하고 통째로 지우는 람다 함수
+  auto nukeIfJson = [&](size_t startPos) -> size_t {
+    if (startPos >= newContent.size()) return startPos;
+    
+    // 만약 `[{` 형태로 시작하는 JSON 배열이라면 전체를 날리기 위해 시작점을 `[`로 잡음
+    bool isArrayWrapped = false;
+    size_t actualStart = startPos;
+    if (newContent[startPos] == '[') {
+        size_t nextChar = newContent.find_first_not_of(" \t\n\r", startPos + 1);
+        if (nextChar != std::string::npos && newContent[nextChar] == '{') {
+            isArrayWrapped = true;
+            startPos = nextChar;
+        } else {
+            return actualStart;
+        }
+    }
+
+    if (newContent[startPos] != '{') return actualStart;
+    
+    // 다음 글자가 따옴표(") 인지 확인 (JSON Object의 Key 시작)
+    size_t nextQuote = newContent.find_first_not_of(" \t\n\r", startPos + 1);
+    if (nextQuote == std::string::npos || newContent[nextQuote] != '"') return actualStart;
+    
+    // 따옴표가 닫히는 곳 찾기
+    size_t quoteEnd = nextQuote + 1;
+    while (quoteEnd < newContent.size()) {
+        if (newContent[quoteEnd] == '"' && newContent[quoteEnd-1] != '\\') break;
+        quoteEnd++;
+    }
+    if (quoteEnd >= newContent.size()) return actualStart;
+    
+    // 문자열 바로 다음에 콜론(:)이 온다면 이것은 100% JSON 상태 데이터!
+    size_t colonPos = newContent.find_first_not_of(" \t\n\r", quoteEnd + 1);
+    if (colonPos == std::string::npos || newContent[colonPos] != ':') return actualStart;
+
+    // 괄호 {} 깊이를 추적하여 해당 JSON 객체의 끝(})을 정확히 찾아냄
+    int depth = 0;
+    size_t endPos = startPos;
+    bool inStr = false;
+    bool escape = false;
+    for (; endPos < newContent.size(); ++endPos) {
+        char c = newContent[endPos];
+        if (inStr) {
+            if (c == '\\') escape = !escape;
+            else {
+                if (c == '"' && !escape) inStr = false;
+                escape = false;
+            }
+        } else {
+            if (c == '"') inStr = true;
+            else if (c == '{') depth++;
+            else if (c == '}') {
+                depth--;
+                if (depth == 0) break; // 완벽한 JSON 블록의 끝
+            }
+        }
+    }
+
+    // 만약 `[{...}]` 였다면 닫는 `]` 도 찾아 지움
+    if (isArrayWrapped && depth == 0 && endPos < newContent.size()) {
+        size_t arrayEnd = newContent.find_first_not_of(" \t\n\r", endPos + 1);
+        if (arrayEnd != std::string::npos && newContent[arrayEnd] == ']') {
+            endPos = arrayEnd;
+            // 배열 닫고 세미콜론이나 콤마가 있으면 같이 날림 (옵션)
+            size_t trailing = newContent.find_first_not_of(" \t\n\r", endPos + 1);
+            if (trailing != std::string::npos && (newContent[trailing] == ';' || newContent[trailing] == ',')) {
+                endPos = trailing;
+            }
+        } else {
+            // ] 로 안닫히면 잘못 찾아온거임
+            return actualStart; 
+        }
+    }
+
+    // JSON 덩어리를 줄바꿈(\n)만 남기고 완벽하게 공백 처리하여 라인 넘버 보존
+    if (depth == 0 && endPos < newContent.size()) {
+        for (size_t i = actualStart; i <= endPos; ++i) {
+            if (newContent[i] != '\n') newContent[i] = ' ';
+        }
+        llvh::errs() << "[Hephaistos] NUKED pure JSON payload at offset " << actualStart << "\n";
+        return endPos + 1; // 지운 직후의 위치 반환
+    }
+    return actualStart;
+  };
+
+  // 1. 파일의 맨 처음이 뜬금없는 JSON으로 시작하는 경우 타격
+  size_t fileStart = newContent.find_first_not_of(" \t\n\r");
+  if (fileStart != std::string::npos) {
+      fileStart = nukeIfJson(fileStart);
+  }
+
+  // 2. 무한루프 패턴(for(;;);) 제거 및 그 직후에 숨어있는 JSON 타격
+  const char* patterns[] = {"for (;;);", "for (; ;);"};
+  for (const char* pattern : patterns) {
+    size_t pos = 0;
+    size_t patternLen = strlen(pattern);
+    while ((pos = newContent.find(pattern, pos)) != std::string::npos) {
+      bool safe = false;
+      if (pos == 0) safe = true;
+      else {
+          // var e = "for(;;);" 같은 문자열 내부 함정 피하기
+          size_t prev = newContent.find_last_not_of(" \t\r", pos - 1);
+          if (prev == std::string::npos || newContent[prev] == '\n' || newContent[prev] == '}' || newContent[prev] == ';') {
+              safe = true;
+          }
+      }
+      if (safe) {
+          for (size_t i = 0; i < patternLen; ++i) newContent[pos + i] = ' ';
+          llvh::errs() << "[Hephaistos] Sanitized for(;;); at offset " << pos << "\n";
+          
+          // 지운 직후에 JSON이 오면 즉각 타격
+          size_t nextCode = newContent.find_first_not_of(" \t\n\r", pos + patternLen);
+          if (nextCode != std::string::npos) {
+              pos = nukeIfJson(nextCode);
+          } else {
+              pos += patternLen;
+          }
+      } else {
+          pos += patternLen;
+      }
+    }
+  }
+
+  // 3. 크롤러 주석(// ====) 뒤에 오는 JSON 타격 (\r\n 문제 완벽 무시)
+  size_t searchPos = 0;
+  std::string delim = "// ====";
+  while ((searchPos = newContent.find(delim, searchPos)) != std::string::npos) {
+    // searchPos 라인의 끝을 찾은 다음부터 코드 시작 지점 탐색
+    size_t eol = newContent.find('\n', searchPos);
+    if (eol == std::string::npos) break;
+    size_t codeStart = eol + 1;
+    
+    // 이어서 나오는 주석이나 빈 줄 스킵
+    while (codeStart < newContent.size()) {
+        size_t firstNonSpace = newContent.find_first_not_of(" \t\r", codeStart);
+        if (firstNonSpace == std::string::npos) break;
+        if (newContent[firstNonSpace] == '\n') {
+            codeStart = firstNonSpace + 1;
+            continue;
+        }
+        if (newContent[firstNonSpace] == '/' && firstNonSpace + 1 < newContent.size() && newContent[firstNonSpace+1] == '/') {
+            size_t nextEol = newContent.find('\n', firstNonSpace);
+            if (nextEol == std::string::npos) { codeStart = newContent.size(); break; }
+            codeStart = nextEol + 1;
+            continue;
+        }
+        codeStart = firstNonSpace;
+        break; // 진짜 코드가 시작되는 지점
+    }
+
+    if (codeStart < newContent.size()) {
+        size_t afterNuke = nukeIfJson(codeStart);
+        if (afterNuke > codeStart) {
+            searchPos = afterNuke; // 연속으로 JSON이 올 수도 있으므로 위치 갱신
+            continue;
+        }
+    }
+    searchPos = eol + 1;
+  }
+
+  return llvh::MemoryBuffer::getMemBufferCopy(newContent, filename);
+}
+// =================================================================
+
 struct ModuleInSegment {
   /// Index of the module, to be used as the ID when generating IR.
   uint32_t id;
@@ -1274,8 +1449,9 @@ std::unique_ptr<llvh::MemoryBuffer> getFileFromDirectoryOrZip(
   }
   llvh::sys::path::append(path, llvh::sys::path::Style::posix, fileName);
   llvh::sys::path::remove_dots(path, false, llvh::sys::path::Style::posix);
-  return zip ? memoryBufferFromZipFile(zip, path.c_str(), silent)
+  auto buf = zip ? memoryBufferFromZipFile(zip, path.c_str(), silent)
              : memoryBufferFromFile(path, false, silent);
+  return sanitizeWholePageJS(std::move(buf));
 }
 
 /// Read a module IDs table. It maps every file name to its unique global module
@@ -2268,6 +2444,8 @@ CompileResult compileFromCommandLineOptions() {
       auto fileBuf = memoryBufferFromFile(filename, true);
       if (!fileBuf)
         return InputFileError;
+      
+      fileBuf = sanitizeWholePageJS(std::move(fileBuf));
       auto emplaceRes = moduleIDs.try_emplace(filename, nextModuleID);
       auto moduleID = emplaceRes.first->second;
       if (emplaceRes.second) {
