@@ -42,3 +42,4 @@ crawler/fail_scripts
 crawler/target_you.txt
 crawler/targetx.txt
 crawler/node_modules/
+crawler/fail_scripts/
