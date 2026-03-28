@@ -90,6 +90,9 @@ let crawlerStats = { success: 0, fail: 0 };
             if (fs.existsSync(wholePagePath)) fs.unlinkSync(wholePagePath);
             fs.writeFileSync(wholePagePath, '\uFEFF');
 
+            // 🌟 [하이브리드 분석용] 모든 통신 패킷 URL을 담을 콜렉션
+            const interceptedUrls = new Set();
+
             const { Deobfuscator } = await import('restringer');
             const babel = require('@babel/core');
             const beautify = require('js-beautify').js;
@@ -97,6 +100,13 @@ let crawlerStats = { success: 0, fail: 0 };
             await page.setRequestInterception(true);
             page.on('request', req => {
                 const rType = req.resourceType();
+                const reqUrl = req.url();
+
+                // 🌟 [하이브리드 분석용] HTTP(S)로 나가는 모든 외부 요청의 주소를 캡처하여 저장 (결과 교차검증에 사용)
+                if (reqUrl.startsWith('http')) {
+                    interceptedUrls.add(reqUrl);
+                }
+
                 // [수정] stylesheet와 other를 차단하면 최신 SPA 웹사이트들이 로딩을 멈추고 타임아웃에 빠질 수 있으므로 허용합니다.
                 if (['image', 'media', 'font'].includes(rType)) {
                     req.abort();
@@ -219,10 +229,15 @@ let crawlerStats = { success: 0, fail: 0 };
 
                 // 스크롤이 끝난 뒤 추가 로딩스크립트를 수집할 자투리 시간 2초 부여
                 await new Promise(r => setTimeout(r, 2000));
+
             } catch (err) {
                 // [개선] 3. 타임아웃이 나더라도 에러로 팅기지 않고, 지금까지 모은 JS가 있으면 정상 저장 취급
                 console.error(`    [Info] 사이트 로드/스크롤 중 타임아웃 또는 에러 발생 (수집된 파일은 보존됨): ${err.message}`);
             }
+
+            // 🌟 [하이브리드 분석용] (버그 수정) 타임아웃이 발생하더라도, 지금까지 잡아낸 통신 로그는 무조건 저장!
+            const networkLogPath = path.join(siteDir, 'network_logs.json');
+            fs.writeFileSync(networkLogPath, JSON.stringify(Array.from(interceptedUrls), null, 2));
 
             // [추가] 수집 여부에 따라 최종 디렉토리 이동 및 통계 집계
             let actualSavedFiles = 0;
@@ -238,6 +253,7 @@ let crawlerStats = { success: 0, fail: 0 };
                 crawlerStats.fail++;
                 console.log(`    [❌ Failed] ${hostname} - 수집된 스크립트 없음 (fail_scripts 폴더로 이동)`);
                 try {
+                    await page.screenshot({ path: path.join(FAIL_ROOT, `${hostname}_blocked.png`), fullPage: false }).catch(() => { });
                     const failDir = path.join(FAIL_ROOT, hostname);
                     if (fs.existsSync(siteDir)) {
                         if (fs.existsSync(failDir)) fs.rmSync(failDir, { recursive: true, force: true });

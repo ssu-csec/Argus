@@ -32,7 +32,7 @@ add_hermes_library(hermesOptimizer
   Optimizer/Scalar/TDZDedup.cpp
   IR/Analysis.cpp
   IR/IREval.cpp
-  Optimizer/Taint/TaintAnalysis.cpp
+  Optimizer/Taint/MixedTaintAnalysis.cpp
   Optimizer/Taint/DefUseAnalyzer.cpp
   Optimizer/Taint/ClosureAnalyzer.cpp
   Optimizer/Taint/SourceDefinitions.cpp

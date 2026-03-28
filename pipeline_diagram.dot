@@ -1,0 +1,102 @@
+digraph HephaistosOPipeline {
+    rankdir=TB;
+    fontname="Helvetica";
+    node [fontname="Helvetica", fontsize=11];
+    edge [fontname="Helvetica", fontsize=10];
+
+    subgraph cluster_phase1 {
+        label="Phase 1  |  Dynamic Collection  (crawler.cjs / Puppeteer)";
+        style=filled; fillcolor="#e8f4fd"; color="#2196F3"; penwidth=2;
+        fontsize=12; fontcolor="#1565C0";
+
+        TARGET  [label="Target Websites\n(targets.txt)", shape=cylinder, fillcolor="#bbdefb", style=filled];
+        CRAWL   [label="Puppeteer\nHeadless Browser", shape=box, fillcolor="#90caf9", style="filled,rounded"];
+        JS_DIR  [label="collected_scripts/\n*.js files", shape=folder, fillcolor="#e3f2fd", style=filled];
+        NETLOG  [label="network_logs.json\n(Intercepted Network Packets)", shape=note, fillcolor="#fff9c4", style=filled];
+
+        TARGET -> CRAWL [label="visit"];
+        CRAWL -> JS_DIR [label="save .js"];
+        CRAWL -> NETLOG [label="intercept\nrequests"];
+    }
+
+    subgraph cluster_phase2 {
+        label="Phase 2  |  Static Taint Analysis  (Hermes C++ Engine)";
+        style=filled; fillcolor="#fce4ec"; color="#e53935"; penwidth=2;
+        fontsize=12; fontcolor="#b71c1c";
+
+        HERMES  [label="Hermes Compiler\n(JS -> Bytecode IR)", shape=box, fillcolor="#ef9a9a", style="filled,rounded"];
+        TAINT   [label="TaintAnalysis.cpp / MixedTaintAnalysis.cpp", shape=box, fillcolor="#ef9a9a", style="filled,rounded"];
+
+        SRC_ID  [label="(1) Source Identification\nlocation.href, screen.width\nDate.now, document.URL ...", shape=box, fillcolor="#ffcdd2", style=filled];
+        PROP    [label="(2) Taint Propagation\nLoadPropertyInst -> CallInst\n-> BinaryOperatorInst -> ...\n[per path, one by one]", shape=box, fillcolor="#ffcdd2", style=filled];
+
+        SINK_REACHED [label="(3) Sink Reached  -- judged simultaneously --\ntrigger_context: AUTONOMOUS / EVENT_DRIVEN\nisSinkInstruction(): Evasion Suspected / window.open / ...\nsink_type: Network / Navigation / Storage", shape=box, fillcolor="#ff8a80", style=filled, color="#c62828", penwidth=2];
+
+        REPORT  [label="(4) Write to JSON\n{ source, sink, trigger_context,\n  sink_type, path_nodes }\n-> *_report.json (s2s_routes)", shape=note, fillcolor="#fff9c4", style=filled];
+
+        HERMES -> TAINT;
+        TAINT  -> SRC_ID;
+        SRC_ID -> PROP;
+        PROP   -> SINK_REACHED [label="sink reached"];
+        SINK_REACHED -> PROP   [label="next path", style=dashed, color="#999999"];
+        SINK_REACHED -> REPORT [label="record"];
+    }
+
+    subgraph cluster_phase3 {
+        label="Phase 3  |  Hybrid Cross-Validation + Classification  (classifier.py)";
+        style=filled; fillcolor="#e8f5e9"; color="#43a047"; penwidth=2;
+        fontsize=12; fontcolor="#1b5e20";
+
+        HYBRID  [label="Hybrid URL Reconstruction\nDYNAMIC_URL + network_logs\n-> Resolved Tracker URL", shape=box, fillcolor="#a5d6a7", style="filled,rounded"];
+
+        subgraph cluster_route {
+            label="Route-Level Rules (per taint path)";
+            style=filled; fillcolor="#f1f8e9"; color="#558b2f"; penwidth=1.5;
+            R4_PY [label="Rule 4  DOM Evasion\nEvasion Suspected + URL Validation\n-> DOM_Evasion / Camouflage", shape=box, fillcolor="#c8e6c9", style=filled, color="#2e7d32"];
+        }
+
+        subgraph cluster_domain {
+            label="Domain-Level Rules (per domain, after route loop)";
+            style=filled; fillcolor="#f1f8e9"; color="#558b2f"; penwidth=1.5;
+            R1_PY [label="Rule 1  Physical Disconnection\npath_nodes: no UI indicator nodes\n-> Isolated_Exfiltration", shape=box, fillcolor="#c8e6c9", style=filled, color="#2e7d32"];
+            R2_PY [label="Rule 2  Parasitic Branch\nSame Source -> Render + Network\n-> Parasitic_Branch", shape=box, fillcolor="#c8e6c9", style=filled, color="#2e7d32"];
+            R3_PY [label="Rule 3  Dual Execution Context\nDomain has EVENT_DRIVEN + AUTONOMOUS\n-> Dual_Execution_Context", shape=box, fillcolor="#c8e6c9", style=filled, color="#2e7d32"];
+            R5_PY [label="Rule 5  Semantic Cross-Validation\nTracker keyword + Sensitive source\n-> Semantic_CrossValidation\n  sub-case: Fingerprinting_Leak", shape=box, fillcolor="#c8e6c9", style=filled, color="#2e7d32"];
+        }
+
+        CSV_OUT [label="malicious_domains_DATE.csv\nSorted: Rule 1 -> 2 -> 3 -> 4 -> 5\nThreat_Type / Trigger_Context\n/ Leaked_Data / Destination", shape=note, fillcolor="#fff9c4", style=filled];
+
+        HYBRID -> R4_PY;
+        HYBRID -> R1_PY;
+        HYBRID -> R2_PY;
+        HYBRID -> R3_PY;
+        HYBRID -> R5_PY;
+        R4_PY -> CSV_OUT;
+        R1_PY -> CSV_OUT;
+        R2_PY -> CSV_OUT;
+        R3_PY -> CSV_OUT;
+        R5_PY -> CSV_OUT;
+    }
+
+    subgraph cluster_phase4 {
+        label="Phase 4  |  Visualization  (viz_tool7.py + Graphviz)";
+        style=filled; fillcolor="#ede7f6"; color="#7b1fa2"; penwidth=2;
+        fontsize=12; fontcolor="#4a148c";
+
+        VIZ     [label="viz_tool7.py\n[data source: *_report.json]", shape=box, fillcolor="#ce93d8", style="filled,rounded"];
+        GTG_OUT [label="*_gtg.png\nGlobal Taint Graph\n(All taint paths)", shape=note, fillcolor="#f3e5f5", style=filled];
+        CTG_OUT [label="*_ctg.png\nCore Taint Graph\n(Resolved destinations only)", shape=note, fillcolor="#f3e5f5", style=filled];
+
+        VIZ -> GTG_OUT;
+        VIZ -> CTG_OUT;
+    }
+
+    // Inter-phase edges
+    JS_DIR  -> HERMES  [label="compile", style=bold, color="#e53935"];
+    NETLOG  -> HYBRID  [label="cross-validate", style=dashed, color="#43a047"];
+    REPORT  -> HYBRID  [label="all s2s_routes", style=bold, color="#43a047"];
+    // viz_tool reads report.json directly (primary data source)
+    REPORT  -> VIZ     [label="primary data source", style=bold, color="#7b1fa2"];
+    // classifier triggers viz_tool via --draw-graphs flag (no data passed)
+    CSV_OUT -> VIZ     [label="triggers call\n(--draw-graphs flag)", style=dashed, color="#aaaaaa", fontcolor="#888888"];
+}

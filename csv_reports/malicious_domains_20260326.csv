@@ -1,0 +1,154 @@
+﻿Domain,Threat_Type,Trigger_Context,Leaked_Data (Source),Leak_Method (Sink),Destination,Party_Check
+www.instagram.com,DOM_Evasion (Rule 4),AUTONOMOUS,document.URL,LoadFrameInst.href (Evasion Suspected),https://www.facebook.com/ig_xsite_user_obid/ (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.kakaocorp.com,DOM_Evasion (Rule 4),AUTONOMOUS,Unknown,location.href (Evasion Suspected),https://connect.facebook.net/en_US/fbevents.js (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.kakaocorp.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.href,LoadFrameInst.href (Evasion Suspected),https://connect.facebook.net/en_US/fbevents.js (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.kakaocorp.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.hostname,LoadFrameInst.src (Evasion Suspected),https://connect.facebook.net/en_US/fbevents.js (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.kakaocorp.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.hostname,LoadFrameInst.src (Evasion Suspected),https://connect.facebook.net/en_US/fbevents.js (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.naver.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://ssl.pstatic.net/tveta/libs/glad/prod/3.8.0/gfp-display-sentry-logger.js (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.naver.com,DOM_Evasion (Rule 4),AUTONOMOUS,Date,Image().src (Evasion Suspected),https://ssl.pstatic.net/tveta/libs/glad/prod/3.8.0/gfp-display-sentry-logger.js (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.naver.com,DOM_Evasion (Rule 4),AUTONOMOUS,Date,Image().src (Evasion Suspected),https://ssl.pstatic.net/tveta/libs/glad/prod/3.8.0/gfp-display-sentry-logger.js (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.naver.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.origin,LoadFrameInst.src (Evasion Suspected),https://ssl.pstatic.net/tveta/libs/glad/prod/3.8.0/gfp-display-sentry-logger.js (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.href,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.href,createElement().href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,Unknown,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,Unknown,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),EVENT_DRIVEN,Unknown,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,Unknown,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.href,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.href,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.hostname,LoadFrameInst.src (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.hostname,LoadFrameInst.src (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.hostname,LoadFrameInst.src (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,DOM_Evasion (Rule 4),AUTONOMOUS,location.hostname,LoadFrameInst.src (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.naver.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.pathname,location.replace,https://ssl.pstatic.net/tveta/libs/glad/prod/3.8.0/gfp-display-sentry-logger.js (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.naver.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.origin,location.replace,https://ssl.pstatic.net/tveta/libs/glad/prod/3.8.0/gfp-display-sentry-logger.js (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.naver.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.origin,location.replace,https://ssl.pstatic.net/tveta/libs/glad/prod/3.8.0/gfp-display-sentry-logger.js (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,Unknown,window.open,https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,window.open,https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,window.open,https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,window.open,https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,window.open,https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,window.open,https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,window.open,https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,createElement().href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,Unknown,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,Unknown,window.open,https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,Unknown,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,Unknown,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,Date,sessionStorage.setItem,https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,Date,sessionStorage.setItem,https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,window.open,https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,window.open,https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,window.open,https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,window.open,https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,Date,document.cookie,https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,window.open,https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,window.open,https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,Date,document.cookie,https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,Date,document.cookie,https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,Date,document.cookie,https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,Date,document.cookie,https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.href,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,document.cookie,document.cookie,https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.hostname,LoadFrameInst.src (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.hostname,LoadFrameInst.src (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.hostname,LoadFrameInst.src (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,location.hostname,LoadFrameInst.src (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.nexon.com,Dual_Execution_Context (Rule 3),AUTONOMOUS,Date,document.cookie,https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),Context Duality Detected
+www.kakaocorp.com,Fingerprinting_Leak,AUTONOMOUS,screen.width,window.open,https://connect.facebook.net/en_US/fbevents.js (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.kakaocorp.com,Fingerprinting_Leak,AUTONOMOUS,screen.height,window.open,https://connect.facebook.net/en_US/fbevents.js (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.naver.com,Fingerprinting_Leak,AUTONOMOUS,screen.width,window.open,https://ssl.pstatic.net/tveta/libs/glad/prod/3.8.0/gfp-display-sentry-logger.js (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.naver.com,Fingerprinting_Leak,AUTONOMOUS,screen.width,window.open,https://ssl.pstatic.net/tveta/libs/glad/prod/3.8.0/gfp-display-sentry-logger.js (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.naver.com,Fingerprinting_Leak,AUTONOMOUS,screen.width,window.open,https://ssl.pstatic.net/tveta/libs/glad/prod/3.8.0/gfp-display-sentry-logger.js (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.naver.com,Fingerprinting_Leak,AUTONOMOUS,screen.width,window.open,https://ssl.pstatic.net/tveta/libs/glad/prod/3.8.0/gfp-display-sentry-logger.js (🌟 Predicted 3rd-Party Tracker),3rd-Party (Identified)
+www.kakaocorp.com,Parasitic_Branch (Rule 2),AUTONOMOUS,location.href,LoadFrameInst.href (Evasion Suspected),https://connect.facebook.net/en_US/fbevents.js (🌟 Predicted 3rd-Party Tracker),3rd-Party (Parasitic)
+www.nexon.com,Parasitic_Branch (Rule 2),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Parasitic)
+www.nexon.com,Parasitic_Branch (Rule 2),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Parasitic)
+www.nexon.com,Parasitic_Branch (Rule 2),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Parasitic)
+www.nexon.com,Parasitic_Branch (Rule 2),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Parasitic)
+www.nexon.com,Parasitic_Branch (Rule 2),AUTONOMOUS,Unknown,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Parasitic)
+www.nexon.com,Parasitic_Branch (Rule 2),AUTONOMOUS,Unknown,window.open,https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Parasitic)
+www.nexon.com,Parasitic_Branch (Rule 2),AUTONOMOUS,Unknown,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Parasitic)
+www.nexon.com,Parasitic_Branch (Rule 2),EVENT_DRIVEN,Unknown,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Parasitic)
+www.nexon.com,Parasitic_Branch (Rule 2),AUTONOMOUS,Unknown,location.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Parasitic)
+www.nexon.com,Parasitic_Branch (Rule 2),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Parasitic)
+www.nexon.com,Parasitic_Branch (Rule 2),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Parasitic)
+www.nexon.com,Parasitic_Branch (Rule 2),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Parasitic)
+www.nexon.com,Parasitic_Branch (Rule 2),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Parasitic)
+www.nexon.com,Parasitic_Branch (Rule 2),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Parasitic)
+www.nexon.com,Parasitic_Branch (Rule 2),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Parasitic)
+www.nexon.com,Parasitic_Branch (Rule 2),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Parasitic)
+www.nexon.com,Parasitic_Branch (Rule 2),AUTONOMOUS,Unknown,LoadFrameInst.href (Evasion Suspected),https://static.hotjar.com/c/hotjar-1327448.js?sv=6 (🌟 Predicted 3rd-Party Tracker),3rd-Party (Parasitic)
+
+
+=== Final Statistical Report ===
+Total domains scanned,4
+Malicious tracker infected domains,4
+
+[Detailed Evasion Technique Statistics]
+DOM Evasion (Rule 4),50 cases
+Fingerprinting Leak,6 cases
+Dual Execution Context (Rule 3),66 cases
+Isolated Exfiltration (Rule 1),0 cases
+Parasitic Branch (Rule 2),18 cases
+Camouflaged 3rd-party leak,0 cases (Core finding!)

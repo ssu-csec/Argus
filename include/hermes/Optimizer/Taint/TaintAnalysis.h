@@ -37,6 +37,9 @@ class TaintAnalysis : public ModulePass {
 
   std::ofstream reportFile_;
 
+  std::string getTriggerContext(hermes::Instruction *sourceInst);
+  std::string getDestinationURL(hermes::Instruction *sinkInst);
+
 
   bool isTainted(Value *V); 
 

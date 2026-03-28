@@ -106,7 +106,7 @@ bool TaintAnalysis::runOnModule(Module *M) {
   auto sinks = identifySinks(M);
   log("  Found " + std::to_string(sinks.size()) + " sink(s).\n\n");
 
-  // Step 4
+  // phase 4
   log("[Phase 4] Analyzing function calls...\n");
   CallGraphAnalyzer CGAnalyzer(M);
   CGAnalyzer.analyze(&defUseAnalyzer_, [this](const std::string &msg) {
@@ -116,7 +116,7 @@ bool TaintAnalysis::runOnModule(Module *M) {
   // analyzeFunctionCalls(M); // Removed
   log("  Call Graph extraction complete.\n\n");
 
-  // Step 5
+  // phase 5
   log("[Phase 5] Creating inter-procedural taint links...\n");
   const auto &functionCalls = CGAnalyzer.getFunctionCalls(); // Get results from CGAnalyzer
   if (functionCalls.empty()) {
@@ -381,7 +381,7 @@ std::string TaintAnalysis::getTriggerContext(Instruction *sourceInst) {
     // 3. 이 함수(F)가 어디서 사용되었는지(Users) 역추적!
     for (auto *U : F->getUsers()) {
         // 함수는 보통 클로저(Closure)로 만들어져서 전달됨
-        if (auto *CCI = llvh::dyn_cast<CreateClosureInst>(U)) {
+        if (auto *CCI = llvh::dyn_cast<CreateFunctionInst>(U)) {
             
             // 그 클로저가 어디에 쓰였는지 다시 확인
             for (auto *CU : CCI->getUsers()) {
@@ -436,17 +436,21 @@ std::string TaintAnalysis::getDestinationURL(Instruction *sinkInst) {
         }
         
         // 2. 문자열 결합 연산인 경우 (url + "?data=" + cookie)
-        // Hermes IR에서는 보통 StringConcatInst나 BinaryOperator(Add)로 나타남
-        if (auto *Concat = llvh::dyn_cast<StringConcatInst>(V)) {
-            std::string reconstructed = "";
-            for (unsigned i = 0; i < Concat->getNumOperands(); ++i) {
-                if (auto *Lit = llvh::dyn_cast<LiteralString>(Concat->getOperand(i))) {
+        if (auto *BinOp = llvh::dyn_cast<BinaryOperatorInst>(V)) {
+            if (BinOp->getOperatorKind() == BinaryOperatorInst::OpKind::AddKind) {
+                std::string reconstructed = "";
+                if (auto *Lit = llvh::dyn_cast<LiteralString>(BinOp->getLeftHandSide())) {
                     reconstructed += Lit->getValue().str().str();
                 } else {
-                    reconstructed += "{VAR}"; // 변수 부분은 마스킹 처리
+                    reconstructed += "{VAR}";
                 }
+                if (auto *Lit = llvh::dyn_cast<LiteralString>(BinOp->getRightHandSide())) {
+                    reconstructed += Lit->getValue().str().str();
+                } else {
+                    reconstructed += "{VAR}";
+                }
+                return reconstructed;
             }
-            return reconstructed;
         }
         return "";
     };
@@ -588,6 +592,18 @@ void TaintAnalysis::analyzeTaintFlow(
 
     // 구조체 멤버인 source, sink에 접근
     isSourceInstruction(pathStruct.source, sourceAPI);
+    
+    // ★ [소스 이름(Source) 유의미화 패치] Unknown을 의미 있는 IR 명령어로 변환
+    if (sourceAPI.empty() && pathStruct.source != nullptr) {
+        if (llvh::isa<LoadPropertyInst>(pathStruct.source)) {
+            sourceAPI = "Obfuscated_Property (LoadPropertyInst)";
+        } else if (llvh::isa<CallInst>(pathStruct.source)) {
+            sourceAPI = "Obfuscated_Call (CallInst)";
+        } else {
+            sourceAPI = "Dynamic_Source (" + pathStruct.source->getKindStr().str() + ")";
+        }
+    }
+
     isSinkInstruction(pathStruct.sink, sinkAPI, sinkType);
 
     // ★ [핵심 수정] 구조체(pathStruct) 안의 벡터(.path)를 꺼내서 반복
@@ -619,6 +635,17 @@ void TaintAnalysis::reportVulnerabilities() {
 
   if (vulnerabilities_.empty()) {
     log("  No vulnerabilities found.\n");
+    // 분석에 성공했지만 취약점이 0개인 경우에도 무조건 빈 JSON을 떨구도록 수정 (파이프라인 연동용)
+    nlohmann::json masterLog;
+    masterLog["target_url"] = "추후 Python에서 파일명으로 파싱";
+    masterLog["s2s_routes"] = nlohmann::json::array();
+    
+    std::string jsonFileName = "report/master_log.json";
+    std::ofstream jsonFile(jsonFileName);
+    if (jsonFile.is_open()) {
+        jsonFile << masterLog.dump(4);
+        jsonFile.close();
+    }
     return;
   }
 
@@ -723,7 +750,28 @@ void TaintAnalysis::reportVulnerabilities() {
       
       nlohmann::json routeObj;
       routeObj["route_id"] = routeId++;
-      routeObj["source_name"] = vuln.sourceAPI; // 기존 구조체에 저장된 Source 이름
+
+      // ★ [소스 이름 유의미화] JSON 덤프 시점에 sourceAPI가 비어있으면
+      //    path.front()의 IR 명령어 타입을 기반으로 레이블을 생성한다.
+      //    (analyzeTaintFlow의 패치는 임시 지역변수에만 적용되어 구조체에는 저장 안 됨)
+      std::string resolvedSource = vuln.sourceAPI;
+      if (resolvedSource.empty() && !vuln.path.empty()) {
+          Instruction *srcInst = vuln.path.front();
+          if (llvh::isa<LoadPropertyInst>(srcInst)) {
+              // 간접 속성 읽기: obj.prop 형태인데 obj 추적 실패
+              auto *LPI = llvh::cast<LoadPropertyInst>(srcInst);
+              if (auto *Lit = llvh::dyn_cast<LiteralString>(LPI->getProperty())) {
+                  resolvedSource = "Obfuscated_Property::" + Lit->getValue().str().str();
+              } else {
+                  resolvedSource = "Obfuscated_Property (LoadPropertyInst)";
+              }
+          } else if (llvh::isa<CallInst>(srcInst)) {
+              resolvedSource = "Obfuscated_Call (CallInst)";
+          } else {
+              resolvedSource = "Dynamic_Source (" + srcInst->getKindStr().str() + ")";
+          }
+      }
+      routeObj["source_name"] = resolvedSource;
       routeObj["sink_name"] = vuln.sinkAPI;     // 기존 구조체에 저장된 Sink 이름
       routeObj["sink_type"] = getSinkTypeName(vuln.sinkType); // "Network", "XSS" 등
       
