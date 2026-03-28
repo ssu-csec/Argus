@@ -44,10 +44,10 @@ crawler/fail_scripts/
 crawler/*.txt
 crawler/*.py
 crawler/trancolist
-./pipeline_diagram.dot
-./pipeline_diagram.png
-./pipeline_results
+pipeline_diagram.dot/
+pipeline_diagram.png/
+pipeline_results/
 build/bin/report
-./csv_reports
-./test
-./testcode
+csv_reports/
+test/
+testcode/
