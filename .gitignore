@@ -37,17 +37,20 @@ android/intltest/java/com/facebook/hermes/test/assets/**
 
 # crawler data and test code
 node_modules/
-crawler/collected_scripts
-crawler/fail_scripts
+crawler/collected_scripts/
+crawler/fail_scripts/
 crawler/node_modules/
 crawler/fail_scripts/
 crawler/*.txt
 crawler/*.py
-crawler/trancolist
-pipeline_diagram.dot/
-pipeline_diagram.png/
-pipeline_results/
-build/bin/report
+*.dot
+*.png
+mixed-hermes
+crawler/trancolist/
+crawler/raw_easylist2/
+report
+pipeline_results
+build/bin/report/
 csv_reports/
 test/
 testcode/

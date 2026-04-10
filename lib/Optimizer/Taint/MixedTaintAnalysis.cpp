@@ -8,6 +8,8 @@
 #define DEBUG_TYPE "taintanalysis"
 #include "hermes/Optimizer/Taint/TaintAnalysis.h"
 #include <fstream>
+#include <functional>
+#include <unordered_set>
 #include <nlohmann/json.hpp>
 #include "hermes/IR/Analysis.h"
 #include "hermes/IR/CFG.h"
@@ -59,20 +61,20 @@ bool TaintAnalysis::runOnModule(Module *M) {
       llvh::sys::path::filename(fullPath); // 전체 경로에서 파일명만 추출
 
   // 만약 분석 대상이 'wholepage.js'라면, 상위 디렉토리 이름(보통 도메인명으로 설정됨)을 가져옵니다.
-  std::string prefix = "";
+  prefix_ = "";
   if (fileName.equals("wholepage.js")) {
     // 경로의 부모 디렉토리 이름을 도메인으로 간주 (예: /crawler/output/naver.com/wholepage.js)
     llvh::StringRef parentDir = llvh::sys::path::parent_path(fullPath);
-    prefix = llvh::sys::path::filename(parentDir).str();
-    if (!prefix.empty())
-      prefix += "_";
+    prefix_ = llvh::sys::path::filename(parentDir).str();
+    if (!prefix_.empty())
+      prefix_ += "_";
   }
 
   llvh::StringRef stem = llvh::sys::path::stem(fileName);
   if (stem.empty())
     stem = "taint";
 
-  std::string fileNameStr = (prefix + stem + "_report.txt").str();
+  std::string fileNameStr = (prefix_ + stem + "_report.txt").str();
 
   llvh::SmallString<128> reportDir("report");
   llvh::sys::fs::create_directory(reportDir);
@@ -94,7 +96,11 @@ bool TaintAnalysis::runOnModule(Module *M) {
   // phase 1
   log("[Phase 1] Analyzing closures...\n");
   closureAnalyzer_.analyzeModuleClosures(M);
-  log("  Closure analysis complete.\n\n");
+  log("  Closure analysis complete.\n");
+
+  // phase 1.5: Rule 3 선스캔 — 이벤트 구동 함수 집합 구축
+  collectEventDrivenFunctions(M);
+  log("\n");
 
   // phase 2 (필터링 적용됨)
   log("[Phase 2] Identifying taint sources...\n");
@@ -363,54 +369,125 @@ bool TaintAnalysis::isSourceInstruction(
   return false;
 }
 
-// 오염이 시작된 명령어가 속한 함수가 어떻게 호출되도록 등록되었는지 사용자 역추적, Rule3 적용을 위해 필요
-std::string TaintAnalysis::getTriggerContext(Instruction *sourceInst) {
-    if (!sourceInst) return "UNKNOWN";
+// ============================================================
+// Rule 3 선스캔: 모듈 전체에서 이벤트 구동 함수 집합 구축
+// ============================================================
+// Value에서 실제 Function*을 역추적하여 eventDrivenFunctions_에 등록.
+// bind/call/apply 래핑, 변수 간접 참조를 재귀적으로 풀어냄.
+void TaintAnalysis::markAsEventDriven(Value *V, int depth) {
+    if (!V || depth > 8) return;  // 무한 재귀 방지
 
-    // 1. 명령어가 속한 함수(Function)를 찾음
-    Function *F = sourceInst->getParent()->getParent();
-    if (!F) return "UNKNOWN";
-
-    std::string funcName = F->getInternalNameStr().str();
-    
-    // 2. 전역 스코프(Global)이거나 Main 모듈이면 무조건 자율 실행(Autonomous)
-    if (funcName == "global" || funcName == "main" || funcName == "") {
-        return "AUTONOMOUS";
+    // 1. 직접적인 함수 생성: CreateFunctionInst → Function
+    if (auto *CCI = llvh::dyn_cast<CreateFunctionInst>(V)) {
+        eventDrivenFunctions_.insert(CCI->getFunctionCode());
+        return;
     }
 
-    // 3. 이 함수(F)가 어디서 사용되었는지(Users) 역추적!
-    for (auto *U : F->getUsers()) {
-        // 함수는 보통 클로저(Closure)로 만들어져서 전달됨
-        if (auto *CCI = llvh::dyn_cast<CreateFunctionInst>(U)) {
-            
-            // 그 클로저가 어디에 쓰였는지 다시 확인
-            for (auto *CU : CCI->getUsers()) {
-                
-                // [Case A] DOM 속성에 이벤트 핸들러로 직접 할당된 경우 (예: button.onclick = function() {...})
-                if (auto *SPI = llvh::dyn_cast<StorePropertyInst>(CU)) {
-                    if (SPI->getStoredValue() == CCI) {
-                        if (auto *Lit = llvh::dyn_cast<LiteralString>(SPI->getProperty())) {
-                            std::string propName = Lit->getValue().str().str();
-                            // 속성 이름이 "on"으로 시작하면 (onclick, onmouseover 등) 이벤트 구동!
-                            if (propName.rfind("on", 0) == 0) { 
-                                return "EVENT_DRIVEN";
-                            }
-                        }
-                    }
+    // 2. bind/call/apply 래핑: fn.bind(this) → fn이 실제 핸들러
+    //    IR: CallInst(LoadPropertyInst("bind"), fn, thisArg)
+    if (auto *Call = llvh::dyn_cast<CallInst>(V)) {
+        Value *callee = Call->getCallee();
+        if (auto *LPI = llvh::dyn_cast<LoadPropertyInst>(callee)) {
+            if (auto *Lit = llvh::dyn_cast<LiteralString>(LPI->getProperty())) {
+                std::string method = Lit->getValue().str().str();
+                if (method == "bind" || method == "call" || method == "apply") {
+                    markAsEventDriven(LPI->getObject(), depth + 1);
+                    return;
                 }
-                
-                // [Case B] 이벤트 리스너 함수에 인자로 전달된 경우 (예: el.addEventListener('click', function() {...}))
-                if (auto *Call = llvh::dyn_cast<CallInst>(CU)) {
+            }
+        }
+        // 일반 함수 호출의 리턴값이 핸들러인 경우: 호출된 함수 자체를 등록
+        if (auto *CCI = llvh::dyn_cast<CreateFunctionInst>(callee)) {
+            eventDrivenFunctions_.insert(CCI->getFunctionCode());
+        }
+        return;
+    }
+
+    // 3. 변수 참조: LoadFrameInst → StoreFrameInst 역추적
+    if (auto *LFI = llvh::dyn_cast<LoadFrameInst>(V)) {
+        Variable *var = LFI->getLoadVariable();
+        // 같은 변수에 저장된 값을 찾아서 역추적
+        for (auto *U : var->getUsers()) {
+            if (auto *SFI = llvh::dyn_cast<StoreFrameInst>(U)) {
+                if (SFI->getVariable() == var) {
+                    markAsEventDriven(SFI->getValue(), depth + 1);
+                }
+            }
+        }
+        return;
+    }
+
+    // 4. 속성 참조는 의도적으로 생략:
+    //    LoadPropertyInst → StorePropertyInst 역추적은 wholepage.js처럼
+    //    거대한 단일 함수에서 O(n²) 폭발을 일으킴. bind/call/apply + 변수
+    //    역추적(Case 2, 3)으로 충분히 커버됨.
+
+    // 5. PhiInst: 모든 incoming value를 역추적
+    if (auto *Phi = llvh::dyn_cast<PhiInst>(V)) {
+        for (unsigned i = 0, e = Phi->getNumEntries(); i < e; ++i) {
+            markAsEventDriven(Phi->getEntry(i).first, depth + 1);
+        }
+        return;
+    }
+}
+
+void TaintAnalysis::collectEventDrivenFunctions(Module *M) {
+    for (auto &F : *M) {
+        for (auto &BB : F) {
+            for (auto &I : BB) {
+                // Case A: el.addEventListener('click', handler)
+                if (auto *Call = llvh::dyn_cast<CallInst>(&I)) {
                     Value *callee = Call->getCallee();
                     if (auto *LPI = llvh::dyn_cast<LoadPropertyInst>(callee)) {
                         if (auto *Lit = llvh::dyn_cast<LiteralString>(LPI->getProperty())) {
                             std::string methodName = Lit->getValue().str().str();
-                            if (methodName == "addEventListener") {
-                                // 클로저가 인자로 잘 들어갔는지 확인
+                            if (methodName == "addEventListener" ||
+                                methodName == "attachEvent") {
+                                // handler는 보통 2번째 인자 (index 1~2)
                                 for (unsigned i = 1; i < Call->getNumArguments(); ++i) {
-                                    if (Call->getArgument(i) == CCI) {
-                                        return "EVENT_DRIVEN";
-                                    }
+                                    markAsEventDriven(Call->getArgument(i), 0);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Case B: el.onclick = handler (on* 속성 할당)
+                if (auto *SPI = llvh::dyn_cast<StorePropertyInst>(&I)) {
+                    if (auto *Lit = llvh::dyn_cast<LiteralString>(SPI->getProperty())) {
+                        std::string propName = Lit->getValue().str().str();
+                        if (propName.size() > 2 && propName.rfind("on", 0) == 0) {
+                            markAsEventDriven(SPI->getStoredValue(), 0);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Call Graph 역추적: EVENT_DRIVEN 함수에서 호출하는 함수도 EVENT_DRIVEN으로 전파
+    bool changed = true;
+    int iterations = 0;
+    while (changed && iterations < 10) {
+        changed = false;
+        iterations++;
+        for (auto &F : *M) {
+            if (eventDrivenFunctions_.count(&F) == 0)
+                continue;
+            // 이 EVENT_DRIVEN 함수 안에서 호출하는 다른 함수들도 EVENT_DRIVEN
+            for (auto &BB : F) {
+                for (auto &I : BB) {
+                    if (auto *Call = llvh::dyn_cast<CallInst>(&I)) {
+                        if (auto *CCI = llvh::dyn_cast<CreateFunctionInst>(Call->getCallee())) {
+                            if (eventDrivenFunctions_.insert(CCI->getFunctionCode()).second) {
+                                changed = true;
+                            }
+                        }
+                        // 인자로 전달되는 함수도 EVENT_DRIVEN 전파
+                        for (unsigned i = 1; i < Call->getNumArguments(); ++i) {
+                            if (auto *CCI = llvh::dyn_cast<CreateFunctionInst>(Call->getArgument(i))) {
+                                if (eventDrivenFunctions_.insert(CCI->getFunctionCode()).second) {
+                                    changed = true;
                                 }
                             }
                         }
@@ -420,38 +497,144 @@ std::string TaintAnalysis::getTriggerContext(Instruction *sourceInst) {
         }
     }
 
-    // 명시적인 이벤트 바인딩(onclick, addEventListener)을 찾지 못했다면, 
-    // 페이지 로드 시 즉시/자동 실행되는 스크립트로 간주함.
+    log("  [Rule 3] Event-driven function scan: " +
+        std::to_string(eventDrivenFunctions_.size()) + " handler(s) identified.\n");
+}
+
+// ============================================================
+// getTriggerContext: 오염 시작점의 실행 맥락 판별
+// ============================================================
+std::string TaintAnalysis::getTriggerContext(Instruction *sourceInst) {
+    if (!sourceInst) return "UNKNOWN";
+
+    // 1. 명령어가 속한 함수(Function)를 찾음
+    Function *F = sourceInst->getParent()->getParent();
+    if (!F) return "UNKNOWN";
+
+    // 2. 전역 스코프(Global)이거나 Main 모듈이면 자율 실행
+    std::string funcName = F->getInternalNameStr().str();
+    if (funcName == "global" || funcName == "main" || funcName == "") {
+        return "AUTONOMOUS";
+    }
+
+    // 3. 선스캔에서 구축한 이벤트 구동 함수 집합과 대조
+    //    bind/call/apply 래핑, 간접 참조, 콜그래프 전파까지 반영된 결과
+    if (eventDrivenFunctions_.count(F) > 0) {
+        return "EVENT_DRIVEN";
+    }
+
+    // 이벤트 바인딩을 찾지 못하면 자율 실행으로 간주
     return "AUTONOMOUS";
 }
 
 std::string TaintAnalysis::getDestinationURL(Instruction *sinkInst) {
     if (!sinkInst) return "UNKNOWN";
 
-    // 내부 헬퍼 람다 함수: Value에서 문자열을 최대한 긁어모음 (문자열 결합 추적)
-    auto extractStringFromValue = [](Value *V) -> std::string {
+    // visited 셋: 동일 Value*를 두 번 방문하지 않아 탐색을 O(IR 노드 수)로 보장
+    std::unordered_set<Value *> visited;
+
+    // 내부 헬퍼: Value에서 문자열을 재귀적으로 복원 (중첩된 문자열 결합 추적)
+    // 예: "https://" + host + "/track?q=" + data → "https://{VAR}/track?q={VAR}"
+    std::function<std::string(Value *, int)> extractStringFromValue =
+        [&](Value *V, int depth) -> std::string {
+        if (!V || depth > 8) return "";           // 스택 깊이 제한 (8이면 충분)
+        if (!visited.insert(V).second) return ""; // ★ 중복 방문 차단 (핵심)
+
         // 1. 완벽한 리터럴 문자열인 경우 ("https://tracker.com")
         if (auto *Lit = llvh::dyn_cast<LiteralString>(V)) {
             return Lit->getValue().str().str();
         }
-        
-        // 2. 문자열 결합 연산인 경우 (url + "?data=" + cookie)
+
+        // 2. 문자열 결합 연산인 경우 — 재귀적으로 양쪽을 풀어냄
         if (auto *BinOp = llvh::dyn_cast<BinaryOperatorInst>(V)) {
             if (BinOp->getOperatorKind() == BinaryOperatorInst::OpKind::AddKind) {
-                std::string reconstructed = "";
-                if (auto *Lit = llvh::dyn_cast<LiteralString>(BinOp->getLeftHandSide())) {
-                    reconstructed += Lit->getValue().str().str();
-                } else {
-                    reconstructed += "{VAR}";
-                }
-                if (auto *Lit = llvh::dyn_cast<LiteralString>(BinOp->getRightHandSide())) {
-                    reconstructed += Lit->getValue().str().str();
-                } else {
-                    reconstructed += "{VAR}";
-                }
-                return reconstructed;
+                std::string lhs = extractStringFromValue(BinOp->getLeftHandSide(), depth + 1);
+                std::string rhs = extractStringFromValue(BinOp->getRightHandSide(), depth + 1);
+                if (lhs.empty()) lhs = "{VAR}";
+                if (rhs.empty()) rhs = "{VAR}";
+                return lhs + rhs;
             }
         }
+
+        // 3. 변수 참조: LoadFrameInst → StoreFrameInst 역추적
+        // 예: var url = "https://tracker.com"; img.src = url;
+        if (auto *LFI = llvh::dyn_cast<LoadFrameInst>(V)) {
+            Variable *var = LFI->getLoadVariable();
+            for (auto *U : var->getUsers()) {
+                if (auto *SFI = llvh::dyn_cast<StoreFrameInst>(U)) {
+                    std::string val = extractStringFromValue(SFI->getValue(), depth + 1);
+                    if (!val.empty()) return val;
+                }
+            }
+        }
+
+        // 4. PhiInst: 조건부 URL — 문자열을 포함하는 첫 번째 분기를 반환
+        // 예: url = isSecure ? "https://t.com" : "http://t.com"
+        if (auto *Phi = llvh::dyn_cast<PhiInst>(V)) {
+            for (unsigned i = 0, e = Phi->getNumEntries(); i < e; ++i) {
+                auto pair = Phi->getEntry(i);
+                std::string val = extractStringFromValue(pair.first, depth + 1);
+                if (!val.empty()) return val;
+            }
+        }
+
+        // 5. 속성 읽기: LoadPropertyInst → 같은 객체의 StorePropertyInst 역추적
+        // 예: var url = obj.trackingUrl; → obj.trackingUrl = "https://..." 을 찾음
+        // 난독화 코드에서 속성명이 a, b 등일 수 있으므로 속성명 제한 없이 추적
+        if (auto *LPI = llvh::dyn_cast<LoadPropertyInst>(V)) {
+            if (auto *PropName = llvh::dyn_cast<LiteralString>(LPI->getProperty())) {
+                std::string pname = PropName->getValue().str().str();
+                Value *obj = LPI->getObject();
+                for (auto *U : obj->getUsers()) {
+                    if (auto *SPI = llvh::dyn_cast<StorePropertyInst>(U)) {
+                        if (auto *SPropName = llvh::dyn_cast<LiteralString>(SPI->getProperty())) {
+                            if (SPropName->getValue().str().str() == pname) {
+                                std::string val = extractStringFromValue(SPI->getStoredValue(), depth + 1);
+                                if (!val.empty()) return val;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 6. 함수 호출 반환값: CallInst → callee 함수의 ReturnInst 역추적
+        // 예: var url = getTrackingUrl(); → function getTrackingUrl() { return "https://..." }
+        if (auto *CI = llvh::dyn_cast<CallInst>(V)) {
+            Value *callee = CI->getCallee();
+            // CreateFunctionInst → Function 본체의 ReturnInst 추적
+            if (auto *CFI = llvh::dyn_cast<CreateFunctionInst>(callee)) {
+                Function *F = CFI->getFunctionCode();
+                for (auto &BB : *F) {
+                    for (auto &I : BB) {
+                        if (auto *RI = llvh::dyn_cast<ReturnInst>(&I)) {
+                            std::string val = extractStringFromValue(RI->getValue(), depth + 1);
+                            if (!val.empty()) return val;
+                        }
+                    }
+                }
+            }
+            // LoadFrameInst → 변수에 저장된 함수 참조 역추적
+            if (auto *LFI = llvh::dyn_cast<LoadFrameInst>(callee)) {
+                Variable *var = LFI->getLoadVariable();
+                for (auto *U : var->getUsers()) {
+                    if (auto *SFI = llvh::dyn_cast<StoreFrameInst>(U)) {
+                        if (auto *CFI2 = llvh::dyn_cast<CreateFunctionInst>(SFI->getValue())) {
+                            Function *F = CFI2->getFunctionCode();
+                            for (auto &BB : *F) {
+                                for (auto &I : BB) {
+                                    if (auto *RI = llvh::dyn_cast<ReturnInst>(&I)) {
+                                        std::string val = extractStringFromValue(RI->getValue(), depth + 1);
+                                        if (!val.empty()) return val;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         return "";
     };
 
@@ -459,7 +642,7 @@ std::string TaintAnalysis::getDestinationURL(Instruction *sinkInst) {
     if (auto *CI = llvh::dyn_cast<CallInst>(sinkInst)) {
         // 보통 URL은 첫 번째(index 1) 또는 두 번째(index 2) 인자로 들어감
         for (unsigned i = 1; i < CI->getNumArguments(); ++i) {
-            std::string val = extractStringFromValue(CI->getArgument(i));
+            std::string val = extractStringFromValue(CI->getArgument(i), 0);
             // 문자열이 비어있지 않고, http나 //로 시작하면 URL로 간주!
             if (!val.empty() && (val.find("http") == 0 || val.find("//") == 0 || val.find("/") == 0)) {
                 return val;
@@ -471,7 +654,7 @@ std::string TaintAnalysis::getDestinationURL(Instruction *sinkInst) {
     if (auto *SPI = llvh::dyn_cast<StorePropertyInst>(sinkInst)) {
         // 할당되는 값(우항)에서 URL 문자열을 추출
         Value *storedVal = SPI->getStoredValue();
-        std::string val = extractStringFromValue(storedVal);
+        std::string val = extractStringFromValue(storedVal, 0);
         if (!val.empty()) {
             return val;
         }
@@ -637,10 +820,15 @@ void TaintAnalysis::reportVulnerabilities() {
     log("  No vulnerabilities found.\n");
     // 분석에 성공했지만 취약점이 0개인 경우에도 무조건 빈 JSON을 떨구도록 수정 (파이프라인 연동용)
     nlohmann::json masterLog;
-    masterLog["target_url"] = "추후 Python에서 파일명으로 파싱";
+    // prefix_ = "www.naver.com_" → domain = "www.naver.com"
+    std::string domain = prefix_;
+    if (!domain.empty() && domain.back() == '_')
+      domain.pop_back();
+    masterLog["target_url"] = domain.empty() ? "unknown" : domain;
+    masterLog["event_driven_functions"] = (int)eventDrivenFunctions_.size();
     masterLog["s2s_routes"] = nlohmann::json::array();
-    
-    std::string jsonFileName = "report/master_log.json";
+
+    std::string jsonFileName = "report/" + prefix_ + "report.json";
     std::ofstream jsonFile(jsonFileName);
     if (jsonFile.is_open()) {
         jsonFile << masterLog.dump(4);
@@ -739,8 +927,13 @@ void TaintAnalysis::reportVulnerabilities() {
   
   // JSON 객체 생성 (nlohmann/json 사용)
   nlohmann::json masterLog;
-  masterLog["target_url"] = "추후 Python에서 파일명으로 파싱"; 
-  
+  // prefix_ = "www.naver.com_" → domain = "www.naver.com"
+  std::string domain = prefix_;
+  if (!domain.empty() && domain.back() == '_')
+    domain.pop_back();
+  masterLog["target_url"] = domain.empty() ? "unknown" : domain;
+  masterLog["event_driven_functions"] = (int)eventDrivenFunctions_.size();
+
   nlohmann::json s2sRoutes = nlohmann::json::array();
   int routeId = 1;
 
@@ -787,19 +980,18 @@ void TaintAnalysis::reportVulnerabilities() {
       routeObj["trigger_context"] = getTriggerContext(sourceInst);
       
       // ★ TODO (Rule 5 연동용): 목적지 URL (fetch나 img.src의 인자값)
-      routeObj["destination_url"] = "UNKNOWN"; // AST에서 인자값을 파싱하여 추출하는 로직 필요
-      routeObj["destination_url"] = getDestinationURL(sinkInst); // ★ Rule 5 적용: AST에서 목적지 도메인/URL 추출
+      routeObj["destination_url"] = getDestinationURL(sinkInst);
 
       s2sRoutes.push_back(routeObj);
   }
 
   masterLog["s2s_routes"] = s2sRoutes;
 
-  // JSON 파일로 저장 (.json 확장자로 변경하여 저장)
-  std::string jsonFileName = "report/master_log.json";
+  // JSON 파일로 저장 (도메인 prefix 기반 파일명 사용)
+  std::string jsonFileName = "report/" + prefix_ + "report.json";
   std::ofstream jsonFile(jsonFileName);
   if (jsonFile.is_open()) {
-      jsonFile << masterLog.dump(4); // indent 4칸으로 예쁘게 포매팅
+      jsonFile << masterLog.dump(4);
       jsonFile.close();
       log("  [System] Master JSON Log saved to '" + jsonFileName + "'\n");
   } else {

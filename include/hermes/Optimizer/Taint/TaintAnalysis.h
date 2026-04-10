@@ -36,6 +36,12 @@ class TaintAnalysis : public ModulePass {
   SinkRegistry &sinkRegistry_;
 
   std::ofstream reportFile_;
+  std::string prefix_;  // 도메인 prefix (예: "www.naver.com_"), JSON/TXT 파일명에 사용
+
+  // Rule 3: 모듈 선스캔으로 구축된 이벤트 구동 함수 집합
+  std::set<Function *> eventDrivenFunctions_;
+  void collectEventDrivenFunctions(Module *M);
+  void markAsEventDriven(Value *V, int depth);
 
   std::string getTriggerContext(hermes::Instruction *sourceInst);
   std::string getDestinationURL(hermes::Instruction *sinkInst);
