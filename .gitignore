@@ -52,5 +52,5 @@ report
 pipeline_results
 build/bin/report/
 csv_reports/
-test/
-testcode/
+/test/
+/testcode/
