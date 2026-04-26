@@ -1,61 +1,66 @@
-# Hermes JS Engine
-[![MIT license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/facebook/hermes/blob/HEAD/LICENSE)
-[![npm version](https://img.shields.io/npm/v/hermes-engine.svg?style=flat)](https://www.npmjs.com/package/hermes-engine)
-[![Fuzzing Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/hermes.svg)](https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:hermes)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/facebook/hermes/blob/HEAD/CONTRIBUTING.md)
-<img src="./doc/img/logo.svg" alt="Hermes logo - large H with wings" align="right" width="20%"/>
+# Argus: Advanced JS Tracker Detection Framework
 
-Hermes is a JavaScript engine optimized for fast start-up of [React Native](https://reactnative.dev/) apps. It features ahead-of-time static optimization and compact bytecode.
+Argus is an advanced JavaScript analysis framework designed to detect stealthy, obfuscated, and "mixed" trackers—scripts that camouflage tracking activities within legitimate functional code. Built on top of the [Hermes JS Engine](https://github.com/facebook/hermes), this framework performs dynamic data flow analysis and applies multi-dimensional heuristic rules to identify privacy-invasive behaviors.
 
-If you're only interested in using pre-built Hermes in a new or existing React Native app, you do not need to follow this guide or have direct access to the Hermes source. Instead, just follow [these instructions to enable Hermes](https://reactnative.dev/docs/hermes).
+## Overview
 
-> Noted that each Hermes release is aimed at a specific RN version. The rule of thumb is to always follow [Hermes releases](https://github.com/facebook/hermes/releases) strictly. Version mismatch can result in instant crash of your apps in the worst case scenario.
+Modern web trackers increasingly use sophisticated evasion techniques such as CNAME cloaking, DOM evasion, and parasitic piggybacking on legitimate functional code (e.g., rendering logic) to bypass traditional filter lists like EasyPrivacy.
 
-If you want to know how to build and hack on Hermes directly, and/or integrate Hermes built from source into a React Native app then read on.
+Argus addresses these challenges by modifying the Hermes JavaScript engine to extract fine-grained execution routes (data flows) and applying a classification pipeline (`classifier.py`) that uses 5 core detection rules to uncover hidden threats.
 
-The instructions here very briefly cover steps to build the Hermes CLI. They assume you have typical native development tools setup for your OS, and support for cmake and Ninja. For more details of required dependencies, building Hermes with different options, etc. follow these links instead:
+## Key Features & Detection Rules
 
-* [Building and Running Hermes](doc/BuildingAndRunning.md)
-* [Using a custom Hermes build in a React Native app](doc/ReactNativeIntegration.md#using-a-custom-hermes-build-in-a-react-native-app)
+The classification pipeline (`classifier.py`) analyzes the execution context, data sources, and network sinks using the following core rules:
 
-To build a local debug version of the Hermes CLI tools the following steps should get you started on macOS/Linux:
+1. **Rule 1: Physical Disconnection (Isolated Exfiltration)**
+   Detects background SDK-style tracking code that is structurally disconnected from the UI/DOM layer. If an exfiltration route contains zero UI-indicator instructions (no DOM interaction), it is flagged.
+2. **Rule 2: Parasitic Branch**
+   Identifies tracking mechanisms that "piggyback" on legitimate data flows. It flags cases where the same data source simultaneously feeds both a normal rendering sink (e.g., `innerHTML`) and a network/navigation sink (exfiltration).
+3. **Rule 3: Dual Execution Context**
+   Detects domains that mix both legitimate event-driven code (triggered by user interactions) and autonomous tracking code (self-executing in the background).
+4. **Rule 4: DOM Evasion & Camouflage**
+   Flags attempts to bypass typical tracking detection by using unconventional DOM APIs (e.g., `img.src` or `frame.href`) for data exfiltration, especially when disguised as 1st-party requests.
+5. **Rule 5: Semantic Cross-Validation & Fingerprinting**
+   Cross-validates sensitive data sources (e.g., location, cookies, screen properties) against the reputation of the destination URL. It distinguishes between legitimate 1st-party telemetry and covert 3rd-party fingerprinting surveillance.
+
+## Project Structure
+
+* **`classifier.py`**: The core Python classification script that parses the JSON output from the modified engine, applies the 5 detection rules, and generates CSV reports.
+* **`crawler/`**: Tools and collected scripts for dynamic analysis. Used to scrape targeted domains and gather `network_logs.json` and JS files.
+* **`pipeline_results/`**: Output directory for generated CSV reports (e.g., `malicious_domains_YYYYMMDD.csv`) and Graphviz visualization graphs (`gtg`, `ctg`).
+* **`ground_truth_data/`**: Contains tracker domains lists (like EasyPrivacy) used for cross-validating known trackers against detected behaviors.
+* **Hermes Engine Components (`lib/`, `API/`, `tools/` etc.)**: The underlying modified Hermes JS engine used for interpreting scripts and extracting execution traces.
+
+## Getting Started
+
+### Prerequisites
+
+* Linux / macOS
+* Python 3.x
+* CMake & Ninja (for building the underlying Hermes engine)
+* Graphviz (Optional, for generating execution graphs via `--draw-graphs`)
+
+### Building the Engine
+
+Since Argus relies on a customized Hermes engine, you need to build it from the source:
 
 ```shell
-mkdir hermes_workingdir
-cd hermes_workingdir
-git clone https://github.com/facebook/hermes.git
-cmake -S hermes -B build -G Ninja
-cmake --build ./build
+mkdir build
+cd build
+cmake -G Ninja ..
+ninja
 ```
 
-Or if you're using Windows, the following should get you going in a Git Bash shell:
+### Running the Classifier
+
+The classifier script evaluates the JSON traces generated by the engine:
 
 ```shell
-mkdir hermes_workingdir
-cd hermes_workingdir
-git -c core.autocrlf=false clone https://github.com/facebook/hermes.git
-cmake -S hermes -B build -G 'Visual Studio 16 2019' -A x64
-cmake --build ./build
+python3 classifier.py
 ```
 
-You will now be in a directory with the output of building Hermes into CLI tools. From here you can run a piece of JavaScript as follows:
+Results are saved to the `~/mixed-trackers/pipeline_results/` and `~/mixed-trackers/csv_reports/` directories.
 
-```shell
-echo "'use strict'; function hello() { print('Hello World'); } hello();" | ./bin/hermes
-```
-
-## Contributing
-
-The main purpose of this repository is to continue to evolve Hermes, making it faster and more efficient. We are grateful to the community for contributing bugfixes and improvements. Read below to learn how you can take part in improving Hermes.
-
-### Code of Conduct
-
-Facebook has adopted a [Code of Conduct](./CODE_OF_CONDUCT.md) that we expect project participants to adhere to. Please read [the full text](https://code.fb.com/codeofconduct) so that you can understand what actions will and will not be tolerated.
-
-### Contributing Guide
-
-Read our [contributing guide](CONTRIBUTING.md) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to Hermes.
-
-### License
-
-Hermes is [MIT licensed](./LICENSE).
+## Acknowledgments
+* Based on the [Hermes JavaScript Engine](https://github.com/facebook/hermes) by Facebook.
+* Uses tracker domain intelligence inspired by [EasyPrivacy](https://easylist.to/).
