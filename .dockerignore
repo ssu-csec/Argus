@@ -1,0 +1,42 @@
+.git
+.gitignore
+.github
+.vscode
+.idea
+
+# Build outputs
+build/
+build_*/
+cmake-build-*/
+*.o
+*.a
+*.so
+*.dylib
+
+# Node
+crawler/node_modules/
+crawler/collected_scripts/
+crawler/fail_scripts/
+**/node_modules/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Local data / results
+data/
+results/
+csv_reports/
+pipeline_results/
+*.zip
+
+# Editor / OS
+.DS_Store
+*.swp
+*.swo
+
+# Docker artifacts
+Dockerfile.local
+docker-compose*.yml
