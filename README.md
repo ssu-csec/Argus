@@ -237,13 +237,13 @@ The build process:
 ### Build
 
 ```bash
-# 기본 빌드
+# Default build
 docker build -t argus:base .
 
-# 전체 로그 보면서 빌드 (권장)
+# Build with full logs (recommended)
 docker build --progress=plain -t argus:base .
 
-# 완전히 새로 빌드 (캐시 무시)
+# Build from scratch (ignore cache)
 docker build --progress=plain --no-cache -t argus:base .
 ```
 
@@ -260,8 +260,8 @@ docker build --progress=plain --no-cache -t argus:base .
 docker run --rm -it argus:base bash
 
 # Inside the container:
-./pipeline.sh                          # 테스트 URL 2개로 스모크 테스트
-./pipeline.sh crawler/tranco-100K.txt    # 풀 데이터셋
+./pipeline.sh                            # smoke test with 2 URLs
+./pipeline.sh crawler/tranco-100K.txt    # full dataset
 ```
 
 ### Run individual stages
