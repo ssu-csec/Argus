@@ -85,8 +85,9 @@ RUN groupadd -r csec \
 # Python helper for pulling datasets from Google Drive (legacy pipeline)
 RUN pip3 install --no-cache-dir gdown
 
-# Node.js 18 — required by crawler/ (puppeteer, restringer)
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+# Node.js 22 — required by crawler/ deps. restringer pulls in isolated-vm,
+# which needs Node >=22 (uses v8::SourceLocation introduced in V8 12.x).
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
  && apt-get install -y --no-install-recommends nodejs \
  && rm -rf /var/lib/apt/lists/*
 
@@ -106,22 +107,36 @@ RUN cmake -S /home/csec/Argus -B /home/csec/Argus/build -G Ninja \
         -DCMAKE_BUILD_TYPE=Release \
  && cmake --build /home/csec/Argus/build
 
-# Crawler npm deps (puppeteer downloads Chromium during install).
-# Comment out if the crawler is not needed inside the image.
-RUN cd /home/csec/Argus/crawler && npm install --no-audit --no-fund
+# Crawler npm deps. puppeteer's postinstall downloads Chrome into
+# $PUPPETEER_CACHE_DIR (or ~/.cache/puppeteer). Pin it to csec's home so the
+# binary is reachable when the runtime user (csec) launches the browser.
+ENV PUPPETEER_CACHE_DIR=/home/csec/.cache/puppeteer
+RUN mkdir -p "$PUPPETEER_CACHE_DIR" \
+ && cd /home/csec/Argus/crawler && npm install --no-audit --no-fund \
+ && chown -R csec:csec /home/csec/.cache
 
-# classifier.py hard-codes paths under ~/mixed-hermes/... — symlink so those
-# paths resolve to the actual source tree without modifying the script.
+# classifier.py hard-codes ~/mixed-hermes/... and run_pipeline.py hard-codes
+# ~/argus/... — symlink both names to the real source tree so the scripts
+# work without modification.
 RUN ln -s /home/csec/Argus /home/csec/mixed-hermes \
- && chown -h csec:csec /home/csec/mixed-hermes \
+ && ln -s /home/csec/Argus /home/csec/argus \
+ && chown -h csec:csec /home/csec/mixed-hermes /home/csec/argus \
+ && chmod +x /home/csec/Argus/pipeline.sh \
  && chown -R csec:csec /home/csec/Argus
 
 USER csec
 WORKDIR /home/csec/Argus
 
 # ---------------------------------------------------------------------------
-# Runtime examples (uncomment / override at `docker run` time)
+# End-to-end pipeline: crawl -> mixed-hermes analysis -> classify.
+# Run inside the container:
+#
+#   ./pipeline.sh                              # uses crawler/urls_test.txt
+#   ./pipeline.sh crawler/tranco-1M.txt        # full Tranco list
+#   ./pipeline.sh path/to/your_urls.txt        # custom list
+#
+# Or invoke each stage manually:
+#   cd crawler && node crawler.cjs urls_test.txt
+#   cd crawler/collected_scripts && python3 run_pipeline.py
+#   python3 classifier.py
 # ---------------------------------------------------------------------------
-# RUN /home/csec/Argus/build/bin/mixed-hermes path/to/script.js
-# RUN cd /home/csec/Argus/crawler && node crawler.cjs urls.txt
-# RUN python3 /home/csec/Argus/classifier.py

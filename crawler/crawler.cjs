@@ -227,10 +227,10 @@ let crawlerStats = { success: 0, fail: 0 };
 
             if (actualSavedFiles > 0) {
                 crawlerStats.success++;
-                console.log(    [Success]  -  scripts collected);
+                console.log(`    [Success] ${hostname} - ${actualSavedFiles} scripts collected`);
             } else {
                 crawlerStats.fail++;
-                console.log(    [Failed]  - No scripts collected (moved to fail_scripts));
+                console.log(`    [Failed] ${hostname} - No scripts collected (moved to fail_scripts)`);
                 try {
                     await page.screenshot({ path: path.join(FAIL_ROOT, `${hostname}_blocked.png`), fullPage: false }).catch(() => { });
                     const failDir = path.join(FAIL_ROOT, hostname);
