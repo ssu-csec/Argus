@@ -15,9 +15,12 @@ cmake-build-*/
 
 # Node
 crawler/node_modules/
-crawler/collected_scripts/
-crawler/fail_scripts/
 **/node_modules/
+
+# Crawler runtime outputs — exclude per-domain subdirs but keep scripts
+crawler/collected_scripts/
+!crawler/collected_scripts/*.py
+crawler/fail_scripts/
 
 # Python
 __pycache__/
