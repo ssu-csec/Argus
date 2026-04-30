@@ -8,7 +8,7 @@ from datetime import datetime
 from urllib.parse import urlparse
 
 # ==========================================
-# ⚙️ 경로 세팅
+# Path setup
 # ==========================================
 RESULT_DIR        = os.path.expanduser("~/mixed-hermes/pipeline_results")
 MIXED_HERMES_ROOT = Path(os.path.expanduser("~/mixed-hermes"))
@@ -29,15 +29,15 @@ def _resolve_csv_path():
 CSV_OUTPUT = _resolve_csv_path()
 
 # ==========================================
-# 🛡️ 화이트리스트 및 트래커 블랙리스트 키워드
+# Whitelist and tracker-blacklist keywords
 # ==========================================
 WHITELIST_KEYWORDS = [
     "login", "signin", "/auth/", "/auth?", "auth.",
     "sso", "oauth", "verify", "returnurl", "logout"
 ]
 
-# 계열사/자사 CDN 도메인 매핑 (동일 기업이지만 TLD가 다른 도메인)
-# is_first_party()에서 이 매핑을 참조하여 1st-party로 판정
+# Affiliate / first-party CDN domain map (same operator under different TLDs).
+# Used by is_first_party() to recognize these as first-party.
 AFFILIATED_DOMAINS = {
     "naver.com":     ["pstatic.net", "nstatic.net"],
     "instagram.com": ["facebook.com", "fbcdn.net", "cdninstagram.com"],
@@ -45,26 +45,26 @@ AFFILIATED_DOMAINS = {
 }
 
 TRACKER_KEYWORDS = [
-    # 일반적인 행위 및 로깅 키워드
+    # General behavior and logging keywords
     "collect", "pixel", "logging", "logger", "/log/", "/log?",
     "beacon", "metric", "analytics", "/ads/", "/ads?", "adserver", "stats",
     "telemetry", "monitor", "insight", "impress", "measure", "report", "trace", "pulse", "record",
-    # boundary-aware: 일반 단어와의 충돌 방지
-    #   track: soundtrack, backtrack, racetrack 방지
+    # Boundary-aware patterns to avoid collisions with common words:
+    #   track: avoid soundtrack, backtrack, racetrack
     "tracker", "tracking", "/track/", "/track?", ".track.",
-    #   event: preventDefault, eventlistener 방지
+    #   event: avoid preventDefault, eventlistener
     "/event/", "/event?", "event.", "events.",
-    #   ping: shopping, mapping, zipping 방지
+    #   ping: avoid shopping, mapping, zipping
     "/ping/", "/ping?", "/ping.",
-    #   segment: URL path segment 혼동 방지 → Segment.io 플랫폼 특정
+    #   segment: avoid URL-path "segment" — match the Segment.io platform only
     "segment.io", "segment.com", "cdn.segment.",
-    # 고도화된 타사 추적자 및 광고 플랫폼 전용 도메인 키워드
+    # Established third-party tracker / ad-platform domain keywords
     "googletagmanager", "google-analytics", "doubleclick", "criteo", "hotjar", "crazyegg",
     "mixpanel", "appdynamics", "newrelic", "datadog", "facebook"
 ]
 
 # ==========================================
-# 📊 통계 변수
+# Statistics counters
 # ==========================================
 stats = {
     "total_scanned": 0,
@@ -218,15 +218,16 @@ def detect_semantic_validation(domain_name, routes, domain_has_tracker=False):
     A) General Semantic:
        destination reputation (tracker keyword) + source sensitivity → confirmed.
        Separates legitimate telemetry from covert surveillance.
-       두 가지 증거 경로:
-         A-1) Static: route.destination_url 자체에 tracker 키워드 포함
-         A-2) Dynamic: destination이 DYNAMIC_URL이지만, 동일 도메인의 network_logs에서
-              3rd-party tracker 통신이 실제 관측됨 (Hybrid Cross-Validation)
+       Two evidence paths:
+         A-1) Static: route.destination_url itself contains a tracker keyword.
+         A-2) Dynamic: destination is DYNAMIC_URL, but the domain's network_logs
+              show actual third-party tracker traffic (Hybrid Cross-Validation).
 
     B) Fingerprinting (sub-case, mutually exclusive with A per route):
        Source(screen.*/navigator.*) + Sink(Network/Navigation) + Destination(3rd-party).
-       Full Data Flow 기반 판정: device 속성이 3rd-party로 전송될 때만 fingerprinting.
-       자사 서버 전송(responsive design 등)은 정상 행위이므로 제외.
+       Full data-flow based: only flag fingerprinting when device attributes are
+       sent to a third party. First-party transmissions (e.g., responsive design)
+       are normal behavior and excluded.
 
     Each route is classified as exactly one of {A, B, neither} — never both.
     """
@@ -244,7 +245,7 @@ def detect_semantic_validation(domain_name, routes, domain_has_tracker=False):
 
         dest_lower = dest_url.lower()
 
-        # (B) Fingerprinting: device-identifying source → 3rd-party tracker (Data Flow 기반)
+        # (B) Fingerprinting: device-identifying source → 3rd-party tracker (data-flow based)
         is_fingerprint_src = any(source_name.startswith(p) for p in FINGERPRINT_PREFIXES)
         if is_fingerprint_src:
             if not is_first_party(domain_name, dest_url):
@@ -263,42 +264,43 @@ def detect_semantic_validation(domain_name, routes, domain_has_tracker=False):
             semantic.append(r)
             continue
 
-        # (A-2) Dynamic (Hybrid): DYNAMIC_URL이지만 domain 단위로 tracker 통신 관측됨
-        # 정적 분석이 URL을 복원 못해도, Puppeteer 동적 관측이 tracker 존재를 증명.
-        # 민감한 소스 → 네트워크 싱크 + 도메인 내 tracker 관측 = Semantic Cross-Validation 성립.
+        # (A-2) Dynamic (Hybrid): destination is DYNAMIC_URL but domain-level tracker traffic is observed.
+        # Even when static analysis cannot resolve the URL, Puppeteer's dynamic capture
+        # proves the tracker is present. Sensitive source → network sink + domain-level
+        # tracker observation satisfies Semantic Cross-Validation.
         if (dest_url == "DYNAMIC_URL" or "{VAR}" in dest_url) and domain_has_tracker and is_sensitive_src:
-            r["_semantic_evidence"] = "domain_level"  # 구분 마킹 (Party_Check 라벨용)
+            r["_semantic_evidence"] = "domain_level"  # marker used downstream by Party_Check
             semantic.append(r)
 
     return semantic, fingerprint
 
 
 # ==========================================
-# 🔍 1st-party(자사) vs 3rd-party(타사) 판별 함수
+# First-party vs third-party check
 # ==========================================
 def is_first_party(source_domain, dest_url, include_affiliated=True):
     """
-    source_domain: 현재 분석 중인 사이트 (예: nexon.com)
-    dest_url: 데이터가 날아가는 목적지 URL (예: nxlogin.nexon.com/...)
-    include_affiliated: True면 계열사/CDN 도메인도 1st-party로 인정,
-                        False면 동일 TLD만 1st-party로 판정 (CNAME 스캔용)
+    source_domain: the site under analysis (e.g., nexon.com).
+    dest_url: the destination URL the data is sent to (e.g., nxlogin.nexon.com/...).
+    include_affiliated: if True, treat affiliate/CDN domains as first-party as well;
+                        if False, only the same TLD is first-party (used for CNAME scans).
     """
     if dest_url == "DYNAMIC_URL" or not dest_url.startswith("http"):
-        return False # 난독화되었거나 완벽한 URL 형태가 아니면 일단 보수적으로 타사(의심) 취급
+        return False  # obfuscated or malformed URLs are conservatively treated as third-party (suspicious)
 
     try:
-        # 목적지 URL에서 도메인 부분만 쏙 뽑아냅니다. (예: nxlogin.nexon.com)
+        # Extract the domain portion from the destination URL (e.g., nxlogin.nexon.com).
         parsed_uri = urlparse(dest_url)
         dest_netloc = parsed_uri.netloc.lower()
 
-        # 'www.' 같은 껍데기를 떼고 핵심 도메인만 비교합니다.
+        # Strip "www." and compare on the bare domain.
         base_source = source_domain.replace("www.", "").lower()
 
-        # 목적지 도메인이 원래 도메인으로 끝나면 자사(1st-party)로 인정!
+        # If the destination domain ends with the source domain, it's first-party.
         if dest_netloc == base_source or dest_netloc.endswith("." + base_source):
             return True
 
-        # 계열사/자사 CDN 도메인 매핑 확인 (예: pstatic.net → naver.com)
+        # Affiliate / first-party CDN map (e.g., pstatic.net → naver.com).
         if include_affiliated:
             for affiliated in AFFILIATED_DOMAINS.get(base_source, []):
                 if dest_netloc == affiliated or dest_netloc.endswith("." + affiliated):
@@ -309,7 +311,7 @@ def is_first_party(source_domain, dest_url, include_affiliated=True):
         return False
 
 # ==========================================
-# 🔍 Party Check 동적 확정 (Unified Rule)
+# Party check (unified rule)
 # ==========================================
 def determine_unified_party(domain_name, dest_url, sink_type):
     first_party = is_first_party(domain_name, dest_url)
@@ -326,22 +328,22 @@ def determine_unified_party(domain_name, dest_url, sink_type):
         return "1st-Party" if first_party else "3rd-Party/Unknown"
 
 # ==========================================
-# 🔍 Unknown 소스 휴리스틱 추론기
+# Heuristic inference for unknown sources
 # ==========================================
 def infer_unknown_source(route: dict) -> str:
     """
-    source_name이 비어있을 때 sink/path 정보로 소스를 휴리스틱 추론.
+    Heuristically infer a source label from sink/path info when source_name is empty.
 
-    원인: Hephaistos C++ 엔진은 2-hop(LoadPropertyInst → StorePropertyInst)처럼
-    매우 짧은 indirect property chain에서 원본 소스를 역추적하지 못함.
-    (e.g.  obj.prop → frame.href  로 바로 넘어가는 패턴)
+    Why this is needed: the Hephaistos C++ engine cannot trace the original
+    source through very short indirect property chains such as a 2-hop
+    LoadPropertyInst → StorePropertyInst (e.g. obj.prop → frame.href directly).
 
-    규칙:
-      1. LoadFrameInst sink → 프레임 속성을 간접 읽어 전달 (DOM Indirect Read)
-      2. createElement sink → 동적 생성 엘리먼트 속성 (Dynamic Element)
-      3. window.open / location.href + 2-hop → 최소 chain indirect navigation
-      4. document.cookie / sessionStorage sink → 세션/쿠키 write (출처 미상)
-      5. 그 외 기본 → Generic Indirect Property
+    Rules:
+      1. LoadFrameInst sink → indirect frame-property read (DOM Indirect Read)
+      2. createElement sink → property of a dynamically created element (Dynamic Element)
+      3. window.open / location.href + 2-hop → minimal-chain indirect navigation
+      4. document.cookie / sessionStorage sink → session/cookie write of unknown origin
+      5. otherwise → Generic Indirect Property
     """
     sink    = route.get("sink_name", "")
     nodes   = route.get("path_nodes", [])
@@ -360,14 +362,14 @@ def infer_unknown_source(route: dict) -> str:
     return "Inferred: Unresolved Source (Engine Limit)"
 
 # ==========================================
-# 🔍 개별 파일 분석 함수
+# Per-file analysis
 # ==========================================
 def analyze_json(file_path, draw_graphs=False):
     global stats, malicious_records, domain_context_map
 
     domain_name = file_path.name.replace("_report.json", "").replace("_log.json", "").replace(".json", "")
-    
-    # 🌟 [하이브리드 교차검증] 크롤러가 수집해 둔 실제 네트워크 로그 불러오기
+
+    # [Hybrid Cross-Validation] Load the actual network log captured by the crawler.
     network_log_file = MIXED_HERMES_ROOT / "crawler" / "collected_scripts" / domain_name / "network_logs.json"
 
     network_url_list = []
@@ -380,15 +382,15 @@ def analyze_json(file_path, draw_graphs=False):
     else:
         print(f"  [⚠️  Warning] network_logs.json not found for {domain_name}: {network_log_file}")
 
-    # Domain-level tracker 관측 여부 (Rule 5 A-2 Hybrid Evidence용)
-    # network_logs에 3rd-party tracker URL이 하나라도 있으면 True
+    # Domain-level tracker observation flag (used by Rule 5 A-2 Hybrid Evidence).
+    # True if at least one third-party tracker URL appears in network_logs.
     domain_has_tracker = any(
         not is_first_party(domain_name, url) and
         any(kw in url.lower() for kw in TRACKER_KEYWORDS)
         for url in network_url_list
     )
 
-    # 도메인에서 실제 관측된 3rd-party tracker 목록 (Observed_Trackers 컬럼용)
+    # Third-party tracker domains actually observed for this site (for the Observed_Trackers column).
     observed_tracker_domains = sorted(set(
         urlparse(url).netloc
         for url in network_url_list
@@ -410,7 +412,7 @@ def analyze_json(file_path, draw_graphs=False):
 
     routes = data.get("s2s_routes", [])
 
-    # 도메인별 실행 컨텍스트 분포 수집 (Rule 3 혼합 증거용)
+    # Per-domain trigger-context distribution (used by Rule 3 mixed-execution evidence).
     ctx_counts = {"AUTONOMOUS": 0, "EVENT_DRIVEN": 0, "UNKNOWN": 0}
     for r in routes:
         ctx = r.get("trigger_context", "UNKNOWN")
@@ -424,28 +426,28 @@ def analyze_json(file_path, draw_graphs=False):
         source_name = route.get("source_name", "") or ""
         dest_url = route.get("destination_url", "")
 
-        # 🔍 Unknown 소스 휴리스틱 추론: 엔진이 소스를 못 잡은 경우 레이블 부여
+        # Heuristic inference for unknown sources: label routes the engine couldn't resolve.
         if not source_name.strip():
             source_name = infer_unknown_source(route)
-            route["source_name"] = source_name  # downstream Rule 함수도 동일 값 사용
+            route["source_name"] = source_name  # so downstream rule functions see the same value
 
         threat_type = None
         trigger_context = route.get("trigger_context", "UNKNOWN")
 
-        # 🌟 [통합 하이브리드 수색 알고리즘]
-        # Sink-type-aware URL resolution: Source → Sink → Destination 전체 Data Flow 기반
+        # [Unified Hybrid Search]
+        # Sink-type-aware URL resolution based on the full Source → Sink → Destination data flow.
         predicted_url = None
         is_hybrid_eligible = ("{VAR}" in dest_url)
 
-        # Phase 0: Cookie/Storage 패턴 감지
-        # destination_url이 URL이 아닌 cookie 문자열인 경우를 식별.
-        # 예: "{VAR}=; path=/; domain=nexon.com; expires={VAR};"
+        # Phase 0: detect cookie/storage patterns.
+        # The destination_url may be a cookie string rather than a URL.
+        # Example: "{VAR}=; path=/; domain=nexon.com; expires={VAR};"
         is_cookie_pattern = any(kw in dest_url for kw in ("path=/", "domain=", "expires="))
 
-        # Phase 1: Hybrid Reconstruction (조각 맞추기)
-        # {VAR} 패턴이 포함된 부분 URL을 network_logs의 실제 URL과 매칭해 복원.
-        # cookie 문자열(path=/, domain= 등)은 URL이 아니므로 건너뜀.
-        # 복원 실패 or 순수 DYNAMIC_URL → 그대로 DYNAMIC_URL 유지 (보수적 표기)
+        # Phase 1: Hybrid Reconstruction (fragment matching).
+        # Reconstruct partial URLs containing {VAR} by matching against real URLs in network_logs.
+        # Cookie strings (path=/, domain=, ...) are not URLs, so we skip them.
+        # If reconstruction fails or the URL is pure DYNAMIC_URL, leave it as-is (conservative).
         if is_hybrid_eligible and not is_cookie_pattern:
             static_fragments = [frag for frag in dest_url.split("{VAR}") if len(frag.strip()) >= 2]
             if static_fragments:
@@ -453,9 +455,9 @@ def analyze_json(file_path, draw_graphs=False):
                     if all(frag in real_url for frag in static_fragments):
                         predicted_url = real_url + " (🌟 Hybrid Reconstructed)"
                         break
-                            
-        # Phase 2: CNAME Cloaking 스캔 — netloc에만 tracker 키워드 체크
-        # CNAME Cloaking은 동일 TLD 서브도메인만 해당 (계열사 도메인 제외)
+
+        # Phase 2: CNAME-cloaking scan — match tracker keywords against the netloc only.
+        # CNAME cloaking applies to same-TLD subdomains only (affiliate domains excluded).
         if not predicted_url and (dest_url == "DYNAMIC_URL" or is_hybrid_eligible) and not is_cookie_pattern:
             for real_url in network_url_list:
                 if is_first_party(domain_name, real_url, include_affiliated=False) and real_url.startswith("http"):
@@ -468,12 +470,12 @@ def analyze_json(file_path, draw_graphs=False):
             dest_url = predicted_url
             route["destination_url"] = dest_url
 
-        # 🌟 1st-party 여부와 화이트리스트 키워드 포함 여부를 동시에 검사
+        # Check first-party status and whitelist-keyword presence in one pass.
         first_party = is_first_party(domain_name, dest_url)
         dest_url_lower = dest_url.lower()
         has_whitelist_keyword = any(keyword in dest_url_lower for keyword in WHITELIST_KEYWORDS)
 
-        # 🌟 Party Check 동적 확정 로직 (논문용 세밀화)
+        # Party-check resolution (refined for paper reporting).
         party_check = determine_unified_party(domain_name, dest_url, sink_type)
 
         # ── Collect all independent rule matches for this route ──
@@ -482,19 +484,19 @@ def analyze_json(file_path, draw_graphs=False):
         # [Rule 4] DOM Evasion — img.src / frame.href bypass (exfiltration only)
         if "(Evasion Suspected)" in sink_name and sink_type in {"Network", "Navigation"}:
             if has_whitelist_keyword and first_party:
-                pass  # 🟢 Whitelist: legitimate 1st-party login — skip entirely
+                pass  # Whitelist: legitimate first-party login — skip entirely.
             elif has_whitelist_keyword and not first_party:
-                # {VAR} 포함 URL은 도메인 자체가 불명 → Camouflage 확정 불가, Dynamic Obfuscated로 처리
+                # URLs containing {VAR} have an unknown domain → cannot confirm camouflage; treat as Dynamic Obfuscated.
                 if "{VAR}" in dest_url or dest_url == "DYNAMIC_URL":
-                    active_rules.append(("DOM_Evasion (Dynamic Obfuscated)", party_check))
+                    active_rules.append(("DOM_Evasion (Rule 4) [Dynamic Obfuscated]", party_check))
                     stats["evasion_dynamic"] += 1
                 else:
-                    active_rules.append(("Evasion_with_Camouflage (Disguised Tracker)", party_check))
+                    active_rules.append(("Evasion_with_Camouflage (Rule 4) [Disguised Tracker]", party_check))
                     stats["camouflaged_3rd_party"] += 1
             else:
-                # {VAR} 포함 URL도 목적지 미확정 → Dynamic Obfuscated
+                # URLs containing {VAR} are also unresolved → Dynamic Obfuscated.
                 is_dest_unresolved = (dest_url == "DYNAMIC_URL" or "{VAR}" in dest_url)
-                label = "DOM_Evasion (Dynamic Obfuscated)" if is_dest_unresolved else "DOM_Evasion (Rule 4)"
+                label = "DOM_Evasion (Rule 4) [Dynamic Obfuscated]" if is_dest_unresolved else "DOM_Evasion (Rule 4)"
                 active_rules.append((label, party_check))
                 if is_dest_unresolved:
                     stats["evasion_dynamic"] += 1
@@ -521,7 +523,7 @@ def analyze_json(file_path, draw_graphs=False):
                 "Party_Check": p_check
             })
 
-    # ── Rule 1, 2, 3, 5: 항상 독립적으로 실행 (Rule 4 결과와 무관) ──
+    # ── Rules 1, 2, 3, 5: always evaluated independently of Rule 4 ──
     event_driven_count = data.get("event_driven_functions", 0)
     isolated = detect_isolated_exfil(domain_name, routes)
     parasitic = detect_parasitic_branch(domain_name, routes)
@@ -584,7 +586,7 @@ def analyze_json(file_path, draw_graphs=False):
             # record every AUTONOMOUS route as evidence of duality,
             # even if also captured by Rule 4 (they are different threat dimensions)
             stats["dual_context"] += 1
-            # Party_Check: 실제 destination 기반 판정 (하드코딩 제거)
+            # Party_Check: derived from the actual destination (no hard-coded values).
             r3_party = determine_unified_party(domain_name, dest_url, r.get("sink_type", ""))
             malicious_records.append({
                 "Domain": domain_name,
@@ -604,7 +606,7 @@ def analyze_json(file_path, draw_graphs=False):
             dest_url  = r.get("destination_url", "DYNAMIC_URL")
             tctx      = r.get("trigger_context", "UNKNOWN")
             is_domain_level = r.pop("_semantic_evidence", None) == "domain_level"
-            # 증거 강도에 따라 Threat_Type 분기
+            # Branch the Threat_Type label by evidence strength.
             if is_domain_level:
                 threat_label = "Semantic_CrossValidation (Rule 5) [Probabilistic]"
                 party = "3rd-Party (Domain-level Evidence)"
@@ -665,7 +667,7 @@ def analyze_json(file_path, draw_graphs=False):
                 print(f"    [❌ Graph Error] Visualization failed: {e}")
 
 # ==========================================
-# 🚀 실행부
+# Main entry point
 # ==========================================
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Hephaistos V2 Intelligent Classifier")
@@ -685,15 +687,15 @@ if __name__ == "__main__":
     for js_file in json_files:
         analyze_json(js_file, draw_graphs=args.draw_graphs)
 
-    # 결과를 CSV로 예쁘게 저장 (중복 제거 후 Rule 번호 순 정렬 + 최종 통계 첨부)
+    # Write results to CSV (dedup, sort by rule number, append final statistics).
     if malicious_records:
         RULE_ORDER = {
             "Isolated_Exfiltration (Rule 1)":                         1,
             "Parasitic_Branch (Rule 2)":                               2,
             "Dual_Execution_Context (Rule 3)":                         3,
             "DOM_Evasion (Rule 4)":                                    4,
-            "DOM_Evasion (Dynamic Obfuscated)":                        4,
-            "Evasion_with_Camouflage (Disguised Tracker)":             4,
+            "DOM_Evasion (Rule 4) [Dynamic Obfuscated]":                        4,
+            "Evasion_with_Camouflage (Rule 4) [Disguised Tracker]":             4,
             "Semantic_CrossValidation (Rule 5) [Deterministic]":       5,
             "Semantic_CrossValidation (Rule 5) [Probabilistic]":       5,
             "Fingerprinting_Leak (Rule 5)":                            5,
@@ -727,16 +729,16 @@ if __name__ == "__main__":
                 if threat not in existing:
                     dedup[key]["Threat_Type"] = existing + " | " + threat
                 
-                # 중첩 Threat_Type 정리 (Rule 4가 있으면 Obfuscated 제거)
-                if "DOM_Evasion (Rule 4)" in dedup[key]["Threat_Type"] and "DOM_Evasion (Dynamic Obfuscated)" in dedup[key]["Threat_Type"]:
-                    labels = dedup[key]["Threat_Type"].split(" | ")
-                    labels = sorted(set(l for l in labels if l != "DOM_Evasion (Dynamic Obfuscated)"))
-                    dedup[key]["Threat_Type"] = " | ".join(labels)
+                # Clean up overlapping Threat_Type labels: if a single route has both R4 (resolved) and R4 [Dynamic Obfuscated], drop the weaker label.
+                _labels_now = [l.strip() for l in dedup[key]["Threat_Type"].split(" | ")]
+                if "DOM_Evasion (Rule 4)" in _labels_now and "DOM_Evasion (Rule 4) [Dynamic Obfuscated]" in _labels_now:
+                    _labels_now = sorted(set(l for l in _labels_now if l != "DOM_Evasion (Rule 4) [Dynamic Obfuscated]"))
+                    dedup[key]["Threat_Type"] = " | ".join(_labels_now)
 
-                # 더 구체적인 Destination으로 업그레이드 및 Party_Check 갱신
+                # Upgrade to a more concrete destination when available, and refresh Party_Check.
                 if dedup[key]["Destination"] == "DYNAMIC_URL" and rec.get("Destination", "") != "DYNAMIC_URL":
                     dedup[key]["Destination"] = rec.get("Destination", "DYNAMIC_URL")
-                    # Destination이 구체화되었으므로 Party_Check 재산정 (단, Rule 5 Deterministic 등 확정 레이블 보존)
+                    # Destination became concrete, so recompute Party_Check (preserve confirmed labels like Rule 5 Deterministic).
                     new_party = determine_unified_party(dedup[key]["Domain"], dedup[key]["Destination"], dedup[key]["Leak_Method (Sink)"])
                     if "WCC Isolated" not in dedup[key]["Party_Check"] and "Confirmed 3rd-Party" not in dedup[key]["Party_Check"]:
                         dedup[key]["Party_Check"] = new_party
@@ -751,8 +753,8 @@ if __name__ == "__main__":
 
         deduped.sort(key=sort_key)
 
-        # ── Confidence Score 계산 ──────────────────────────────────────────
-        # 각 deduped 행에 Confidence_Score (1~5) 부여:
+        # ── Confidence-score computation ──────────────────────────────────
+        # Assign each deduped row a Confidence_Score in 1..5:
         #   +1 per unique Rule fired (up to 3)
         #   +1 if AUTONOMOUS context
         #   +1 if Hybrid/Predicted 3rd-Party destination (dynamic confirmation)
@@ -760,13 +762,13 @@ if __name__ == "__main__":
             score = 0
             labels = [l.strip() for l in rec.get("Threat_Type", "").split(" | ")]
             rule_nums = {RULE_ORDER.get(l, 99) for l in labels if RULE_ORDER.get(l, 99) != 99}
-            score += min(len(rule_nums), 3)          # 최대 +3 (Rule 수)
+            score += min(len(rule_nums), 3)          # up to +3 from triggered rules
             if rec.get("Trigger_Context") == "AUTONOMOUS":
-                score += 1                           # +1 자율실행
+                score += 1                           # +1 for page-load (autonomous) execution
             dest = rec.get("Destination", "")
             if "Predicted 3rd-Party" in dest or "Hybrid Reconstructed" in dest or "CNAME Cloaked" in dest:
-                score += 1                           # +1 동적 확인
-            return max(1, min(score, 5))             # 1~5 범위 클램프
+                score += 1                           # +1 for dynamic confirmation
+            return max(1, min(score, 5))             # clamp to 1..5
 
         for rec in deduped:
             rec["Confidence_Score"] = compute_confidence(rec)
@@ -779,7 +781,7 @@ if __name__ == "__main__":
             threat = rec.get("Threat_Type", "")
             dest   = rec.get("Destination", "")
             if "Isolated_Exfiltration (Rule 1)" in threat and "WCC Isolated" in rec.get("Party_Check", ""):
-                # Rule 5가 추가로 존재하거나, 동적 분석을 통해 타겟지가 파악되었을 때 Party_Check를 구체화
+                # Refine Party_Check when Rule 5 is additionally present or when dynamic analysis resolved the destination.
                 if "CNAME Cloaked" in dest:
                     rec["Party_Check"] = "1st-Party (CNAME Cloaked)"
                 elif "Hybrid Reconstructed" in dest and "1st-Party" in determine_unified_party(rec["Domain"], dest, rec["Leak_Method (Sink)"]):
@@ -809,8 +811,8 @@ if __name__ == "__main__":
             "Parasitic_Branch (Rule 2)":                               "parasitic_branch",
             "Dual_Execution_Context (Rule 3)":                         "dual_context",
             "DOM_Evasion (Rule 4)":                                    "evasion_dom",
-            "DOM_Evasion (Dynamic Obfuscated)":                        "evasion_dynamic",
-            "Evasion_with_Camouflage (Disguised Tracker)":             "camouflaged_3rd_party",
+            "DOM_Evasion (Rule 4) [Dynamic Obfuscated]":                        "evasion_dynamic",
+            "Evasion_with_Camouflage (Rule 4) [Disguised Tracker]":             "camouflaged_3rd_party",
             "Semantic_CrossValidation (Rule 5) [Deterministic]":       "semantic_crossval",
             "Semantic_CrossValidation (Rule 5) [Probabilistic]":       "semantic_crossval",
             "Fingerprinting_Leak (Rule 5)":                            "fingerprinting",
@@ -834,7 +836,7 @@ if __name__ == "__main__":
             dict_writer.writeheader()
             dict_writer.writerows(deduped)
 
-            # 통계 블록 추가
+            # Append the statistics block.
             writer = csv.writer(output_file)
             writer.writerow([])
             writer.writerow([])
@@ -855,10 +857,10 @@ if __name__ == "__main__":
             writer.writerow(["  └ Fingerprinting Leak (Rule 5 sub-case)",     f"{final_stats['fingerprinting']} cases"])
             writer.writerow(["Camouflaged 3rd-party leak",                f"{final_stats['camouflaged_3rd_party']} cases (Core finding!)"])
 
-            # 도메인별 혼합추적자 증거 요약
+            # Per-domain mixed-tracker evidence summary.
             writer.writerow([])
             writer.writerow(["[Per-Domain Mixed Tracker Evidence]"])
-            # 도메인별 Rule 히트 집계
+            # Per-domain rule-hit aggregation.
             domain_rules: dict = {}
             for rec in deduped:
                 dom = rec["Domain"]
@@ -879,7 +881,7 @@ if __name__ == "__main__":
                 ctx_label = "Mixed (Dual Context)" if is_dual else "Single Context"
                 writer.writerow([f"  {dom}", f"Routes: AUTONOMOUS={auto} EVENT_DRIVEN={event} | Handlers={ed_funcs} ({ctx_label})", f"Rules: {rules_str}"])
 
-        # ── --summary: 도메인별 요약 테이블 ────────────────────────────────
+        # ── --summary: per-domain summary table ────────────────────────────
         if args.summary:
             summary_path = CSV_OUTPUT.replace(".csv", "_summary.csv")
             domain_summary: dict = {}
@@ -909,14 +911,14 @@ if __name__ == "__main__":
                 sw = csv.DictWriter(sf, fieldnames=["Domain","Rule_1","Rule_2","Rule_3","Rule_4","Rule_5","Total_Routes","Max_Confidence","3rd_Party_Confirmed"])
                 sw.writeheader()
                 sw.writerows(summary_rows)
-            print(f"📋 Per-domain summary saved: {summary_path}")
+            print(f" Per-domain summary saved: {summary_path}")
 
 
     # final_stats is available only if malicious_records existed; fall back to raw stats otherwise
     _s = final_stats if malicious_records else stats
-    print("✅ Analysis Complete! [Final Statistical Report]")
+    print(" Analysis Complete! [Final Statistical Report]")
     print(f"- Total domains scanned : {_s['total_scanned']}")
-    print(f"- 🚨 Malicious tracker infected domains : {_s['total_malicious']}\n")
+    print(f"- Malicious tracker infected domains : {_s['total_malicious']}\n")
     print("[Detailed Evasion Technique Statistics]")
     print(f"  > Isolated Exfiltration (Rule 1)        : {_s['isolated_exfil']} cases")
     print(f"  > Parasitic Branch (Rule 2)             : {_s['parasitic_branch']} cases")
@@ -928,4 +930,4 @@ if __name__ == "__main__":
     print(f"  >   └ Fingerprinting Leak (sub-case)    : {_s['fingerprinting']} cases")
     print(f"  > Camouflaged 3rd-party leak            : {_s['camouflaged_3rd_party']} cases (Core finding!)")
     print("==================================================")
-    print(f"📂 Detailed malicious domain blacklist saved as CSV: {CSV_OUTPUT}")
+    print(f" Detailed malicious domain blacklist saved as CSV: {CSV_OUTPUT}")

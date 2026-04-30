@@ -7,8 +7,8 @@
 
 #define DEBUG_TYPE "taintanalysis"
 #include "hermes/Optimizer/Taint/TaintAnalysis.h"
-#include <fstream>
 #include <nlohmann/json.hpp>
+#include <fstream>
 #include "hermes/IR/Analysis.h"
 #include "hermes/IR/CFG.h"
 #include "hermes/IR/IRBuilder.h"
@@ -19,25 +19,20 @@
 #include "llvh/Support/Path.h"
 #include "llvh/Support/raw_ostream.h"
 
+
 using namespace hermes;
 using llvh::dbgs;
 using llvh::outs;
 
-//===----------------------------------------------------------------------===//
-// TaintAnalysis Implementation
-//===----------------------------------------------------------------------===//
-
-// ★ [헬퍼 함수] 화면(outs)과 파일(reportFile_)에 동시에 로그를 남기는 함수
 void TaintAnalysis::log(const std::string &msg) {
-  outs() << msg; // 터미널 출력
+  outs() << msg;
   if (reportFile_.is_open()) {
-    reportFile_ << msg; // 파일 출력
-    reportFile_.flush(); // 즉시 저장
+    reportFile_ << msg;
+    reportFile_.flush();
   }
 }
 
 bool TaintAnalysis::runOnModule(Module *M) {
-  // 1. [파일 이름 추출]
   std::string sourceFileName = "unknown_script.js";
   for (auto &F : *M) {
     if (!F.empty() && !F.front().empty()) {
@@ -53,15 +48,11 @@ bool TaintAnalysis::runOnModule(Module *M) {
     }
   }
 
-  // 2. [파일 열기] 멤버 변수 reportFile_을 여기서 엽니다.
   llvh::StringRef fullPath = sourceFileName;
-  llvh::StringRef fileName =
-      llvh::sys::path::filename(fullPath); // 전체 경로에서 파일명만 추출
+  llvh::StringRef fileName = llvh::sys::path::filename(fullPath);
 
-  // 만약 분석 대상이 'wholepage.js'라면, 상위 디렉토리 이름(보통 도메인명으로 설정됨)을 가져옵니다.
   std::string prefix = "";
   if (fileName.equals("wholepage.js")) {
-    // 경로의 부모 디렉토리 이름을 도메인으로 간주 (예: /crawler/output/naver.com/wholepage.js)
     llvh::StringRef parentDir = llvh::sys::path::parent_path(fullPath);
     prefix = llvh::sys::path::filename(parentDir).str();
     if (!prefix.empty())
@@ -76,14 +67,13 @@ bool TaintAnalysis::runOnModule(Module *M) {
 
   llvh::SmallString<128> reportDir("report");
   llvh::sys::fs::create_directory(reportDir);
-  
+
   llvh::sys::path::append(reportDir, fileNameStr);
-  
+
   std::string outFileName = reportDir.str().str();
 
   reportFile_.open(outFileName);
 
-  // 3. [로그 기록] log() 함수 사용
   log("\n");
   log("========================================\n");
   log("=== Taint Analysis for Hermes IR\n");
@@ -91,34 +81,27 @@ bool TaintAnalysis::runOnModule(Module *M) {
   log("    Output: " + outFileName + "\n");
   log("========================================\n\n");
 
-  // phase 1
   log("[Phase 1] Analyzing closures...\n");
   closureAnalyzer_.analyzeModuleClosures(M);
   log("  Closure analysis complete.\n\n");
 
-  // phase 2 (필터링 적용됨)
   log("[Phase 2] Identifying taint sources...\n");
   auto sources = identifySources(M);
   log("  Found " + std::to_string(sources.size()) + " source(s).\n\n");
 
-  // phase 3
   log("[Phase 3] Identifying taint sinks...\n");
   auto sinks = identifySinks(M);
   log("  Found " + std::to_string(sinks.size()) + " sink(s).\n\n");
 
-  // Step 4
   log("[Phase 4] Analyzing function calls...\n");
   CallGraphAnalyzer CGAnalyzer(M);
-  CGAnalyzer.analyze(&defUseAnalyzer_, [this](const std::string &msg) {
-      log(msg);
-  }); // Pass DefUseAnalyzer and logger
+  CGAnalyzer.analyze(
+      &defUseAnalyzer_, [this](const std::string &msg) { log(msg); });
 
-  // analyzeFunctionCalls(M); // Removed
   log("  Call Graph extraction complete.\n\n");
 
-  // Step 5
   log("[Phase 5] Creating inter-procedural taint links...\n");
-  const auto &functionCalls = CGAnalyzer.getFunctionCalls(); // Get results from CGAnalyzer
+  const auto &functionCalls = CGAnalyzer.getFunctionCalls();
   if (functionCalls.empty()) {
     log("  (No inter-procedural calls found to link)\n");
   } else {
@@ -136,12 +119,10 @@ bool TaintAnalysis::runOnModule(Module *M) {
   }
   log("\n");
 
-  // phase 6
   log("[Phase 6] Analyzing taint propagation...\n");
   analyzeTaintFlow(sources, sinks);
   log("  Taint flow analysis complete.\n\n");
 
-  // phase 7: 결과 리포트
   log("[Phase 7] Generating vulnerability report...\n");
 
   reportVulnerabilities();
@@ -162,7 +143,6 @@ llvh::SmallVector<Instruction *, 32> TaintAnalysis::identifySources(Module *M) {
   llvh::SmallVector<Instruction *, 32> sources;
   std::vector<std::string> taintedGlobals;
 
-  // [Step 0] 전역 변수 오염 여부 미리 스캔 (데이터 세탁 함수 포함)
   for (auto &F : *M) {
     for (auto &BB : F) {
       for (auto &I : BB) {
@@ -177,7 +157,6 @@ llvh::SmallVector<Instruction *, 32> TaintAnalysis::identifySources(Module *M) {
             } else if (auto *CI = llvh::dyn_cast<CallInst>(Instr)) {
               Value *callee = CI->getCallee();
               if (auto *func = llvh::dyn_cast<Function>(callee)) {
-                // 기존 규칙 + 데이터 세탁(Encoding/Decoding) 함수 감시 추가
                 if (returnsTaintedValue(func))
                   isTainted = true;
               }
@@ -188,7 +167,6 @@ llvh::SmallVector<Instruction *, 32> TaintAnalysis::identifySources(Module *M) {
             if (auto *Lit = llvh::dyn_cast<LiteralString>(SPI->getProperty())) {
               std::string varName = Lit->getValue().str().str();
 
-              // 기존 ignoreList 유지 (시스템 노이즈 제거)
               static const std::set<std::string> ignoreList = {
                   "exports",   "module",  "window",  "self",   "global",
                   "document",  "console", "process", "now",    "date",
@@ -196,7 +174,6 @@ llvh::SmallVector<Instruction *, 32> TaintAnalysis::identifySources(Module *M) {
                   "undefined", "null",    "true",    "false",  "prototype",
                   "length",    "width",   "height"};
 
-              // 한 글자 변수 필터링 유지
               if (varName.length() <= 1 || ignoreList.count(varName)) {
                 continue;
               }
@@ -216,17 +193,14 @@ llvh::SmallVector<Instruction *, 32> TaintAnalysis::identifySources(Module *M) {
     }
   }
 
-  // [Step 1, 2, 3] 실제 오염원 및 핑거프린팅 요소 등록
   for (auto &F : *M) {
     for (auto &BB : F) {
       for (auto &I : BB) {
-        // 1. 기존 명시적 Source API 탐지 (document.URL 등)
         std::string sourceAPI;
         if (isSourceInstruction(&I, sourceAPI)) {
           sources.push_back(&I);
         }
 
-        // 2. 콜백 및 동적 함수 호출 분석 보강
         if (auto *CI = llvh::dyn_cast<CallInst>(&I)) {
           Value *callee = CI->getCallee();
           Function *targetFunc = nullptr;
@@ -236,8 +210,6 @@ llvh::SmallVector<Instruction *, 32> TaintAnalysis::identifySources(Module *M) {
             if (auto *Lit = llvh::dyn_cast<LiteralString>(LPI->getProperty())) {
               std::string funcName = Lit->getValue().str().str();
 
-              // ★ [추가] 데이터 세탁 함수 직접 감시 (atob, decodeURIComponent
-              // 등)
               static const std::set<std::string> encodingAPIs = {
                   "atob",
                   "btoa",
@@ -245,7 +217,7 @@ llvh::SmallVector<Instruction *, 32> TaintAnalysis::identifySources(Module *M) {
                   "unescape",
                   "decodeURI"};
               if (encodingAPIs.count(funcName)) {
-                sources.push_back(&I); // 인코딩된 데이터 흐름 추적 시작
+                sources.push_back(&I);
               }
 
               for (auto &candidateF : *M) {
@@ -261,12 +233,10 @@ llvh::SmallVector<Instruction *, 32> TaintAnalysis::identifySources(Module *M) {
           }
         }
 
-        // 3. 속성 접근을 통한 핑거프린팅 요소 탐지 (navigator.*, screen.* 등)
         if (auto *LPI = llvh::dyn_cast<LoadPropertyInst>(&I)) {
           if (auto *Lit = llvh::dyn_cast<LiteralString>(LPI->getProperty())) {
             std::string varName = Lit->getValue().str().str();
 
-            // ★ [추가] 고도화된 핑거프린팅 소스 목록
             static const std::set<std::string> fingerprintSources = {
                 "userAgent",
                 "platform",
@@ -292,7 +262,6 @@ llvh::SmallVector<Instruction *, 32> TaintAnalysis::identifySources(Module *M) {
               }
             }
 
-            // 오염된 전역 변수 로드 확인
             for (const auto &taintedName : taintedGlobals) {
               if (taintedName == varName) {
                 sources.push_back(&I);
@@ -363,118 +332,99 @@ bool TaintAnalysis::isSourceInstruction(
   return false;
 }
 
-// 오염이 시작된 명령어가 속한 함수가 어떻게 호출되도록 등록되었는지 사용자 역추적, Rule3 적용을 위해 필요
 std::string TaintAnalysis::getTriggerContext(Instruction *sourceInst) {
-    if (!sourceInst) return "UNKNOWN";
+  if (!sourceInst)
+    return "UNKNOWN";
 
-    // 1. 명령어가 속한 함수(Function)를 찾음
-    Function *F = sourceInst->getParent()->getParent();
-    if (!F) return "UNKNOWN";
+  Function *F = sourceInst->getParent()->getParent();
+  if (!F)
+    return "UNKNOWN";
 
-    std::string funcName = F->getInternalNameStr().str();
-    
-    // 2. 전역 스코프(Global)이거나 Main 모듈이면 무조건 자율 실행(Autonomous)
-    if (funcName == "global" || funcName == "main" || funcName == "") {
-        return "AUTONOMOUS";
-    }
+  std::string funcName = F->getInternalNameStr().str();
 
-    // 3. 이 함수(F)가 어디서 사용되었는지(Users) 역추적!
-    for (auto *U : F->getUsers()) {
-        // 함수는 보통 클로저(Closure)로 만들어져서 전달됨
-        if (auto *CCI = llvh::dyn_cast<CreateClosureInst>(U)) {
-            
-            // 그 클로저가 어디에 쓰였는지 다시 확인
-            for (auto *CU : CCI->getUsers()) {
-                
-                // [Case A] DOM 속성에 이벤트 핸들러로 직접 할당된 경우 (예: button.onclick = function() {...})
-                if (auto *SPI = llvh::dyn_cast<StorePropertyInst>(CU)) {
-                    if (SPI->getStoredValue() == CCI) {
-                        if (auto *Lit = llvh::dyn_cast<LiteralString>(SPI->getProperty())) {
-                            std::string propName = Lit->getValue().str().str();
-                            // 속성 이름이 "on"으로 시작하면 (onclick, onmouseover 등) 이벤트 구동!
-                            if (propName.rfind("on", 0) == 0) { 
-                                return "EVENT_DRIVEN";
-                            }
-                        }
-                    }
-                }
-                
-                // [Case B] 이벤트 리스너 함수에 인자로 전달된 경우 (예: el.addEventListener('click', function() {...}))
-                if (auto *Call = llvh::dyn_cast<CallInst>(CU)) {
-                    Value *callee = Call->getCallee();
-                    if (auto *LPI = llvh::dyn_cast<LoadPropertyInst>(callee)) {
-                        if (auto *Lit = llvh::dyn_cast<LiteralString>(LPI->getProperty())) {
-                            std::string methodName = Lit->getValue().str().str();
-                            if (methodName == "addEventListener") {
-                                // 클로저가 인자로 잘 들어갔는지 확인
-                                for (unsigned i = 1; i < Call->getNumArguments(); ++i) {
-                                    if (Call->getArgument(i) == CCI) {
-                                        return "EVENT_DRIVEN";
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // 명시적인 이벤트 바인딩(onclick, addEventListener)을 찾지 못했다면, 
-    // 페이지 로드 시 즉시/자동 실행되는 스크립트로 간주함.
+  if (funcName == "global" || funcName == "main" || funcName == "") {
     return "AUTONOMOUS";
+  }
+
+  for (auto *U : F->getUsers()) {
+    if (auto *CCI = llvh::dyn_cast<CreateClosureInst>(U)) {
+      for (auto *CU : CCI->getUsers()) {
+        if (auto *SPI = llvh::dyn_cast<StorePropertyInst>(CU)) {
+          if (SPI->getStoredValue() == CCI) {
+            if (auto *Lit = llvh::dyn_cast<LiteralString>(SPI->getProperty())) {
+              std::string propName = Lit->getValue().str().str();
+              if (propName.rfind("on", 0) == 0) {
+                return "EVENT_DRIVEN";
+              }
+            }
+          }
+        }
+
+        if (auto *Call = llvh::dyn_cast<CallInst>(CU)) {
+          Value *callee = Call->getCallee();
+          if (auto *LPI = llvh::dyn_cast<LoadPropertyInst>(callee)) {
+            if (auto *Lit = llvh::dyn_cast<LiteralString>(LPI->getProperty())) {
+              std::string methodName = Lit->getValue().str().str();
+              if (methodName == "addEventListener") {
+                for (unsigned i = 1; i < Call->getNumArguments(); ++i) {
+                  if (Call->getArgument(i) == CCI) {
+                    return "EVENT_DRIVEN";
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return "AUTONOMOUS";
 }
 
 std::string TaintAnalysis::getDestinationURL(Instruction *sinkInst) {
-    if (!sinkInst) return "UNKNOWN";
+  if (!sinkInst)
+    return "UNKNOWN";
 
-    // 내부 헬퍼 람다 함수: Value에서 문자열을 최대한 긁어모음 (문자열 결합 추적)
-    auto extractStringFromValue = [](Value *V) -> std::string {
-        // 1. 완벽한 리터럴 문자열인 경우 ("https://tracker.com")
-        if (auto *Lit = llvh::dyn_cast<LiteralString>(V)) {
-            return Lit->getValue().str().str();
-        }
-        
-        // 2. 문자열 결합 연산인 경우 (url + "?data=" + cookie)
-        // Hermes IR에서는 보통 StringConcatInst나 BinaryOperator(Add)로 나타남
-        if (auto *Concat = llvh::dyn_cast<StringConcatInst>(V)) {
-            std::string reconstructed = "";
-            for (unsigned i = 0; i < Concat->getNumOperands(); ++i) {
-                if (auto *Lit = llvh::dyn_cast<LiteralString>(Concat->getOperand(i))) {
-                    reconstructed += Lit->getValue().str().str();
-                } else {
-                    reconstructed += "{VAR}"; // 변수 부분은 마스킹 처리
-                }
-            }
-            return reconstructed;
-        }
-        return "";
-    };
-
-    // [Case A] Sink가 함수 호출인 경우 (예: fetch(url), navigator.sendBeacon(url))
-    if (auto *CI = llvh::dyn_cast<CallInst>(sinkInst)) {
-        // 보통 URL은 첫 번째(index 1) 또는 두 번째(index 2) 인자로 들어감
-        for (unsigned i = 1; i < CI->getNumArguments(); ++i) {
-            std::string val = extractStringFromValue(CI->getArgument(i));
-            // 문자열이 비어있지 않고, http나 //로 시작하면 URL로 간주!
-            if (!val.empty() && (val.find("http") == 0 || val.find("//") == 0 || val.find("/") == 0)) {
-                return val;
-            }
-        }
+  auto extractStringFromValue = [](Value *V) -> std::string {
+    if (auto *Lit = llvh::dyn_cast<LiteralString>(V)) {
+      return Lit->getValue().str().str();
     }
 
-    // [Case B] Sink가 속성 저장인 경우 (예: img.src = url) -> Rule 4와 연동됨
-    if (auto *SPI = llvh::dyn_cast<StorePropertyInst>(sinkInst)) {
-        // 할당되는 값(우항)에서 URL 문자열을 추출
-        Value *storedVal = SPI->getStoredValue();
-        std::string val = extractStringFromValue(storedVal);
-        if (!val.empty()) {
-            return val;
+    if (auto *Concat = llvh::dyn_cast<StringConcatInst>(V)) {
+      std::string reconstructed = "";
+      for (unsigned i = 0; i < Concat->getNumOperands(); ++i) {
+        if (auto *Lit = llvh::dyn_cast<LiteralString>(Concat->getOperand(i))) {
+          reconstructed += Lit->getValue().str().str();
+        } else {
+          reconstructed += "{VAR}";
         }
+      }
+      return reconstructed;
     }
+    return "";
+  };
 
-    // 정적 분석으로 문자열을 복원할 수 없는 고도의 난독화/동적 생성인 경우
-    return "DYNAMIC_URL";
+  if (auto *CI = llvh::dyn_cast<CallInst>(sinkInst)) {
+    for (unsigned i = 1; i < CI->getNumArguments(); ++i) {
+      std::string val = extractStringFromValue(CI->getArgument(i));
+      if (!val.empty() &&
+          (val.find("http") == 0 || val.find("//") == 0 ||
+           val.find("/") == 0)) {
+        return val;
+      }
+    }
+  }
+
+  if (auto *SPI = llvh::dyn_cast<StorePropertyInst>(sinkInst)) {
+    Value *storedVal = SPI->getStoredValue();
+    std::string val = extractStringFromValue(storedVal);
+    if (!val.empty()) {
+      return val;
+    }
+  }
+
+  return "DYNAMIC_URL";
 }
 
 std::string TaintAnalysis::extractObjectName(Value *object) {
@@ -503,34 +453,32 @@ std::string TaintAnalysis::extractObjectName(Value *object) {
   return "UnknownSource";
 }
 
-bool TaintAnalysis::isSinkInstruction(Instruction *I, std::string &sinkAPI, SinkType &type) {
-  // 1. 속성 저장 (예: .src, .innerHTML) 처리
+bool TaintAnalysis::isSinkInstruction(
+    Instruction *I,
+    std::string &sinkAPI,
+    SinkType &type) {
   if (auto *SPI = llvh::dyn_cast<StorePropertyInst>(I)) {
-    // [Backtracking 적용] 리터럴이 아니면 역추적 시도
     std::string propName = "";
     if (auto *litProp = llvh::dyn_cast<LiteralString>(SPI->getProperty())) {
       propName = litProp->getValue().str().str();
     } else {
-      // 속성 이름이 변수일 때도 한 번 더 뒤져봄 (필요 시)
     }
 
     std::string objectName = extractObjectName(SPI->getObject());
 
-    // ★ [Rule 4: DOM 우회 기법 강제 매핑 로직 주입] ★
-    // img.src, script.src, iframe.src 등에 값을 넣는 행위를 감지
     if (propName == "src" || propName == "href") {
-        sinkAPI = objectName + "." + propName + " (Evasion Suspected)";
-        type = SinkType::Network; // SINK_DOM을 무시하고 강제로 NETWORK로 취급!
-        
-        static std::set<std::string> loggedEvasions;
-        if (loggedEvasions.find(sinkAPI) == loggedEvasions.end()) {
-            log("  [Rule 4 Alert] Forced mapping DOM Evasion to SINK_NETWORK: " + sinkAPI + "\n");
-            loggedEvasions.insert(sinkAPI);
-        }
-        return true;
+      sinkAPI = objectName + "." + propName + " (Evasion Suspected)";
+      type = SinkType::Network;
+
+      static std::set<std::string> loggedEvasions;
+      if (loggedEvasions.find(sinkAPI) == loggedEvasions.end()) {
+        log("  [Rule 4 Alert] Forced mapping DOM Evasion to SINK_NETWORK: " +
+            sinkAPI + "\n");
+        loggedEvasions.insert(sinkAPI);
+      }
+      return true;
     }
 
-    // Rule 4에 해당하지 않는 일반 속성들은 기존 레지스트리를 따름
     if (auto *sinkDef = sinkRegistry_.isPropertySink(objectName, propName)) {
       sinkAPI = sinkDef->name;
       type = sinkDef->type;
@@ -538,15 +486,12 @@ bool TaintAnalysis::isSinkInstruction(Instruction *I, std::string &sinkAPI, Sink
     }
   }
 
-  // 2. 함수 호출 (예: .sendBeacon, .postMessage)
   if (auto *CI = llvh::dyn_cast<CallInst>(I)) {
     Value *callee = CI->getCallee();
     if (auto *LPI = llvh::dyn_cast<LoadPropertyInst>(callee)) {
-      // ★ [고도화] 역추적 엔진을 사용하여 난독화된 메서드명 식별
-      std::string methodName = CallGraphAnalyzer::tryBacktrackPropertyName(LPI); 
+      std::string methodName = CallGraphAnalyzer::tryBacktrackPropertyName(LPI);
       std::string objectName = extractObjectName(LPI->getObject());
 
-      // Rule 4에 해당하지 않는 일반 속성들은 기존 레지스트리를 따름
       if (auto *sinkDef = sinkRegistry_.isMethodSink(objectName, methodName)) {
         sinkAPI = sinkDef->name;
         type = sinkDef->type;
@@ -557,56 +502,44 @@ bool TaintAnalysis::isSinkInstruction(Instruction *I, std::string &sinkAPI, Sink
   return false;
 }
 
-
 void TaintAnalysis::analyzeTaintFlow(
     const llvh::SmallVectorImpl<Instruction *> &sources,
     const llvh::SmallVectorImpl<Instruction *> &sinks) {
-  // 1. Source/Sink 벡터 변환
   std::vector<Instruction *> sourceVec(sources.begin(), sources.end());
   std::vector<Instruction *> sinkVec(sinks.begin(), sinks.end());
 
-  // 2. [변경됨] 함수 호출 매핑 정보는 runOnModule에서 이미 설정됨
-  // (defUseAnalyzer_.setFunctionCalls 호출 완료)
-
-  // 3. 오염 흐름 분석 실행
-  defUseAnalyzer_.setLogger([this](const std::string &msg) {
-      log(msg);
-  });
+  defUseAnalyzer_.setLogger([this](const std::string &msg) { log(msg); });
   defUseAnalyzer_.analyzeTaintFlow(sourceVec, sinkVec, &closureAnalyzer_);
 
-  // 4. 결과 경로 가져오기
   const auto &sinkPaths = defUseAnalyzer_.getSinkReachingPaths();
-  log("  [Phase 6] Found " + std::to_string(sinkPaths.size()) + " potential taint path(s).\n");
+  log("  [Phase 6] Found " + std::to_string(sinkPaths.size()) +
+      " potential taint path(s).\n");
 
-  // 5. 결과 처리 loop
   int pathCount = 0;
-  for (const auto &pathStruct :
-       sinkPaths) { // 이름을 pathStruct로 명확하게 변경
+  for (const auto &pathStruct : sinkPaths) {
     std::string sourceAPI;
     std::string sinkAPI;
-    SinkType sinkType = SinkType::Network; // 기본값
+    SinkType sinkType = SinkType::Network;
 
-    // 구조체 멤버인 source, sink에 접근
     isSourceInstruction(pathStruct.source, sourceAPI);
     isSinkInstruction(pathStruct.sink, sinkAPI, sinkType);
 
-    // ★ [핵심 수정] 구조체(pathStruct) 안의 벡터(.path)를 꺼내서 반복
     std::vector<Instruction *> pathVec;
     for (auto *I : pathStruct.path) {
       pathVec.push_back(I);
     }
 
-    // pathVec이 비어있지 않으면 취약점으로 등록
     if (!pathVec.empty()) {
       Instruction *source = pathVec.front();
       Instruction *sink = pathVec.back();
 
       vulnerabilities_.emplace_back(
           source, sink, sourceAPI, sinkAPI, sinkType, pathVec);
-      
-      log("    Path #" + std::to_string(++pathCount) + ": " + sourceAPI + " -> " + sinkAPI + "\n");
-      for(auto *I : pathVec) {
-          log("      -> " + I->getKindStr().str() + "\n");
+
+      log("    Path #" + std::to_string(++pathCount) + ": " + sourceAPI +
+          " -> " + sinkAPI + "\n");
+      for (auto *I : pathVec) {
+        log("      -> " + I->getKindStr().str() + "\n");
       }
     }
   }
@@ -627,9 +560,8 @@ void TaintAnalysis::reportVulnerabilities() {
     Instruction *sourceInst = vuln.path.front();
     Instruction *sinkInst = vuln.path.back();
 
-    // 1. Sink 정보 가져오기
     std::string sinkName = "Unknown";
-    SinkType sinkType = SinkType::XSS; // 기본값
+    SinkType sinkType = SinkType::XSS;
 
     if (auto *Call = llvh::dyn_cast<CallInst>(sinkInst)) {
       if (auto *Func = llvh::dyn_cast<Function>(Call->getCallee())) {
@@ -638,42 +570,37 @@ void TaintAnalysis::reportVulnerabilities() {
         if (def)
           sinkType = def->type;
       }
-      // (LoadPropertyInst 등으로 호출된 메서드 처리 로직은 생략되었으나 기존
-      // 로직 활용 가능)
     } else if (auto *SPI = llvh::dyn_cast<StorePropertyInst>(sinkInst)) {
       if (auto *Lit = llvh::dyn_cast<LiteralString>(SPI->getProperty())) {
         sinkName = Lit->getValue().str().str();
-        // 속성 Sink (예: innerHTML, src 등) 확인
-        // 여기서는 간단히 이름으로 매칭하거나 레지스트리 조회
+
         if (sinkName == "src")
           sinkType = SinkType::Network;
         else if (sinkName == "innerHTML")
           sinkType = SinkType::XSS;
         else if (sinkName == "location.href")
           sinkType = SinkType::Navigation;
-        // ... (SinkRegistry를 통해 정확히 가져오는 것이 베스트입니다)
         auto *def = SinkRegistry::getInstance().isPropertySink("", sinkName);
         if (def)
           sinkType = def->type;
       }
     }
 
-    // 2. 위험도 및 태그 결정
     std::string severityTag = "[INFO]";
     std::string category = "General Flow";
 
     switch (sinkType) {
       default:
       case SinkType::Network:
-        severityTag = "[CRITICAL]"; // ★ 정보 유출 (가장 중요)
+        severityTag = "[CRITICAL]";
         category = "Data Exfiltration (Tracking)";
         break;
       case SinkType::Storage:
-        severityTag = "[WARNING]"; // 식별자 저장
+        severityTag = "[WARNING]";
         category = "Fingerprinting / Storage";
         break;
       case SinkType::CodeInjection:
-        severityTag = "[HIGH]"; // 코드 실행
+        severityTag = "[HIGH]";
         category = "Code Injection";
         break;
       case SinkType::XSS:
@@ -681,16 +608,14 @@ void TaintAnalysis::reportVulnerabilities() {
         category = "DOM Manipulation (XSS)";
         break;
       case SinkType::Navigation:
-        severityTag = "[LOW]"; // 단순 이동
+        severityTag = "[LOW]";
         category = "Page Navigation";
         break;
     }
 
-    // 3. 보고서 출력
     log("\n  " + severityTag + " [" + std::to_string(index++) + "] " +
         category + "\n");
 
-    // Source 이름 가져오기
     std::string sourceName = "Unknown";
     std::string sourceAPI;
     if (isSourceInstruction(sourceInst, sourceAPI)) {
@@ -705,57 +630,50 @@ void TaintAnalysis::reportVulnerabilities() {
     log("      Sink:   " + sinkName + "\n");
     log("      Path length: " + std::to_string(vuln.path.size()) +
         " instruction(s)\n");
-  } // <-- End of outer vulnerabilities_ loop
-    
-    // ★ [Master JSON Log 덤프 파트 시작] ★
+  }
   log("\n[Export] Generating Master JSON Log for Python Classifier...\n");
-  
-  // JSON 객체 생성 (nlohmann/json 사용)
+
   nlohmann::json masterLog;
-  masterLog["target_url"] = "추후 Python에서 파일명으로 파싱"; 
-  
+  masterLog["target_url"] = "Parsed as a filename in Python later";
+
   nlohmann::json s2sRoutes = nlohmann::json::array();
   int routeId = 1;
 
   for (const auto &vuln : vulnerabilities_) {
-      Instruction *sourceInst = vuln.path.front();
-      Instruction *sinkInst = vuln.path.back();
-      
-      nlohmann::json routeObj;
-      routeObj["route_id"] = routeId++;
-      routeObj["source_name"] = vuln.sourceAPI; // 기존 구조체에 저장된 Source 이름
-      routeObj["sink_name"] = vuln.sinkAPI;     // 기존 구조체에 저장된 Sink 이름
-      routeObj["sink_type"] = getSinkTypeName(vuln.sinkType); // "Network", "XSS" 등
-      
-      // 경로의 길이 및 디버깅용 노드 리스트
-      routeObj["path_length"] = vuln.path.size();
-      nlohmann::json pathNodes = nlohmann::json::array();
-      for (auto *I : vuln.path) {
-          pathNodes.push_back(I->getKindStr().str());
-      }
-      routeObj["path_nodes"] = pathNodes;
+    Instruction *sourceInst = vuln.path.front();
+    Instruction *sinkInst = vuln.path.back();
 
-      // ★ TODO (Rule 3 연동용): 이 S2S 경로가 속한 함수의 Call Graph Root (Trigger) 정보
-      routeObj["trigger_context"] = getTriggerContext(sourceInst);
-      
-      // ★ TODO (Rule 5 연동용): 목적지 URL (fetch나 img.src의 인자값)
-      routeObj["destination_url"] = "UNKNOWN"; // AST에서 인자값을 파싱하여 추출하는 로직 필요
-      routeObj["destination_url"] = getDestinationURL(sinkInst); // ★ Rule 5 적용: AST에서 목적지 도메인/URL 추출
+    nlohmann::json routeObj;
+    routeObj["route_id"] = routeId++;
+    routeObj["source_name"] = vuln.sourceAPI;
+    routeObj["sink_name"] = vuln.sinkAPI;
+    routeObj["sink_type"] = getSinkTypeName(vuln.sinkType);
 
-      s2sRoutes.push_back(routeObj);
+    routeObj["path_length"] = vuln.path.size();
+    nlohmann::json pathNodes = nlohmann::json::array();
+    for (auto *I : vuln.path) {
+      pathNodes.push_back(I->getKindStr().str());
+    }
+    routeObj["path_nodes"] = pathNodes;
+
+    routeObj["trigger_context"] = getTriggerContext(sourceInst);
+
+    routeObj["destination_url"] = "UNKNOWN";
+    routeObj["destination_url"] = getDestinationURL(sinkInst);
+
+    s2sRoutes.push_back(routeObj);
   }
 
   masterLog["s2s_routes"] = s2sRoutes;
 
-  // JSON 파일로 저장 (.json 확장자로 변경하여 저장)
   std::string jsonFileName = "report/master_log.json";
   std::ofstream jsonFile(jsonFileName);
   if (jsonFile.is_open()) {
-      jsonFile << masterLog.dump(4); // indent 4칸으로 예쁘게 포매팅
-      jsonFile.close();
-      log("  [System] Master JSON Log saved to '" + jsonFileName + "'\n");
+    jsonFile << masterLog.dump(4);
+    jsonFile.close();
+    log("  [System] Master JSON Log saved to '" + jsonFileName + "'\n");
   } else {
-      log("  [Error] Failed to open JSON output file.\n");
+    log("  [Error] Failed to open JSON output file.\n");
   }
 }
 
@@ -776,8 +694,6 @@ const char *TaintAnalysis::getSinkTypeName(SinkType type) {
   }
 }
 
-// analyzeFunctionCalls, shouldAnalyzeFunction, tryBacktrackPropertyName moved to CallGraphAnalyzer.cpp
-
 bool TaintAnalysis::returnsTaintedValue(Function *F) {
   for (auto &BB : *F) {
     for (auto &I : BB) {
@@ -787,7 +703,6 @@ bool TaintAnalysis::returnsTaintedValue(Function *F) {
           if (llvh::isa<ReturnInst>(User))
             return true;
           if (llvh::isa<StoreFrameInst>(User)) {
-            // Additional tracking logic could go here
           }
         }
       }
@@ -800,10 +715,10 @@ std::unique_ptr<Pass> hermes::createTaintAnalysis() {
   return std::make_unique<TaintAnalysis>();
 }
 
-// [구현] 실제 오염 데이터(Taint)가 흐르는지 엔진에 물어보는 함수
 bool TaintAnalysis::isTainted(Value *V) {
-  if (!V) return false;
-  return defUseAnalyzer_.isTainted(V); // DefUseAnalyzer 엔진과 연결
+  if (!V)
+    return false;
+  return defUseAnalyzer_.isTainted(V);
 }
 
 #undef DEBUG_TYPE
