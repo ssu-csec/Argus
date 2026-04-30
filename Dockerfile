@@ -22,7 +22,7 @@ ENV TZ=Asia/Seoul \
 #                                                   by lib/Optimizer/Taint/*
 #   libnss3 ... fonts-liberation                  : Chromium runtime libs for
 #                                                   puppeteer (crawler/)
-# Install BEFORE creating the csec user so sudo's postinst owns /etc/sudoers.
+# Install BEFORE creating the user user so sudo's postinst owns /etc/sudoers.
 # ---------------------------------------------------------------------------
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
@@ -76,11 +76,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Non-root user (mirrors the legacy CustomHermes image convention).
 # Use /etc/sudoers.d drop-in instead of editing /etc/sudoers directly so
 # sudo's package-managed config stays untouched.
-RUN groupadd -r csec \
- && useradd -r -g csec -m csec \
- && echo "csec:csec" | chpasswd \
- && echo "csec ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/csec \
- && chmod 0440 /etc/sudoers.d/csec
+RUN groupadd -r user \
+ && useradd -r -g user -m user \
+ && echo "user:user" | chpasswd \
+ && echo "user ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/user \
+ && chmod 0440 /etc/sudoers.d/user
 
 # Python helper for pulling datasets from Google Drive (legacy pipeline)
 RUN pip3 install --no-cache-dir gdown
@@ -99,33 +99,33 @@ RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
 # ---------------------------------------------------------------------------
 # Source + build
 # ---------------------------------------------------------------------------
-WORKDIR /home/csec/Argus
-COPY . /home/csec/Argus
+WORKDIR /home/user/Argus
+COPY . /home/user/Argus
 
 # Build Hermes + mixed-hermes (taint analysis). Outputs land in build/bin/.
-RUN cmake -S /home/csec/Argus -B /home/csec/Argus/build -G Ninja \
+RUN cmake -S /home/user/Argus -B /home/user/Argus/build -G Ninja \
         -DCMAKE_BUILD_TYPE=Release \
- && cmake --build /home/csec/Argus/build
+ && cmake --build /home/user/Argus/build
 
 # Crawler npm deps. puppeteer's postinstall downloads Chrome into
-# $PUPPETEER_CACHE_DIR (or ~/.cache/puppeteer). Pin it to csec's home so the
-# binary is reachable when the runtime user (csec) launches the browser.
-ENV PUPPETEER_CACHE_DIR=/home/csec/.cache/puppeteer
+# $PUPPETEER_CACHE_DIR (or ~/.cache/puppeteer). Pin it to user's home so the
+# binary is reachable when the runtime user (user) launches the browser.
+ENV PUPPETEER_CACHE_DIR=/home/user/.cache/puppeteer
 RUN mkdir -p "$PUPPETEER_CACHE_DIR" \
- && cd /home/csec/Argus/crawler && npm install --no-audit --no-fund \
- && chown -R csec:csec /home/csec/.cache
+ && cd /home/user/Argus/crawler && npm install --no-audit --no-fund \
+ && chown -R user:user /home/user/.cache
 
 # classifier.py hard-codes ~/mixed-hermes/... and run_pipeline.py hard-codes
 # ~/argus/... — symlink both names to the real source tree so the scripts
 # work without modification.
-RUN ln -s /home/csec/Argus /home/csec/mixed-hermes \
- && ln -s /home/csec/Argus /home/csec/argus \
- && chown -h csec:csec /home/csec/mixed-hermes /home/csec/argus \
- && chmod +x /home/csec/Argus/pipeline.sh \
- && chown -R csec:csec /home/csec/Argus
+RUN ln -s /home/user/Argus /home/user/mixed-hermes \
+ && ln -s /home/user/Argus /home/user/argus \
+ && chown -h user:user /home/user/mixed-hermes /home/user/argus \
+ && chmod +x /home/user/Argus/pipeline.sh \
+ && chown -R user:user /home/user/Argus
 
-USER csec
-WORKDIR /home/csec/Argus
+USER user
+WORKDIR /home/user/Argus
 
 # ---------------------------------------------------------------------------
 # End-to-end pipeline: crawl -> mixed-hermes analysis -> classify.

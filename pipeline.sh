@@ -5,7 +5,7 @@
 #   pipeline.sh path/to/urls.txt      # custom URL list
 set -euo pipefail
 
-ARGUS_ROOT="${ARGUS_ROOT:-/home/csec/Argus}"
+ARGUS_ROOT="${ARGUS_ROOT:-/home/user/Argus}"
 URL_FILE="${1:-${ARGUS_ROOT}/crawler/urls_test.txt}"
 
 if [[ ! -f "$URL_FILE" ]]; then

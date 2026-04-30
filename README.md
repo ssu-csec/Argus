@@ -232,7 +232,7 @@ The build process:
 1. Installs system packages (build toolchain, Chromium runtime libs, `nlohmann-json3-dev`, Graphviz, etc.)
 2. Compiles the Argus/Hermes taint analysis binary via CMake + Ninja → `build/bin/mixed-hermes`
 3. Runs `npm install` in `crawler/` (downloads Chromium for Puppeteer into `~/.cache/puppeteer`)
-4. Creates a non-root user `csec` and prepares the runtime environment
+4. Creates a non-root user `user` and prepares the runtime environment
 
 ### Build
 
@@ -271,43 +271,43 @@ Each stage can be invoked with its own `docker run`, mounting only the directori
 ```bash
 # Stage 1 — Crawl a URL list
 docker run --rm -it \
-  -v $(pwd)/urls.txt:/home/csec/Argus/urls.txt \
-  -v $(pwd)/collected_scripts:/home/csec/Argus/crawler/collected_scripts \
+  -v $(pwd)/urls.txt:/home/user/Argus/urls.txt \
+  -v $(pwd)/collected_scripts:/home/user/Argus/crawler/collected_scripts \
   argus:base \
-  bash -c "cd crawler && node crawler.cjs /home/csec/Argus/urls.txt"
+  bash -c "cd crawler && node crawler.cjs /home/user/Argus/urls.txt"
 
 # Stage 2 — Taint analysis on a single script
 docker run --rm -it \
-  -v $(pwd)/collected_scripts:/home/csec/Argus/crawler/collected_scripts \
-  -v $(pwd)/report:/home/csec/Argus/report \
+  -v $(pwd)/collected_scripts:/home/user/Argus/crawler/collected_scripts \
+  -v $(pwd)/report:/home/user/Argus/report \
   argus:base \
-  /home/csec/Argus/build/bin/mixed-hermes \
+  /home/user/Argus/build/bin/mixed-hermes \
     crawler/collected_scripts/<domain>/wholepage.js
 
 # Stage 3 — Classification
 #   reads:  pipeline_results/  (Stage 2 batch output)
 #   writes: csv_reports/       (timestamped CSV)
 docker run --rm -it \
-  -v $(pwd)/pipeline_results:/home/csec/Argus/pipeline_results \
-  -v $(pwd)/csv_reports:/home/csec/Argus/csv_reports \
+  -v $(pwd)/pipeline_results:/home/user/Argus/pipeline_results \
+  -v $(pwd)/csv_reports:/home/user/Argus/csv_reports \
   argus:base \
-  python3 /home/csec/Argus/classifier.py
+  python3 /home/user/Argus/classifier.py
 
 # Stage 4 — Graph generation for a specific report
 docker run --rm -it \
-  -v $(pwd)/report:/home/csec/Argus/report \
+  -v $(pwd)/report:/home/user/Argus/report \
   argus:base \
-  python3 /home/csec/Argus/viz_taint.py report/<domain>_report.json
+  python3 /home/user/Argus/viz_taint.py report/<domain>_report.json
 ```
 
 ### Run the full pipeline
 
 ```bash
 docker run --rm -it \
-  -v $(pwd)/collected_scripts:/home/csec/Argus/crawler/collected_scripts \
-  -v $(pwd)/pipeline_results:/home/csec/Argus/pipeline_results \
+  -v $(pwd)/collected_scripts:/home/user/Argus/crawler/collected_scripts \
+  -v $(pwd)/pipeline_results:/home/user/Argus/pipeline_results \
   argus:base \
-  bash -c "cd /home/csec/Argus/crawler/collected_scripts && python3 run_pipeline.py"
+  bash -c "cd /home/user/Argus/crawler/collected_scripts && python3 run_pipeline.py"
 ```
 
 > Puppeteer requires `--no-sandbox` (already configured in `crawler.cjs`).
