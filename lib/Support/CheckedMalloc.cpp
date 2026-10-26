@@ -29,4 +29,4 @@ void *checkedCalloc(size_t count, size_t size) {
   return res;
 }
 
-} // namespace hermes
+}                    

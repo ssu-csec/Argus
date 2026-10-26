@@ -8,7 +8,7 @@
 #include "hermes/AST/ASTBuilder.h"
 #include "hermes/Support/UTF8.h"
 
-// Use this value to enable debug logging from the command line.
+                                                                
 #define DEBUG_TYPE "ast"
 
 using namespace hermes;
@@ -35,7 +35,7 @@ class ASTBuilder {
 
   Context &context_;
   SourceErrorManager &sm_;
-  /// The optional JavaScript source of the ESTree.
+                                                   
   const llvh::MemoryBuffer *jsSource_;
 
  public:
@@ -44,16 +44,16 @@ class ASTBuilder {
         sm_(context.getSourceErrorManager()),
         jsSource_(jsSource) {}
 
-  /// Deserialize the ESTree from the input JSON.
-  /// \returns the deserialized data structure. The program asserts and crashes
-  /// if the data structure is malformed.
+                                                 
+                                                                               
+                                         
   llvh::Optional<Node *> build(const parser::JSONValue *node);
 
  private:
-  // Extractors for the different types of ESTree fields that we support.
-  // Each extractor checks if a value of the specified name and type exists,
-  // in which case it stores it in 'result' and returns true. Otherwise it
-  // returns false.
+                                                                         
+                                                                            
+                                                                          
+                   
 
   bool extractNodeLabel(
       const parser::JSONObject *jsObj,
@@ -82,12 +82,12 @@ class ASTBuilder {
       llvh::StringRef name,
       NodeList &result);
 
-  /// Convert an ESTree Literal node into a type-specific tttLiteral node.
-  /// Report an error and return None on error.
+                                                                          
+                                               
   llvh::Optional<ESTree::Node *> convertLiteral(const parser::JSONObject *lit);
 
-  /// Flatten an ESTree TemplateElement node so we get rid of the 'value' field.
-  /// Report an error and return None on error.
+                                                                                
+                                               
   llvh::Optional<ESTree::Node *> convertTemplateElement(
       const parser::JSONObject *obj);
 };
@@ -191,8 +191,8 @@ llvh::Optional<ESTree::Node *> ASTBuilder::convertTemplateElement(
 
 llvh::Optional<Node *> ASTBuilder::convertLiteral(
     const parser::JSONObject *lit) {
-  // First check if it is a RegExpLiteral, which is determined by the presence
-  // of the 'regex' value.
+                                                                              
+                          
   if (auto *regex = dyn_cast_or_null<JSONObject>(lit->get("regex"))) {
     NodeLabel pattern{};
     NodeLabel flags{};
@@ -208,7 +208,7 @@ llvh::Optional<Node *> ASTBuilder::convertLiteral(
     return new (context_) RegExpLiteralNode(pattern, flags);
   };
 
-  // No classify the 'value'.
+                             
   JSONValue *value = lit->get("value");
   if (!value) {
     sm_.error(SMLoc{}, "Invalid field 'value' in Literal");
@@ -234,8 +234,8 @@ llvh::Optional<Node *> ASTBuilder::convertLiteral(
   }
 }
 
-/// Constructs an ESTree object from the node \p Node and sets the parent of the
-/// node to \p Parent, that may be null.
+                                                                                
+                                        
 llvh::Optional<Node *> ASTBuilder::build(const JSONValue *node) {
   if (isa<parser::JSONNull>(node))
     return new (context_) EmptyNode();
@@ -247,29 +247,29 @@ llvh::Optional<Node *> ASTBuilder::build(const JSONValue *node) {
   }
   assert(jsObj && "invalid node type");
 
-  // Get the type of the serialized object.
+                                           
   auto TypeItr = jsObj->find("type");
 
-  // If the 'type' field is unspecified then this is a metadata object.
+                                                                       
   if (TypeItr == jsObj->end())
     return new (context_) ESTree::MetadataNode();
 
-  // Read the name of the property.
+                                   
   assert(isa<JSONString>((*TypeItr).second) && "invalid 'type' property");
   llvh::StringRef Typename = dyn_cast<JSONString>((*TypeItr).second)->str();
 
-  /*  // Ignore the following nodes as they are not supported.
-    if (Typename == "CommentLine" || Typename == "CommentBlock") {
-      return nullptr;
-    }*/
+                                                              
+                                                                  
+                     
+       
 
-  // Optionally extract location information.
+                                             
   SMRange sourceRng;
   if (jsSource_) {
     const auto *start = dyn_cast_or_null<JSONNumber>(jsObj->get("start"));
     const auto *end = dyn_cast_or_null<JSONNumber>(jsObj->get("end"));
 
-    // If start or end are missing, check for range array.
+                                                          
     if (!start || !end) {
       if (auto *range = dyn_cast_or_null<JSONArray>(jsObj->get("range"))) {
         if (range->size() == 2) {
@@ -295,16 +295,16 @@ llvh::Optional<Node *> ASTBuilder::build(const JSONValue *node) {
 
   Node *result = nullptr;
 
-  // Some parsers (e.g. Flow) emit RestProperty instead of RestElement, so map
-  // the former to the latter. Same for SpreadProperty and SpreadElement.
+                                                                              
+                                                                         
   if (Typename == "RestProperty")
     Typename = "RestElement";
   else if (Typename == "SpreadProperty")
     Typename = "SpreadElement";
 
   if (Typename == "Literal") {
-    // Special-case ESTree Literal nodes, which we have to convert to a type-
-    // specific literal.
+                                                                             
+                        
     auto lit = convertLiteral(jsObj);
     if (!lit)
       return None;
@@ -803,9 +803,9 @@ llvh::Optional<Node *> ASTBuilder::build(const JSONValue *node) {
   return None;
 }
 
-/// Visits all the ast nodes and synthesizes debug info for each one.
+                                                                     
 struct DebugLocationSynthesizer {
-  /// Should visit all the nodes
+                                
   bool shouldVisit(Node *node) {
     return true;
   }
@@ -834,7 +834,7 @@ struct DebugLocationSynthesizer {
   }
 };
 
-} // namespace
+}             
 
 llvh::Optional<Node *> buildAST(
     Context &context,
@@ -846,7 +846,7 @@ llvh::Optional<Node *> buildAST(
   return result;
 }
 
-} // namespace ESTree
-} // namespace hermes
+}                    
+}                    
 
 #undef DEBUG_TYPE

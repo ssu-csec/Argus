@@ -20,9 +20,9 @@ llvh::Optional<ESTree::ProgramNode *> parseFlowParser(
     Context &context,
     uint32_t bufferId);
 
-} // namespace parser
-} // namespace hermes
+}                    
+}                    
 
-#endif // HERMES_USE_FLOWPARSER
+#endif                         
 
-#endif // HERMES_FLOWPARSER_FLOWPARSER_FLOWPARSER_H
+#endif                                             

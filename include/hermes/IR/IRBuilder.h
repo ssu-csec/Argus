@@ -22,20 +22,20 @@
 
 namespace hermes {
 
-/// The IRBuilder is used for creating IR. The builder APIs is split into two
-/// parts. First, APIs for creating blocks and functions. These APIs are
-/// stateless and do not affect the second kind of APIs which are used for
-/// creating new instructions. The Instruction creation APIS are stateful and
-/// follow an insertion point that can be saved, restored and manipulated.
+                                                                             
+                                                                        
+                                                                          
+                                                                             
+                                                                          
 class IRBuilder {
   IRBuilder(const IRBuilder &) = delete;
   void operator=(const IRBuilder &) = delete;
 
-  /// The module is the root of the program that we are building.
+                                                                 
   Module *M;
-  /// This is where the next instruction will be inserted.
+                                                          
   BasicBlock::iterator InsertionPoint{};
-  // The iterator must point into this block:
+                                             
   BasicBlock *Block{};
 
   SMLoc Location{};
@@ -46,9 +46,9 @@ class IRBuilder {
   explicit IRBuilder(Function *F)
       : M(F->getParent()), InsertionPoint(nullptr) {}
 
-  //--------------------------------------------------------------------------//
-  //                          Stateless APIs.                                 //
-  //--------------------------------------------------------------------------//
+                                                                                
+                                                                                
+                                                                                
 
   enum class PropEnumerable { No = 0, Yes = 1 };
 
@@ -56,13 +56,13 @@ class IRBuilder {
     return M;
   }
 
-  /// Create a new BasicBlock and add it to a function \p Parent.
+                                                                 
   BasicBlock *createBasicBlock(Function *Parent);
 
-  /// Create a new Function and add it to the Module.
-  /// \param OriginalName the original name specified by the user.
-  /// \param insertBefore Another function in the module where this function
-  ///   should be inserted before. If null, appends to the end of the module.
+                                                     
+                                                                  
+                                                                            
+                                                                             
   Function *createFunction(
       ScopeDesc *scopeDesc,
       Identifier OriginalName,
@@ -73,7 +73,7 @@ class IRBuilder {
       bool isGlobal = false,
       Function *insertBefore = nullptr);
 
-  /// Create a new Function and add it to the Module.
+                                                     
   Function *createFunction(
       ScopeDesc *scopeDesc,
       llvh::StringRef OriginalName,
@@ -84,10 +84,10 @@ class IRBuilder {
       bool isGlobal = false,
       Function *insertBefore = nullptr);
 
-  /// Create a new AsyncFunction and add it to the Module.
-  /// \param OriginalName the original name specified by the user.
-  /// \param insertBefore Another function in the module where this function
-  ///   should be inserted before. If null, appends to the end of the module.
+                                                          
+                                                                  
+                                                                            
+                                                                             
   AsyncFunction *createAsyncFunction(
       ScopeDesc *scopeDesc,
       Identifier OriginalName,
@@ -97,10 +97,10 @@ class IRBuilder {
       SMRange sourceRange = SMRange{},
       Function *insertBefore = nullptr);
 
-  /// Create a new GeneratorFunction and add it to the Module.
-  /// \param OriginalName the original name specified by the user.
-  /// \param insertBefore Another function in the module where this function
-  ///   should be inserted before. If null, appends to the end of the module.
+                                                              
+                                                                  
+                                                                            
+                                                                             
   GeneratorFunction *createGeneratorFunction(
       ScopeDesc *scopeDesc,
       Identifier OriginalName,
@@ -110,10 +110,10 @@ class IRBuilder {
       SMRange sourceRange = SMRange{},
       Function *insertBefore = nullptr);
 
-  /// Create a new GeneratorInnerFunction and add it to the Module.
-  /// \param OriginalName the original name specified by the user.
-  /// \param insertBefore Another function in the module where this function
-  ///   should be inserted before. If null, appends to the end of the module.
+                                                                   
+                                                                  
+                                                                            
+                                                                             
   GeneratorInnerFunction *createGeneratorInnerFunction(
       ScopeDesc *scopeDesc,
       Identifier OriginalName,
@@ -122,126 +122,126 @@ class IRBuilder {
       SMRange sourceRange = SMRange{},
       Function *insertBefore = nullptr);
 
-  /// Create the top level function representing the global scope.
+                                                                  
   Function *createTopLevelFunction(
       ScopeDesc *scopeDesc,
       bool strictMode,
       SourceVisibility sourceVisibility = SourceVisibility::Default,
       SMRange sourceRange = SMRange{});
 
-  /// Create a new global object property.
+                                          
   GlobalObjectProperty *createGlobalObjectProperty(
       Identifier name,
       bool declared);
-  /// Create a new global object property.
+                                          
   GlobalObjectProperty *createGlobalObjectProperty(
       llvh::StringRef name,
       bool declared);
 
-  /// Add a new non-this parameter to function \p Parent.
+                                                         
   Parameter *createParameter(Function *Parent, Identifier Name);
 
-  /// Add a new non-this parameter to function \p Parent.
+                                                         
   Parameter *createParameter(Function *Parent, llvh::StringRef Name);
 
-  /// Add the 'this' parameter to function \p Parent.
-  /// Must only be done once per function.
+                                                     
+                                          
   Parameter *createThisParameter(Function *Parent);
 
-  /// Add a new variable to scope \p Parent.
+                                            
   Variable *createVariable(
       ScopeDesc *Parent,
       Variable::DeclKind declKind,
       Identifier Name);
 
-  /// Add a new variable to scope \p Parent.
+                                            
   Variable *createVariable(
       ScopeDesc *Parent,
       Variable::DeclKind declKind,
       llvh::StringRef Name);
 
-  /// Create a new literal number of value \p value.
+                                                    
   LiteralNumber *getLiteralNumber(double value);
 
-  /// Create a new literal positive zero.
+                                         
   LiteralNumber *getLiteralPositiveZero();
 
-  /// Create a new literal negative zero.
+                                         
   LiteralNumber *getLiteralNegativeZero();
 
-  /// Create a new literal NaN.
+                               
   LiteralNumber *getLiteralNaN();
 
-  /// Create a new literal BitInt of value \p value.
+                                                    
   LiteralBigInt *getLiteralBigInt(UniqueString *value);
 
-  /// Create a new literal string of value \p value.
+                                                    
   LiteralString *getLiteralString(llvh::StringRef value);
 
-  /// Create a new literal string of value \p value.
+                                                    
   LiteralString *getLiteralString(Identifier value);
 
-  /// Create a new literal bool of value \p value.
+                                                  
   LiteralBool *getLiteralBool(bool value);
 
-  /// Create a new literal 'empty'.
+                                   
   LiteralEmpty *getLiteralEmpty();
 
-  /// Create a new literal 'undefined'.
+                                       
   LiteralUndefined *getLiteralUndefined();
 
-  /// Create a new literal null.
+                                
   LiteralNull *getLiteralNull();
 
-  /// Return the GlobalObject value.
+                                    
   GlobalObject *getGlobalObject();
 
-  /// Return the EmptySentinel value.
+                                     
   EmptySentinel *getEmptySentinel();
 
-  /// Convert llvh::StringRef to Identifier.
+                                            
   Identifier createIdentifier(llvh::StringRef str);
 
-  //--------------------------------------------------------------------------//
-  //                          Statefull APIs.                                 //
-  //--------------------------------------------------------------------------//
+                                                                                
+                                                                                
+                                                                                
 
  private:
-  /// Insert the newly created instruction \p Inst into the basic block without
-  /// touching its location or statement index.
+                                                                               
+                                               
   void justInsert(Instruction *Inst);
 
-  /// Insert the newly created instruction \p Inst into the basic block and
-  /// populate its location and statement index.
+                                                                           
+                                                
   void insert(Instruction *Inst);
 
  public:
-  /// Set the insertion point of the builder. The next instruction will be
-  /// inserted at the end of \p BB.
+                                                                          
+                                   
   void setInsertionBlock(BasicBlock *BB);
 
-  /// Return the current insertion block.
+                                         
   BasicBlock *getInsertionBlock();
 
-  /// Return the current function.
+                                  
   Function *getFunction() {
     assert(Block && "Builder has no current function");
     return Block->getParent();
   }
 
-  /// Set the insertion point of the builder. The next instruction will be
-  /// inserted after \p IP.
+                                                                          
+                           
   void setInsertionPointAfter(Instruction *IP);
 
-  /// Set the insertion point of the builder. The next instruction will be
-  /// inserted where the current \p IP is (thereby pushing it down).
+                                                                          
+                                                                    
   void setInsertionPoint(Instruction *IP);
 
-  /// \returns true if the insertion point is set.
+                                                  
   bool isInsertionPointValid();
 
-  /// Clear the insertion point. New instructions must not be created until the
-  /// insertion point it set.
+                                                                               
+                             
   void resetInsertionPoint();
 
   void setLocation(SMLoc loc) {
@@ -258,19 +258,19 @@ class IRBuilder {
     CurrentSourceLevelScope = sourceLevelScope;
   }
 
-  /// Move instruction \p inst from its block to the insertion point in the
-  /// current block. If the instruction is a terminator, correctly update the
-  /// phi-nodes that refer to the old block and point then to the current one.
+                                                                           
+                                                                             
+                                                                              
   void transferInstructionToCurrentBlock(Instruction *inst);
 
-  //--------------------------------------------------------------------------//
-  //                    Instruction Creation methods                          //
-  //--------------------------------------------------------------------------//
+                                                                                
+                                                                                
+                                                                                
 
-  /// Insert a clone of the instruction at the current insertion point. The
-  /// location and statement index are preserved but the operands are recreated.
-  /// \param source the original instruction.
-  /// \param operands the (updated) operands to use in the new instruction.
+                                                                           
+                                                                                
+                                             
+                                                                           
   Instruction *cloneInst(
       const Instruction *source,
       llvh::ArrayRef<Value *> operands);
@@ -498,9 +498,9 @@ class IRBuilder {
 
   ResumeGeneratorInst *createResumeGeneratorInst(Value *isReturn);
 
-  //--------------------------------------------------------------------------//
-  //                  Target specific insertions                              //
-  //--------------------------------------------------------------------------//
+                                                                                
+                                                                                
+                                                                                
 
   HBCResolveEnvironment *createHBCResolveEnvironment(
       ScopeDesc *originScopeDesc,
@@ -609,8 +609,8 @@ class IRBuilder {
 
   UnreachableInst *createUnreachableInst();
 
-  /// This is an RAII object that saves and restores the source location of the
-  /// IRBuilder.
+                                                                               
+                
   class ScopedLocationChange {
     ScopedLocationChange(const ScopedLocationChange &) = delete;
     void operator=(const ScopedLocationChange &) = delete;
@@ -619,24 +619,24 @@ class IRBuilder {
     SMLoc oldLocation_;
 
    public:
-    /// Save the builder source location when constructing the object.
+                                                                      
     explicit ScopedLocationChange(IRBuilder &builder, SMLoc location)
         : builder_(builder), oldLocation_(builder.getLocation()) {
       builder_.setLocation(location);
     }
 
-    /// Resotre source location when the object is destroyed.
+                                                             
     ~ScopedLocationChange() {
       builder_.setLocation(oldLocation_);
     }
   };
 
-  //--------------------------------------------------------------------------//
-  //                  Insertion point Save and Restore                        //
-  //--------------------------------------------------------------------------//
+                                                                                
+                                                                                
+                                                                                
 
-  /// This is an RAII object that saves and restores the insertion point of the
-  /// IRBuilder.
+                                                                               
+                
   class SaveRestore {
     SaveRestore(const SaveRestore &) = delete;
     void operator=(const SaveRestore &) = delete;
@@ -646,7 +646,7 @@ class IRBuilder {
     SMLoc Location;
 
    public:
-    // Save the builder insertion point when constructing the object.
+                                                                     
     explicit SaveRestore(IRBuilder &builder)
         : Builder(builder),
           BB(builder.getInsertionBlock()),
@@ -654,14 +654,14 @@ class IRBuilder {
       builder.clearLocation();
     }
 
-    // Restore insertion point when the object is destroyed.
+                                                            
     ~SaveRestore() {
       Builder.setInsertionBlock(BB);
       Builder.setLocation(Location);
     }
   };
 
-  /// This is an RAII object that destroys instructions when it is destroyed.
+                                                                             
   class InstructionDestroyer {
     InstructionDestroyer(const InstructionDestroyer &) = delete;
     void operator=(const InstructionDestroyer &) = delete;
@@ -671,14 +671,14 @@ class IRBuilder {
    public:
     explicit InstructionDestroyer() = default;
 
-    /// \returns true if the instruction \p A is already in the destruction
-    /// queue. Notice that this is an O(n) search and should only be used for
-    /// debugging.
+                                                                           
+                                                                             
+                  
     bool hasInstruction(Instruction *A) {
       return std::find(list.begin(), list.end(), A) != list.end();
     }
 
-    /// Add the instruction \p  A to the list of instructions to delete.
+                                                                        
     void add(Instruction *A) {
 #ifndef NDEBUG
       assert(!hasInstruction(A) && "Instruction already in list!");
@@ -694,6 +694,6 @@ class IRBuilder {
   };
 };
 
-} // end namespace hermes
+}                        
 
 #endif

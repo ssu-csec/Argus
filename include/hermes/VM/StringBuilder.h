@@ -16,26 +16,26 @@
 namespace hermes {
 namespace vm {
 
-/// There are many cases we want to allocate a string with a fixed length, and
-/// fill in content afterwards.
-/// StringBuilder is a helper class that provides such feature.
-/// It ensures that the content never exceeds the length, and we can only
-/// obtain the string after we have filled in every character.
-/// It supports building both ASCII and UTF16 string. In cases where it does
-/// not matter and you are not sure, use default (UTF16). Only in places where
-/// it is obvious that this will be an ASCII string most of the time, we create
-/// an ASCII string builder. In the worst case when you start to append UTF16
-/// into an ASCII string, the builder will automatically take care of that
-/// and create a new UTF16 string internally.
+                                                                              
+                               
+                                                               
+                                                                         
+                                                              
+                                                                            
+                                                                              
+                                                                               
+                                                                             
+                                                                          
+                                             
 class StringBuilder {
-  /// Handle to the StringPrimitive we are constructing.
+                                                        
   MutableHandle<StringPrimitive> strPrim_;
 
-  /// Current appending index.
+                              
   uint32_t index_;
 
-  /// The runtime. We need this in the rare case when we have to create a new
-  /// string when we append UTF16 string into an ASCII string.
+                                                                             
+                                                              
   Runtime *runtime_;
 
  public:
@@ -53,31 +53,31 @@ class StringBuilder {
     return StringBuilder(runtime, crtRes->getString());
   }
 
-  /// Number of characters accumulated in the StringBuilder so far.
+                                                                   
   uint32_t currentLength() const {
     return index_;
   }
 
-  /// The length this StringBuilder was constructed with. The max length doesn't
-  /// ever change.
+                                                                                
+                  
   uint32_t maxLength() const {
     return strPrim_->getStringLength();
   }
 
-  /// Append an UTF16Ref \p str. Note that str should not point to a GC-managed
-  /// memory, as this function in theory can allocate.
+                                                                               
+                                                      
   void appendUTF16Ref(UTF16Ref str) {
     assert(
         index_ + str.size() <= strPrim_->getStringLength() &&
         "StringBuilder append out of bound");
     if (LLVM_UNLIKELY((*strPrim_)->isASCII())) {
-      // If we are appending a UTF16 string to an ASCII, we have to recreate
-      // the string. This can cause performance issues if misused.
-      // The allocation can fail in theory, but in practice, since we are
-      // dropping one string and replace it with another, this should be safe.
+                                                                            
+                                                                  
+                                                                         
+                                                                              
       auto strRes = runtime_->ignoreAllocationFailure(
           StringPrimitive::create(
-              *runtime_, strPrim_->getStringLength(), /*asciiNotUTF16*/ false));
+              *runtime_, strPrim_->getStringLength(),                   false));
       auto currentPartialString =
           ASCIIRef(strPrim_->castToASCIIPointer(), index_);
       strPrim_ = strRes.getString();
@@ -109,7 +109,7 @@ class StringBuilder {
     index_ += ascii.size();
   }
 
-  /// Append a char16_t character \p ch.
+                                        
   void appendCharacter(char16_t ch) {
     assert(
         index_ + 1 <= strPrim_->getStringLength() &&
@@ -118,8 +118,8 @@ class StringBuilder {
       if (ch < 128) {
         strPrim_->castToASCIIPointerForWrite()[index_++] = ch;
       } else {
-        // Reuse the implementation of appendUTF16Ref, which will trigger
-        // allocating a new UTF16 string.
+                                                                         
+                                         
         appendUTF16Ref(ch);
       }
     } else {
@@ -127,7 +127,7 @@ class StringBuilder {
     }
   }
 
-  /// Append the first \p length characters from StringPrimitive \p other.
+                                                                          
   void appendStringPrim(Handle<StringPrimitive> other, uint32_t length) {
     assert(
         index_ + length <= strPrim_->getStringLength() &&
@@ -137,27 +137,27 @@ class StringBuilder {
     } else if (!strPrim_->isASCII()) {
       appendUTF16Ref({other->castToUTF16Pointer(), length});
     } else {
-      // strPrim_ is ASCII, while other is UTF16. We have to recreate string.
+                                                                             
       auto strRes = runtime_->ignoreAllocationFailure(
           StringPrimitive::create(
-              *runtime_, strPrim_->getStringLength(), /*asciiNotUTF16*/ false));
+              *runtime_, strPrim_->getStringLength(),                   false));
       auto currentPartialString =
           ASCIIRef(strPrim_->castToASCIIPointer(), index_);
-      // Set strPrim_ to the newly created string.
+                                                  
       strPrim_ = strRes.getString();
       index_ = 0;
-      // Append original string and other.
+                                          
       appendASCIIRef(currentPartialString);
       appendUTF16Ref({other->castToUTF16Pointer(), length});
     }
   }
 
-  /// Append all characters from StringPrimitive \p other.
+                                                          
   void appendStringPrim(Handle<StringPrimitive> other) {
     return appendStringPrim(other, other->getStringLength());
   }
 
-  /// After appending finished, return the StringPrimitive.
+                                                           
   Handle<StringPrimitive> getStringPrimitive() const {
     assert(
         index_ == strPrim_->getStringLength() &&
@@ -170,7 +170,7 @@ class StringBuilder {
       : strPrim_(runtime, strPrim), index_(0), runtime_(&runtime) {}
 };
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
 #endif

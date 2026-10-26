@@ -18,8 +18,8 @@ Handle<JSObject> createTextEncoderConstructor(Runtime &runtime) {
   auto textEncoderPrototype =
       Handle<JSObject>::vmcast(&runtime.textEncoderPrototype);
 
-  // Per https://webidl.spec.whatwg.org/#javascript-binding, @@toStringTag
-  // should be writable=false, enumerable=false, and configurable=true.
+                                                                          
+                                                                       
   DefinePropertyFlags dpf = DefinePropertyFlags::getNewNonEnumerableFlags();
   dpf.writable = 0;
   defineProperty(
@@ -29,10 +29,10 @@ Handle<JSObject> createTextEncoderConstructor(Runtime &runtime) {
       runtime.getPredefinedStringHandle(Predefined::TextEncoder),
       dpf);
 
-  // Based on
-  // Object.getOwnPropertyDescriptor(TextEncoder.prototype, 'encoding'), both
-  // Chrome and Safari have the 'encoding' property as enumerable and
-  // configurable. We set things up to be the same.
+             
+                                                                             
+                                                                     
+                                                   
   defineAccessor(
       runtime,
       textEncoderPrototype,
@@ -40,8 +40,8 @@ Handle<JSObject> createTextEncoderConstructor(Runtime &runtime) {
       nullptr,
       textEncoderPrototypeEncoding,
       nullptr,
-      /* enumerable */ true,
-      /* configurable */ true);
+                       true,
+                         true);
 
   defineMethod(
       runtime,
@@ -152,9 +152,9 @@ textEncoderPrototypeEncode(void *, Runtime &runtime, NativeArgs args) {
   }
   Handle<StringPrimitive> string = runtime.makeHandle(std::move(*strRes));
 
-  // If input string is empty, then the function can return early. This also
-  // avoids having to check later before calling std::memcpy to avoid undefined
-  // behavior.
+                                                                            
+                                                                               
+              
   if (LLVM_UNLIKELY(string->getStringLength() == 0)) {
     auto result = Uint8Array::allocate(runtime);
     if (LLVM_UNLIKELY(result == ExecutionStatus::EXCEPTION)) {
@@ -164,8 +164,8 @@ textEncoderPrototypeEncode(void *, Runtime &runtime, NativeArgs args) {
   }
 
   if (string->isASCII()) {
-    // ASCII string can trivially be converted to UTF-8 because ASCII is a
-    // strict subset.
+                                                                          
+                     
     auto result = Uint8Array::allocate(runtime, string->getStringLength());
     if (LLVM_UNLIKELY(result == ExecutionStatus::EXCEPTION)) {
       return ExecutionStatus::EXCEPTION;
@@ -178,7 +178,7 @@ textEncoderPrototypeEncode(void *, Runtime &runtime, NativeArgs args) {
         typedArray->begin(runtime), strRef.data(), string->getStringLength());
     return typedArray.getHermesValue();
   } else {
-    // Convert UTF-16 to UTF-8
+                              
     llvh::ArrayRef<char16_t> strRef = string->getStringRef<char16_t>();
     std::string converted;
     bool success = convertUTF16ToUTF8WithReplacements(converted, strRef);
@@ -243,9 +243,9 @@ textEncoderPrototypeEncodeInto(void *, Runtime &runtime, NativeArgs args) {
     numRead = 0;
     numWritten = 0;
   } else if (string->isASCII()) {
-    // ASCII string can trivially be converted to UTF-8 because ASCII is a
-    // strict subset. However, since the output array size is provided by the
-    // caller, we will only copy as much length as provided.
+                                                                          
+                                                                             
+                                                            
     llvh::ArrayRef<char> strRef = string->getStringRef<char>();
 
     uint32_t copiedLength =
@@ -256,7 +256,7 @@ textEncoderPrototypeEncodeInto(void *, Runtime &runtime, NativeArgs args) {
     numRead = copiedLength;
     numWritten = copiedLength;
   } else {
-    // Convert UTF-16 to the given Uint8Array
+                                             
     llvh::ArrayRef<char16_t> strRef = string->getStringRef<char16_t>();
     std::pair<uint32_t, uint32_t> result =
         convertUTF16ToUTF8BufferWithReplacements(
@@ -267,8 +267,8 @@ textEncoderPrototypeEncodeInto(void *, Runtime &runtime, NativeArgs args) {
     numWritten = result.second;
   }
 
-  // Construct the result JSObject containing information about how much data
-  // was converted
+                                                                             
+                  
   auto numReadHandle =
       runtime.makeHandle(HermesValue::encodeTrustedNumberValue(numRead));
   auto numWrittenHandle =
@@ -297,5 +297,5 @@ textEncoderPrototypeEncodeInto(void *, Runtime &runtime, NativeArgs args) {
   return obj.getHermesValue();
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

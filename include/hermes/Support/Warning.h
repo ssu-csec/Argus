@@ -14,8 +14,8 @@
 
 namespace hermes {
 
-/// Categories of warnings the compiler might emit, that can be turned on or
-/// off.
+                                                                            
+        
 enum class Warning {
 #define WARNING_CATEGORY_HIDDEN(name, specifier, description) name,
 #include "hermes/Support/Warnings.def"
@@ -23,14 +23,14 @@ enum class Warning {
   _NumWarnings,
 };
 
-} // namespace hermes
+}                    
 
 namespace llvh {
 
 using hermes::Warning;
 
-/// Information to store a \p Warning as the key of a \p DenseMap or \p
-/// DensetSet
+                                                                       
+             
 template <>
 struct DenseMapInfo<Warning> {
   using Underlying = std::underlying_type<Warning>::type;
@@ -53,6 +53,6 @@ struct DenseMapInfo<Warning> {
   }
 };
 
-} // namespace llvh
+}                  
 
-#endif // HERMES_SUPPORT_SOURCEERRORMANAGER_H
+#endif                                       

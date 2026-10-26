@@ -17,8 +17,8 @@ namespace vm {
 
 #ifdef HERMES_SLOW_DEBUG
 
-/// An acceptor for checking that the heap is full of valid objects, with
-/// pointers to valid objects.
+                                                                         
+                              
 struct CheckHeapWellFormedAcceptor final : public RootAndSlotAcceptorDefault,
                                            public WeakAcceptorDefault {
   using RootAndSlotAcceptorDefault::accept;
@@ -38,7 +38,7 @@ struct CheckHeapWellFormedAcceptor final : public RootAndSlotAcceptorDefault,
 
 #endif
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
 #endif

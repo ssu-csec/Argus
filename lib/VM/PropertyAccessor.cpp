@@ -29,5 +29,5 @@ HermesValue PropertyAccessor::create(
   return HermesValue::encodeObjectValue(cell);
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

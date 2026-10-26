@@ -15,13 +15,13 @@
 #include "llvh/Config/config.h"
 #include "llvh/Support/ErrorHandling.h"
 
-//===----------------------------------------------------------------------===//
-//=== WARNING: Implementation here must contain only TRULY operating system
-//===          independent code.
-//===----------------------------------------------------------------------===//
+                                                                                
+                                                                           
+                                
+                                                                                
 
 #if !defined(LLVM_ENABLE_THREADS) || LLVM_ENABLE_THREADS == 0
-// Define all methods as no-ops if threading is explicitly disabled
+                                                                   
 namespace llvh {
 using namespace sys;
 MutexImpl::MutexImpl( bool recursive) { }
@@ -41,39 +41,39 @@ bool MutexImpl::tryacquire() { return true; }
 namespace llvh {
 using namespace sys;
 
-// Construct a Mutex using pthread calls
+                                        
 MutexImpl::MutexImpl( bool recursive)
   : data_(nullptr)
 {
-  // Declare the pthread_mutex data structures
+                                              
   pthread_mutex_t* mutex =
     static_cast<pthread_mutex_t*>(safe_malloc(sizeof(pthread_mutex_t)));
 
   pthread_mutexattr_t attr;
 
-  // Initialize the mutex attributes
+                                    
   int errorcode = pthread_mutexattr_init(&attr);
   assert(errorcode == 0); (void)errorcode;
 
-  // Initialize the mutex as a recursive mutex, if requested, or normal
-  // otherwise.
+                                                                       
+               
   int kind = ( recursive  ? PTHREAD_MUTEX_RECURSIVE : PTHREAD_MUTEX_NORMAL );
   errorcode = pthread_mutexattr_settype(&attr, kind);
   assert(errorcode == 0);
 
-  // Initialize the mutex
+                         
   errorcode = pthread_mutex_init(mutex, &attr);
   assert(errorcode == 0);
 
-  // Destroy the attributes
+                           
   errorcode = pthread_mutexattr_destroy(&attr);
   assert(errorcode == 0);
 
-  // Assign the data member
+                           
   data_ = mutex;
 }
 
-// Destruct a Mutex
+                   
 MutexImpl::~MutexImpl()
 {
   pthread_mutex_t* mutex = static_cast<pthread_mutex_t*>(data_);

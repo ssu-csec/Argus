@@ -1,4 +1,4 @@
-# Determine if the compiler has GCC-compatible command-line syntax.
+                                                                   
 
 if(NOT DEFINED LLVM_COMPILER_IS_GCC_COMPATIBLE)
   if(CMAKE_COMPILER_IS_GNUCXX)

@@ -16,9 +16,9 @@
 
 namespace hermes {
 
-/// Encapsulates POSIX semaphore support across platform.
-/// Apple does not support unamed semaphore so we will use named semaphore.
-/// Android does not support named semaphore so use unamed semaphore instead.
+                                                         
+                                                                           
+                                                                             
 class Semaphore {
  private:
 #ifdef __APPLE__
@@ -28,31 +28,31 @@ class Semaphore {
 #endif
 
  private:
-  /// \return the raw semaphore pointer.
+                                        
   sem_t *getSemaphorePtr();
 
  public:
-  /// Initialize an unnamed OS semaphore.
-  /// \p semaphorePrefix is used to create a temporary named semaphore if
-  /// unnamed semaphores are not supported on target platform. It must be a
-  /// valid semaphore name (see
-  /// https://man7.org/linux/man-pages/man7/sem_overview.7.html), which will be
-  /// suffixed with the thread ID to ensure the created semaphore is not
-  /// accessible from other any other thread.
+                                         
+                                                                         
+                                                                           
+                               
+                                                                               
+                                                                        
+                                             
   bool open(const char *semaphorePrefix);
 
-  /// Destory the underlying OS semaphore.
+                                          
   bool close();
 
-  /// Notify one thread blocked on this semaphore to wait up.
+                                                             
   bool notifyOne();
 
-  /// Wait to be notified.
+                          
   bool wait();
 };
 
-} // namespace hermes
+}                    
 
-#endif // _WINDOWS
+#endif            
 
-#endif // HERMES_SUPPORT_SEMAPHORE_H
+#endif                              

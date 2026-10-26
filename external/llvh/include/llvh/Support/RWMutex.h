@@ -21,69 +21,69 @@
 namespace llvh {
 namespace sys {
 
-    /// Platform agnostic RWMutex class.
+                                        
     class RWMutexImpl
     {
-    /// @name Constructors
-    /// @{
+                          
+          
     public:
 
-      /// Initializes the lock but doesn't acquire it.
-      /// Default Constructor.
+                                                      
+                              
       explicit RWMutexImpl();
 
-    /// @}
-    /// @name Do Not Implement
-    /// @{
+          
+                              
+          
       RWMutexImpl(const RWMutexImpl & original) = delete;
       RWMutexImpl &operator=(const RWMutexImpl &) = delete;
-    /// @}
+          
 
-      /// Releases and removes the lock
-      /// Destructor
+                                       
+                    
       ~RWMutexImpl();
 
-    /// @}
-    /// @name Methods
-    /// @{
+          
+                     
+          
     public:
 
-      /// Attempts to unconditionally acquire the lock in reader mode. If the
-      /// lock is held by a writer, this method will wait until it can acquire
-      /// the lock.
-      /// @returns false if any kind of error occurs, true otherwise.
-      /// Unconditionally acquire the lock in reader mode.
+                                                                             
+                                                                              
+                   
+                                                                     
+                                                          
       bool reader_acquire();
 
-      /// Attempts to release the lock in reader mode.
-      /// @returns false if any kind of error occurs, true otherwise.
-      /// Unconditionally release the lock in reader mode.
+                                                      
+                                                                     
+                                                          
       bool reader_release();
 
-      /// Attempts to unconditionally acquire the lock in reader mode. If the
-      /// lock is held by any readers, this method will wait until it can
-      /// acquire the lock.
-      /// @returns false if any kind of error occurs, true otherwise.
-      /// Unconditionally acquire the lock in writer mode.
+                                                                             
+                                                                         
+                           
+                                                                     
+                                                          
       bool writer_acquire();
 
-      /// Attempts to release the lock in writer mode.
-      /// @returns false if any kind of error occurs, true otherwise.
-      /// Unconditionally release the lock in write mode.
+                                                      
+                                                                     
+                                                         
       bool writer_release();
 
-    //@}
-    /// @name Platform Dependent Data
-    /// @{
+        
+                                     
+          
     private:
 #if defined(LLVM_ENABLE_THREADS) && LLVM_ENABLE_THREADS != 0
-      void* data_ = nullptr; ///< We don't know what the data will be
+      void* data_ = nullptr;                                         
 #endif
     };
 
-    /// SmartMutex - An R/W mutex with a compile time constant parameter that
-    /// indicates whether this mutex should become a no-op when we're not
-    /// running in multithreaded mode.
+                                                                             
+                                                                         
+                                      
     template<bool mt_only>
     class SmartRWMutex {
       RWMutexImpl impl;
@@ -99,8 +99,8 @@ namespace sys {
         if (!mt_only || llvm_is_multithreaded())
           return impl.reader_acquire();
 
-        // Single-threaded debugging code.  This would be racy in multithreaded
-        // mode, but provides not sanity checks in single threaded mode.
+                                                                               
+                                                                        
         ++readers;
         return true;
       }
@@ -109,8 +109,8 @@ namespace sys {
         if (!mt_only || llvm_is_multithreaded())
           return impl.reader_release();
 
-        // Single-threaded debugging code.  This would be racy in multithreaded
-        // mode, but provides not sanity checks in single threaded mode.
+                                                                               
+                                                                        
         assert(readers > 0 && "Reader lock not acquired before release!");
         --readers;
         return true;
@@ -120,8 +120,8 @@ namespace sys {
         if (!mt_only || llvm_is_multithreaded())
           return impl.writer_acquire();
 
-        // Single-threaded debugging code.  This would be racy in multithreaded
-        // mode, but provides not sanity checks in single threaded mode.
+                                                                               
+                                                                        
         assert(writers == 0 && "Writer lock already acquired!");
         ++writers;
         return true;
@@ -131,8 +131,8 @@ namespace sys {
         if (!mt_only || llvm_is_multithreaded())
           return impl.writer_release();
 
-        // Single-threaded debugging code.  This would be racy in multithreaded
-        // mode, but provides not sanity checks in single threaded mode.
+                                                                               
+                                                                        
         assert(writers == 1 && "Writer lock not acquired before release!");
         --writers;
         return true;
@@ -141,7 +141,7 @@ namespace sys {
 
     typedef SmartRWMutex<false> RWMutex;
 
-    /// ScopedReader - RAII acquisition of a reader lock
+                                                        
     template<bool mt_only>
     struct SmartScopedReader {
       SmartRWMutex<mt_only>& mutex;
@@ -157,7 +157,7 @@ namespace sys {
 
     typedef SmartScopedReader<false> ScopedReader;
 
-    /// ScopedWriter - RAII acquisition of a writer lock
+                                                        
     template<bool mt_only>
     struct SmartScopedWriter {
       SmartRWMutex<mt_only>& mutex;
@@ -173,7 +173,7 @@ namespace sys {
 
     typedef SmartScopedWriter<false> ScopedWriter;
 
-} // end namespace sys
-} // end namespace llvh
+}                     
+}                      
 
-#endif // LLVM_SUPPORT_RWMUTEX_H
+#endif                          

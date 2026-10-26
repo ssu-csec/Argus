@@ -26,9 +26,9 @@ HermesValue SerializedLiteralParser::get(Runtime &) {
   leftInSeq_--;
   elemsLeft_--;
 
-  // Passing the nullptr instead of a RuntimeModule signifies that
-  // the generator is generating object key values, and that it should
-  // just return the StringID rather than find a String Primitive.
+                                                                  
+                                                                      
+                                                                  
   switch (lastTag_) {
     case SLG::ByteStringTag: {
       uint8_t val = llvh::support::endian::read<uint8_t, 1>(
@@ -79,5 +79,5 @@ HermesValue SerializedLiteralParser::get(Runtime &) {
   llvm_unreachable("No other valid tag");
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

@@ -15,7 +15,7 @@ namespace hbc {
 
 class LowerBuiltinCallsContext;
 
-/// Context encapsulating data shared inside the HBC backend.
+                                                             
 class BackendContext {
   BackendContext();
 
@@ -27,7 +27,7 @@ class BackendContext {
   std::shared_ptr<LowerBuiltinCallsContext> lowerBuiltinCallsContext;
 };
 
-} // namespace hbc
-} // namespace hermes
+}                 
+}                    
 
-#endif // HERMES_BCGEN_HBC_BACKENDCONTEXT_H
+#endif                                     

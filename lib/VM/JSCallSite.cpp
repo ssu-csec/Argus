@@ -122,8 +122,8 @@ CallResult<HermesValue> JSCallSite::getLineNumber(
     if (location) {
       return HermesValue::encodeUntrustedNumberValue(location->line);
     } else {
-      // Add 1 to the CJSModuleOffset to account for 1-based indexing of
-      // symbolication tools.
+                                                                        
+                             
       return HermesValue::encodeUntrustedNumberValue(
           sti->codeBlock->getRuntimeModule()->getBytecode()->getSegmentID() +
           1);
@@ -239,12 +239,12 @@ const StackTraceInfo *JSCallSite::getStackTraceInfo(
       stacktrace &&
       "The Error associated with this CallSite has already released its "
       "stack trace vector");
-  // Returning a pointer to stacktrace elements is safe because:
-  //   1. stacktrace's ownership is managed (indirectly) by selfHandle (i.e.,
-  //      the CallSite object); and
-  //   2. stacktrace is not modified after it is created.
+                                                                
+                                                                             
+                                   
+                                                         
   return &stacktrace->at(selfHandle->stackFrameIndex_);
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

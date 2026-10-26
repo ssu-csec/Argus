@@ -15,6 +15,6 @@ enum class NativeErrorTypes : unsigned char {
 #include "NativeErrorTypes.def"
 };
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_FRONTENDDEFS_NATIVEERRORTYPES_H
+#endif                                          

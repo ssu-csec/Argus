@@ -27,31 +27,31 @@
 #endif
 
 #if (defined(__linux__) || defined(__ANDROID__)) && defined(__aarch64__)
-/* On Linux on ARM64 we most likely have at least 39 bits of virtual address
- * space https://github.com/torvalds/linux/blob/v6.7/arch/arm64/Kconfig#L1262 If
- * our mmap hint is above 2**39 it will likely fail. */
+                                                                            
+                                                                                
+                                                       
 #define MAX_ADDR_HINT 0x37FFFFFFFF
 #elif defined(__APPLE__) && defined(__aarch64__)
-/* On ios/arm64 assume we have at least 39 bits of virtual address space  (
- * similar to linux on arm64). This should be true for all iOS versions >=14
- * (https://github.com/golang/go/issues/46860), older versions <14 are
- * unsupported. Note that the effective addressable space might vary, depending
- * on apps entitelmnets as well as various other factors, hence we go for a
- * conservative 39 bit address space limit, which is sufficient for most
- * applications and should be good enough for this purpose.
- */
+                                                                           
+                                                                            
+                                                                      
+                                                                               
+                                                                           
+                                                                        
+                                                           
+   
 #define MAX_ADDR_HINT 0x37FFFFFFFF
 #elif (defined(__linux__) || defined(__ANDROID__)) && defined(__amd64__)
 #define MAX_ADDR_HINT 0x3FFFFFFFFFFF
 #elif defined(_WIN64)
-/* On Windows use a 37 bit address space limit as this is the lowest
- * configuration for Windows Home
- * https://learn.microsoft.com/en-us/windows/win32/memory/memory-limits-for-windows-releases
- */
+                                                                    
+                                 
+                                                                                            
+   
 #define MAX_ADDR_HINT 0x1FFFFFFFFF
 #else
-/* For other non-explicitly listed configuration, be extra conservative and use
- * a 32 bit address space limit. */
+                                                                               
+                                   
 #define MAX_ADDR_HINT 0xFFFFFFFF
 #endif
 
@@ -72,9 +72,9 @@ char *alignAlloc(void *p) {
 void *getMmapHint() {
   uintptr_t addr = std::random_device()();
   if constexpr (sizeof(uintptr_t) >= 8) {
-    // std::random_device() yields an unsigned int, so combine two.
+                                                                   
     addr = (addr << 32) | std::random_device()();
-    // Don't use the entire address space, to ensure this is a valid address.
+                                                                             
     addr &= MAX_ADDR_HINT;
   }
   return alignAlloc(reinterpret_cast<void *>(addr));
@@ -142,16 +142,16 @@ class MallocStorageProvider final : public StorageProvider {
   void deleteStorageImpl(void *storage) override;
 
  private:
-  /// Map aligned starts to actual starts for freeing.
-  /// NOTE: Since this is only used for debugging purposes, and it is rare to
-  /// create and delete storage, it's ok to use a map.
+                                                      
+                                                                             
+                                                      
   llvh::DenseMap<void *, void *> lowLimToAllocHandle_;
 };
 
 llvh::ErrorOr<void *> VMAllocateStorageProvider::newStorageImpl(
     const char *name) {
   assert(AlignedStorage::size() % oscompat::page_size() == 0);
-  // Allocate the space, hoping it will be the correct alignment.
+                                                                 
   auto result = oscompat::vm_allocate_aligned(
       AlignedStorage::size(), AlignedStorage::size(), getMmapHint());
   if (!result) {
@@ -164,7 +164,7 @@ llvh::ErrorOr<void *> VMAllocateStorageProvider::newStorageImpl(
   oscompat::vm_hugepage(mem, AlignedStorage::size());
 #endif
 
-  // Name the memory region on platforms that support naming.
+                                                             
   oscompat::vm_name(mem, AlignedStorage::size(), name);
   return mem;
 }
@@ -177,7 +177,7 @@ void VMAllocateStorageProvider::deleteStorageImpl(void *storage) {
 }
 
 llvh::ErrorOr<void *> MallocStorageProvider::newStorageImpl(const char *name) {
-  // name is unused, can't name malloc memory.
+                                              
   (void)name;
   void *mem = checkedMalloc2(AlignedStorage::size(), 2u);
   void *lowLim = alignAlloc(mem);
@@ -194,24 +194,24 @@ void MallocStorageProvider::deleteStorageImpl(void *storage) {
   lowLimToAllocHandle_.erase(storage);
 }
 
-} // namespace
+}             
 
 StorageProvider::~StorageProvider() {
   assert(numLiveAllocs() == 0);
 }
 
-/* static */
+            
 std::unique_ptr<StorageProvider> StorageProvider::mmapProvider() {
   return std::unique_ptr<StorageProvider>(new VMAllocateStorageProvider);
 }
 
-/* static */
+            
 std::unique_ptr<StorageProvider> StorageProvider::contiguousVAProvider(
     size_t size) {
   return std::make_unique<ContiguousVAStorageProvider>(size);
 }
 
-/* static */
+            
 std::unique_ptr<StorageProvider> StorageProvider::mallocProvider() {
   return std::unique_ptr<StorageProvider>(new MallocStorageProvider);
 }
@@ -243,11 +243,11 @@ vmAllocateAllowLess(size_t sz, size_t minSz, size_t alignment) {
   assert(minSz != 0 && "Minimum size must not be zero");
   assert(sz == llvh::alignTo(sz, alignment));
   assert(minSz == llvh::alignTo(minSz, alignment));
-  // Try fractions of the requested size, down to the minimum.
-  // We'll do it by eighths.
-  assert(sz >= 8); // Since sz is page-aligned, safe assumption.
+                                                              
+                            
+  assert(sz >= 8);                                              
   const size_t increment = sz / 8;
-  // Store the result for the case where all attempts fail.
+                                                           
   llvh::ErrorOr<void *> result{std::error_code{}};
   while (sz >= minSz) {
     result = oscompat::vm_allocate_aligned(sz, alignment, getMmapHint());
@@ -258,7 +258,7 @@ vmAllocateAllowLess(size_t sz, size_t minSz, size_t alignment) {
       return std::make_pair(result.get(), sz);
     }
     if (sz < increment || sz == minSz) {
-      // Would either underflow or can't reduce any lower.
+                                                          
       break;
     }
     sz = std::max(
@@ -284,5 +284,5 @@ size_t StorageProvider::numLiveAllocs() const {
   return numSucceededAllocs_ - numDeletedAllocs_;
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

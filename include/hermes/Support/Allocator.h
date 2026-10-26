@@ -24,49 +24,49 @@
 #endif
 namespace hermes {
 
-/// A slab based BumpPtrAllocator where the pointer can be saved and restored.
+                                                                              
 class BacktrackingBumpPtrAllocator {
  private:
-  /// The size of slabs we allocate.
-  // For lazy parsing, we don't need to be efficient for huge amounts of huge
-  // allocations or tiny amounts of tiny allocations. Just relevant amounts of
-  // AST subtrees. Therefore, we just use a fixed size instead of growing it.
+                                    
+                                                                             
+                                                                              
+                                                                             
   static const unsigned SlabSize = 256 << 10;
 
-  /// The default memory alignment.
+                                   
   static const unsigned kDefaultPlatformAlignment = sizeof(double);
 
-  /// A slab of memory that can be allocated.
+                                             
   struct Slab {
     char data[SlabSize];
   };
-  /// The currently allocated slabs in order.
+                                             
   std::vector<std::unique_ptr<Slab>> slabs_{};
 
-  /// The state of a scope, specifically the current bump pointer position and
-  /// any extra allocations.
+                                                                              
+                            
   class State {
    public:
-    /// The currently used slab.
+                                
     unsigned slab;
-    /// The current offset within the slab.
+                                           
     uintptr_t offset;
-    /// A place to store allocations that can't fit into the slabs, if any.
+                                                                           
     llvh::SmallVector<std::unique_ptr<void, decltype(free) *>, 0> hugeAllocs{};
-    /// The state of the previous scope.
+                                        
     State *previous;
 
-    /// Construct a new scope shadowing a previous one.
+                                                       
     State(State *previous)
         : slab(previous->slab), offset(previous->offset), previous(previous) {}
-    /// Construct the initial scope.
+                                    
     State() : slab(0), offset(0), previous(nullptr) {}
   };
 
-  /// The current state of the bump pointer.
+                                            
   State *state_;
 
-  /// Allocate memory that can't fit within a single slab.
+                                                          
   void *allocateHuge(size_t size) {
     auto *ptr = checkedMalloc(size);
     state_->hugeAllocs.push_back(
@@ -74,13 +74,13 @@ class BacktrackingBumpPtrAllocator {
     return ptr;
   }
 
-  /// Align an offset from a base pointer.
+                                          
   static uintptr_t
   alignOffset(uintptr_t base, uintptr_t offset, uintptr_t alignment) {
     return llvh::alignTo(base + offset, alignment) - base;
   }
 
-  /// Allocate a size in a new slab. This is the Allocate slow path.
+                                                                    
   void *allocateNewSlab(size_t size, size_t alignment = sizeof(double));
 
  public:
@@ -93,26 +93,26 @@ class BacktrackingBumpPtrAllocator {
       popScope();
   }
 
-  /// Create and push a new scope on the stack. All allocations made after this
-  /// can be unallocated with a corresponding popScope().
+                                                                               
+                                                         
   void pushScope() {
     state_ = new State(state_);
   }
 
-  /// Remove all allocations since the last pushScope().
+                                                        
   void popScope() {
     assert(state_ && "No previous allocation scope pushed");
     auto *top = state_;
     state_ = state_->previous;
     delete top;
-    // We could also clean up unnecessary slabs, but we're likely to need
-    // then again so don't bother.
+                                                                         
+                                  
   }
 
-  /// Allocate space for N elements of type T.
+                                              
   template <typename T>
   inline T *Allocate(size_t num = 1, size_t alignment = sizeof(double)) {
-    // Calculate the maximum value for num that will not overflow.
+                                                                  
     constexpr size_t maxNum = std::numeric_limits<size_t>::max() / sizeof(T);
     if (LLVM_UNLIKELY(num > maxNum))
       hermes_fatal("Allocation size overflow.");
@@ -120,7 +120,7 @@ class BacktrackingBumpPtrAllocator {
     return static_cast<T *>(Allocate(size, alignment));
   }
 
-  /// Allocate \p size bytes of memory.
+                                       
   inline void *Allocate(
       size_t size,
       size_t alignment = kDefaultPlatformAlignment) {
@@ -138,10 +138,10 @@ class BacktrackingBumpPtrAllocator {
   }
 };
 
-/// RAII object for automatically deleting all allocations made in its lifetime.
+                                                                                
 class AllocationScope {
  private:
-  /// The allocator we're creating a scope in.
+                                              
   BacktrackingBumpPtrAllocator &allocator_;
 
  public:
@@ -154,9 +154,9 @@ class AllocationScope {
   }
 };
 
-// To more conveniently replace llvh::BumpPtrAllocator.
+                                                       
 using BumpPtrAllocator = BacktrackingBumpPtrAllocator;
-} // namespace hermes
+}                    
 #pragma GCC diagnostic pop
 
-#endif // HERMES_SUPPORT_ALLOCATOR_H
+#endif                              

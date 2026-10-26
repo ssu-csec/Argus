@@ -21,7 +21,7 @@ constexpr const std::array<char, 64> Base64Chars = {
     'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'};
 
-// A lookup table that map (Base64-encoded) ASCII back to binary.
+                                                                 
 constexpr const std::array<unsigned char, 128> decMap = {
     64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
     64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
@@ -37,15 +37,15 @@ inline bool isWhitespace(T c) {
       c == '\x09' || c == '\x0A' || c == '\x0C' || c == '\x0D' || c == '\x20');
 }
 
-} // namespace
+}             
 
 template <typename T>
 bool base64Encode(llvh::ArrayRef<T> str, StringBuilder &builder) {
   uint64_t strLength = str.size();
 
-  // An implementation of the algorithm at
-  // https://www.rfc-editor.org/rfc/rfc4648#section-4
-  // Adapted from folly's base64Encode implementation.
+                                          
+                                                     
+                                                      
   uint32_t i = 0;
   while ((strLength - i) >= 3) {
     if (str[i] > 0xFF || str[i + 1] > 0xFF || str[i + 2] > 0xFF) {
@@ -80,7 +80,7 @@ bool base64Encode(llvh::ArrayRef<T> str, StringBuilder &builder) {
   uint8_t aaa = aaab >> 2;
   builder.appendCharacter(Base64Chars[aaa]);
 
-  // Duplicating some tail handling to try to do less jumps.
+                                                            
   if (strLength - i == 1) {
     uint8_t b00 = aaab << 4 & 0x3f;
     builder.appendCharacter(Base64Chars[b00]);
@@ -89,7 +89,7 @@ bool base64Encode(llvh::ArrayRef<T> str, StringBuilder &builder) {
     return true;
   }
 
-  // When there are 2 characters left.
+                                      
   assert(strLength - i == 2);
   if (str[i + 1] > 0xFF) {
     return false;
@@ -110,12 +110,12 @@ template bool base64Encode(
 
 template <typename T>
 OptValue<uint32_t> base64DecodeOutputLength(llvh::ArrayRef<T> str) {
-  // Figure out the actual string length after ignoring all whitespaces.
+                                                                        
   uint64_t strLength = 0;
   T lastChar = 0;
   T secondLastChar = 0;
   for (const auto c : str) {
-    // Only increment length if character is not a whitespace
+                                                             
     if (!isWhitespace(c)) {
       strLength++;
       secondLastChar = lastChar;
@@ -125,8 +125,8 @@ OptValue<uint32_t> base64DecodeOutputLength(llvh::ArrayRef<T> str) {
 
   uint32_t numPadding = 0;
   if (strLength % 4 == 0) {
-    // Check to see if the last character or the last 2 characters are the
-    // padding character.
+                                                                          
+                         
     if (strLength > 0 && lastChar == '=') {
       numPadding++;
       if (strLength > 1 && secondLastChar == '=') {
@@ -134,20 +134,20 @@ OptValue<uint32_t> base64DecodeOutputLength(llvh::ArrayRef<T> str) {
       }
     }
   } else if (strLength % 4 == 1) {
-    // If strLength divides by 4 leaving a remainder of 1, then this is for sure
-    // not a valid base64 encoded data because there cannot be 3 '=' padding
-    // characters.
+                                                                                
+                                                                            
+                  
     return llvh::None;
   } else {
-    // Otherwise, the data could be padded with '=' and still be valid. In this
-    // case, the padding characters are not included, but we need to process as
-    // if they are there.
+                                                                               
+                                                                               
+                         
     uint32_t simulatedPadding = 4 - (strLength % 4);
     strLength += simulatedPadding;
     numPadding += simulatedPadding;
   }
 
-  // This shouldn't overflow because the value is guaranteed to be smaller.
+                                                                           
   uint32_t expectedLength = (strLength / 4 * 3) - numPadding;
   if (strLength != 0 && expectedLength == 0) {
     return llvh::None;
@@ -161,9 +161,9 @@ template OptValue<uint32_t> base64DecodeOutputLength(
 
 template <typename T>
 bool base64Decode(llvh::ArrayRef<T> str, StringBuilder &builder) {
-  // Iterate over the trimmed \p str, decode every \c c into a sextet and store
-  // into a buffer \c buf of capacity 32 bits. \c bufSize is maintained to
-  // track how many bits are actually buffered.
+                                                                               
+                                                                          
+                                               
   uint32_t buf = 0;
   uint32_t bufSize = 0;
   for (const auto c : str) {
@@ -175,7 +175,7 @@ bool base64Decode(llvh::ArrayRef<T> str, StringBuilder &builder) {
       return false;
     }
 
-    // Check for '=' in the middle
+                                  
     if (LLVM_UNLIKELY(c == '=')) {
       break;
     }
@@ -185,11 +185,11 @@ bool base64Decode(llvh::ArrayRef<T> str, StringBuilder &builder) {
       return false;
     }
 
-    // Making room for the new sextet.
+                                      
     buf = (buf << 6) + sextet;
     bufSize += 6;
 
-    // Once buffer is filled over a byte, evacuate a byte to the output.
+                                                                        
     if (bufSize >= 8) {
       char16_t decodedChar = (buf >> (bufSize - 8)) & 0xFF;
       builder.appendCharacter(decodedChar);
@@ -205,5 +205,5 @@ template bool base64Decode(
     llvh::ArrayRef<char16_t> str,
     StringBuilder &builder);
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

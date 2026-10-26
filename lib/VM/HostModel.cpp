@@ -12,8 +12,8 @@
 namespace hermes {
 namespace vm {
 
-//===----------------------------------------------------------------------===//
-// class FinalizableNativeFunction
+                                                                                
+                                  
 
 const CallableVTable FinalizableNativeFunction::vt{
     {
@@ -116,5 +116,5 @@ CallResult<HermesValue> HostObject::createWithoutPrototype(
   return JSObjectInit::initToHermesValue(runtime, hostObj);
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

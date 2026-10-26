@@ -25,7 +25,7 @@ namespace vm {
 class Debugger;
 struct InterpreterState;
 
-/// Commands that can be sent to the debugger.
+                                              
 enum class DebugCommandType { NONE, CONTINUE, STEP, EVAL };
 
 struct CreateBreakpointArgs {
@@ -35,17 +35,17 @@ struct CreateBreakpointArgs {
 };
 
 struct PrintVarsArgs {
-  /// Index of the call stack frame to print. 0 means the topmost frame.
+                                                                        
   uint32_t frameIdx;
 };
 
 struct EvalArgs {
-  /// Index of the call stack frame in which to eval. 0 means the topmost frame.
+                                                                                
   uint32_t frameIdx;
 };
 
 struct StepArgs {
-  /// Stepping mode.
+                    
   ::facebook::hermes::debugger::StepMode mode;
 };
 
@@ -56,7 +56,7 @@ struct DebugCommand {
     StepArgs stepArgs;
   };
 
-  /// A generic string argument, whose interpretation is command dependent.
+                                                                           
   std::string text = {};
 
   DebugCommand(DebugCommandType type) : type(type) {}
@@ -83,8 +83,8 @@ struct DebugCommand {
   }
 };
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
 #endif
 

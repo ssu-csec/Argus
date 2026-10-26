@@ -21,5 +21,5 @@ std::unique_ptr<JSLibStorage> createJSLibStorage() {
 JSLibStorage::JSLibStorage() = default;
 JSLibStorage::~JSLibStorage() = default;
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

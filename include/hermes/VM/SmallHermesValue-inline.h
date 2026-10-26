@@ -30,7 +30,7 @@ void SmallHermesValueAdaptor::setInGC(SmallHermesValueAdaptor hv, GC &gc) {
   HermesValue::setInGC(hv, gc);
 }
 
-#else // #ifndef HERMESVM_ALLOW_COMPRESSED_POINTERS
+#else                                              
 
 void HermesValue32::setInGC(HermesValue32 hv, GC &gc) {
   setNoBarrier(hv);
@@ -94,13 +94,13 @@ double HermesValue32::getNumber(PointerBase &pb) const {
   return vmcast<BoxedDouble>(getPointer(pb))->get();
 }
 
-/* static */ HermesValue32 HermesValue32::encodeHermesValue(
+             HermesValue32 HermesValue32::encodeHermesValue(
     HermesValue hv,
     Runtime &runtime) {
 #ifdef HERMESVM_SANITIZE_HANDLES
-  // When Handle-SAN is on, make a double so that this function always
-  // allocates. Note we can't do this for pointer values since they would get
-  // invalidated.
+                                                                      
+                                                                             
+                 
   if (!hv.isPointer())
     encodeNumberValue(0.0, runtime);
 #endif
@@ -133,10 +133,10 @@ double HermesValue32::getNumber(PointerBase &pb) const {
   }
 }
 
-/* static */ HermesValue32 HermesValue32::encodeNumberValue(
+             HermesValue32 HermesValue32::encodeNumberValue(
     double d,
     Runtime &runtime) {
-  // Always box values when Handle-SAN is on so we can catch any mistakes.
+                                                                          
 #ifndef HERMESVM_SANITIZE_HANDLES
   const SmiType i = doubleToSmi(d);
   if (LLVM_LIKELY(llvh::DoubleToBits(d) == llvh::DoubleToBits(i)))
@@ -146,7 +146,7 @@ double HermesValue32::getNumber(PointerBase &pb) const {
       BoxedDouble::create(d, runtime), Tag::BoxedDouble, runtime);
 }
 
-/* static */ HermesValue32 HermesValue32::encodeObjectValue(
+             HermesValue32 HermesValue32::encodeObjectValue(
     GCCell *ptr,
     PointerBase &pb) {
   assert(
@@ -155,10 +155,10 @@ double HermesValue32::getNumber(PointerBase &pb) const {
   return encodePointerImpl(ptr, Tag::Object, pb);
 }
 
-#endif // #ifndef HERMESVM_ALLOW_COMPRESSED_POINTERS
+#endif                                              
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 #pragma GCC diagnostic pop
 
-#endif // HERMES_VM_SMALLHERMESVALUE_INLINE_H
+#endif                                       

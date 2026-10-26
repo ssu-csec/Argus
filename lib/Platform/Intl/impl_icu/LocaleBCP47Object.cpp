@@ -31,10 +31,10 @@ std::optional<LocaleBCP47Object> LocaleBCP47Object::forLanguageTag(
   return instance;
 }
 
-// https://tc39.es/ecma402/#sec-canonicalizelocalelist
-// Implementation Note: Rather than returning a vector of canonicalized locale
-// strings, return a vector of LocaleBCP47Object instead so they don't need to
-// be parsed again later in resolveLocale() and supportedLocalesOf() functions.
+                                                      
+                                                                              
+                                                                              
+                                                                               
 vm::CallResult<std::vector<LocaleBCP47Object>>
 LocaleBCP47Object::canonicalizeLocaleList(
     vm::Runtime &runtime,
@@ -51,8 +51,8 @@ LocaleBCP47Object::canonicalizeLocaleList(
     auto canonicalizedLocale = localeBcp47ObjectOpt->getCanonicalizedLocaleId();
     if (canonicalizedLocalesSeen.find(canonicalizedLocale) ==
         canonicalizedLocalesSeen.end()) {
-      // Have not seen this canonicalized locale.
-      // Add to seen set and result vector.
+                                                 
+                                           
       canonicalizedLocalesSeen.insert(std::move(canonicalizedLocale));
       result.push_back(std::move(*localeBcp47ObjectOpt));
     }
@@ -96,6 +96,6 @@ std::u16string LocaleBCP47Object::getBaseName(
   return result;
 }
 
-} // namespace impl_icu
-} // namespace platform_intl
-} // namespace hermes
+}                      
+}                           
+}                    

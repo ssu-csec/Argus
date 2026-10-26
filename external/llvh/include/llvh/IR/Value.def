@@ -12,11 +12,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-// NOTE: NO INCLUDE GUARD DESIRED!
+                                  
 
-// Provide definitions of macros so that users of this file do not have to
-// define everything to use it...
-//
+                                                                          
+                                 
+  
 #if !(defined HANDLE_GLOBAL_VALUE || defined HANDLE_CONSTANT ||                \
       defined HANDLE_INSTRUCTION || defined HANDLE_INLINE_ASM_VALUE ||         \
       defined HANDLE_METADATA_VALUE || defined HANDLE_VALUE ||                 \
@@ -56,10 +56,10 @@
 #define HANDLE_CONSTANT_MARKER(MarkerName, ValueName)
 #endif
 
-// Having constant first makes the range check for isa<Constant> faster
-// and smaller by one operation.
+                                                                       
+                                
 
-// Constant
+           
 HANDLE_GLOBAL_VALUE(Function)
 HANDLE_GLOBAL_VALUE(GlobalAlias)
 HANDLE_GLOBAL_VALUE(GlobalIFunc)
@@ -67,12 +67,12 @@ HANDLE_GLOBAL_VALUE(GlobalVariable)
 HANDLE_CONSTANT(BlockAddress)
 HANDLE_CONSTANT(ConstantExpr)
 
-// ConstantAggregate.
+                     
 HANDLE_CONSTANT(ConstantArray)
 HANDLE_CONSTANT(ConstantStruct)
 HANDLE_CONSTANT(ConstantVector)
 
-// ConstantData.
+                
 HANDLE_CONSTANT(UndefValue)
 HANDLE_CONSTANT(ConstantAggregateZero)
 HANDLE_CONSTANT(ConstantDataArray)
@@ -96,16 +96,16 @@ HANDLE_VALUE(BasicBlock)
 HANDLE_METADATA_VALUE(MetadataAsValue)
 HANDLE_INLINE_ASM_VALUE(InlineAsm)
 
-// FIXME: It's awkward that Value.def knows about classes in Analysis. While
-// this doesn't introduce a strict link or include dependency, we should remove
-// the circular dependency eventually.
+                                                                            
+                                                                               
+                                      
 HANDLE_MEMORY_VALUE(MemoryUse)
 HANDLE_MEMORY_VALUE(MemoryDef)
 HANDLE_MEMORY_VALUE(MemoryPhi)
 
 HANDLE_INSTRUCTION(Instruction)
-// Enum values starting at InstructionVal are used for Instructions;
-// don't add new values here!
+                                                                    
+                             
 
 #undef HANDLE_MEMORY_VALUE
 #undef HANDLE_GLOBAL_VALUE

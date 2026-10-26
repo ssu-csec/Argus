@@ -18,8 +18,8 @@ namespace hermes {
 namespace {
 using namespace hermes::ESTree;
 
-/// Pair of (callee, kind) where calling the callee with a string argument
-/// results in a dependency of the kind.
+                                                                          
+                                        
 struct ResourceCallee {
   llvh::StringLiteral callee;
   DependencyKind kind;
@@ -27,7 +27,7 @@ struct ResourceCallee {
       : callee(callee), kind(kind) {}
 };
 
-/// All the resource callees which can result in a dependency.
+                                                              
 static constexpr ResourceCallee RESOURCE_CALLEES[] = {
     {"__jsResource", DependencyKind::Resource},
     {"__conditionallySplitJSResource", DependencyKind::Resource},
@@ -39,14 +39,14 @@ static constexpr ResourceCallee RESOURCE_CALLEES[] = {
 static constexpr uint32_t NUM_RESOURCE_CALLEES =
     sizeof(RESOURCE_CALLEES) / sizeof(RESOURCE_CALLEES[0]);
 
-/// Visitor for extracting dependencies from a given node.
-/// Reports errors on encountering nodes which should introduce dependencies
-/// but are malformed.
+                                                          
+                                                                            
+                      
 class DependencyExtractor {
-  /// Storage for the extracted dependencies.
+                                             
   std::vector<Dependency> deps_{};
 
-  /// SourceErrorManager for reporting errors, e.g. for invalid require() calls.
+                                                                                
   SourceErrorManager &sm_;
 
   UniqueString *requireIdent_;
@@ -55,19 +55,19 @@ class DependencyExtractor {
   UniqueString *requireActualIdent_;
   UniqueString *requireMockIdent_;
 
-  /// Store the RESOURCE_CALLEES uniqued for quick comparison in a loop.
+                                                                        
   UniqueString *resourceIdents_[NUM_RESOURCE_CALLEES];
 
   UniqueString *graphqlIdent_;
-  /// Bytecode for the regex that detects dependencies in GraphQL template
-  /// literals.
+                                                                          
+               
   std::vector<uint8_t> graphqlQueryRegexBytecode_;
 
 #if HERMES_PARSE_JSX
-  /// Set to true when we have already found an registered a JSX dependency
-  /// for this file.
+                                                                           
+                    
   bool foundJSX_{false};
-#endif // HERMES_PARSE_JSX
+#endif                    
 
  public:
   DependencyExtractor(Context &astContext)
@@ -89,20 +89,20 @@ class DependencyExtractor {
     return deps_;
   }
 
-  /// Perform the extraction on whole AST.
+                                          
   void doIt(Node *rootNode) {
     visitESTreeNode(*this, rootNode);
   }
 
-  /// A dummy implementation of the AST stack overflow protocol.
+                                                                
   bool incRecursionDepth(Node *) const {
     return true;
   }
-  /// A dummy implementation of the AST stack overflow protocol.
+                                                                
   void decRecursionDepth() const {}
 
-  /// Stub which catches all nodes we don't need to directly extract
-  /// dependencies from.
+                                                                    
+                        
   void visit(Node *node) {
     visitESTreeChildren(*this, node);
   }
@@ -110,13 +110,13 @@ class DependencyExtractor {
   void visit(ImportDeclarationNode *node) {
     auto *source = llvh::cast<StringLiteralNode>(node->_source);
 
-    // Whether there was an import of a value.
+                                              
     bool hasValue = false;
 
-    // Whether there was an import of a type.
+                                             
     bool hasType = false;
 
-    // Check top-level import kind.
+                                   
     if (node->_importKind->str() == "value") {
       hasValue = true;
     } else {
@@ -124,8 +124,8 @@ class DependencyExtractor {
     }
 
     for (Node &child : node->_specifiers) {
-      // Use dyn_cast because there can also be ImportDefaultSpecifier or
-      // ImportNamespaceSpecifier here.
+                                                                         
+                                       
       if (auto *spec = llvh::dyn_cast<ImportSpecifierNode>(&child)) {
         if (spec->_importKind->str() == "value") {
           hasValue = true;
@@ -173,8 +173,8 @@ class DependencyExtractor {
   }
 
   void visit(CallExpressionLikeNode *node) {
-    // CallExpressionLike-based dependencies will need the first argument to be
-    // a string indicating the source.
+                                                                               
+                                      
     auto *callee = getCallee(node);
     if (auto *ident = llvh::dyn_cast<IdentifierNode>(callee)) {
       if (ident->_name == requireIdent_) {
@@ -233,16 +233,16 @@ class DependencyExtractor {
     registerJSXDependencies();
     visitESTreeChildren(*this, node);
   }
-#endif // HERMES_PARSE_JSX
+#endif                    
 
  private:
-  /// Perform any postprocessing on \p name (e.g. removing "m#" at the start)
-  /// and add the {name, kind} pair to the list of extracted dependencies.
+                                                                             
+                                                                          
   void addDependency(llvh::StringRef name, DependencyKind kind) {
     name.consume_front("m#");
     switch (kind) {
       case DependencyKind::GraphQL:
-        // GraphQL dependencies require a .graphql appended to them.
+                                                                    
         deps_.push_back(Dependency{llvh::Twine(name, ".graphql").str(), kind});
         break;
       default:
@@ -251,8 +251,8 @@ class DependencyExtractor {
     }
   }
 
-  /// \return the first argument to \p node if it is a string literal.
-  ///   Else, report an error to sm_ and return nullptr.
+                                                                      
+                                                        
   StringLiteralNode *needFirstStringArgument(CallExpressionLikeNode *node) {
     NodeList &args = getArguments(node);
     if (args.empty()) {
@@ -271,8 +271,8 @@ class DependencyExtractor {
     return first;
   }
 
-  /// Run the graphqlQueryRegexBytecode_ against the contents of \p elem,
-  /// and add any matches to the dependency list.
+                                                                         
+                                                 
   void registerGraphQLDependencies(TemplateElementNode *elem) {
     if (!elem->_cooked)
       return;
@@ -285,8 +285,8 @@ class DependencyExtractor {
   }
 
 #if HERMES_PARSE_JSX
-  /// If we have not seen JSX before, add the relevant JSX dependencies to the
-  /// dependency list, and set foundJSX_ so we don't duplicate entries.
+                                                                              
+                                                                       
   void registerJSXDependencies() {
     if (foundJSX_)
       return;
@@ -294,10 +294,10 @@ class DependencyExtractor {
     addDependency("react/jsx-runtime", DependencyKind::ESM);
     addDependency("react/jsx-dev-runtime", DependencyKind::ESM);
   }
-#endif // HERMES_PARSE_JSX
+#endif                    
 };
 
-} // namespace
+}             
 
 std::vector<Dependency> extractDependencies(Context &astContext, Node *node) {
   DependencyExtractor extract{astContext};
@@ -305,4 +305,4 @@ std::vector<Dependency> extractDependencies(Context &astContext, Node *node) {
   return std::move(extract.getDeps());
 }
 
-} // namespace hermes
+}                    

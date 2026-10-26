@@ -83,13 +83,13 @@ CallResult<Handle<SymbolID>> IdentifierTable::getSymbolHandleFromPrimitive(
     PseudoHandle<StringPrimitive> str) {
   assert(str && "null string primitive");
   if (str->isUniqued()) {
-    // If the string was already uniqued, we can return directly.
+                                                                 
     SymbolID id = str->getUniqueID();
     symbolReadBarrier(id.unsafeGetIndex());
     return runtime.makeHandle(id);
   }
   auto handle = runtime.makeHandle(std::move(str));
-  // Force the string primitive to flatten if it's a rope.
+                                                          
   handle = StringPrimitive::ensureFlat(runtime, handle);
   auto cr = handle->isASCII()
       ? getOrCreateIdentifier(runtime, handle->castToASCIIRef(), handle)
@@ -105,20 +105,20 @@ StringPrimitive *IdentifierTable::getStringPrim(Runtime &runtime, SymbolID id) {
     return entry.getStringPrimRef();
   }
 
-  // This is a lazy identifier, since a string primitive is requested, we must
-  // materialize it.
+                                                                              
+                    
   return materializeLazyIdentifier(runtime, id);
 }
 
 StringView IdentifierTable::getStringView(Runtime &runtime, SymbolID id) const {
   auto &entry = getLookupTableEntry(id);
   if (entry.isStringPrim()) {
-    // The const_cast is a mechanical requirement as it's not worth it to
-    // add const version constructors for Handle.
+                                                                         
+                                                 
     Handle<StringPrimitive> handle{
         runtime, const_cast<StringPrimitive *>(entry.getStringPrim())};
-    // We know that this string already exists in the identifier table,
-    // and hence it's safe to call the const version of getStringView.
+                                                                       
+                                                                      
     return StringPrimitive::createStringViewMustBeFlat(handle);
   }
   if (entry.isLazyASCII()) {
@@ -164,7 +164,7 @@ std::string IdentifierTable::convertSymbolToUTF8(SymbolID id) {
   } else {
     llvm_unreachable("Invalid symbol given");
   }
-  // To avoid compiler warnings.
+                                
   return "";
 }
 
@@ -226,7 +226,7 @@ void IdentifierTable::snapshotAddEdges(HeapSnapshot &snap) {
       GCBase::IDTracker::reserved(
           GCBase::IDTracker::ReservedObjectID::IdentifierTableMarkedSymbols));
 }
-#endif // HERMES_MEMORY_INSTRUMENTATION
+#endif                                 
 
 void IdentifierTable::visitIdentifiers(
     const std::function<void(SymbolID, const StringPrimitive *)> &acceptor) {
@@ -272,8 +272,8 @@ IdentifierTable::allocateDynamicString(
         LongLived::Yes>(
         DynamicStringPrimitive<T, Unique>::allocationSize((uint32_t)length),
         length);
-    // Since we keep a raw pointer to mem, no more JS heap allocations after
-    // this point.
+                                                                            
+                  
     NoAllocScope _(runtime);
     if (primHandle) {
       str = primHandle->getStringRef<T>();
@@ -286,10 +286,10 @@ IdentifierTable::allocateDynamicString(
 }
 
 void IdentifierTable::symbolReadBarrier(uint32_t id) {
-  // Set the mark bool inside the symbol table entry so that this symbol isn't
-  // garbage collected.
-  // The reason this exists is that a Symbol can be retrieved via a string hash
-  // that doesn't otherwise keep the symbol alive while in the middle of a GC.
+                                                                              
+                       
+                                                                               
+                                                                              
   markedSymbols_.set(id);
 }
 
@@ -301,9 +301,9 @@ uint32_t IdentifierTable::allocIDAndInsert(
   assert(lookupVector_[nextId].isFreeSlot() && "Allocated a non-free slot");
   strPrim->convertToUniqued(symbolId);
 
-  // We must assign strPrim to the lookupVector before inserting to
-  // hashTable_, because inserting to hashTable_ could trigger a grow/rehash,
-  // which requires accessing the newly inserted string primitive.
+                                                                   
+                                                                             
+                                                                  
   new (&lookupVector_[nextId]) LookupEntry(strPrim);
 
   hashTable_.insert(hashTableIndex, symbolId);
@@ -332,25 +332,25 @@ CallResult<SymbolID> IdentifierTable::getOrCreateIdentifier(
   if (hashTable_.isValid(idx)) {
     NoAllocScope scope{runtime};
     const auto id = hashTable_.get(idx);
-    // Read barrier here because a symbol value is getting read out of the hash
-    // map.
+                                                                               
+           
     symbolReadBarrier(id);
     return SymbolID::unsafeCreate(id);
   }
 
-  // It is tempting here to check whether the incoming StringPrimitive can be
-  // uniqued, and use it instead of allocating a new one. The problem is that
-  // identifiers must always be allocated in "long-lived" memory, but we don't
-  // (yet) have a way of checking whether that is the case. If in the future we
-  // did get that GC API, the check would look something like this:
-  // \code
-  // if (maybeIncomingPrimHandle &&
-  //     LLVM_UNLIKELY(maybeIncomingPrimHandle->canBeUniqued()) &&
-  //     runtime.getHeap().isLongLived(*maybeIncomingPrimHandle)) {
-  //   return SymbolID::unsafeCreate(
-  //       allocIDAndInsert(idx, maybeIncomingPrimHandle.get()));
-  // }
-  // \endcode
+                                                                             
+                                                                             
+                                                                              
+                                                                               
+                                                                   
+          
+                                   
+                                                                  
+                                                                   
+                                     
+                                                                 
+      
+             
 
   CallResult<PseudoHandle<StringPrimitive>> cr =
       allocateDynamicString(runtime, str, maybeIncomingPrimHandle);
@@ -358,8 +358,8 @@ CallResult<SymbolID> IdentifierTable::getOrCreateIdentifier(
     return ExecutionStatus::EXCEPTION;
   }
 
-  // Allocate the id after we have performed memory allocations because a GC
-  // would have freed id.
+                                                                            
+                         
   return SymbolID::unsafeCreate(allocIDAndInsert(idx, cr->get()));
 }
 
@@ -379,7 +379,7 @@ StringPrimitive *IdentifierTable::getExistingStringPrimitiveOrNullWithHash(
   if (!hashTable_.isValid(idx)) {
     return nullptr;
   }
-  // Use a handle since getStringPrim may need to materialize the string.
+                                                                         
   const auto id = hashTable_.get(idx);
   symbolReadBarrier(id);
   Handle<SymbolID> sym(runtime, SymbolID::unsafeCreate(id));
@@ -392,7 +392,7 @@ SymbolID IdentifierTable::registerLazyIdentifierImpl(
     uint32_t hash) {
   auto idx = hashTable_.lookupString(str, hash);
   if (hashTable_.isValid(idx)) {
-    // If the string is already in the table, return it.
+                                                        
     const auto id = hashTable_.get(idx);
     symbolReadBarrier(id);
     return SymbolID::unsafeCreate(id);
@@ -414,9 +414,9 @@ StringPrimitive *IdentifierTable::materializeLazyIdentifier(
   auto &entry = getLookupTableEntry(id);
   assert(
       (entry.isLazyASCII() || entry.isLazyUTF16()) && "identifier is not lazy");
-  // This in theory can throw if running out of memory. However there are only
-  // finite number of persistent identifiers, and we should always have enough
-  // memory to hold them.
+                                                                              
+                                                                              
+                         
   PseudoHandle<StringPrimitive> strPrim = runtime.ignoreAllocationFailure(
       entry.isLazyASCII() ? allocateDynamicString(
                                 runtime,
@@ -453,7 +453,7 @@ void IdentifierTable::freeSymbol(uint32_t index) {
 }
 
 uint32_t IdentifierTable::allocNextID() {
-  // If the free list is empty, grow the array.
+                                               
   if (firstFreeID_ == LookupEntry::FREE_LIST_END) {
     uint32_t newID = lookupVector_.size();
     if (LLVM_UNLIKELY(newID > LookupEntry::MAX_IDENTIFIER)) {
@@ -463,12 +463,12 @@ uint32_t IdentifierTable::allocNextID() {
     markedSymbols_.push_back(true);
     LLVM_DEBUG(
         llvh::dbgs() << "Allocated new symbol id at end " << newID << "\n");
-    // Don't need to tell the GC about this ID, it will assume any growth is
-    // live.
+                                                                            
+            
     return newID;
   }
 
-  // Allocate from the free list.
+                                 
   uint32_t nextId = firstFreeID_;
   auto &entry = getLookupTableEntry(nextId);
   assert(entry.isFreeSlot() && "firstFreeID_ is not a free slot");
@@ -483,7 +483,7 @@ void IdentifierTable::freeID(uint32_t id) {
       lookupVector_[id].isStringPrim() &&
       "The specified symbol cannot be freed");
 
-  // Add the freed index to the free list.
+                                          
   lookupVector_[id].free(firstFreeID_);
   firstFreeID_ = id;
   LLVM_DEBUG(llvh::dbgs() << "Freeing ID " << id << "\n");
@@ -503,19 +503,19 @@ void IdentifierTable::freeUnmarkedSymbols(
       markedSymbols_.size() == lookupVector_.size() &&
       "Size of markedSymbols_ must be the same as the lookupVector");
   markedSymbols_ |= markedSymbols;
-  // Flip and find set bits, which will correspond to symbols that weren't
-  // marked.
+                                                                          
+            
   markedSymbols_.flip();
   const bool hasTrackedObjectIDs = tracker.hasTrackedObjectIDs();
   const uint32_t markedSymbolsSize = markedSymbols.size();
   for (const uint32_t i : markedSymbols_.set_bits()) {
-    // Don't check any bits after the passed-in bits, which represent the number
-    // of symbols alive at the start of the collection.
+                                                                                
+                                                       
     if (i >= markedSymbolsSize) {
       break;
     }
-    // We never free StringPrimitives that are materialized from a lazy
-    // identifier.
+                                                                       
+                  
     if (lookupVector_[i].isNonLazyStringPrim()) {
       if (hasTrackedObjectIDs) {
         tracker.untrackSymbol(i);
@@ -529,7 +529,7 @@ void IdentifierTable::freeUnmarkedSymbols(
 #ifdef HERMES_SLOW_DEBUG
 bool IdentifierTable::isSymbolLive(SymbolID id) const {
   auto &entry = getLookupTableEntry(id);
-  // If the entry is not a free slot, then it is live.
+                                                      
   return !entry.isFreeSlot();
 }
 
@@ -550,28 +550,29 @@ SymbolID IdentifierTable::createNotUniquedLazySymbol(ASCIIRef desc) {
 
 CallResult<SymbolID> IdentifierTable::createNotUniquedSymbol(
     Runtime &runtime,
-    Handle<StringPrimitive> desc) {
+    Handle<StringPrimitive> desc, bool descriptionUndefined) {
   uint32_t nextID = allocNextID();
 
   if (runtime.getHeap().inYoungGen(desc.get())) {
-    // Need to reallocate in the old gen if the description is in the young gen.
+                                                                                
     CallResult<PseudoHandle<StringPrimitive>> longLivedStr = desc->isASCII()
-        ? allocateDynamicString<char, /* Unique */ false>(
+        ? allocateDynamicString<char,              false>(
               runtime, desc->castToASCIIRef(), desc)
-        : allocateDynamicString<char16_t, /* Unique */ false>(
+        : allocateDynamicString<char16_t,              false>(
               runtime, desc->castToUTF16Ref(), desc);
-    // Since we keep a raw pointer to mem, no more JS heap allocations after
-    // this point.
+                                                                            
+                  
     NoAllocScope _(runtime);
     if (LLVM_UNLIKELY(longLivedStr == ExecutionStatus::EXCEPTION)) {
       return ExecutionStatus::EXCEPTION;
     }
     new (&lookupVector_[nextID]) LookupEntry(longLivedStr->get(), true);
   } else {
-    // Description is already in the old gen, just point to it.
+                                                               
     new (&lookupVector_[nextID]) LookupEntry(*desc, true);
   }
 
+  lookupVector_[nextID].symbolDescriptionUndefined_ = descriptionUndefined;
   return SymbolID::unsafeCreateNotUniqued(nextID);
 }
 
@@ -586,7 +587,7 @@ llvh::raw_ostream &operator<<(llvh::raw_ostream &OS, SymbolID symbolID) {
               << symbolID.unsafeGetIndex() << ")";
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
 #undef DEBUG_TYPE

@@ -53,7 +53,7 @@ PerfSection::PerfSection(const char *name, const char *category)
 void PerfSection::addArg(const char *argName, size_t value) {
   if (!enabled_)
     return;
-  // Note that if the argument has already been set, we overwrite it.
+                                                                     
   freeDataIfExists(argName);
   auto &val = argValues_[argName];
   val.type = ArgType::SIZE_T;
@@ -63,7 +63,7 @@ void PerfSection::addArg(const char *argName, size_t value) {
 void PerfSection::addArgD(const char *argName, double d) {
   if (!enabled_)
     return;
-  // Note that if the argument has already been set, we overwrite it.
+                                                                     
   freeDataIfExists(argName);
   auto &val = argValues_[argName];
   val.type = ArgType::DOUBLE;
@@ -108,28 +108,28 @@ PerfSection::~PerfSection() {
     return;
   }
 
-  // First, transform the ArgValue parts of argValues_ into strings.
+                                                                    
   std::vector<KVPair> kvPairs(argValues_.size());
   std::transform(
       argValues_.begin(),
       argValues_.end(),
       kvPairs.begin(),
       [](const std::pair<std::string, ArgValue> &pair) -> KVPair {
-        // If more elements are added to ArgType, more cases must be added to
-        // this switch.
+                                                                             
+                       
         switch (pair.second.type) {
           case ArgType::SIZE_T: {
             SNPrintfBuf buf(20);
             buf.printf("%zu", pair.second.value.sz_t);
-            // Note that KVPair has std::string elements, so the
-            // c_str() is copied.
+                                                                
+                                 
             return KVPair{pair.first, buf.c_str()};
           }
           case ArgType::DOUBLE: {
             SNPrintfBuf buf(20);
             buf.printf("%f", pair.second.value.d);
-            // Note that KVPair has std::string elements, so the
-            // c_str() is copied.
+                                                                
+                                 
             return KVPair{pair.first, buf.c_str()};
           }
           case ArgType::STRINGREF:
@@ -143,8 +143,8 @@ PerfSection::~PerfSection() {
         }
       });
 #ifdef HERMES_USE_FBSYSTRACE
-  // To output via fbsystrace, we must further translate into
-  // FBSystraceSectionArg format.
+                                                             
+                                 
   auto argArr = std::unique_ptr<FbSystraceSectionArg[]>{
       new FbSystraceSectionArg[argValues_.size()]};
   std::transform(
@@ -182,7 +182,7 @@ PerfSection::~PerfSection() {
   }
 }
 
-} // namespace hermes
+}                    
 
-#endif // defined(HERMES_USE_FBSYSTRACE) ||
-       // defined(HERMESVM_PLATFORM_LOGGING)
+#endif                                     
+                                            

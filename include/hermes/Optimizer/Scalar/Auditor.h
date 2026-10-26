@@ -13,7 +13,7 @@
 
 namespace hermes {
 
-/// Performs simple audits of code quality.
+                                           
 class Auditor : public FunctionPass {
  public:
   explicit Auditor() : FunctionPass("Auditor") {}
@@ -22,6 +22,6 @@ class Auditor : public FunctionPass {
   bool runOnFunction(Function *F) override;
 };
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_OPTIMIZER_SCALAR_AUDITOR_H
+#endif                                     

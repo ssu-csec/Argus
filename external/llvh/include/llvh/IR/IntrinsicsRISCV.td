@@ -13,8 +13,8 @@
 
 let TargetPrefix = "riscv" in {
 
-//===----------------------------------------------------------------------===//
-// Atomics
+                                                                                
+          
 
 class MaskedAtomicRMW32Intrinsic
     : Intrinsic<[llvm_i32_ty],
@@ -36,4 +36,4 @@ def int_riscv_masked_atomicrmw_min_i32  : MaskedAtomicRMW32WithSextIntrinsic;
 def int_riscv_masked_atomicrmw_umax_i32 : MaskedAtomicRMW32Intrinsic;
 def int_riscv_masked_atomicrmw_umin_i32 : MaskedAtomicRMW32Intrinsic;
 
-} // TargetPrefix = "riscv"
+}                          

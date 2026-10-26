@@ -70,7 +70,7 @@ public:
   reference operator*() const { return Value; }
 };
 
-} // end namespace detail
+}                        
 
 template <typename ValueT>
 iterator_range<detail::value_sequence_iterator<ValueT>> seq(ValueT Begin,
@@ -79,6 +79,6 @@ iterator_range<detail::value_sequence_iterator<ValueT>> seq(ValueT Begin,
                     detail::value_sequence_iterator<ValueT>(End));
 }
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_ADT_SEQUENCE_H
+#endif                       

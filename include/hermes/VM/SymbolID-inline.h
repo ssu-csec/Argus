@@ -21,7 +21,7 @@ inline GCSymbolID &GCSymbolID::set(SymbolID sym, GC &gc) {
   return *this;
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMES_VM_SYMBOLID_INLINE_H
+#endif                               

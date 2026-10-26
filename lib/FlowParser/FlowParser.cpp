@@ -54,7 +54,7 @@ class JSONTranslator final
     return factory_.getNull();
   }
   virtual JSONValue *convert_undefined() {
-    // TODO: this probably indicates an error. There is no "undefined" in JSON.
+                                                                               
     errorEncountered_ = true;
     return factory_.getNull();
   }
@@ -71,7 +71,7 @@ class JSONTranslator final
     }
 
     auto *res = factory_.newObject(propList.begin(), propList.end());
-    // In case of failure (caused by duplicate properties), set the error flag.
+                                                                               
     return res ? res : convert_undefined();
   }
 
@@ -88,7 +88,7 @@ class JSONTranslator final
 
  private:
   JSONFactory &factory_;
-  /// Set to true if we encountered an error.
+                                             
   bool errorEncountered_{false};
 };
 
@@ -147,8 +147,8 @@ void dump(llvh::raw_ostream &OS, const JSONValue *jsonValue) {
 }
 #endif
 
-/// Print all recorded errors.
-/// \return true if there were no errors.
+                              
+                                         
 bool printErrors(Context &context, uint32_t bufferId, JSONValue *v) {
   bool haveErrors = false;
 
@@ -198,7 +198,7 @@ bool printErrors(Context &context, uint32_t bufferId, JSONValue *v) {
   return !haveErrors;
 }
 
-} // anonymous namespace
+}                       
 
 llvh::Optional<ESTree::ProgramNode *> parseFlowParser(
     Context &context,
@@ -237,14 +237,14 @@ llvh::Optional<ESTree::ProgramNode *> parseFlowParser(
 
   LLVM_DEBUG(
       hermes::dumpESTreeJSON(
-          llvh::dbgs(), parsed, true /* pretty */, ESTreeDumpMode::HideEmpty));
+          llvh::dbgs(), parsed, true             , ESTreeDumpMode::HideEmpty));
 
   return cast<ESTree::ProgramNode>(parsed);
 }
 
-} // namespace parser
-} // namespace hermes
+}                    
+}                    
 
 #undef DEBUG_TYPE
 
-#endif // HERMES_USE_FLOWPARSER
+#endif                         

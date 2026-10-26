@@ -76,3 +76,8 @@ add_subdirectory(ConsoleHost)
 add_subdirectory(Regex)
 add_subdirectory(Platform)
 add_subdirectory(InternalBytecode)
+
+                                                             
+set_property(SOURCE Optimizer/Taint/CallGraphAnalyzer.cpp APPEND PROPERTY COMPILE_DEFINITIONS "ARGUS_CG_INDEXED=1")
+set_property(SOURCE Optimizer/Taint/DefUseAnalyzer.cpp APPEND PROPERTY COMPILE_OPTIONS "-O2")
+set_property(SOURCE Utils/Dumper.cpp APPEND PROPERTY COMPILE_OPTIONS "-O2")

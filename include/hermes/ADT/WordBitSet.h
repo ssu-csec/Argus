@@ -16,7 +16,7 @@
 
 namespace hermes {
 
-/// A very simple bitset that fits in a single word of the specified type T.
+                                                                            
 template <typename T = uint32_t>
 class WordBitSet {
   T value_{};
@@ -29,45 +29,45 @@ class WordBitSet {
   WordBitSet &operator=(const WordBitSet &) = default;
   ~WordBitSet() = default;
 
-  /// \return true if no bits are set.
+                                      
   bool empty() const {
     return value_ == 0;
   }
 
-  /// Set bit at position \p pos to 1.
+                                      
   WordBitSet &set(unsigned pos) {
     value_ |= (T)1 << pos;
     return *this;
   }
 
-  /// Set bit at position \p pos to 0;
+                                      
   WordBitSet &clear(unsigned pos) {
     value_ &= ~((T)1 << pos);
     return *this;
   }
 
-  /// Return bit at position \p pos.
+                                    
   bool at(unsigned pos) const {
     assert(pos < NUM_BITS && "Invalid index");
     return (value_ & ((T)1 << pos));
   }
 
-  /// Return bit at position \p pos.
+                                    
   bool operator[](unsigned pos) const {
     assert(pos < NUM_BITS && "Invalid index");
     return (value_ & ((T)1 << pos));
   }
 
-  /// \return the index of the first set bit, or -1 if no bit is set.
+                                                                     
   int findFirst() const {
     return !value_ ? -1 : llvh::countTrailingZeros(value_, llvh::ZB_Undefined);
   }
 
-  /// \return the index of the next set bit following \p prev, or -1 if the next
-  /// set bit is not found.
+                                                                                
+                           
   int findNext(int prev) const {
     assert(prev >= 0 && prev < NUM_BITS && "Invalid index");
-    // Do the shift in two steps because (uint32_t >> 32) is UB.
+                                                                
     T tmp = value_ >> prev;
     tmp >>= 1;
     return !tmp ? -1
@@ -122,6 +122,6 @@ class WordBitSet {
   }
 };
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_ADT_WORDBITSET_H
+#endif                           

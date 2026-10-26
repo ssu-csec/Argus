@@ -36,7 +36,7 @@ T *WeakRoot<T>::get(PointerBase &base, GC &gc) const {
   return static_cast<T *>(WeakRootBase::get(base, gc));
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
 #endif

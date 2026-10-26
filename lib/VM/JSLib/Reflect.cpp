@@ -5,12 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//===----------------------------------------------------------------------===//
-/// \file
-/// ES9 21.1 The Reflect Object
-//===----------------------------------------------------------------------===//
+                                                                                
+         
+                               
+                                                                                
 #include "JSLibInternal.h"
 #include "Object.h"
+#include "hermes/VM/ArrayLike.h"
+#include "hermes/VM/StackFrame-inline.h"
 
 namespace hermes {
 namespace vm {
@@ -68,52 +70,38 @@ reflectConstruct(void *, Runtime &runtime, NativeArgs args) {
     return runtime.raiseTypeError("target arguments is not an object");
   }
 
-  MutableHandle<JSObject> prototype{runtime};
-
-  if (newTarget) {
-    CallResult<PseudoHandle<>> ntProtoRes = JSObject::getNamed_RJS(
-        newTarget, runtime, Predefined::getSymbolID(Predefined::prototype));
-    if (LLVM_UNLIKELY(ntProtoRes == ExecutionStatus::EXCEPTION)) {
-      return ExecutionStatus::EXCEPTION;
-    }
-    prototype = PseudoHandle<JSObject>::dyn_vmcast(std::move(*ntProtoRes));
-  }
-  if (!prototype) {
-    // If newTarget.prototype is not an object, then we need to
-    // use a built-in-specific intrinsicDefaultPrototype in
-    // OrdinaryCreateFromConstructor (es9 9.1.13).  We don't have
-    // this directly available.  However, target.prototype has the
-    // right value for builtins, and the prototype property is
-    // non-configurable and non-writable for all of them (enforced
-    // in Callable::defineNameLengthAndPrototype).  So if
-    // newTarget.prototype is not an object, we fall back to using
-    // target.prototype.
-    CallResult<PseudoHandle<>> tProtoRes = JSObject::getNamed_RJS(
-        target, runtime, Predefined::getSymbolID(Predefined::prototype));
-    if (LLVM_UNLIKELY(tProtoRes == ExecutionStatus::EXCEPTION)) {
-      return ExecutionStatus::EXCEPTION;
-    }
-    prototype = PseudoHandle<JSObject>::dyn_vmcast(std::move(*tProtoRes));
-    if (!prototype) {
-      // If all else fails, use %ObjectPrototype%
-      prototype = runtime.objectPrototypeRawPtr;
-    }
-  }
-  assert(prototype && "prototype was never set");
-  CallResult<PseudoHandle<JSObject>> thisValRes =
-      Callable::newObject(target, runtime, prototype);
-  if (LLVM_UNLIKELY(thisValRes == ExecutionStatus::EXCEPTION)) {
+                                                                  
+                                                                          
+  auto count = getArrayLikeLength_RJS(arguments, runtime);
+  if (count == ExecutionStatus::EXCEPTION)
     return ExecutionStatus::EXCEPTION;
-  }
-
-  Handle<JSObject> thisVal = runtime.makeHandle(std::move(*thisValRes));
-  CallResult<PseudoHandle<>> objRes = Callable::executeCall(
-      target, runtime, newTarget ? newTarget : target, thisVal, arguments);
-  if (LLVM_UNLIKELY(objRes == ExecutionStatus::EXCEPTION)) {
+  if (*count > UINT32_MAX)
+    return runtime.raiseRangeError("Too many constructor arguments");
+  uint32_t n = static_cast<uint32_t>(*count);
+  auto effectiveNewTarget = newTarget ? newTarget : target;
+  ScopedNativeCallFrame frame{
+      runtime, n, target.getHermesValue(), effectiveNewTarget.getHermesValue(),
+      HermesValue::encodeUndefinedValue()};
+  if (frame.overflowed())
+    return runtime.raiseStackOverflow(Runtime::StackOverflowKind::NativeStack);
+  frame.fillArguments(n, HermesValue::encodeUndefinedValue());
+  if (createListFromArrayLike_RJS(
+          arguments, runtime, n,
+          [&frame](Runtime &, uint64_t index, PseudoHandle<> value) {
+            frame->getArgRef(index) = value.getHermesValue();
+            return ExecutionStatus::RETURNED;
+          }) == ExecutionStatus::EXCEPTION)
     return ExecutionStatus::EXCEPTION;
-  }
-  return (*objRes)->isObject() ? objRes.toCallResultHermesValue()
-                               : thisVal.getHermesValue();
+  auto prepared = Callable::prepareThisForConstruct_RJS(
+      target, runtime, effectiveNewTarget);
+  if (prepared == ExecutionStatus::EXCEPTION)
+    return ExecutionStatus::EXCEPTION;
+  auto thisVal = runtime.makeHandle(std::move(*prepared));
+  frame->getThisArgRef() = thisVal.getHermesValue();
+  auto result = Callable::call(target, runtime);
+  if (result == ExecutionStatus::EXCEPTION)
+    return ExecutionStatus::EXCEPTION;
+  return result->get().isObject() ? result->get() : thisVal.getHermesValue();
 }
 
 namespace {
@@ -125,7 +113,7 @@ CallResult<HermesValue> toHV(CallResult<bool> boolRes) {
   return HermesValue::encodeBoolValue(*boolRes);
 }
 
-} // namespace
+}             
 
 CallResult<HermesValue>
 reflectDefineProperty(void *, Runtime &runtime, NativeArgs args) {
@@ -264,7 +252,7 @@ Handle<JSObject> createReflectObject(Runtime &runtime) {
             runtime,
             reflect,
             Predefined::getSymbolID(symID),
-            nullptr /* context */,
+            nullptr              ,
             func,
             count);
       };
@@ -299,5 +287,5 @@ Handle<JSObject> createReflectObject(Runtime &runtime) {
   return reflect;
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

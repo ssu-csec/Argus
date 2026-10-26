@@ -22,8 +22,8 @@ using llvh::SaveAndRestore;
 namespace hermes {
 namespace sem {
 
-//===----------------------------------------------------------------------===//
-// Keywords
+                                                                                
+           
 
 Keywords::Keywords(Context &astContext)
     : identArguments(
@@ -46,8 +46,8 @@ Keywords::Keywords(Context &astContext)
       identMinus(astContext.getIdentifier("-").getUnderlyingPointer()),
       identAssign(astContext.getIdentifier("=").getUnderlyingPointer()) {}
 
-//===----------------------------------------------------------------------===//
-// SemanticValidator
+                                                                                
+                    
 
 SemanticValidator::SemanticValidator(
     Context &astContext,
@@ -67,16 +67,16 @@ bool SemanticValidator::doIt(Node *rootNode) {
 }
 
 bool SemanticValidator::doFunction(Node *function, bool strict) {
-  // Create a wrapper context since a function always assumes there is an
-  // existing context.
+                                                                         
+                      
   FunctionContext wrapperContext(this, strict, nullptr, nullptr);
 
   assert(
       wrapperContext.scopedClosures == nullptr &&
       "current context doesnt have a body, so it shouldn't have closures.");
 
-  // Create a dummy closures array that will contain the closure for \p
-  // function.
+                                                                       
+              
   FunctionInfo::BlockClosures dummyClosures;
   wrapperContext.scopedClosures = &dummyClosures;
   FunctionInfo::BlockDecls dummyDecls;
@@ -122,12 +122,12 @@ void SemanticValidator::visit(MetaPropertyNode *metaProp) {
 
   if (meta->_name->str() == "new" && property->_name->str() == "target") {
     if (curFunction()->isGlobalScope()) {
-      // ES9.0 15.1.1:
-      // It is a Syntax Error if StatementList Contains NewTarget unless the
-      // source code containing NewTarget is eval code that is being processed
-      // by a direct eval.
-      // Hermes does not support local eval, so we assume that this is not
-      // inside a local eval call.
+                      
+                                                                            
+                                                                              
+                          
+                                                                          
+                                  
       sm_.error(metaProp->getSourceRange(), "'new.target' not in a function");
     }
     return;
@@ -158,19 +158,19 @@ void SemanticValidator::visit(IdentifierNode *identifier) {
   }
 }
 
-/// Process a function declaration by creating a new FunctionContext.
+                                                                     
 void SemanticValidator::visit(FunctionDeclarationNode *funcDecl) {
   curFunction()->addHoistingCandidate(funcDecl);
   visitFunction(funcDecl, funcDecl->_id, funcDecl->_params, funcDecl->_body);
 }
 
-/// Process a function expression by creating a new FunctionContext.
+                                                                    
 void SemanticValidator::visit(FunctionExpressionNode *funcExpr) {
   visitFunction(funcExpr, funcExpr->_id, funcExpr->_params, funcExpr->_body);
 }
 
 void SemanticValidator::visit(ArrowFunctionExpressionNode *arrowFunc) {
-  // Convert expression functions to a full-body to simplify IRGen.
+                                                                   
   if (compile_ && arrowFunc->_expression) {
     auto *retStmt = new (astContext_) ReturnStatementNode(arrowFunc->_body);
     retStmt->copyLocationFrom(arrowFunc->_body);
@@ -195,7 +195,7 @@ void SemanticValidator::visit(ArrowFunctionExpressionNode *arrowFunc) {
 }
 
 #if HERMES_PARSE_FLOW
-/// Process a component declaration by creating a new FunctionContext.
+                                                                      
 void SemanticValidator::visit(ComponentDeclarationNode *componentDecl) {
   visitFunction(
       componentDecl,
@@ -203,22 +203,17 @@ void SemanticValidator::visit(ComponentDeclarationNode *componentDecl) {
       componentDecl->_params,
       componentDecl->_body);
 }
-/// Process a hook declaration by creating a new FunctionContext.
+                                                                 
 void SemanticValidator::visit(HookDeclarationNode *hookDecl) {
   visitFunction(hookDecl, hookDecl->_id, hookDecl->_params, hookDecl->_body);
 }
 #endif
 
-/// Ensure that the left side of for-in is an l-value.
+                                                      
 void SemanticValidator::visit(ForInStatementNode *forIn) {
   visitForInOf(forIn, forIn->_left);
 }
 void SemanticValidator::visit(ForOfStatementNode *forOf) {
-  if (compile_ && forOf->_await)
-    sm_.error(
-        forOf->getSourceRange(),
-        "for await..of loops are currently unsupported");
-
   visitForInOf(forOf, forOf->_left);
 }
 
@@ -257,7 +252,7 @@ void SemanticValidator::visitForInOf(LoopStatementNode *loopNode, Node *left) {
 }
 
 void SemanticValidator::visit(BinaryExpressionNode *bin) {
-  // Handle nested +/- non-recursively.
+                                       
   if (bin->_operator == kw_.identPlus || bin->_operator == kw_.identMinus) {
     auto list = linearizeLeft(bin, {"+", "-"});
     if (list.size() > MAX_NESTED_BINARY) {
@@ -275,9 +270,9 @@ void SemanticValidator::visit(BinaryExpressionNode *bin) {
   visitESTreeChildren(*this, bin);
 }
 
-/// Ensure that the left side of assgnments is an l-value.
+                                                          
 void SemanticValidator::visit(AssignmentExpressionNode *assignment) {
-  // Handle nested "=" non-recursively.
+                                       
   if (assignment->_operator == kw_.identAssign) {
     auto list = linearizeRight(assignment, {"="});
     if (list.size() > MAX_NESTED_ASSIGNMENTS) {
@@ -297,9 +292,9 @@ void SemanticValidator::visit(AssignmentExpressionNode *assignment) {
   visitESTreeChildren(*this, assignment);
 }
 
-/// Ensure that the operand of ++/-- is an l-value.
+                                                   
 void SemanticValidator::visit(UpdateExpressionNode *update) {
-  // Check if the left-hand side is valid.
+                                          
   if (!isLValue(update->_argument)) {
     sm_.error(
         update->_argument->getSourceRange(),
@@ -308,14 +303,14 @@ void SemanticValidator::visit(UpdateExpressionNode *update) {
   visitESTreeChildren(*this, update);
 }
 
-/// Declare named labels, checking for duplicates, etc.
+                                                       
 void SemanticValidator::visit(LabeledStatementNode *labelStmt) {
   auto id = cast<IdentifierNode>(labelStmt->_label);
 
   labelStmt->setLabelIndex(curFunction()->allocateLabel());
 
-  // Determine the target statement. We need to check if it directly encloses
-  // a loop or another label enclosing a loop.
+                                                                             
+                                              
   StatementNode *targetStmt = labelStmt;
   {
     LabeledStatementNode *curStmt = labelStmt;
@@ -327,7 +322,7 @@ void SemanticValidator::visit(LabeledStatementNode *labelStmt) {
     } while ((curStmt = dyn_cast<LabeledStatementNode>(curStmt->_body)));
   }
 
-  // Define the new label, checking for a previous definition.
+                                                              
   auto insertRes =
       curFunction()->labelMap.insert({id->_name, {id, targetStmt}});
   if (!insertRes.second) {
@@ -338,7 +333,7 @@ void SemanticValidator::visit(LabeledStatementNode *labelStmt) {
         insertRes.first->second.declarationNode->getSourceRange(),
         "previous definition");
   }
-  // Auto-erase the label on exit, if we inserted it.
+                                                     
   const auto &deleter = llvh::make_scope_exit([=, this]() {
     if (insertRes.second)
       curFunction()->labelMap.erase(id->_name);
@@ -348,7 +343,7 @@ void SemanticValidator::visit(LabeledStatementNode *labelStmt) {
   visitESTreeChildren(*this, labelStmt);
 }
 
-/// Check RegExp syntax.
+                        
 void SemanticValidator::visit(RegExpLiteralNode *regexp) {
   llvh::StringRef regexpError;
   if (compile_) {
@@ -366,7 +361,7 @@ void SemanticValidator::visit(RegExpLiteralNode *regexp) {
 }
 
 void SemanticValidator::validateCatchClause(const Node *catchClause) {
-  // The catch clause is optional, so bail early if it doesn't exist.
+                                                                     
   if (!catchClause) {
     return;
   }
@@ -374,7 +369,7 @@ void SemanticValidator::validateCatchClause(const Node *catchClause) {
   if (!castedCatch) {
     return;
   }
-  // Bail early if there is no identifier in the parameter of the catch.
+                                                                        
   if (!castedCatch->_param ||
       !llvh::isa<ESTree::IdentifierNode>(castedCatch->_param)) {
     return;
@@ -392,29 +387,29 @@ void SemanticValidator::visit(TryStatementNode *tryStatement) {
   if (curFunction()->strictMode) {
     validateCatchClause(tryStatement->_handler);
   }
-  // The catch parameter cannot bind to 'eval' or 'arguments' in strict mode.
-  // A try statement with both catch and finally handlers is technically
-  // two nested try statements. Transform:
-  //
-  //    try {
-  //      tryBody;
-  //    } catch {
-  //      catchBody;
-  //    } finally {
-  //      finallyBody;
-  //    }
-  //
-  // into
-  //
-  //    try {
-  //      try {
-  //        tryBody;
-  //      } catch {
-  //        catchBody;
-  //      }
-  //    } finally {
-  //      finallyBody;
-  //    }
+                                                                             
+                                                                        
+                                          
+    
+             
+                  
+                 
+                    
+                   
+                      
+         
+    
+         
+    
+             
+               
+                    
+                   
+                      
+           
+                   
+                      
+         
   if (compile_ && tryStatement->_handler && tryStatement->_finalizer) {
     auto *nestedTry = new (astContext_)
         TryStatementNode(tryStatement->_block, tryStatement->_handler, nullptr);
@@ -445,6 +440,13 @@ void SemanticValidator::visitTryHandler(TryStatementNode *tryStatement) {
     auto *param = llvh::dyn_cast_or_null<IdentifierNode>(handler->_param);
 
     BlockContext blockScope(this, curFunction(), handler);
+                                                                          
+                                                                             
+    if (handler->_param && !param) {
+      validateDeclarationNames(FunctionInfo::VarDecl::Kind::Let,
+          handler->_param, curFunction()->varDecls, curFunction()->scopedDecls);
+      visitESTreeNode(*this, handler->_param, handler);
+    }
 
     if (auto *block = llvh::dyn_cast<BlockStatementNode>(handler->_body)) {
       for (auto &stmt : block->_body) {
@@ -457,9 +459,9 @@ void SemanticValidator::visitTryHandler(TryStatementNode *tryStatement) {
     blockScope.ensureScopedNamesAreUnique(
         BlockContext::IsFunctionBody::No, param);
 
-    // Delay adding the catch param until now to prevent Syntax Errors if the
-    // handler has a var that with the same ID as the catch param (as specified
-    // in ES2023 B.3.4).
+                                                                             
+                                                                               
+                        
     validateDeclarationNames(
         FunctionInfo::VarDecl::Kind::Let,
         param,
@@ -517,8 +519,8 @@ void SemanticValidator::visit(SwitchStatementNode *switchStmt) {
 
 void SemanticValidator::visit(BreakStatementNode *breakStmt) {
   if (auto id = cast_or_null<IdentifierNode>(breakStmt->_label)) {
-    // A labeled break.
-    // Find the label in the label map.
+                       
+                                       
     auto labelIt = curFunction()->labelMap.find(id->_name);
     if (labelIt != curFunction()->labelMap.end()) {
       auto labelIndex = getLabelDecorationBase(labelIt->second.targetStatement)
@@ -530,7 +532,7 @@ void SemanticValidator::visit(BreakStatementNode *breakStmt) {
           Twine("label '") + id->_name->str() + "' is not defined");
     }
   } else {
-    // Anonymous break.
+                       
     if (curFunction()->activeSwitchOrLoop) {
       auto labelIndex =
           getLabelDecorationBase(curFunction()->activeSwitchOrLoop)
@@ -547,8 +549,8 @@ void SemanticValidator::visit(BreakStatementNode *breakStmt) {
 
 void SemanticValidator::visit(ContinueStatementNode *continueStmt) {
   if (auto id = cast_or_null<IdentifierNode>(continueStmt->_label)) {
-    // A labeled continue.
-    // Find the label in the label map.
+                          
+                                       
     auto labelIt = curFunction()->labelMap.find(id->_name);
     if (labelIt != curFunction()->labelMap.end()) {
       if (isa<LoopStatementNode>(labelIt->second.targetStatement)) {
@@ -571,7 +573,7 @@ void SemanticValidator::visit(ContinueStatementNode *continueStmt) {
           Twine("label '") + id->_name->str() + "' is not defined");
     }
   } else {
-    // Anonymous continue.
+                          
     if (curFunction()->activeLoop) {
       auto labelIndex = curFunction()->activeLoop->getLabelIndex();
       continueStmt->setLabelIndex(labelIndex);
@@ -596,9 +598,9 @@ void SemanticValidator::visit(YieldExpressionNode *yieldExpr) {
         yieldExpr->getSourceRange(), "'yield' not in a generator function");
 
   if (isFormalParams_) {
-    // For generators functions (the only time YieldExpression is parsed):
-    // It is a Syntax Error if UniqueFormalParameters Contains YieldExpression
-    // is true.
+                                                                          
+                                                                              
+               
     sm_.error(
         yieldExpr->getSourceRange(),
         "'yield' not allowed in a formal parameter");
@@ -615,7 +617,7 @@ void SemanticValidator::visit(AwaitExpressionNode *awaitExpr) {
 }
 
 void SemanticValidator::visit(UnaryExpressionNode *unaryExpr) {
-  // Check for unqualified delete in strict mode.
+                                                 
   if (unaryExpr->_operator == kw_.identDelete) {
     if (curFunction()->strictMode &&
         isa<IdentifierNode>(unaryExpr->_argument)) {
@@ -632,11 +634,24 @@ void SemanticValidator::visit(ArrayPatternNode *AP) {
 }
 
 void SemanticValidator::visit(SpreadElementNode *S, Node *parent) {
-  if (!isa<ESTree::ObjectExpressionNode>(parent) &&
+                                                                         
+  bool nativeSuperArgument=false;
+  if(auto *op=dyn_cast<ESTree::NativeClassDefinitionOperationNode>(parent)) {
+    if(op->_operation->str()=="call_super_property" ||
+       op->_operation->str()=="call_super_computed_property") {
+      unsigned index=0;
+      for(auto &arg:op->_arguments) {
+        if(&arg==S && index>=3)nativeSuperArgument=true;
+        ++index;
+      }
+    }
+  }
+  if (!nativeSuperArgument && !isa<ESTree::ObjectExpressionNode>(parent) &&
       !isa<ESTree::ArrayExpressionNode>(parent) &&
       !isa<ESTree::CallExpressionNode>(parent) &&
       !isa<ESTree::OptionalCallExpressionNode>(parent) &&
-      !isa<ESTree::NewExpressionNode>(parent))
+      !isa<ESTree::NewExpressionNode>(parent) &&
+      !isa<ESTree::NativeDerivedSuperOperationNode>(parent))
     sm_.error(S->getSourceRange(), "spread operator is not supported");
   visitESTreeChildren(*this, S);
 }
@@ -663,9 +678,9 @@ void SemanticValidator::visit(ClassPrivatePropertyNode *node) {
   visitESTreeNode(*this, node->_key);
   {
     SaveAndRestore<bool> oldForbidAwait{forbidAwaitExpression_, true};
-    // ES14.0 15.7.1
-    // It is a Syntax Error if Initializer is present and ContainsArguments of
-    // Initializer is true.
+                    
+                                                                              
+                           
     SaveAndRestore<bool> oldForbidArguments{forbidArguments_, true};
     visitESTreeNode(*this, node->_value);
   }
@@ -675,9 +690,9 @@ void SemanticValidator::visit(ClassPropertyNode *node) {
   visitESTreeNode(*this, node->_key);
   {
     SaveAndRestore<bool> oldForbidAwait{forbidAwaitExpression_, true};
-    // ES14.0 15.7.1
-    // It is a Syntax Error if Initializer is present and ContainsArguments of
-    // Initializer is true.
+                    
+                                                                              
+                           
     SaveAndRestore<bool> oldForbidArguments{forbidArguments_, true};
     visitESTreeNode(*this, node->_value);
   }
@@ -686,15 +701,15 @@ void SemanticValidator::visit(ClassPropertyNode *node) {
 void SemanticValidator::visit(StaticBlockNode *node) {
   if (compile_)
     sm_.error(node->getSourceRange(), "class static blocks are not supported");
-  // ES14.0 15.7.1
-  // It is a Syntax Error if ClassStaticBlockStatementList Contains await is
-  // true.
+                  
+                                                                            
+          
   llvh::SaveAndRestore<bool> oldForbidAwait{forbidAwaitExpression_, true};
   visitESTreeChildren(*this, node);
 }
 
 void SemanticValidator::visit(ImportDeclarationNode *importDecl) {
-  // Like variable declarations, imported names must be hoisted.
+                                                                
   if (!astContext_.getTransformCJSModules()) {
     sm_.error(
         importDecl->getSourceRange(),
@@ -711,7 +726,7 @@ void SemanticValidator::visit(ImportDeclarationNode *importDecl) {
 }
 
 void SemanticValidator::visit(ImportDefaultSpecifierNode *importDecl) {
-  // import defaultProperty from 'file.js';
+                                           
   validateDeclarationNames(
       FunctionInfo::VarDecl::Kind::Var,
       importDecl->_local,
@@ -721,7 +736,7 @@ void SemanticValidator::visit(ImportDefaultSpecifierNode *importDecl) {
 }
 
 void SemanticValidator::visit(ImportNamespaceSpecifierNode *importDecl) {
-  // import * as File from 'file.js';
+                                     
   validateDeclarationNames(
       FunctionInfo::VarDecl::Kind::Var,
       importDecl->_local,
@@ -731,8 +746,8 @@ void SemanticValidator::visit(ImportNamespaceSpecifierNode *importDecl) {
 }
 
 void SemanticValidator::visit(ImportSpecifierNode *importDecl) {
-  // import {x as y} as File from 'file.js';
-  // import {x} as File from 'file.js';
+                                            
+                                       
   validateDeclarationNames(
       FunctionInfo::VarDecl::Kind::Var,
       importDecl->_local,
@@ -762,8 +777,8 @@ void SemanticValidator::visit(ExportDefaultDeclarationNode *exportDecl) {
   if (auto *funcDecl =
           dyn_cast<ESTree::FunctionDeclarationNode>(exportDecl->_declaration)) {
     if (compile_ && !funcDecl->_id) {
-      // If the default function declaration has no name, then change it to a
-      // FunctionExpression node for cleaner IRGen.
+                                                                             
+                                                   
       auto *funcExpr = new (astContext_) ESTree::FunctionExpressionNode(
           funcDecl->_id,
           std::move(funcDecl->_params),
@@ -772,7 +787,7 @@ void SemanticValidator::visit(ExportDefaultDeclarationNode *exportDecl) {
           funcDecl->_returnType,
           funcDecl->_predicate,
           funcDecl->_generator,
-          /* async */ false);
+                      false);
       funcExpr->strictness = funcDecl->strictness;
       funcExpr->copyLocationFrom(funcDecl);
 
@@ -827,25 +842,23 @@ void SemanticValidator::visitFunction(
       haveActiveContext() ? curFunction()->sourceVisibility
                           : SourceVisibility::Default};
 
-  if (compile_ && ESTree::isAsync(node) && ESTree::isGenerator(node)) {
-    sm_.error(node->getSourceRange(), "async generators are unsupported");
-  }
+                                                                              
 
-  // It is a Syntax Error if UniqueFormalParameters Contains YieldExpression
-  // is true.
-  // NOTE: isFormalParams_ is reset to false on encountering a new function,
-  // because the semantics for "x Contains y" always return `false` when "x" is
-  // a function definition.
+                                                                            
+             
+                                                                            
+                                                                               
+                           
   llvh::SaveAndRestore<bool> oldIsFormalParamsFn{isFormalParams_, false};
 
   Node *useStrictNode = nullptr;
 
-  // Note that body might me empty (for lazy functions) or an expression (for
-  // arrow functions).
+                                                                             
+                      
   if (auto *bodyNode = dyn_cast<ESTree::BlockStatementNode>(body)) {
     if (bodyNode->isLazyFunctionBody) {
-      // If it is a lazy function body, then the directive nodes in the body are
-      // fabricated without location, so don't set useStrictNode.
+                                                                                
+                                                                 
       scanDirectivePrologue(bodyNode->_body);
     } else {
       useStrictNode = scanDirectivePrologue(bodyNode->_body);
@@ -859,8 +872,8 @@ void SemanticValidator::visitFunction(
 
 #if HERMES_PARSE_FLOW
   if (astContext_.getParseFlow() && !params.empty()) {
-    // Skip 'this' parameter annotation, and error if it's an arrow parameter,
-    // because arrow functions inherit 'this'.
+                                                                              
+                                              
     if (auto *ident = dyn_cast<ESTree::IdentifierNode>(&params.front())) {
       if (ident->_name == kw_.identThis) {
         if (isa<ArrowFunctionExpressionNode>(node)) {
@@ -868,7 +881,7 @@ void SemanticValidator::visitFunction(
               ident->getSourceRange(), "'this' not allowed as parameter name");
         }
         if (compile_) {
-          // Delete the node because it cannot be compiled.
+                                                           
           params.erase(params.begin());
         }
       }
@@ -901,7 +914,7 @@ void SemanticValidator::visitFunction(
         "'use strict' not allowed inside function with non-simple parameter list");
   }
 
-  // Check repeated parameter names when they are supposed to be unique.
+                                                                        
   if (!simpleParameterList || curFunction()->strictMode ||
       isa<ArrowFunctionExpressionNode>(node)) {
     llvh::SmallSet<NodeLabel, 8> paramNameSet;
@@ -916,11 +929,11 @@ void SemanticValidator::visitFunction(
     }
   }
 
-  // 'await' forbidden outside async functions.
+                                               
   llvh::SaveAndRestore<bool> oldForbidAwait{
       forbidAwaitExpression_, !ESTree::isAsync(node)};
-  // Forbidden-ness of 'arguments' passes through arrow functions because they
-  // use the same 'arguments'.
+                                                                              
+                              
   llvh::SaveAndRestore<bool> oldForbidArguments{
       forbidArguments_,
       llvh::isa<ESTree::ArrowFunctionExpressionNode>(node) ? forbidArguments_
@@ -993,13 +1006,13 @@ void SemanticValidator::visitParamsAndBody(FunctionLikeNode *node) {
 
 void SemanticValidator::visitBody(Node *body, FunctionLikeNode *func) {
   if (auto *block = dyn_cast<ESTree::BlockStatementNode>(body)) {
-    // Avoid creating yet another block scope for function declarations like
-    //
-    // (function func() { ... })
-    //                  ^ BlockStatementNode
-    //
-    // In those cases, the scope for the BlockStatementNode is the same as
-    // func's.
+                                                                            
+      
+                                
+                                            
+      
+                                                                          
+              
     for (auto &stmt : block->_body) {
       visitESTreeNode(*this, &stmt, block);
     }
@@ -1052,13 +1065,13 @@ bool SemanticValidator::isLValue(const Node *node) const {
 
   auto *idNode = cast<IdentifierNode>(node);
 
-  /// 'arguments' cannot be modified in strict mode, but we also don't
-  /// support modifying it in non-strict mode yet.
+                                                                      
+                                                  
   if (idNode->_name == kw_.identArguments)
     return false;
 
-  // 'eval' cannot be used as a variable in strict mode. If it is disabled we
-  // we don't report an error because it will be reported separately.
+                                                                             
+                                                                     
   if (idNode->_name == kw_.identEval && curFunction()->strictMode &&
       astContext_.getEnableEval())
     return false;
@@ -1068,12 +1081,12 @@ bool SemanticValidator::isLValue(const Node *node) const {
 
 bool SemanticValidator::isValidDeclarationName(
     const IdentifierNode *idNode) const {
-  // 'arguments' cannot be redeclared in strict mode.
+                                                     
   if (idNode->_name == kw_.identArguments && curFunction()->strictMode)
     return false;
 
-  // 'eval' cannot be redeclared in strict mode. If it is disabled we
-  // we don't report an error because it will be reported separately.
+                                                                     
+                                                                     
   if (idNode->_name == kw_.identEval && curFunction()->strictMode &&
       astContext_.getEnableEval())
     return false;
@@ -1089,14 +1102,14 @@ void SemanticValidator::validateDeclarationNames(
   assert(
       (varIdents || !scopedIdents) &&
       "Variable scope must always be provided if a scoped scope is provided.");
-  // The identifier is sometimes optional, in which case it is valid.
+                                                                     
   if (!node)
     return;
 
   if (auto *idNode = dyn_cast<IdentifierNode>(node)) {
     if (!blockScopingEnabled()) {
-      // Block scoping is disabled, so short-circuit both BlockDecls to use the
-      // var environment.
+                                                                               
+                         
       scopedIdents = varIdents;
     }
     if (varIdents) {
@@ -1117,10 +1130,10 @@ void SemanticValidator::validateDeclarationNames(
 
     if (declKind != FunctionInfo::VarDecl::Kind::Var &&
         idNode->_name == kw_.identLet) {
-      // ES9.0 13.3.1.1
-      // LexicalDeclaration : LetOrConst BindingList
-      // It is a Syntax Error if the BoundNames of BindingList
-      // contains "let".
+                       
+                                                    
+                                                              
+                        
       sm_.error(
           node->getSourceRange(),
           "'let' is disallowed as a lexically bound name");
@@ -1232,12 +1245,12 @@ void SemanticValidator::recursionDepthExceeded(Node *n) {
 void SemanticValidator::reportRedeclaredIdentifier(
     const IdentifierNode &id1,
     const IdentifierNode &id2) {
-  // The redeclared ID is the one that appears later in the source code.
+                                                                        
   const IdentifierNode &redeclaredId = id1.getSourceRange().Start.getPointer() <
           id2.getSourceRange().Start.getPointer()
       ? id2
       : id1;
-  // The original ID is the one that appears first in the source code.
+                                                                      
   const IdentifierNode &originalId = &redeclaredId == &id2 ? id1 : id2;
 
   sm_.error(
@@ -1250,11 +1263,11 @@ void SemanticValidator::reportRedeclaredIdentifier(
   return;
 }
 
-//===----------------------------------------------------------------------===//
-// BlockContext
+                                                                                
+               
 
-/// Helper function that ensures the given \p ptr is not nullptr. If it is,
-/// \p ptr will be initialized to a new \p T. \return \p ptr.
+                                                                           
+                                                             
 template <typename T>
 std::unique_ptr<T> &initializeIfNull(std::unique_ptr<T> &ptr) {
   if (!ptr) {
@@ -1273,21 +1286,21 @@ BlockContext::BlockContext(
       previousScopedClosures_(curFunction_->scopedClosures),
       varDeclaredBegin_(curFunction_->semInfo->varScoped.size()) {
   if (nextScopeNode) {
-    // nextScopeNode is nullptr for lazy compilation's wrapper context -- in
-    // which case there is no need for setting up the block environment.
+                                                                            
+                                                                        
 
     if (!validator->blockScopingEnabled()) {
-      // Block scope is disabled, so short-circuit nextScopeNode to be the
-      // function body (or the Program node if the semantic validator is
-      // currently traversing the global scope). This means all declarations
-      // will be placed in the top-level function/global scope.
+                                                                          
+                                                                        
+                                                                            
+                                                               
       nextScopeNode = curFunction->body;
     }
 
-    // Now set up curFunction_'s scopedDecls and scopedClosures pointer. Note
-    // that this will either create new containers (when block scoping is
-    // enabled), or reuse the existing containers for the function's top-level
-    // scope
+                                                                             
+                                                                         
+                                                                              
+            
     curFunction_->scopedDecls =
         initializeIfNull(curFunction_->semInfo->lexicallyScoped[nextScopeNode])
             .get();
@@ -1302,13 +1315,13 @@ BlockContext::~BlockContext() {
 }
 
 void BlockContext::stopHoisting(IdentifierNode *id) {
-  // The hoisting candidates are stored in a map of name to list of all known
-  // functions with that name. Therefore, if name is in hoistingCandidates_,
-  // clearing the list is all that's needed to stop function hoisting. Note
-  // that the code __clears__ the list instead of removing it from the map, thus
-  // preserving any memory allocated by the list (so, in case the same
-  // identifier appears again the compiler won't incur in (possibly) heap
-  // allocating memory).
+                                                                             
+                                                                            
+                                                                           
+                                                                                
+                                                                      
+                                                                         
+                        
   auto it = curFunction_->hoistingCandidates_.find(id->_name);
   if (it != curFunction_->hoistingCandidates_.end()) {
     curFunction_->hoistingCandidates_.erase(it);
@@ -1324,7 +1337,7 @@ void BlockContext::ensureScopedNamesAreUnique(
 
   if (isFunctionBody == IsFunctionBody::Yes) {
     if (!curFunction_->scopedClosures) {
-      // This happens during semantic validation for lazy compilation.
+                                                                      
       return;
     }
   }
@@ -1332,13 +1345,13 @@ void BlockContext::ensureScopedNamesAreUnique(
   llvh::SmallDenseMap<UniqueString *, IdentifierNode *, 8>
       lexicallyDeclaredNames;
 
-  // It is a Syntax Error if the LexicallyDeclaredNames of StatementList
-  // contains any duplicate entries. LexicallyDeclaredNames includes let/const
-  // declarations. Function identifiers are not considered
-  // LexicallyDeclaredNames in function scopes.
+                                                                        
+                                                                              
+                                                          
+                                               
   if (isFunctionBody != IsFunctionBody::Yes) {
-    // Keep track of all scopedClosures that are not regular functions (i.e.,
-    // generators and async functions).
+                                                                             
+                                       
     llvh::SmallDenseSet<UniqueString *, 8> generatorOrAsync;
     for (FunctionDeclarationNode *scopedClosure :
          *curFunction_->scopedClosures) {
@@ -1346,20 +1359,20 @@ void BlockContext::ensureScopedNamesAreUnique(
           llvh::dyn_cast_or_null<IdentifierNode>(scopedClosure->_id);
 
       if (!funName) {
-        // Anonymous function names are always unique.
+                                                      
         assert(
             !scopedClosure->_id &&
             "FunctionLikeNode's _id is not an IdentifierNode");
         continue;
       }
 
-      // ES2023 B.3.2.4 requires that duplicate identifiers within
-      // FunctionDeclarations is not an error in non-strict mode. Thus, keep
-      // track of the closures that are not regular function declarations so the
-      // error can be reported. N.B.: adding the name here ensures that, should
-      // the check for duplicate below fail, an error would still be reported
-      // even if all previous instances of the duplicate symbol were
-      // FunctionDeclarations and scopedClosure was not.
+                                                                  
+                                                                            
+                                                                                
+                                                                               
+                                                                             
+                                                                    
+                                                        
       if (ESTree::isAsync(scopedClosure) || scopedClosure->_generator) {
         generatorOrAsync.insert(funName->_name);
       }
@@ -1367,22 +1380,22 @@ void BlockContext::ensureScopedNamesAreUnique(
       auto res = lexicallyDeclaredNames.insert(
           std::make_pair(funName->_name, funName));
       if (!res.second) {
-        // ES2023 B.3.2.4 Changes to Block Static Semantics: Early Errors
-        //
-        // Block: {StatementList}
-        //     It is a Syntax Error if the LexicallyDeclaredNames of
-        //     StatementList contains any duplicate entries, **unless the
-        //     source code matching this production is not strict mode code
-        //     and the duplicate entries are only bound by
-        //     FunctionDeclarations**.
+                                                                         
+          
+                                 
+                                                                    
+                                                                         
+                                                                           
+                                                          
+                                      
         if (ESTree::isStrict(scopedClosure->strictness) ||
             generatorOrAsync.count(funName->_name)) {
           validator_->reportRedeclaredIdentifier(*res.first->second, *funName);
           return;
         }
 
-        // Keep the ID that was declared earliest in the JS source. This is fine
-        // since the validation stops on the first duplicate ID found.
+                                                                                
+                                                                      
         if (funName->getSourceRange().Start.getPointer() <
             res.first->second->getSourceRange().Start.getPointer()) {
           res.first->second = funName;
@@ -1391,13 +1404,13 @@ void BlockContext::ensureScopedNamesAreUnique(
     }
   }
 
-  // Nothing special for const/let declarations -- thus, just iterate over them,
-  // and complain about duplicates.
+                                                                                
+                                   
   for (const FunctionInfo::VarDecl &scopedDecl : *curFunction_->scopedDecls) {
-    // According to ES2023 B.3.2.1 and ES2023 B.3.2.2 functions should not be
-    // hoisted if doing so would cause early errors. Therefore, any functions
-    // that share its ID with scopedDecl cannot possibly be hoisted past this
-    // scope.
+                                                                             
+                                                                             
+                                                                             
+             
     stopHoisting(scopedDecl.identifier);
 
     auto res = lexicallyDeclaredNames.insert(
@@ -1417,8 +1430,8 @@ void BlockContext::ensureScopedNamesAreUnique(
     }
   }
 
-  // Now ensure that the var decls in this scope don't clash with its
-  // LexicallyDeclaredNames.
+                                                                     
+                            
   for (auto it = curFunction_->semInfo->varScoped.begin() + varDeclaredBegin_,
             end = curFunction_->semInfo->varScoped.end();
        it != end;
@@ -1432,8 +1445,8 @@ void BlockContext::ensureScopedNamesAreUnique(
   }
 }
 
-//===----------------------------------------------------------------------===//
-// FunctionContext
+                                                                                
+                  
 
 FunctionContext::FunctionContext(
     SemanticValidator *validator,
@@ -1478,31 +1491,31 @@ void FunctionContext::finalizeHoisting() {
       "should not have hoisting candidates in strict mode.");
 
   if (node && !ESTree::isStrict(node->strictness)) {
-    // Hoisting only happens in non-strict mode per ES2023 B.3.2.1 and
-    // ES2023 B.3.2.2;
+                                                                      
+                      
     for (const auto &[name, nodes] : hoistingCandidates_) {
       assert(
           !nodes.empty() && "empty vectors should be removed by stopHoisting");
 
-      // Add a new var declaration to this function's varDecls. Only one
-      // declaration per identifier is needed regardless of how many
-      // functions with that id are hoisted.
+                                                                        
+                                                                    
+                                            
       FunctionDeclarationNode *first = nodes[0];
       varDecls->emplace_back(
           FunctionInfo::VarDecl::withoutInitializer(
               FunctionInfo::VarDecl::Kind::Var,
               cast<ESTree::IdentifierNode>(first->_id)));
 
-      // Now mark all functions as hoisted, which prevents creation of the
-      // binding identifier below.
+                                                                          
+                                  
       for (FunctionDeclarationNode *fdn : nodes) {
         fdn->getSemInfo()->hoisted = true;
       }
     }
   }
 
-  // Now add a scoped var decl (in the proper scope) for all functions that
-  // weren't hoisted.
+                                                                           
+                     
   assert(
       (validator_->astContext_.getCodeGenerationSettings().enableBlockScoping ||
        semInfo->closures.size() <= 1) &&
@@ -1513,14 +1526,14 @@ void FunctionContext::finalizeHoisting() {
       continue;
     }
 
-    // For nested functions at the top level of an enclosing function,
-    // the nested function is added to the enclosing function's
-    // var list.  For nested functions in blocks in an enclosing
-    // function, the nested function is added to the scope's
-    // list.  For functions in the global scope, the function
-    // is added to the global scope var list.  For functions
-    // in a scope nested in the global scope, the function is added
-    // to the scope's list.
+                                                                      
+                                                               
+                                                                
+                                                            
+                                                             
+                                                            
+                                                                   
+                           
     FunctionInfo::BlockDecls *decls =
         (containingNode == body && functionHoistingEnabled())
         ? &semInfo->varScoped
@@ -1539,5 +1552,5 @@ void FunctionContext::finalizeHoisting() {
     }
   }
 }
-} // namespace sem
-} // namespace hermes
+}                 
+}                    

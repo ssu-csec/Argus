@@ -24,20 +24,20 @@ namespace llvh {
 
 class raw_ostream;
 
-// This class represents Branch Probability as a non-negative fraction that is
-// no greater than 1. It uses a fixed-point-like implementation, in which the
-// denominator is always a constant value (here we use 1<<31 for maximum
-// precision).
+                                                                              
+                                                                             
+                                                                        
+              
 class BranchProbability {
-  // Numerator
+              
   uint32_t N;
 
-  // Denominator, which is a constant value.
+                                            
   static const uint32_t D = 1u << 31;
   static const uint32_t UnknownN = UINT32_MAX;
 
-  // Construct a BranchProbability with only numerator assuming the denominator
-  // is 1<<31. For internal use only.
+                                                                               
+                                     
   explicit BranchProbability(uint32_t n) : N(n) {}
 
 public:
@@ -50,15 +50,15 @@ public:
   static BranchProbability getZero() { return BranchProbability(0); }
   static BranchProbability getOne() { return BranchProbability(D); }
   static BranchProbability getUnknown() { return BranchProbability(UnknownN); }
-  // Create a BranchProbability object with the given numerator and 1<<31
-  // as denominator.
+                                                                         
+                    
   static BranchProbability getRaw(uint32_t N) { return BranchProbability(N); }
-  // Create a BranchProbability object from 64-bit integers.
+                                                            
   static BranchProbability getBranchProbability(uint64_t Numerator,
                                                 uint64_t Denominator);
 
-  // Normalize given probabilties so that the sum of them becomes approximate
-  // one.
+                                                                             
+         
   template <class ProbabilityIter>
   static void normalizeProbabilities(ProbabilityIter Begin,
                                      ProbabilityIter End);
@@ -66,33 +66,33 @@ public:
   uint32_t getNumerator() const { return N; }
   static uint32_t getDenominator() { return D; }
 
-  // Return (1 - Probability).
+                              
   BranchProbability getCompl() const { return BranchProbability(D - N); }
 
   raw_ostream &print(raw_ostream &OS) const;
 
   void dump() const;
 
-  /// Scale a large integer.
-  ///
-  /// Scales \c Num.  Guarantees full precision.  Returns the floor of the
-  /// result.
-  ///
-  /// \return \c Num times \c this.
+                            
+     
+                                                                          
+             
+     
+                                   
   uint64_t scale(uint64_t Num) const;
 
-  /// Scale a large integer by the inverse.
-  ///
-  /// Scales \c Num by the inverse of \c this.  Guarantees full precision.
-  /// Returns the floor of the result.
-  ///
-  /// \return \c Num divided by \c this.
+                                           
+     
+                                                                          
+                                      
+     
+                                        
   uint64_t scaleByInverse(uint64_t Num) const;
 
   BranchProbability &operator+=(BranchProbability RHS) {
     assert(N != UnknownN && RHS.N != UnknownN &&
            "Unknown probability cannot participate in arithmetics.");
-    // Saturate the result in case of overflow.
+                                               
     N = (uint64_t(N) + RHS.N > D) ? D : N + RHS.N;
     return *this;
   }
@@ -100,7 +100,7 @@ public:
   BranchProbability &operator-=(BranchProbability RHS) {
     assert(N != UnknownN && RHS.N != UnknownN &&
            "Unknown probability cannot participate in arithmetics.");
-    // Saturate the result in case of underflow.
+                                                
     N = N < RHS.N ? 0 : N - RHS.N;
     return *this;
   }
@@ -201,9 +201,9 @@ void BranchProbability::normalizeProbabilities(ProbabilityIter Begin,
 
   if (UnknownProbCount > 0) {
     BranchProbability ProbForUnknown = BranchProbability::getZero();
-    // If the sum of all known probabilities is less than one, evenly distribute
-    // the complement of sum to unknown probabilities. Otherwise, set unknown
-    // probabilities to zeros and continue to normalize known probabilities.
+                                                                                
+                                                                             
+                                                                            
     if (Sum < BranchProbability::getDenominator())
       ProbForUnknown = BranchProbability::getRaw(
           (BranchProbability::getDenominator() - Sum) / UnknownProbCount);

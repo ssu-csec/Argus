@@ -56,7 +56,7 @@ void DummyObject::setPointer(GC &gc, DummyObject *obj) {
   other.set(gc.getPointerBase(), obj, gc);
 }
 
-/* static */ constexpr CellKind DummyObject::getCellKind() {
+             constexpr CellKind DummyObject::getCellKind() {
   return CellKind::DummyObjectKind;
 }
 
@@ -83,7 +83,7 @@ void DummyObject::_finalizeImpl(GCCell *cell, GC &gc) {
     self->weak->releaseSlot();
   self->releaseExtMem(gc);
 
-  // Callback is assumed to point to allocated memory
+                                                     
   delete callback;
   self->~DummyObject();
 }
@@ -100,10 +100,10 @@ void DummyObject::_snapshotAddEdgesImpl(
   auto *const self = vmcast<DummyObject>(cell);
   if (!self->weak)
     return;
-  // Filter out empty refs from adding edges.
+                                             
   if (!self->weak->isValid())
     return;
-  // DummyObject has only one WeakRef field.
+                                            
   snap.addNamedEdge(
       HeapSnapshot::EdgeType::Weak,
       "weak",
@@ -111,7 +111,7 @@ void DummyObject::_snapshotAddEdgesImpl(
 }
 #endif
 
-} // namespace testhelpers
+}                         
 
 void DummyObjectBuildMeta(const GCCell *cell, Metadata::Builder &mb) {
   const auto *self = static_cast<const testhelpers::DummyObject *>(cell);
@@ -125,5 +125,5 @@ void DummyObjectBuildMeta(const GCCell *cell, Metadata::Builder &mb) {
   mb.addField("other", &self->other);
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

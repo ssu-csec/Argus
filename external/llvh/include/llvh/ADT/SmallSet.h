@@ -28,8 +28,8 @@
 
 namespace llvh {
 
-/// SmallSetIterator - This class implements a const_iterator for SmallSet by
-/// delegating to the underlying SmallVector or Set iterators.
+                                                                             
+                                                              
 template <typename T, unsigned N, typename C>
 class SmallSetIterator
     : public iterator_facade_base<SmallSetIterator<T, N, C>,
@@ -39,8 +39,8 @@ private:
   using VecIterTy = typename SmallVector<T, N>::const_iterator;
   using SelfTy = SmallSetIterator<T, N, C>;
 
-  /// Iterators to the parts of the SmallSet containing the data. They are set
-  /// depending on isSmall.
+                                                                              
+                           
   union {
     SetIterTy SetIter;
     VecIterTy VecIter;
@@ -53,8 +53,8 @@ public:
 
   SmallSetIterator(VecIterTy VecIter) : VecIter(VecIter), isSmall(true) {}
 
-  // Spell out destructor, copy/move constructor and assignment operators for
-  // MSVC STL, where set<T>::const_iterator is not trivially copy constructible.
+                                                                             
+                                                                                
   ~SmallSetIterator() {
     if (isSmall)
       VecIter.~VecIterTy();
@@ -66,8 +66,8 @@ public:
     if (isSmall)
       VecIter = Other.VecIter;
     else
-      // Use placement new, to make sure SetIter is properly constructed, even
-      // if it is not trivially copy-able (e.g. in MSVC).
+                                                                              
+                                                         
       new (&SetIter) SetIterTy(Other.SetIter);
   }
 
@@ -75,14 +75,14 @@ public:
     if (isSmall)
       VecIter = std::move(Other.VecIter);
     else
-      // Use placement new, to make sure SetIter is properly constructed, even
-      // if it is not trivially copy-able (e.g. in MSVC).
+                                                                              
+                                                         
       new (&SetIter) SetIterTy(std::move(Other.SetIter));
   }
 
   SmallSetIterator& operator=(const SmallSetIterator& Other) {
-    // Call destructor for SetIter, so it gets properly destroyed if it is
-    // not trivially destructible in case we are setting VecIter.
+                                                                          
+                                                                 
     if (!isSmall)
       SetIter.~SetIterTy();
 
@@ -95,8 +95,8 @@ public:
   }
 
   SmallSetIterator& operator=(SmallSetIterator&& Other) {
-    // Call destructor for SetIter, so it gets properly destroyed if it is
-    // not trivially destructible in case we are setting VecIter.
+                                                                          
+                                                                 
     if (!isSmall)
       SetIter.~SetIterTy();
 
@@ -116,7 +116,7 @@ public:
     return SetIter == RHS.SetIter;
   }
 
-  SmallSetIterator &operator++() { // Preincrement
+  SmallSetIterator &operator++() {                
     if (isSmall)
       VecIter++;
     else
@@ -127,24 +127,24 @@ public:
   const T &operator*() const { return isSmall ? *VecIter : *SetIter; }
 };
 
-/// SmallSet - This maintains a set of unique values, optimizing for the case
-/// when the set is small (less than N).  In this case, the set can be
-/// maintained with no mallocs.  If the set gets large, we expand to using an
-/// std::set to maintain reasonable lookup times.
+                                                                             
+                                                                      
+                                                                             
+                                                 
 template <typename T, unsigned N, typename C = std::less<T>>
 class SmallSet {
-  /// Use a SmallVector to hold the elements here (even though it will never
-  /// reach its 'large' stage) to avoid calling the default ctors of elements
-  /// we will never use.
+                                                                            
+                                                                             
+                        
   SmallVector<T, N> Vector;
   std::set<T, C> Set;
 
   using VIterator = typename SmallVector<T, N>::const_iterator;
   using mutable_iterator = typename SmallVector<T, N>::iterator;
 
-  // In small mode SmallPtrSet uses linear search for the elements, so it is
-  // not a good idea to choose this value too high. You may consider using a
-  // DenseSet<> instead if you expect many elements in the set.
+                                                                            
+                                                                            
+                                                               
   static_assert(N <= 32, "N should be small");
 
 public:
@@ -161,36 +161,36 @@ public:
     return isSmall() ? Vector.size() : Set.size();
   }
 
-  /// count - Return 1 if the element is in the set, 0 otherwise.
+                                                                 
   size_type count(const T &V) const {
     if (isSmall()) {
-      // Since the collection is small, just do a linear search.
+                                                                
       return vfind(V) == Vector.end() ? 0 : 1;
     } else {
       return Set.count(V);
     }
   }
 
-  /// insert - Insert an element into the set if it isn't already there.
-  /// Returns true if the element is inserted (it was not in the set before).
-  /// The first value of the returned pair is unused and provided for
-  /// partial compatibility with the standard library self-associative container
-  /// concept.
-  // FIXME: Add iterators that abstract over the small and large form, and then
-  // return those here.
+                                                                        
+                                                                             
+                                                                     
+                                                                                
+              
+                                                                               
+                       
   std::pair<NoneType, bool> insert(const T &V) {
     if (!isSmall())
       return std::make_pair(None, Set.insert(V).second);
 
     VIterator I = vfind(V);
-    if (I != Vector.end())    // Don't reinsert if it already exists.
+    if (I != Vector.end())                                           
       return std::make_pair(None, false);
     if (Vector.size() < N) {
       Vector.push_back(V);
       return std::make_pair(None, true);
     }
 
-    // Otherwise, grow from vector to set.
+                                          
     while (!Vector.empty()) {
       Set.insert(Vector.back());
       Vector.pop_back();
@@ -244,11 +244,11 @@ private:
   }
 };
 
-/// If this set is of pointer values, transparently switch over to using
-/// SmallPtrSet for performance.
+                                                                        
+                                
 template <typename PointeeType, unsigned N>
 class SmallSet<PointeeType*, N> : public SmallPtrSet<PointeeType*, N> {};
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_ADT_SMALLSET_H
+#endif                       

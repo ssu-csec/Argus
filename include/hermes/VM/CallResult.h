@@ -22,8 +22,8 @@ namespace vm {
 
 class StringBuilder;
 
-/// Describes the exit status of a JavaScript function: it either returned
-/// normally or threw an exception.
+                                                                          
+                                   
 enum class ExecutionStatus : uint32_t {
   EXCEPTION,
   RETURNED,
@@ -80,20 +80,20 @@ struct GetCallResultSpecialize<PseudoHandle<T>> {
       : CallResultSpecialize::None;
 };
 
-} // namespace detail
+}                    
 
-/// A tuple combining the result of a function which may have returned
-/// successfully (ExecutionStatus::RETURNED) with a value, or thrown a VM
-/// exception (ExceptionStatus::EXCEPTION).
-/// This is used by some internal functions for convenience.
+                                                                      
+                                                                         
+                                           
+                                                            
 template <
     typename T,
     detail::CallResultSpecialize Specialize =
         detail::GetCallResultSpecialize<T>::value>
 class CallResult {
-  // Nontrivial implementation.
-  // Trivial implementation provided by partial specialization below.
-  // Here we identify a missing value as an exception.
+                               
+                                                                     
+                                                      
   llvh::Optional<T> value_;
 
  public:
@@ -106,9 +106,9 @@ class CallResult {
       typename U,
       typename =
           typename std::enable_if<std::is_convertible<U, T>::value>::type>
-  /* implicit */ CallResult(U &&value) : value_(std::forward<U>(value)) {}
+                 CallResult(U &&value) : value_(std::forward<U>(value)) {}
 
-  /* implicit */ CallResult(ExecutionStatus status) : value_(llvh::None) {
+                 CallResult(ExecutionStatus status) : value_(llvh::None) {
     assert(status != ExecutionStatus::RETURNED);
   }
 
@@ -142,7 +142,7 @@ class CallResult {
 
 template <typename T>
 class CallResult<T, detail::CallResultSpecialize::Trivial> {
-  // Trivial implementation via partial specialization
+                                                      
   ExecutionStatus status_;
   T storage_;
 
@@ -154,17 +154,17 @@ class CallResult<T, detail::CallResultSpecialize::Trivial> {
   CallResult(const CallResult &cr) = default;
   CallResult &operator=(const CallResult &cr) {
     status_ = cr.status_;
-    // GCC8 requires this no-op cast to avoid its -Wclass-memaccess warning.
+                                                                            
     std::memcpy(reinterpret_cast<void *>(&storage_), &cr.storage_, sizeof(T));
     return *this;
   }
   ~CallResult() = default;
 
-  /* implicit */ CallResult(T value) : status_(ExecutionStatus::RETURNED) {
+                 CallResult(T value) : status_(ExecutionStatus::RETURNED) {
     new (&storage_) T(value);
   }
 
-  /* implicit */ CallResult(ExecutionStatus status) : status_(status) {
+                 CallResult(ExecutionStatus status) : status_(status) {
     assert(status != ExecutionStatus::RETURNED);
   }
 
@@ -184,8 +184,8 @@ class CallResult<T, detail::CallResultSpecialize::Trivial> {
   }
 
  private:
-  /// Private constructor meant to be used in converting
-  /// CallResult<PseudoHandle<HermesValue>> to CallResult<HermesValue>.
+                                                        
+                                                                       
   explicit CallResult(ExecutionStatus status, HermesValue value)
       : status_(status), storage_(value) {
     static_assert(
@@ -194,7 +194,7 @@ class CallResult<T, detail::CallResultSpecialize::Trivial> {
   }
 } HERMES_ATTRIBUTE_WARN_UNUSED_RESULT_TYPE;
 
-/// Specialization for bool to fit in a single register.
+                                                        
 template <>
 class CallResult<bool, detail::CallResultSpecialize::Bool> {
   int status_ : 8;
@@ -205,10 +205,10 @@ class CallResult<bool, detail::CallResultSpecialize::Bool> {
   CallResult &operator=(const CallResult &cr) = default;
   ~CallResult() = default;
 
-  /* implicit */ CallResult(bool value)
+                 CallResult(bool value)
       : status_((int)ExecutionStatus::RETURNED), value_(value) {}
 
-  /* implicit */ CallResult(ExecutionStatus status) : status_((int)status) {
+                 CallResult(ExecutionStatus status) : status_((int)status) {
     assert(status != ExecutionStatus::RETURNED);
   }
 
@@ -225,7 +225,7 @@ class CallResult<bool, detail::CallResultSpecialize::Bool> {
   }
 } HERMES_ATTRIBUTE_WARN_UNUSED_RESULT_TYPE;
 
-/// Specialization for pointer types.
+                                     
 template <typename T>
 class CallResult<T *, detail::CallResultSpecialize::Pointer> {
   T *valueOrStatus_{};
@@ -235,9 +235,9 @@ class CallResult<T *, detail::CallResultSpecialize::Pointer> {
   CallResult &operator=(const CallResult &cr) = default;
   ~CallResult() = default;
 
-  /* implicit */ CallResult(T *value) : valueOrStatus_(value) {}
+                 CallResult(T *value) : valueOrStatus_(value) {}
 
-  /* implicit */ CallResult(ExecutionStatus status)
+                 CallResult(ExecutionStatus status)
       : valueOrStatus_(reinterpret_cast<T *>(-1)) {
     assert(status != ExecutionStatus::RETURNED);
   }
@@ -260,7 +260,7 @@ class CallResult<T *, detail::CallResultSpecialize::Pointer> {
   }
 } HERMES_ATTRIBUTE_WARN_UNUSED_RESULT_TYPE;
 
-/// Specialization for Handle types.
+                                    
 template <typename T>
 class CallResult<Handle<T>, detail::CallResultSpecialize::Handle> {
   Handle<T> valueOrStatus_;
@@ -270,9 +270,9 @@ class CallResult<Handle<T>, detail::CallResultSpecialize::Handle> {
   CallResult &operator=(const CallResult &cr) = default;
   ~CallResult() = default;
 
-  /* implicit */ CallResult(Handle<T> value) : valueOrStatus_(value) {}
+                 CallResult(Handle<T> value) : valueOrStatus_(value) {}
 
-  /* implicit */ CallResult(ExecutionStatus status)
+                 CallResult(ExecutionStatus status)
       : valueOrStatus_(
             Handle<T>::unsafeCreate(
                 reinterpret_cast<const PinnedHermesValue *>(-1))) {
@@ -299,13 +299,13 @@ class CallResult<Handle<T>, detail::CallResultSpecialize::Handle> {
   }
 } HERMES_ATTRIBUTE_WARN_UNUSED_RESULT_TYPE;
 
-/// Specialization for PseudoHandle<HermesValue>, which must use a separate
-/// EXCEPTION representation, because -1 is a valid number HermesValue.
+                                                                           
+                                                                       
 template <>
 class CallResult<
     PseudoHandle<HermesValue>,
     detail::CallResultSpecialize::PseudoHandleHV> {
-  // Storage method is similar to the Trivial implementation.
+                                                             
   ExecutionStatus status_;
   PseudoHandle<> storage_;
 
@@ -316,10 +316,10 @@ class CallResult<
   CallResult &operator=(CallResult &&cr) = default;
   ~CallResult() = default;
 
-  /* implicit */ CallResult(PseudoHandle<> &&value)
+                 CallResult(PseudoHandle<> &&value)
       : status_(ExecutionStatus::RETURNED), storage_(std::move(value)) {}
 
-  /* implicit */ CallResult(ExecutionStatus status) : status_(status) {
+                 CallResult(ExecutionStatus status) : status_(status) {
     assert(status != ExecutionStatus::RETURNED);
   }
 
@@ -349,13 +349,13 @@ class CallResult<
   }
 
   CallResult<HermesValue> toCallResultHermesValue() const {
-    // Use a private constructor in CallResult<HermesValue> to convert
-    // without having to branch.
+                                                                      
+                                
     return CallResult<HermesValue>{status_, storage_.getHermesValue()};
   }
 } HERMES_ATTRIBUTE_WARN_UNUSED_RESULT_TYPE;
 
-/// Specialization for PseudoHandle which uses -1 as the EXCEPTION value.
+                                                                         
 template <typename T>
 class CallResult<
     PseudoHandle<T>,
@@ -373,19 +373,19 @@ class CallResult<
   CallResult &operator=(const CallResult &cr) = delete;
   ~CallResult() = default;
 
-  /* implicit */ CallResult(CallResult &&value) = default;
+                 CallResult(CallResult &&value) = default;
 
-  /* implicit */ CallResult(PseudoHandle<T> &&value)
+                 CallResult(PseudoHandle<T> &&value)
       : valueOrStatus_(std::move(value)) {}
 
   template <
       typename U,
       typename = typename std::enable_if<
           std::is_convertible<PseudoHandle<U>, PseudoHandle<T>>::value>::type>
-  /* implicit */ CallResult(CallResult<PseudoHandle<U>> &&other)
+                 CallResult(CallResult<PseudoHandle<U>> &&other)
       : valueOrStatus_(std::move(other.unsafeGetValue())) {}
 
-  /* implicit */ CallResult(ExecutionStatus status)
+                 CallResult(ExecutionStatus status)
       : valueOrStatus_(PseudoHandle<T>::create(reinterpret_cast<T *>(-1))) {
     assert(status != ExecutionStatus::RETURNED);
   }
@@ -429,7 +429,7 @@ bool operator!=(ExecutionStatus lhs, const CallResult<T> &rhs) {
   return rhs != lhs;
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMES_VM_CALLRESULT_H
+#endif                          

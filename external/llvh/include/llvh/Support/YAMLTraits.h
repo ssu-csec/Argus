@@ -41,204 +41,204 @@ namespace yaml {
 
 struct EmptyContext {};
 
-/// This class should be specialized by any type that needs to be converted
-/// to/from a YAML mapping.  For example:
-///
-///     struct MappingTraits<MyStruct> {
-///       static void mapping(IO &io, MyStruct &s) {
-///         io.mapRequired("name", s.name);
-///         io.mapRequired("size", s.size);
-///         io.mapOptional("age",  s.age);
-///       }
-///     };
+                                                                           
+                                         
+   
+                                        
+                                                    
+                                           
+                                           
+                                          
+           
+          
 template<class T>
 struct MappingTraits {
-  // Must provide:
-  // static void mapping(IO &io, T &fields);
-  // Optionally may provide:
-  // static StringRef validate(IO &io, T &fields);
-  //
-  // The optional flow flag will cause generated YAML to use a flow mapping
-  // (e.g. { a: 0, b: 1 }):
-  // static const bool flow = true;
+                  
+                                            
+                            
+                                                  
+    
+                                                                           
+                           
+                                   
 };
 
-/// This class is similar to MappingTraits<T> but allows you to pass in
-/// additional context for each map operation.  For example:
-///
-///     struct MappingContextTraits<MyStruct, MyContext> {
-///       static void mapping(IO &io, MyStruct &s, MyContext &c) {
-///         io.mapRequired("name", s.name);
-///         io.mapRequired("size", s.size);
-///         io.mapOptional("age",  s.age);
-///         ++c.TimesMapped;
-///       }
-///     };
+                                                                       
+                                                            
+   
+                                                          
+                                                                  
+                                           
+                                           
+                                          
+                            
+           
+          
 template <class T, class Context> struct MappingContextTraits {
-  // Must provide:
-  // static void mapping(IO &io, T &fields, Context &Ctx);
-  // Optionally may provide:
-  // static StringRef validate(IO &io, T &fields, Context &Ctx);
-  //
-  // The optional flow flag will cause generated YAML to use a flow mapping
-  // (e.g. { a: 0, b: 1 }):
-  // static const bool flow = true;
+                  
+                                                          
+                            
+                                                                
+    
+                                                                           
+                           
+                                   
 };
 
-/// This class should be specialized by any integral type that converts
-/// to/from a YAML scalar where there is a one-to-one mapping between
-/// in-memory values and a string in YAML.  For example:
-///
-///     struct ScalarEnumerationTraits<Colors> {
-///         static void enumeration(IO &io, Colors &value) {
-///           io.enumCase(value, "red",   cRed);
-///           io.enumCase(value, "blue",  cBlue);
-///           io.enumCase(value, "green", cGreen);
-///         }
-///       };
+                                                                       
+                                                                     
+                                                        
+   
+                                                
+                                                            
+                                                
+                                                 
+                                                  
+             
+            
 template<typename T>
 struct ScalarEnumerationTraits {
-  // Must provide:
-  // static void enumeration(IO &io, T &value);
+                  
+                                               
 };
 
-/// This class should be specialized by any integer type that is a union
-/// of bit values and the YAML representation is a flow sequence of
-/// strings.  For example:
-///
-///      struct ScalarBitSetTraits<MyFlags> {
-///        static void bitset(IO &io, MyFlags &value) {
-///          io.bitSetCase(value, "big",   flagBig);
-///          io.bitSetCase(value, "flat",  flagFlat);
-///          io.bitSetCase(value, "round", flagRound);
-///        }
-///      };
+                                                                        
+                                                                   
+                          
+   
+                                             
+                                                       
+                                                    
+                                                     
+                                                      
+            
+           
 template<typename T>
 struct ScalarBitSetTraits {
-  // Must provide:
-  // static void bitset(IO &io, T &value);
+                  
+                                          
 };
 
-/// Describe which type of quotes should be used when quoting is necessary.
-/// Some non-printable characters need to be double-quoted, while some others
-/// are fine with simple-quoting, and some don't need any quoting.
+                                                                           
+                                                                             
+                                                                  
 enum class QuotingType { None, Single, Double };
 
-/// This class should be specialized by type that requires custom conversion
-/// to/from a yaml scalar.  For example:
-///
-///    template<>
-///    struct ScalarTraits<MyType> {
-///      static void output(const MyType &val, void*, llvh::raw_ostream &out) {
-///        // stream out custom formatting
-///        out << llvh::format("%x", val);
-///      }
-///      static StringRef input(StringRef scalar, void*, MyType &value) {
-///        // parse scalar and set `value`
-///        // return empty string on success, or error string
-///        return StringRef();
-///      }
-///      static QuotingType mustQuote(StringRef) { return QuotingType::Single; }
-///    };
+                                                                            
+                                        
+   
+                 
+                                    
+                                                                               
+                                          
+                                          
+          
+                                                                         
+                                          
+                                                             
+                              
+          
+                                                                                
+         
 template<typename T>
 struct ScalarTraits {
-  // Must provide:
-  //
-  // Function to write the value as a string:
-  //static void output(const T &value, void *ctxt, llvh::raw_ostream &out);
-  //
-  // Function to convert a string to a value.  Returns the empty
-  // StringRef on success or an error string if string is malformed:
-  //static StringRef input(StringRef scalar, void *ctxt, T &value);
-  //
-  // Function to determine if the value should be quoted.
-  //static QuotingType mustQuote(StringRef);
+                  
+    
+                                             
+                                                                           
+    
+                                                                
+                                                                    
+                                                                   
+    
+                                                         
+                                            
 };
 
-/// This class should be specialized by type that requires custom conversion
-/// to/from a YAML literal block scalar. For example:
-///
-///    template <>
-///    struct BlockScalarTraits<MyType> {
-///      static void output(const MyType &Value, void*, llvh::raw_ostream &Out)
-///      {
-///        // stream out custom formatting
-///        Out << Val;
-///      }
-///      static StringRef input(StringRef Scalar, void*, MyType &Value) {
-///        // parse scalar and set `value`
-///        // return empty string on success, or error string
-///        return StringRef();
-///      }
-///    };
+                                                                            
+                                                     
+   
+                  
+                                         
+                                                                               
+          
+                                          
+                      
+          
+                                                                         
+                                          
+                                                             
+                              
+          
+         
 template <typename T>
 struct BlockScalarTraits {
-  // Must provide:
-  //
-  // Function to write the value as a string:
-  // static void output(const T &Value, void *ctx, llvh::raw_ostream &Out);
-  //
-  // Function to convert a string to a value.  Returns the empty
-  // StringRef on success or an error string if string is malformed:
-  // static StringRef input(StringRef Scalar, void *ctxt, T &Value);
+                  
+    
+                                             
+                                                                           
+    
+                                                                
+                                                                    
+                                                                    
 };
 
-/// This class should be specialized by any type that needs to be converted
-/// to/from a YAML sequence.  For example:
-///
-///    template<>
-///    struct SequenceTraits<MyContainer> {
-///      static size_t size(IO &io, MyContainer &seq) {
-///        return seq.size();
-///      }
-///      static MyType& element(IO &, MyContainer &seq, size_t index) {
-///        if ( index >= seq.size() )
-///          seq.resize(index+1);
-///        return seq[index];
-///      }
-///    };
+                                                                           
+                                          
+   
+                 
+                                           
+                                                       
+                             
+          
+                                                                       
+                                     
+                                 
+                             
+          
+         
 template<typename T, typename EnableIf = void>
 struct SequenceTraits {
-  // Must provide:
-  // static size_t size(IO &io, T &seq);
-  // static T::value_type& element(IO &io, T &seq, size_t index);
-  //
-  // The following is option and will cause generated YAML to use
-  // a flow sequence (e.g. [a,b,c]).
-  // static const bool flow = true;
+                  
+                                        
+                                                                 
+    
+                                                                 
+                                    
+                                   
 };
 
-/// This class should be specialized by any type for which vectors of that
-/// type need to be converted to/from a YAML sequence.
+                                                                          
+                                                      
 template<typename T, typename EnableIf = void>
 struct SequenceElementTraits {
-  // Must provide:
-  // static const bool flow;
+                  
+                            
 };
 
-/// This class should be specialized by any type that needs to be converted
-/// to/from a list of YAML documents.
+                                                                           
+                                     
 template<typename T>
 struct DocumentListTraits {
-  // Must provide:
-  // static size_t size(IO &io, T &seq);
-  // static T::value_type& element(IO &io, T &seq, size_t index);
+                  
+                                        
+                                                                 
 };
 
-/// This class should be specialized by any type that needs to be converted
-/// to/from a YAML mapping in the case where the names of the keys are not known
-/// in advance, e.g. a string map.
+                                                                           
+                                                                                
+                                  
 template <typename T>
 struct CustomMappingTraits {
-  // static void inputOne(IO &io, StringRef key, T &elem);
-  // static void output(IO &io, T &elem);
+                                                          
+                                         
 };
 
-// Only used for better diagnostics of missing traits
+                                                     
 template <typename T>
 struct MissingTrait;
 
-// Test if ScalarEnumerationTraits<T> is defined on type T.
+                                                           
 template <class T>
 struct has_ScalarEnumerationTraits
 {
@@ -255,7 +255,7 @@ public:
     (sizeof(test<ScalarEnumerationTraits<T>>(nullptr)) == 1);
 };
 
-// Test if ScalarBitSetTraits<T> is defined on type T.
+                                                      
 template <class T>
 struct has_ScalarBitSetTraits
 {
@@ -271,7 +271,7 @@ public:
   static bool const value = (sizeof(test<ScalarBitSetTraits<T>>(nullptr)) == 1);
 };
 
-// Test if ScalarTraits<T> is defined on type T.
+                                                
 template <class T>
 struct has_ScalarTraits
 {
@@ -292,7 +292,7 @@ public:
       (sizeof(test<ScalarTraits<T>>(nullptr, nullptr, nullptr)) == 1);
 };
 
-// Test if BlockScalarTraits<T> is defined on type T.
+                                                     
 template <class T>
 struct has_BlockScalarTraits
 {
@@ -311,7 +311,7 @@ public:
       (sizeof(test<BlockScalarTraits<T>>(nullptr, nullptr)) == 1);
 };
 
-// Test if MappingContextTraits<T> is defined on type T.
+                                                        
 template <class T, class Context> struct has_MappingTraits {
   using Signature_mapping = void (*)(class IO &, T &, Context &);
 
@@ -326,7 +326,7 @@ public:
       (sizeof(test<MappingContextTraits<T, Context>>(nullptr)) == 1);
 };
 
-// Test if MappingTraits<T> is defined on type T.
+                                                 
 template <class T> struct has_MappingTraits<T, EmptyContext> {
   using Signature_mapping = void (*)(class IO &, T &);
 
@@ -339,7 +339,7 @@ public:
   static bool const value = (sizeof(test<MappingTraits<T>>(nullptr)) == 1);
 };
 
-// Test if MappingContextTraits<T>::validate() is defined on type T.
+                                                                    
 template <class T, class Context> struct has_MappingValidateTraits {
   using Signature_validate = StringRef (*)(class IO &, T &, Context &);
 
@@ -354,7 +354,7 @@ public:
       (sizeof(test<MappingContextTraits<T, Context>>(nullptr)) == 1);
 };
 
-// Test if MappingTraits<T>::validate() is defined on type T.
+                                                             
 template <class T> struct has_MappingValidateTraits<T, EmptyContext> {
   using Signature_validate = StringRef (*)(class IO &, T &);
 
@@ -367,7 +367,7 @@ public:
   static bool const value = (sizeof(test<MappingTraits<T>>(nullptr)) == 1);
 };
 
-// Test if SequenceTraits<T> is defined on type T.
+                                                  
 template <class T>
 struct has_SequenceMethodTraits
 {
@@ -383,7 +383,7 @@ public:
   static bool const value =  (sizeof(test<SequenceTraits<T>>(nullptr)) == 1);
 };
 
-// Test if CustomMappingTraits<T> is defined on type T.
+                                                       
 template <class T>
 struct has_CustomMappingTraits
 {
@@ -400,9 +400,9 @@ public:
       (sizeof(test<CustomMappingTraits<T>>(nullptr)) == 1);
 };
 
-// has_FlowTraits<int> will cause an error with some compilers because
-// it subclasses int.  Using this wrapper only instantiates the
-// real has_FlowTraits only if the template type is a class.
+                                                                      
+                                                               
+                                                            
 template <typename T, bool Enabled = std::is_class<T>::value>
 class has_FlowTraits
 {
@@ -410,9 +410,9 @@ public:
    static const bool value = false;
 };
 
-// Some older gcc compilers don't support straight forward tests
-// for members, so test for ambiguity cause by the base and derived
-// classes both defining the member.
+                                                                
+                                                                   
+                                    
 template <class T>
 struct has_FlowTraits<T, true>
 {
@@ -429,12 +429,12 @@ public:
   static bool const value = sizeof(f<Derived>(nullptr)) == 2;
 };
 
-// Test if SequenceTraits<T> is defined on type T
+                                                 
 template<typename T>
 struct has_SequenceTraits : public std::integral_constant<bool,
                                       has_SequenceMethodTraits<T>::value > { };
 
-// Test if DocumentListTraits<T> is defined on type T
+                                                     
 template <class T>
 struct has_DocumentListTraits
 {
@@ -456,25 +456,25 @@ inline bool isNumeric(StringRef S) {
         std::min(Input.find_first_not_of("0123456789"), Input.size()));
   };
 
-  // Make S.front() and S.drop_front().front() (if S.front() is [+-]) calls
-  // safe.
+                                                                           
+          
   if (S.empty() || S.equals("+") || S.equals("-"))
     return false;
 
   if (S.equals(".nan") || S.equals(".NaN") || S.equals(".NAN"))
     return true;
 
-  // Infinity and decimal numbers can be prefixed with sign.
+                                                            
   StringRef Tail = (S.front() == '-' || S.front() == '+') ? S.drop_front() : S;
 
-  // Check for infinity first, because checking for hex and oct numbers is more
-  // expensive.
+                                                                               
+               
   if (Tail.equals(".inf") || Tail.equals(".Inf") || Tail.equals(".INF"))
     return true;
 
-  // Section 10.3.2 Tag Resolution
-  // YAML 1.2 Specification prohibits Base 8 and Base 16 numbers prefixed with
-  // [-+], so S should be used instead of Tail.
+                                  
+                                                                              
+                                               
   if (S.startswith("0o"))
     return S.size() > 2 &&
            S.drop_front(2).find_first_not_of("01234567") == StringRef::npos;
@@ -483,12 +483,12 @@ inline bool isNumeric(StringRef S) {
     return S.size() > 2 && S.drop_front(2).find_first_not_of(
                                "0123456789abcdefABCDEF") == StringRef::npos;
 
-  // Parse float: [-+]? (\. [0-9]+ | [0-9]+ (\. [0-9]* )?) ([eE] [-+]? [0-9]+)?
+                                                                               
   S = Tail;
 
-  // Handle cases when the number starts with '.' and hence needs at least one
-  // digit after dot (as opposed by number which has digits before the dot), but
-  // doesn't have one.
+                                                                              
+                                                                                
+                      
   if (S.startswith(".") &&
       (S.equals(".") ||
        (S.size() > 1 && std::strchr("0123456789", S[1]) == nullptr)))
@@ -506,7 +506,7 @@ inline bool isNumeric(StringRef S) {
 
   S = skipDigits(S);
 
-  // Accept decimal integer.
+                            
   if (S.empty())
     return true;
 
@@ -556,11 +556,11 @@ inline bool isBool(StringRef S) {
          S.equals("false") || S.equals("False") || S.equals("FALSE");
 }
 
-// 5.1. Character Set
-// The allowed character range explicitly excludes the C0 control block #x0-#x1F
-// (except for TAB #x9, LF #xA, and CR #xD which are allowed), DEL #x7F, the C1
-// control block #x80-#x9F (except for NEL #x85 which is allowed), the surrogate
-// block #xD800-#xDFFF, #xFFFE, and #xFFFF.
+                     
+                                                                                
+                                                                               
+                                                                                
+                                           
 inline QuotingType needsQuotes(StringRef S) {
   if (S.empty())
     return QuotingType::Single;
@@ -573,21 +573,21 @@ inline QuotingType needsQuotes(StringRef S) {
   if (isNumeric(S))
     return QuotingType::Single;
 
-  // 7.3.3 Plain Style
-  // Plain scalars must not begin with most indicators, as this would cause
-  // ambiguity with other YAML constructs.
+                      
+                                                                           
+                                          
   static constexpr char Indicators[] = R"(-?:\,[]{}#&*!|>'"%@`)";
   if (S.find_first_of(Indicators) == 0)
     return QuotingType::Single;
 
   QuotingType MaxQuotingNeeded = QuotingType::None;
   for (unsigned char C : S) {
-    // Alphanum is safe.
+                        
     if (isAlnum(C))
       continue;
 
     switch (C) {
-    // Safe scalar characters.
+                              
     case '_':
     case '-':
     case '/':
@@ -595,29 +595,29 @@ inline QuotingType needsQuotes(StringRef S) {
     case '.':
     case ',':
     case ' ':
-    // TAB (0x9) is allowed in unquoted strings.
+                                                
     case 0x9:
       continue;
-    // LF(0xA) and CR(0xD) may delimit values and so require at least single
-    // quotes.
+                                                                            
+              
     case 0xA:
     case 0xD:
       MaxQuotingNeeded = QuotingType::Single;
       continue;
-    // DEL (0x7F) are excluded from the allowed character range.
+                                                                
     case 0x7F:
       return QuotingType::Double;
     default: {
-      // C0 control block (0x0 - 0x1F) is excluded from the allowed character
-      // range.
+                                                                             
+               
       if (C <= 0x1F)
         return QuotingType::Double;
 
-      // Always double quote UTF-8.
+                                   
       if ((C & 0x80) != 0)
         return QuotingType::Double;
 
-      // The character is not safe, at least simple quoting needed.
+                                                                   
       MaxQuotingNeeded = QuotingType::Single;
     }
     }
@@ -650,7 +650,7 @@ struct unvalidatedMappingTraits
           bool, has_MappingTraits<T, Context>::value &&
                     !has_MappingValidateTraits<T, Context>::value> {};
 
-// Base class for Input and Output.
+                                   
 class IO {
 public:
   IO(void *Ctxt = nullptr);
@@ -700,7 +700,7 @@ public:
     }
   }
 
-  // allow anonymous enum values to be used with LLVM_YAML_STRONG_TYPEDEF
+                                                                         
   template <typename T>
   void enumCase(T &Val, const char* Str, const uint32_t ConstVal) {
     if ( matchEnumScalar(Str, outputting() && Val == static_cast<T>(ConstVal)) ) {
@@ -712,7 +712,7 @@ public:
   void enumFallback(T &Val) {
     if (matchEnumFallback()) {
       EmptyContext Context;
-      // FIXME: Force integral conversion to allow strong typedefs to convert.
+                                                                              
       FBT Res = static_cast<typename FBT::BaseType>(Val);
       yamlize(*this, Res, true, Context);
       Val = static_cast<T>(static_cast<typename FBT::BaseType>(Res));
@@ -726,7 +726,7 @@ public:
     }
   }
 
-  // allow anonymous enum values to be used with LLVM_YAML_STRONG_TYPEDEF
+                                                                         
   template <typename T>
   void bitSetCase(T &Val, const char* Str, const uint32_t ConstVal) {
     if ( bitSetMatch(Str, outputting() && (Val & ConstVal) == ConstVal) ) {
@@ -774,7 +774,7 @@ public:
   template <typename T, typename Context>
   typename std::enable_if<has_SequenceTraits<T>::value, void>::type
   mapOptionalWithContext(const char *Key, T &Val, Context &Ctx) {
-    // omit key/value instead of outputting empty sequence
+                                                          
     if (this->canElideEmptySequence() && !(Val.begin() != Val.end()))
       return;
     this->processKey(Key, Val, false, Ctx);
@@ -782,7 +782,7 @@ public:
 
   template <typename T, typename Context>
   void mapOptionalWithContext(const char *Key, Optional<T> &Val, Context &Ctx) {
-    this->processKeyWithDefault(Key, Val, Optional<T>(), /*Required=*/false,
+    this->processKeyWithDefault(Key, Val, Optional<T>(),              false,
                                 Ctx);
   }
 
@@ -863,7 +863,7 @@ template <typename T> void doMapping(IO &io, T &Val, EmptyContext &Ctx) {
   MappingTraits<T>::mapping(io, Val);
 }
 
-} // end namespace detail
+}                        
 
 template <typename T>
 typename std::enable_if<has_ScalarEnumerationTraits<T>::value, void>::type
@@ -1105,9 +1105,9 @@ struct ScalarTraits<double> {
   static QuotingType mustQuote(StringRef) { return QuotingType::None; }
 };
 
-// For endian types, we just use the existing ScalarTraits for the underlying
-// type.  This way endian aware types are supported whenever a ScalarTraits
-// is defined for the underlying type.
+                                                                             
+                                                                           
+                                      
 template <typename value_type, support::endianness endian, size_t alignment>
 struct ScalarTraits<support::detail::packed_endian_specific_integral<
     value_type, endian, alignment>> {
@@ -1131,8 +1131,8 @@ struct ScalarTraits<support::detail::packed_endian_specific_integral<
   }
 };
 
-// Utility for use within MappingTraits<>::mapping() method
-// to [de]normalize an object for use with YAML conversion.
+                                                           
+                                                           
 template <typename TNorm, typename TFinal>
 struct MappingNormalization {
   MappingNormalization(IO &i_o, TFinal &Obj)
@@ -1163,8 +1163,8 @@ private:
   TFinal       &Result;
 };
 
-// Utility for use within MappingTraits<>::mapping() method
-// to [de]normalize an object for use with YAML conversion.
+                                                           
+                                                           
 template <typename TNorm, typename TFinal>
 struct MappingNormalizationHeap {
   MappingNormalizationHeap(IO &i_o, TFinal &Obj, BumpPtrAllocator *allocator)
@@ -1200,23 +1200,23 @@ private:
   TFinal       &Result;
 };
 
-///
-/// The Input class is used to parse a yaml document into in-memory structs
-/// and vectors.
-///
-/// It works by using YAMLParser to do a syntax parse of the entire yaml
-/// document, then the Input class builds a graph of HNodes which wraps
-/// each yaml Node.  The extra layer is buffering.  The low level yaml
-/// parser only lets you look at each node once.  The buffering layer lets
-/// you search and interate multiple times.  This is necessary because
-/// the mapRequired() method calls may not be in the same order
-/// as the keys in the document.
-///
+   
+                                                                           
+                
+   
+                                                                        
+                                                                       
+                                                                      
+                                                                          
+                                                                      
+                                                               
+                                
+   
 class Input : public IO {
 public:
-  // Construct a yaml Input object from a StringRef and optional
-  // user-data. The DiagHandler can be specified to provide
-  // alternative error reporting.
+                                                                
+                                                           
+                                 
   Input(StringRef InputContent,
         void *Ctxt = nullptr,
         SourceMgr::DiagHandlerTy DiagHandler = nullptr,
@@ -1227,7 +1227,7 @@ public:
         void *DiagHandlerCtxt = nullptr);
   ~Input() override;
 
-  // Check if there was an syntax or semantic error during parsing.
+                                                                   
   std::error_code error();
 
 private:
@@ -1340,16 +1340,16 @@ private:
   void setError(Node *node, const Twine &message);
 
 public:
-  // These are only used by operator>>. They could be private
-  // if those templated things could be made friends.
+                                                             
+                                                     
   bool setCurrentDocument();
   bool nextDocument();
 
-  /// Returns the current node that's being parsed by the YAML Parser.
+                                                                      
   const Node *getCurrentNode() const;
 
 private:
-  SourceMgr                           SrcMgr; // must be before Strm
+  SourceMgr                           SrcMgr;                       
   std::unique_ptr<llvh::yaml::Stream> Strm;
   std::unique_ptr<HNode>              TopNode;
   std::error_code                     EC;
@@ -1360,20 +1360,20 @@ private:
   bool                                ScalarMatchFound;
 };
 
-///
-/// The Output class is used to generate a yaml document from in-memory structs
-/// and vectors.
-///
+   
+                                                                               
+                
+   
 class Output : public IO {
 public:
   Output(raw_ostream &, void *Ctxt = nullptr, int WrapColumn = 70);
   ~Output() override;
 
-  /// Set whether or not to output optional values which are equal
-  /// to the default value.  By default, when outputting if you attempt
-  /// to write a value that is equal to the default, the value gets ignored.
-  /// Sometimes, it is useful to be able to see these in the resulting YAML
-  /// anyway.
+                                                                  
+                                                                       
+                                                                            
+                                                                           
+             
   void setWriteDefaultValues(bool Write) { WriteDefaultValues = Write; }
 
   bool outputting() override;
@@ -1405,8 +1405,8 @@ public:
   void setError(const Twine &message) override;
   bool canElideEmptySequence() override;
 
-  // These are only used by operator<<. They could be private
-  // if that templated operator could be made a friend.
+                                                             
+                                                       
   void beginDocuments();
   bool preflightDocument(unsigned);
   void postflightDocument();
@@ -1442,14 +1442,14 @@ private:
   bool WriteDefaultValues = false;
 };
 
-/// YAML I/O does conversion based on types. But often native data types
-/// are just a typedef of built in intergral types (e.g. int).  But the C++
-/// type matching system sees through the typedef and all the typedefed types
-/// look like a built in type. This will cause the generic YAML I/O conversion
-/// to be used. To provide better control over the YAML conversion, you can
-/// use this macro instead of typedef.  It will create a class with one field
-/// and automatic conversion operators to and from the base type.
-/// Based on BOOST_STRONG_TYPEDEF
+                                                                        
+                                                                           
+                                                                             
+                                                                              
+                                                                           
+                                                                             
+                                                                 
+                                 
 #define LLVM_YAML_STRONG_TYPEDEF(_base, _type)                                 \
     struct _type {                                                             \
         _type() = default;                                                     \
@@ -1465,10 +1465,10 @@ private:
         using BaseType = _base;                                                \
     };
 
-///
-/// Use these types instead of uintXX_t in any mapping to have
-/// its yaml output formatted as hexadecimal.
-///
+   
+                                                              
+                                             
+   
 LLVM_YAML_STRONG_TYPEDEF(uint8_t, Hex8)
 LLVM_YAML_STRONG_TYPEDEF(uint16_t, Hex16)
 LLVM_YAML_STRONG_TYPEDEF(uint32_t, Hex32)
@@ -1502,7 +1502,7 @@ struct ScalarTraits<Hex64> {
   static QuotingType mustQuote(StringRef) { return QuotingType::None; }
 };
 
-// Define non-member operator>> so that Input can stream in a document list.
+                                                                            
 template <typename T>
 inline
 typename std::enable_if<has_DocumentListTraits<T>::value, Input &>::type
@@ -1519,7 +1519,7 @@ operator>>(Input &yin, T &docList) {
   return yin;
 }
 
-// Define non-member operator>> so that Input can stream in a map as a document.
+                                                                                
 template <typename T>
 inline typename std::enable_if<has_MappingTraits<T, EmptyContext>::value,
                                Input &>::type
@@ -1530,8 +1530,8 @@ operator>>(Input &yin, T &docMap) {
   return yin;
 }
 
-// Define non-member operator>> so that Input can stream in a sequence as
-// a document.
+                                                                         
+              
 template <typename T>
 inline
 typename std::enable_if<has_SequenceTraits<T>::value, Input &>::type
@@ -1542,7 +1542,7 @@ operator>>(Input &yin, T &docSeq) {
   return yin;
 }
 
-// Define non-member operator>> so that Input can stream in a block scalar.
+                                                                           
 template <typename T>
 inline
 typename std::enable_if<has_BlockScalarTraits<T>::value, Input &>::type
@@ -1553,7 +1553,7 @@ operator>>(Input &In, T &Val) {
   return In;
 }
 
-// Define non-member operator>> so that Input can stream in a string map.
+                                                                         
 template <typename T>
 inline
 typename std::enable_if<has_CustomMappingTraits<T>::value, Input &>::type
@@ -1564,7 +1564,7 @@ operator>>(Input &In, T &Val) {
   return In;
 }
 
-// Provide better error message about types missing a trait specialization
+                                                                          
 template <typename T>
 inline typename std::enable_if<missingTraits<T, EmptyContext>::value,
                                Input &>::type
@@ -1573,7 +1573,7 @@ operator>>(Input &yin, T &docSeq) {
   return yin;
 }
 
-// Define non-member operator<< so that Output can stream out document list.
+                                                                            
 template <typename T>
 inline
 typename std::enable_if<has_DocumentListTraits<T>::value, Output &>::type
@@ -1592,7 +1592,7 @@ operator<<(Output &yout, T &docList) {
   return yout;
 }
 
-// Define non-member operator<< so that Output can stream out a map.
+                                                                    
 template <typename T>
 inline typename std::enable_if<has_MappingTraits<T, EmptyContext>::value,
                                Output &>::type
@@ -1607,7 +1607,7 @@ operator<<(Output &yout, T &map) {
   return yout;
 }
 
-// Define non-member operator<< so that Output can stream out a sequence.
+                                                                         
 template <typename T>
 inline
 typename std::enable_if<has_SequenceTraits<T>::value, Output &>::type
@@ -1622,7 +1622,7 @@ operator<<(Output &yout, T &seq) {
   return yout;
 }
 
-// Define non-member operator<< so that Output can stream out a block scalar.
+                                                                             
 template <typename T>
 inline
 typename std::enable_if<has_BlockScalarTraits<T>::value, Output &>::type
@@ -1637,7 +1637,7 @@ operator<<(Output &Out, T &Val) {
   return Out;
 }
 
-// Define non-member operator<< so that Output can stream out a string map.
+                                                                           
 template <typename T>
 inline
 typename std::enable_if<has_CustomMappingTraits<T>::value, Output &>::type
@@ -1652,7 +1652,7 @@ operator<<(Output &Out, T &Val) {
   return Out;
 }
 
-// Provide better error message about types missing a trait specialization
+                                                                          
 template <typename T>
 inline typename std::enable_if<missingTraits<T, EmptyContext>::value,
                                Output &>::type
@@ -1679,12 +1679,12 @@ public:
   }
 };
 
-// Simple helper to check an expression can be used as a bool-valued template
-// argument.
+                                                                             
+            
 template <bool> struct CheckIsBool { static const bool value = true; };
 
-// If T has SequenceElementTraits, then vector<T> and SmallVector<T, N> have
-// SequenceTraits that do the obvious thing.
+                                                                            
+                                            
 template <typename T>
 struct SequenceTraits<std::vector<T>,
                       typename std::enable_if<CheckIsBool<
@@ -1696,14 +1696,14 @@ struct SequenceTraits<SmallVector<T, N>,
                           SequenceElementTraits<T>::flow>::value>::type>
     : SequenceTraitsImpl<SmallVector<T, N>, SequenceElementTraits<T>::flow> {};
 
-// Sequences of fundamental types use flow formatting.
+                                                      
 template <typename T>
 struct SequenceElementTraits<
     T, typename std::enable_if<std::is_fundamental<T>::value>::type> {
   static const bool flow = true;
 };
 
-// Sequences of strings use block formatting.
+                                             
 template<> struct SequenceElementTraits<std::string> {
   static const bool flow = false;
 };
@@ -1714,7 +1714,7 @@ template<> struct SequenceElementTraits<std::pair<std::string, std::string>> {
   static const bool flow = false;
 };
 
-/// Implementation of CustomMappingTraits for std::map<std::string, T>.
+                                                                       
 template <typename T> struct StdMapStringCustomMappingTraitsImpl {
   using map_type = std::map<std::string, T>;
 
@@ -1728,8 +1728,8 @@ template <typename T> struct StdMapStringCustomMappingTraitsImpl {
   }
 };
 
-} // end namespace yaml
-} // end namespace llvh
+}                      
+}                      
 
 #define LLVM_YAML_IS_SEQUENCE_VECTOR_IMPL(TYPE, FLOW)                          \
   namespace llvh {                                                             \
@@ -1745,13 +1745,13 @@ template <typename T> struct StdMapStringCustomMappingTraitsImpl {
   }                                                                            \
   }
 
-/// Utility for declaring that a std::vector of a particular type
-/// should be considered a YAML sequence.
+                                                                 
+                                         
 #define LLVM_YAML_IS_SEQUENCE_VECTOR(type)                                     \
   LLVM_YAML_IS_SEQUENCE_VECTOR_IMPL(type, false)
 
-/// Utility for declaring that a std::vector of a particular type
-/// should be considered a YAML flow sequence.
+                                                                 
+                                              
 #define LLVM_YAML_IS_FLOW_SEQUENCE_VECTOR(type)                                \
   LLVM_YAML_IS_SEQUENCE_VECTOR_IMPL(type, true)
 
@@ -1793,8 +1793,8 @@ template <typename T> struct StdMapStringCustomMappingTraitsImpl {
   }                                                                            \
   }
 
-/// Utility for declaring that a std::vector of a particular type
-/// should be considered a YAML document list.
+                                                                 
+                                              
 #define LLVM_YAML_IS_DOCUMENT_LIST_VECTOR(_type)                               \
   namespace llvh {                                                             \
   namespace yaml {                                                             \
@@ -1807,8 +1807,8 @@ template <typename T> struct StdMapStringCustomMappingTraitsImpl {
   }                                                                            \
   }
 
-/// Utility for declaring that std::map<std::string, _type> should be considered
-/// a YAML map.
+                                                                                
+               
 #define LLVM_YAML_IS_STRING_MAP(_type)                                         \
   namespace llvh {                                                             \
   namespace yaml {                                                             \
@@ -1818,4 +1818,4 @@ template <typename T> struct StdMapStringCustomMappingTraitsImpl {
   }                                                                            \
   }
 
-#endif // LLVM_SUPPORT_YAMLTRAITS_H
+#endif                             

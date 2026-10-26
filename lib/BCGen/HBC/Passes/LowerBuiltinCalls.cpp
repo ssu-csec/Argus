@@ -35,7 +35,7 @@ class LowerBuiltinCallsContext {
     return *BEC.lowerBuiltinCallsContext;
   }
 
-  /// Look for a builtin method \c object.method.
+                                                 
   hermes::OptValue<BuiltinMethod::Enum> findBuiltinMethod(
       Identifier objectName,
       Identifier methodName);
@@ -45,26 +45,26 @@ class LowerBuiltinCallsContext {
   }
 
  private:
-  /// Identifier of "HermesInternal".
+                                     
   Identifier hermesInternalID_;
 
-  /// Map from a builtin object to an integer "object index".
+                                                             
   llvh::DenseMap<Identifier, int> objects_;
 
-  /// Map from "object index":identifier to a "method index".
-  /// We are avoiding allocating a DenseMap per object.
+                                                             
+                                                       
   llvh::DenseMap<std::pair<int, Identifier>, BuiltinMethod::Enum> methods_;
 };
 
 LowerBuiltinCallsContext::LowerBuiltinCallsContext(StringTable &strTab) {
   hermesInternalID_ = strTab.getIdentifier("HermesInternal");
 
-  // First insert all objects.
+                              
   int objIndex = 0;
 #define BUILTIN_OBJECT(name) objects_[strTab.getIdentifier(#name)] = objIndex++;
 #include "hermes/FrontEndDefs/Builtins.def"
 
-  // Now insert all methods.
+                            
   int methodIndex = 0;
 #define BUILTIN_METHOD(object, name)                                           \
   methods_[std::make_pair(                                                     \
@@ -96,18 +96,18 @@ static bool run(Function *F) {
 
   for (auto &BB : *F) {
     for (auto it = BB.begin(), e = BB.end(); it != e;) {
-      // Get a pointer to the instruction and increment the iterator so we
-      // can delete the instruction if we want to.
+                                                                          
+                                                  
       auto *inst = &*it++;
 
-      // Look for an instruction sequence of the kind:
-      //    (Call
-      //        (LoadProperty
-      //            (LoadProperty globalObject, "objectLiteral")
-      //            Prop)
-      //        ...)
-      // where \c Object.Prop is a pre-defined builtin.
-      // Note: we only want to check for call. Not for construct.
+                                                      
+                 
+                             
+                                                                
+                         
+                    
+                                                       
+                                                                 
       if (inst->getKind() != ValueKind::CallInstKind)
         continue;
       auto *callInst = cast<CallInst>(inst);
@@ -128,10 +128,10 @@ static bool run(Function *F) {
       if (!objLit)
         continue;
 
-      // Uncomment this to get a dump of all global calls detected during
-      // compilation.
-      // llvh::outs() << "global call: " << objLit->getValue() << "."
-      //             << propLit->getValue() << "\n";
+                                                                         
+                     
+                                                                     
+                                                    
 
       auto builtinIndex =
           builtins.findBuiltinMethod(objLit->getValue(), propLit->getValue());
@@ -142,8 +142,8 @@ static bool run(Function *F) {
           llvh::dbgs() << "Found builtin [" << (int)*builtinIndex << "] "
                        << getBuiltinMethodName(*builtinIndex) << "()\n");
 
-      // Always lower HermesInternal.xxx() calls, but only lower the rest if
-      // -fstatic-builtins is enabled.
+                                                                            
+                                      
       if (objLit->getValue() != builtins.getHermesInternalID() &&
           !F->getContext().getOptimizationSettings().staticBuiltins) {
         continue;
@@ -164,8 +164,8 @@ static bool run(Function *F) {
       callInst->replaceAllUsesWith(callBuiltin);
       callInst->eraseFromParent();
 
-      // The property access instructions are not normally optimizable since
-      // they have side effects, but in this case it is safe to remove them.
+                                                                            
+                                                                            
       if (!loadProp->hasUsers())
         loadProp->eraseFromParent();
       if (!loadGlobalProp->hasUsers())
@@ -182,7 +182,7 @@ bool LowerBuiltinCalls::runOnFunction(Function *F) {
   return run(F);
 }
 
-} // namespace hbc
-} // namespace hermes
+}                 
+}                    
 
 #undef DEBUG_TYPE

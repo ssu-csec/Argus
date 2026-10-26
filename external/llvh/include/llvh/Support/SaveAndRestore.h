@@ -18,7 +18,7 @@
 
 namespace llvh {
 
-/// A utility class that uses RAII to save and restore the value of a variable.
+                                                                               
 template <typename T> struct SaveAndRestore {
   SaveAndRestore(T &X) : X(X), OldValue(X) {}
   SaveAndRestore(T &X, const T &NewValue) : X(X), OldValue(X) {
@@ -32,6 +32,6 @@ private:
   T OldValue;
 };
 
-} // namespace llvh
+}                  
 
 #endif

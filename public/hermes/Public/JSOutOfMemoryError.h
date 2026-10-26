@@ -16,7 +16,7 @@
 namespace hermes {
 namespace vm {
 
-/// A std::runtime_error class for out-of-memory.
+                                                 
 class HERMES_EXPORT JSOutOfMemoryError : public std::runtime_error {
   friend class GCBase;
   JSOutOfMemoryError(const std::string &what_arg)
@@ -24,7 +24,7 @@ class HERMES_EXPORT JSOutOfMemoryError : public std::runtime_error {
   ~JSOutOfMemoryError() override;
 };
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMES_PUBLIC_JSOUTOFMEMORYERROR_H
+#endif                                      

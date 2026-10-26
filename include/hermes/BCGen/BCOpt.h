@@ -19,7 +19,7 @@
 namespace hermes {
 class RegisterAllocator;
 
-/// Eliminates redundant moves by updating the written registers.
+                                                                 
 class MovElimination : public FunctionPass {
  public:
   explicit MovElimination(RegisterAllocator &RA)
@@ -32,6 +32,6 @@ class MovElimination : public FunctionPass {
   RegisterAllocator &RA_;
 };
 
-} // namespace hermes
+}                    
 
 #endif

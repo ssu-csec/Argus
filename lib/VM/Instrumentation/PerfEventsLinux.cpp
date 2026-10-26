@@ -30,8 +30,8 @@ namespace hermes {
 namespace vm {
 namespace instrumentation {
 
-// Simple struct to allow aggregate initialization and avoid global
-// constructors/destructors.
+                                                                   
+                            
 struct PerfCounter {
   bool ensureInit();
   bool begin();
@@ -71,10 +71,10 @@ bool PerfCounter::ensureInit() {
   fd_ = syscall(
       __NR_perf_event_open,
       &pe,
-      0, /* this process */
-      -1, /* any CPU */
-      -1, /* no group */
-      0 /* flags */);
+      0,                   
+      -1,              
+      -1,               
+      0            );
   return fd_ != -1;
 }
 
@@ -120,13 +120,13 @@ bool PerfEvents::endAndInsertStats(std::string &jsonStats) {
   return true;
 }
 
-} // namespace instrumentation
-} // namespace vm
-} // namespace hermes
+}                             
+}                
+}                    
 
 #else
 
-// Empty implementations for unsupported environments.
+                                                      
 
 namespace hermes {
 namespace vm {
@@ -140,7 +140,7 @@ bool PerfEvents::endAndInsertStats(std::string &jsonStats) {
   return false;
 }
 
-} // namespace instrumentation
-} // namespace vm
-} // namespace hermes
+}                             
+}                
+}                    
 #endif

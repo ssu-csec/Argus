@@ -11,7 +11,7 @@
 namespace hermes {
 namespace vm {
 
-/// Different Iteration Kinds. Entry means Key + Value.
+                                                       
 enum class IterationKind {
   Key,
   Value,
@@ -19,7 +19,7 @@ enum class IterationKind {
   NumKinds,
 };
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
 #endif

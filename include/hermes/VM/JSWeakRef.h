@@ -29,15 +29,15 @@ class JSWeakRef final : public JSObject {
     return cell->getKind() == CellKind::JSWeakRefKind;
   }
 
-  /// Create a new WeakRef with prototype property \p parentHandle.
+                                                                   
   static PseudoHandle<JSWeakRef> create(
       Runtime &runtime,
       Handle<JSObject> parentHandle);
 
   HermesValue deref(Runtime &runtime) const;
 
-  // This allocates a new WeakRef pointing to the given target. This should only
-  // be called once.
+                                                                                
+                    
   void setTarget(Runtime &runtime, Handle<JSObject> target);
 
   friend void JSWeakRefBuildMeta(const GCCell *cell, Metadata::Builder &mb);
@@ -58,6 +58,6 @@ class JSWeakRef final : public JSObject {
   WeakRef<JSObject> ref_;
 };
 
-} // namespace vm
-} // namespace hermes
-#endif // HERMES_VM_JSRWEAKREF
+}                
+}                    
+#endif                        

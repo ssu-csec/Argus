@@ -17,21 +17,21 @@
 
 namespace hermes {
 namespace hbc {
-/// A builder that is able to generate bytecode for very simple functions.
-/// This can be used to generate a few special functions needed by the Runtime.
+                                                                          
+                                                                               
 class SimpleBytecodeBuilder {
-  /// A wrapper for a few crutial fields needed to represent a function.
-  /// We can add more fields to it if things get more complicated, but let's
-  /// try to keep it as simple as we can.
+                                                                        
+                                                                            
+                                         
   struct SimpleFunction {
-    /// Offset of the bytecode. This will be populated later during buffer
-    /// generation.
+                                                                          
+                   
     uint32_t offset{};
-    /// Number of parameters including "this".
+                                              
     uint32_t paramCount;
-    /// Size of the frame.
+                          
     uint32_t frameSize;
-    /// The opcodes.
+                    
     std::vector<opcode_atom_t> opcodes;
 
     SimpleFunction(
@@ -45,13 +45,13 @@ class SimpleBytecodeBuilder {
     }
   };
 
-  /// List of functions in the builder to be concatenated into the final
-  /// bytecode buffer.
+                                                                        
+                      
   std::vector<SimpleFunction> functions_{};
 
  public:
-  /// Add a function to the builder. We only need the \p frameSize and
-  /// \p opcodes.
+                                                                      
+                 
   void addFunction(
       uint32_t paramCount,
       uint32_t frameSize,
@@ -59,10 +59,10 @@ class SimpleBytecodeBuilder {
     functions_.emplace_back(paramCount, frameSize, std::move(opcodes));
   }
 
-  /// Generate the bytecode buffer given the list of functions in the builder.
+                                                                              
   std::unique_ptr<Buffer> generateBytecodeBuffer();
 };
-} // namespace hbc
-} // namespace hermes
+}                 
+}                    
 
-#endif // HERMES_BCGEN_HBC_SIMPLEBYTECODEBUILDER_H
+#endif                                            

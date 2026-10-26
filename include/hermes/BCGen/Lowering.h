@@ -19,7 +19,7 @@
 
 namespace hermes {
 
-/// Lowers switches to a sequence of IFs.
+                                         
 class SwitchLowering : public FunctionPass {
  public:
   explicit SwitchLowering() : FunctionPass("SwitchLowering") {}
@@ -28,18 +28,18 @@ class SwitchLowering : public FunctionPass {
   bool runOnFunction(Function *F) override;
 
  private:
-  /// Replace the switch instruction with a sequence of IFs.
+                                                            
   void lowerSwitchIntoIfs(SwitchInst *switchInst);
 
-  /// Copy a branch in all PhiInsts in a block.
+                                               
   void
   copyPhiTarget(BasicBlock *block, BasicBlock *search, BasicBlock *replace);
-  /// Erase incoming branches from all PhiInsts in a block.
+                                                           
   void erasePhiTarget(BasicBlock *block, BasicBlock *toDelete);
 };
 
-/// Lowers AllocObjects and its associated StoreOwnPropertyInst with literals
-/// properties.
+                                                                             
+               
 class LowerAllocObject : public FunctionPass {
  public:
   explicit LowerAllocObject() : FunctionPass("LowerAllocObject") {}
@@ -48,33 +48,33 @@ class LowerAllocObject : public FunctionPass {
   bool runOnFunction(Function *F) override;
 
  private:
-  /// Define a type for managing lists of StoreNewOwnPropertyInsts.
+                                                                   
   using StoreList = llvh::SmallVector<StoreNewOwnPropertyInst *, 4>;
-  /// Define a type for mapping a given basic block to the stores to a given
-  /// AllocObjectInst in that basic block.
+                                                                            
+                                          
   using BlockUserMap = llvh::DenseMap<BasicBlock *, StoreList>;
 
-  /// Construct an ordered list of stores to \p allocInst that are known to
-  /// always execute without any other intervening users.
+                                                                           
+                                                         
   StoreList collectStores(
       AllocObjectInst *allocInst,
       const BlockUserMap &userBasicBlockMap,
       const DominanceInfo &DI);
-  /// Serialize AllocObjects with literal property and value sets into object
-  /// buffer; non-literals values could also be set as placeholders and later
-  /// overwritten by PutByIds.
+                                                                             
+                                                                             
+                              
   bool lowerAllocObjectBuffer(
       AllocObjectInst *allocInst,
       const StoreList &users,
       uint32_t maxSize);
-  /// Estimate best number of elements to serialize into the buffer.
-  /// Try optimizing for max bytecode size saving.
+                                                                    
+                                                  
   uint32_t estimateBestNumElemsToSerialize(
       const StoreList &users,
       bool hasParent);
 };
 
-/// Lowers Store instructions down to MOVs after register allocation.
+                                                                     
 class LowerStoreInstrs : public FunctionPass {
  public:
   explicit LowerStoreInstrs(RegisterAllocator &RA)
@@ -87,7 +87,7 @@ class LowerStoreInstrs : public FunctionPass {
   RegisterAllocator &RA_;
 };
 
-/// Transform number-like string properties into a LiteralNumber.
+                                                                 
 class LowerNumericProperties : public FunctionPass {
  public:
   explicit LowerNumericProperties() : FunctionPass("LowerNumericProperties") {}
@@ -102,13 +102,13 @@ class LowerNumericProperties : public FunctionPass {
       unsigned operandIdx);
 };
 
-// Limits the size of a function's array buffer by creating a
-// StoreOwnPropertyInst for each element in an AllocArray once it reaches
-// maxSize_ elements, since bytecode instructions can only represent up to
-// a certain sized array.
-// Also creates a StoreOwnPropertyInst for any `undefined` literal in an
-// AllocArray, and all literals past it, since undefined cannot be added
-// to the array buffer.
+                                                             
+                                                                         
+                                                                          
+                         
+                                                                        
+                                                                        
+                       
 class LimitAllocArray : public FunctionPass {
  public:
   explicit LimitAllocArray(unsigned maxSizeInclusive)
@@ -120,7 +120,7 @@ class LimitAllocArray : public FunctionPass {
   uint32_t maxSize_;
 };
 
-/// Lowers conditional branches to CompareBranchInst instructions
+                                                                 
 class LowerCondBranch : public FunctionPass {
  public:
   explicit LowerCondBranch() : FunctionPass("LowerCondBranch") {}
@@ -128,15 +128,15 @@ class LowerCondBranch : public FunctionPass {
   bool runOnFunction(Function *F) override;
 
  private:
-  /// \return whether the given binary operator can be lowered to a conditional
-  /// branch.
+                                                                               
+             
   static bool isOperatorSupported(BinaryOperatorInst::OpKind op);
 };
 
-/// Iterates over all instructions and performs lowering on exponentiation
-/// operators to turn them into HermesInternal calls.
-/// NOTE: It may be possible in the future to extend this pass to allow for
-/// other lowering operations on single instructions.
+                                                                          
+                                                     
+                                                                           
+                                                     
 class LowerExponentiationOperator : public FunctionPass {
  public:
   explicit LowerExponentiationOperator()
@@ -145,13 +145,13 @@ class LowerExponentiationOperator : public FunctionPass {
   bool runOnFunction(Function *F) override;
 
  private:
-  /// Changes the binary exponentiation operator \p inst into a call to
-  /// HermesInternal.exponentiationOperator.
+                                                                       
+                                            
   static bool lowerExponentiationOperator(
       IRBuilder &builder,
       BinaryOperatorInst *inst);
 };
 
-} // namespace hermes
+}                    
 
 #endif

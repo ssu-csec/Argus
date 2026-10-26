@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//===----------------------------------------------------------------------===//
-/// \file
-/// The BigInt constructor (https://tc39.es/ecma262/#sec-bigint-constructor).
-//===----------------------------------------------------------------------===//
+                                                                                
+         
+                                                                             
+                                                                                
 #include "JSLibInternal.h"
 
 #include "hermes/VM/BigIntPrimitive.h"
@@ -29,8 +29,8 @@ Handle<JSObject> createBigIntConstructor(Runtime &runtime) {
       1,
       CellKind::JSBigIntKind);
 
-  // BigInt.prototype.xxx methods.
-  // https://tc39.es/ecma262/#sec-properties-of-the-bigint-prototype-object
+                                  
+                                                                           
   void *ctx = nullptr;
   defineMethod(
       runtime,
@@ -54,8 +54,8 @@ Handle<JSObject> createBigIntConstructor(Runtime &runtime) {
       bigintPrototypeToLocaleString,
       1);
 
-  // BigInt.xxx() methods.
-  // https://tc39.es/ecma262/#sec-properties-of-the-bigint-constructor
+                          
+                                                                      
   defineMethod(
       runtime,
       cons,
@@ -71,7 +71,7 @@ Handle<JSObject> createBigIntConstructor(Runtime &runtime) {
       bigintTruncate,
       2);
 
-  // BigInt.xxx properties
+                          
   auto dpf = DefinePropertyFlags::getDefaultNewPropertyFlags();
   dpf.writable = 0;
   dpf.enumerable = 0;
@@ -87,8 +87,8 @@ Handle<JSObject> createBigIntConstructor(Runtime &runtime) {
 
 CallResult<HermesValue>
 bigintConstructor(void *, Runtime &runtime, NativeArgs args) {
-  // The bigint constructor is not a constructor according to
-  // https://262.ecma-international.org/#sec-bigint-constructor
+                                                             
+                                                               
   if (args.isConstructorCall()) {
     return runtime.raiseTypeError("BigInt is not a constructor");
   }
@@ -113,8 +113,8 @@ bigintPrototypeToLocaleString(void *ctx, Runtime &runtime, NativeArgs args) {
     return ExecutionStatus::EXCEPTION;
   }
 
-  // Call toString, as JSC does.
-  // TODO(T120187933): Format string according to locale.
+                                
+                                                         
   auto res = toString_RJS(runtime, runtime.makeHandle(*bigint));
   if (LLVM_UNLIKELY(res == ExecutionStatus::EXCEPTION)) {
     return ExecutionStatus::EXCEPTION;
@@ -125,7 +125,7 @@ bigintPrototypeToLocaleString(void *ctx, Runtime &runtime, NativeArgs args) {
 
 CallResult<HermesValue>
 bigintPrototypeToString(void *, Runtime &runtime, NativeArgs args) {
-  // 1. Let x be ? thisBigIntValue(this value).
+                                               
   auto x = thisBigIntValue(runtime, args.getThisHandle());
 
   if (LLVM_UNLIKELY(x == ExecutionStatus::EXCEPTION)) {
@@ -134,10 +134,10 @@ bigintPrototypeToString(void *, Runtime &runtime, NativeArgs args) {
 
   Handle<BigIntPrimitive> xHandle = runtime.makeHandle(x->getBigInt());
 
-  // 2. If radix is undefined, let radixMV be 10.
+                                                 
   uint32_t radixMV = 10;
 
-  // 3. Else, let radixMV be ? ToIntegerOrInfinity(radix).
+                                                          
   auto radixArg = args.getArgHandle(0);
   if (!radixArg->isUndefined()) {
     auto r = toIntegerOrInfinity(runtime, radixArg);
@@ -145,7 +145,7 @@ bigintPrototypeToString(void *, Runtime &runtime, NativeArgs args) {
       return ExecutionStatus::EXCEPTION;
     }
     assert(r->isNumber());
-    // 4. If radixMV < 2 or radixMV > 36, throw a RangeError exception.
+                                                                       
     if (r->getNumber() < 2 || r->getNumber() > 36) {
       return runtime.raiseRangeError(
           "radix out-of-range in BigInt.prototype.toString");
@@ -154,8 +154,8 @@ bigintPrototypeToString(void *, Runtime &runtime, NativeArgs args) {
     radixMV = r->getNumber();
   }
 
-  // 5. If radixMV = 10, return ! ToString(x).
-  // 6. Return the String representation of x.
+                                              
+                                              
   return BigIntPrimitive::toString(runtime, xHandle, radixMV);
 }
 
@@ -184,5 +184,5 @@ bigintTruncate(void *ctx, Runtime &runtime, NativeArgs args) {
   return (*op)(runtime, bits, runtime.makeHandle(bigint->getBigInt()));
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

@@ -20,6 +20,6 @@ class SimplifyCFG : public FunctionPass {
 
   bool runOnFunction(Function *F) override;
 };
-} // namespace hermes
+}                    
 
-#endif // HERMES_OPTIMIZER_SCALAR_SIMPLIFYCFG_H
+#endif                                         

@@ -17,7 +17,7 @@
 #include "Windows/WindowsSupport.h"
 #include <process.h>
 
-// Windows will at times define MemoryFence.
+                                            
 #ifdef MemoryFence
 #undef MemoryFence
 #endif
@@ -45,11 +45,11 @@ void llvh::llvm_execute_on_thread(void(*Fn)(void*), void *UserData,
     &param, 0, NULL);
 
   if (hThread) {
-    // We actually don't care whether the wait succeeds or fails, in
-    // the same way we don't care whether the pthread_join call succeeds
-    // or fails.  There's not much we could do if this were to fail. But
-    // on success, this call will wait until the thread finishes executing
-    // before returning.
+                                                                    
+                                                                        
+                                                                        
+                                                                          
+                        
     (void)::WaitForSingleObject(hThread, INFINITE);
     ::CloseHandle(hThread);
   }
@@ -67,10 +67,10 @@ static void SetThreadName(DWORD Id, LPCSTR Name) {
 
 #pragma pack(push, 8)
   struct THREADNAME_INFO {
-    DWORD dwType;     // Must be 0x1000.
-    LPCSTR szName;    // Pointer to thread name
-    DWORD dwThreadId; // Thread ID (-1 == current thread)
-    DWORD dwFlags;    // Reserved.  Do not use.
+    DWORD dwType;                       
+    LPCSTR szName;                             
+    DWORD dwThreadId;                                    
+    DWORD dwFlags;                             
   };
 #pragma pack(pop)
 
@@ -91,7 +91,7 @@ static void SetThreadName(DWORD Id, LPCSTR Name) {
 
 void llvh::set_thread_name(const Twine &Name) {
 #if defined(_MSC_VER)
-  // Make sure the input is null terminated.
+                                            
   SmallString<64> Storage;
   StringRef NameStr = Name.toNullTerminatedStringRef(Storage);
   SetThreadName(::GetCurrentThreadId(), NameStr.data());
@@ -99,11 +99,11 @@ void llvh::set_thread_name(const Twine &Name) {
 }
 
 void llvh::get_thread_name(SmallVectorImpl<char> &Name) {
-  // "Name" is not an inherent property of a thread on Windows.  In fact, when
-  // you "set" the name, you are only firing a one-time message to a debugger
-  // which it interprets as a program setting its threads' name.  We may be
-  // able to get fancy by creating a TLS entry when someone calls
-  // set_thread_name so that subsequent calls to get_thread_name return this
-  // value.
+                                                                              
+                                                                             
+                                                                           
+                                                                 
+                                                                            
+           
   Name.clear();
 }

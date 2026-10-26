@@ -30,13 +30,13 @@ bool hermes::runCustomOptimizationPasses(
   LLVM_DEBUG(dbgs() << "Optimizing with custom pipeline...\n");
   PassManager PM{M.getContext().getCodeGenerationSettings()};
 
-  // Add the optimization passes.
+                                 
   for (auto P : Opts) {
     if (!PM.addPassForName(P)) {
       return false;
     }
   }
-  // Run the optimizations.
+                           
   PM.run(&M);
   return true;
 }
@@ -45,19 +45,19 @@ void hermes::runFullOptimizationPasses(Module &M) {
   LLVM_DEBUG(dbgs() << "Running -O3 optimizations...\n");
   PassManager PM{M.getContext().getCodeGenerationSettings()};
 
-  // Run taint analysis first to analyze the original unoptimized IR
+                                                                    
   PM.addPass<TaintAnalysis>();
 
-  // Add the optimization passes.
+                                 
   if (M.getContext().getCodeGenerationSettings().enableBlockScoping) {
     PM.addPass<ScopeMerger>();
   }
 
-  // We need to fold constant strings before staticrequire.
+                                                           
   PM.addInstSimplify();
   PM.addResolveStaticRequire();
-  // staticrequire creates some dead instructions (namely frame loads) which
-  // need to be eliminated now, or the "require" parameter cannot be promoted.
+                                                                            
+                                                                              
   PM.addDCE();
 
   PM.addTypeInference();
@@ -76,9 +76,9 @@ void hermes::runFullOptimizationPasses(Module &M) {
     PM.addTypeInference();
     PM.addPass<WasmSimplify>();
   }
-#endif // HERMES_RUN_WASM
+#endif                   
 
-  // Run type inference before CSE so that we can better reason about binopt.
+                                                                             
   PM.addTypeInference();
   PM.addCSE();
   PM.addSimplifyCFG();
@@ -92,17 +92,17 @@ void hermes::runFullOptimizationPasses(Module &M) {
 
   PM.addTypeInference();
 
-  // Move StartGenerator instructions to the start of functions.
+                                                                
   PM.addHoistStartGenerator();
 
 #ifdef HERMES_RUN_WASM
-  // Emit Asm.js/Wasm unsafe compiler intrinsics, if enabled.
+                                                             
   if (M.getContext().getUseUnsafeIntrinsics()) {
     PM.addPass<EmitWasmIntrinsics>();
   }
-#endif // HERMES_RUN_WASM
+#endif                   
 
-  // Run the optimizations.
+                           
   PM.run(&M);
 }
 
@@ -110,23 +110,23 @@ void hermes::runDebugOptimizationPasses(Module &M) {
   LLVM_DEBUG(dbgs() << "Running -Og optimizations...\n");
   PassManager PM{M.getContext().getCodeGenerationSettings()};
 
-  // Run taint analysis first to analyze the original unoptimized IR
+                                                                    
   PM.addPass<TaintAnalysis>();
 
   PM.addInstSimplify();
   PM.addResolveStaticRequire();
 
-  // Move StartGenerator instructions to the start of functions.
+                                                                
   PM.addHoistStartGenerator();
 
 #ifdef HERMES_RUN_WASM
-  // Emit Asm.js/Wasm unsafe compiler intrinsics, if enabled.
+                                                             
   if (M.getContext().getUseUnsafeIntrinsics()) {
     PM.addPass<EmitWasmIntrinsics>();
   }
-#endif // HERMES_RUN_WASM
+#endif                   
 
-  // Run the optimizations.
+                           
   PM.run(&M);
 }
 
@@ -134,11 +134,11 @@ void hermes::runDebugOptimizationPasses(Module &M) {
 void hermes::runNoOptimizationPasses(Module &M) {
   LLVM_DEBUG(dbgs() << "Running -O0 optimizations...\n");
 
-  // Always run taint analysis even at -O0
+                                          
   PassManager PM{M.getContext().getCodeGenerationSettings()};
   PM.addPass<TaintAnalysis>();
 
-  // Emit Asm.js/Wasm unsafe compiler intrinsics, if enabled.
+                                                             
   if (M.getContext().getUseUnsafeIntrinsics()) {
     PM.addPass<EmitWasmIntrinsics>();
   }
@@ -149,11 +149,11 @@ void hermes::runNoOptimizationPasses(Module &M) {
 void hermes::runNoOptimizationPasses(Module &M) {
   LLVM_DEBUG(dbgs() << "Running -O0 optimizations...\n");
   
-  // Always run taint analysis even at -O0
+                                          
   PassManager PM{M.getContext().getCodeGenerationSettings()};
   PM.addPass<TaintAnalysis>();
   PM.run(&M);
 }
-#endif // HERMES_RUN_WASM
+#endif                   
 
 #undef DEBUG_TYPE

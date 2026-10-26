@@ -15,14 +15,14 @@
 namespace hermes {
 namespace inst {
 
-/// Store the structure of each opcode: size, number of operands and their
-/// types.
+                                                                          
+          
 static const struct {
-  /// Size of the entire instruction in bytes.
+                                              
   uint8_t size;
-  /// Number of operands.
+                         
   uint8_t numOperands;
-  /// The type of each operand.
+                               
   OperandType operandType[INST_MAX_OPERANDS];
 } meta[] = {
 #define DEFINE_OPCODE_0(name) {sizeof(inst::name##Inst), 0, {}},
@@ -202,5 +202,5 @@ llvh::raw_ostream &operator<<(
   return OS;
 }
 
-} // namespace inst
-} // namespace hermes
+}                  
+}                    

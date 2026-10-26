@@ -39,34 +39,34 @@ class raw_ostream;
 
 class LLT {
 public:
-  /// Get a low-level scalar or aggregate "bag of bits".
+                                                        
   static LLT scalar(unsigned SizeInBits) {
     assert(SizeInBits > 0 && "invalid scalar size");
-    return LLT{/*isPointer=*/false, /*isVector=*/false, /*NumElements=*/0,
-               SizeInBits, /*AddressSpace=*/0};
+    return LLT{              false,              false,                 0,
+               SizeInBits,                  0};
   }
 
-  /// Get a low-level pointer in the given address space (defaulting to 0).
+                                                                           
   static LLT pointer(uint16_t AddressSpace, unsigned SizeInBits) {
     assert(SizeInBits > 0 && "invalid pointer size");
-    return LLT{/*isPointer=*/true, /*isVector=*/false, /*NumElements=*/0,
+    return LLT{              true,              false,                 0,
                SizeInBits, AddressSpace};
   }
 
-  /// Get a low-level vector of some number of elements and element width.
-  /// \p NumElements must be at least 2.
+                                                                          
+                                        
   static LLT vector(uint16_t NumElements, unsigned ScalarSizeInBits) {
     assert(NumElements > 1 && "invalid number of vector elements");
     assert(ScalarSizeInBits > 0 && "invalid vector element size");
-    return LLT{/*isPointer=*/false, /*isVector=*/true, NumElements,
-               ScalarSizeInBits, /*AddressSpace=*/0};
+    return LLT{              false,              true, NumElements,
+               ScalarSizeInBits,                  0};
   }
 
-  /// Get a low-level vector of some number of elements and element type.
+                                                                         
   static LLT vector(uint16_t NumElements, LLT ScalarTy) {
     assert(NumElements > 1 && "invalid number of vector elements");
     assert(!ScalarTy.isVector() && "invalid vector element type");
-    return LLT{ScalarTy.isPointer(), /*isVector=*/true, NumElements,
+    return LLT{ScalarTy.isPointer(),              true, NumElements,
                ScalarTy.getSizeInBits(),
                ScalarTy.isPointer() ? ScalarTy.getAddressSpace() : 0};
   }
@@ -87,8 +87,8 @@ public:
 
   bool isVector() const { return isValid() && IsVector; }
 
-  /// Returns the number of elements in a vector LLT. Must only be called on
-  /// vector types.
+                                                                            
+                   
   uint16_t getNumElements() const {
     assert(IsVector && "cannot get number of elements on scalar/aggregate");
     if (!IsPointer)
@@ -97,7 +97,7 @@ public:
       return getFieldValue(PointerVectorElementsFieldInfo);
   }
 
-  /// Returns the total size of the type. Must only be called on sized types.
+                                                                             
   unsigned getSizeInBits() const {
     if (isPointer() || isScalar())
       return getScalarSizeInBits();
@@ -128,7 +128,7 @@ public:
       return getFieldValue(PointerVectorAddressSpaceFieldInfo);
   }
 
-  /// Returns the vector's element type. Only valid for vector types.
+                                                                     
   LLT getElementType() const {
     assert(isVector() && "cannot get element type of scalar/aggregate");
     if (IsPointer)
@@ -149,40 +149,40 @@ public:
   friend struct DenseMapInfo<LLT>;
 
 private:
-  /// LLT is packed into 64 bits as follows:
-  /// isPointer : 1
-  /// isVector  : 1
-  /// with 62 bits remaining for Kind-specific data, packed in bitfields
-  /// as described below. As there isn't a simple portable way to pack bits
-  /// into bitfields, here the different fields in the packed structure is
-  /// described in static const *Field variables. Each of these variables
-  /// is a 2-element array, with the first element describing the bitfield size
-  /// and the second element describing the bitfield offset.
+                                            
+                   
+                   
+                                                                        
+                                                                           
+                                                                          
+                                                                         
+                                                                               
+                                                            
   typedef int BitFieldInfo[2];
-  ///
-  /// This is how the bitfields are packed per Kind:
-  /// * Invalid:
-  ///   gets encoded as RawData == 0, as that is an invalid encoding, since for
-  ///   valid encodings, SizeInBits/SizeOfElement must be larger than 0.
-  /// * Non-pointer scalar (isPointer == 0 && isVector == 0):
-  ///   SizeInBits: 32;
+     
+                                                    
+                
+                                                                               
+                                                                        
+                                                             
+                       
   static const constexpr BitFieldInfo ScalarSizeFieldInfo{32, 0};
-  /// * Pointer (isPointer == 1 && isVector == 0):
-  ///   SizeInBits: 16;
-  ///   AddressSpace: 23;
+                                                  
+                       
+                         
   static const constexpr BitFieldInfo PointerSizeFieldInfo{16, 0};
   static const constexpr BitFieldInfo PointerAddressSpaceFieldInfo{
       23, PointerSizeFieldInfo[0] + PointerSizeFieldInfo[1]};
-  /// * Vector-of-non-pointer (isPointer == 0 && isVector == 1):
-  ///   NumElements: 16;
-  ///   SizeOfElement: 32;
+                                                                
+                        
+                          
   static const constexpr BitFieldInfo VectorElementsFieldInfo{16, 0};
   static const constexpr BitFieldInfo VectorSizeFieldInfo{
       32, VectorElementsFieldInfo[0] + VectorElementsFieldInfo[1]};
-  /// * Vector-of-pointer (isPointer == 1 && isVector == 1):
-  ///   NumElements: 16;
-  ///   SizeOfElement: 16;
-  ///   AddressSpace: 23;
+                                                            
+                        
+                          
+                         
   static const constexpr BitFieldInfo PointerVectorElementsFieldInfo{16, 0};
   static const constexpr BitFieldInfo PointerVectorSizeFieldInfo{
       16,
@@ -261,4 +261,4 @@ template<> struct DenseMapInfo<LLT> {
 
 }
 
-#endif // LLVM_SUPPORT_LOWLEVELTYPEIMPL_H
+#endif                                   

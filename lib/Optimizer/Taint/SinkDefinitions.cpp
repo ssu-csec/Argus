@@ -16,9 +16,9 @@ using llvh::dbgs;
 
 namespace hermes {
 
-//===----------------------------------------------------------------------===//
-// SinkRegistry Implementation
-//===----------------------------------------------------------------------===//
+                                                                                
+                              
+                                                                                
 
 SinkRegistry &SinkRegistry::getInstance() {
   static SinkRegistry instance;
@@ -28,8 +28,8 @@ SinkRegistry &SinkRegistry::getInstance() {
 SinkRegistry::SinkRegistry() {
   LLVM_DEBUG(dbgs() << "[SinkRegistry] Initializing sink definitions...\n");
   
-  // Reserve space to prevent vector reallocation and pointer invalidation
-  sinks_.reserve(50);  // Reserve space for ~50 sinks
+                                                                          
+  sinks_.reserve(50);                                
   
   initializeSinks();
   LLVM_DEBUG(dbgs() << "[SinkRegistry] Initialized " << sinks_.size() 
@@ -41,7 +41,7 @@ SinkRegistry::SinkRegistry() {
   LLVM_DEBUG(dbgs() << "[SinkRegistry] Function sink map size: " 
                     << functionSinkMap_.size() << "\n");
   
-  // Debug: Print all property sinks
+                                    
   LLVM_DEBUG({
     dbgs() << "[SinkRegistry] Property sinks:\n";
     for (const auto &pair : propertySinkMap_) {
@@ -51,13 +51,13 @@ SinkRegistry::SinkRegistry() {
 }
 
 void SinkRegistry::initializeSinks() {
-  // Network Sinks
+                  
   addSink(SinkDefinition(
-      "fetch", SinkType::Network, 0 /* url */, 1 /* data */, false));
+      "fetch", SinkType::Network, 0          , 1           , false));
   addSink(SinkDefinition(
       "XMLHttpRequest.open",
       SinkType::Network,
-      1 /* url */,
+      1          ,
       -1,
       true,
       "XMLHttpRequest",
@@ -66,7 +66,7 @@ void SinkRegistry::initializeSinks() {
       "XMLHttpRequest.send",
       SinkType::Network,
       -1,
-      0 /* data */,
+      0           ,
       true,
       "XMLHttpRequest",
       "send"));
@@ -74,25 +74,25 @@ void SinkRegistry::initializeSinks() {
       "XMLHttpRequest.setRequestHeader",
       SinkType::Network,
       -1,
-      1 /* value */,
+      1            ,
       true,
       "XMLHttpRequest",
       "setRequestHeader"));
   addSink(SinkDefinition(
       "navigator.sendBeacon",
       SinkType::Network,
-      0 /* url */,
-      1 /* data */,
+      0          ,
+      1           ,
       true,
       "navigator",
       "sendBeacon"));
 
-  // Storage Sinks
+                  
   addSink(SinkDefinition(
       "localStorage.setItem",
       SinkType::Storage,
       -1,
-      1 /* value */,
+      1            ,
       true,
       "localStorage",
       "setItem"));
@@ -100,19 +100,19 @@ void SinkRegistry::initializeSinks() {
       "sessionStorage.setItem",
       SinkType::Storage,
       -1,
-      1 /* value */,
+      1            ,
       true,
       "sessionStorage",
       "setItem"));
   addSink(SinkDefinition(
-      "document.cookie", SinkType::Storage, -1, 0 /* value */, false));
+      "document.cookie", SinkType::Storage, -1, 0            , false));
 
-  // XSS Sinks
+              
   addSink(SinkDefinition(
       "document.write",
       SinkType::XSS,
       -1,
-      0 /* html */,
+      0           ,
       true,
       "document",
       "write"));
@@ -120,41 +120,41 @@ void SinkRegistry::initializeSinks() {
       "document.writeln",
       SinkType::XSS,
       -1,
-      0 /* html */,
+      0           ,
       true,
       "document",
       "writeln"));
   addSink(
-      SinkDefinition("innerHTML", SinkType::XSS, -1, 0 /* value */, false));
+      SinkDefinition("innerHTML", SinkType::XSS, -1, 0            , false));
   addSink(
-      SinkDefinition("outerHTML", SinkType::XSS, -1, 0 /* value */,false));
+      SinkDefinition("outerHTML", SinkType::XSS, -1, 0            ,false));
 
-  // Code Injection Sinks
+                         
   addSink(SinkDefinition(
-      "eval", SinkType::CodeInjection, -1, 0 /* code */, false));
+      "eval", SinkType::CodeInjection, -1, 0           , false));
   addSink(SinkDefinition(
-      "Function", SinkType::CodeInjection, -1, 0 /* code */, false));
+      "Function", SinkType::CodeInjection, -1, 0           , false));
   addSink(SinkDefinition(
       "setTimeout",
       SinkType::CodeInjection,
       -1,
-      0 /* code */,
+      0           ,
       false));
   addSink(SinkDefinition(
       "setInterval",
       SinkType::CodeInjection,
       -1,
-      0 /* code */,
+      0           ,
       false));
 
-  // Navigation Sinks
+                     
   addSink(SinkDefinition(
-      "location.href", SinkType::Navigation, -1, 0 /* url */, false));
+      "location.href", SinkType::Navigation, -1, 0          , false));
   addSink(SinkDefinition(
       "location.assign",
       SinkType::Navigation,
       -1,
-      0 /* url */,
+      0          ,
       true,
       "location",
       "assign"));
@@ -162,14 +162,14 @@ void SinkRegistry::initializeSinks() {
       "location.replace",
       SinkType::Navigation,
       -1,
-      0 /* url */,
+      0          ,
       true,
       "location",
       "replace"));
   addSink(SinkDefinition(
       "window.open",
       SinkType::Navigation,
-      0 /* url */,
+      0          ,
       -1,
       true,
       "window",
@@ -178,15 +178,15 @@ void SinkRegistry::initializeSinks() {
       "src", 
       SinkType::Network, 
       -1, 
-      0 /* value */, 
+      0            , 
       false));
 
-  // [추가] WebSocket (실시간 데이터 유출 통로)
+                                   
    addSink(SinkDefinition(
       "WebSocket.send",
       SinkType::Network,
       -1,
-      0 /* data */,
+      0           ,
       true,
       "WebSocket",
       "send"));   
@@ -200,19 +200,19 @@ void SinkRegistry::addSink(SinkDefinition sink) {
   LLVM_DEBUG(dbgs() << "[addSink] After move, name: '" << def->name << "'\n");
 
   if (def->isMethod) {
-    // For methods: "objectName.methodName"
+                                           
     std::string key = def->objectName + "." + def->methodName;
     methodSinkMap_[key] = def;
   } else {
-    // For properties and functions
+                                   
     if (def->objectName.empty()) {
-      // Could be global function or generic property
+                                                     
       functionSinkMap_[def->name] = def;
-      // Also add to property map for generic properties like "innerHTML"
+                                                                         
       LLVM_DEBUG(dbgs() << "[addSink] Adding to property map: '" << def->name << "'\n");
       propertySinkMap_[def->name] = def;
     } else {
-      // Property (e.g., "document.cookie") 
+                                            
       std::string key = def->objectName + "." + def->name;
       propertySinkMap_[key] = def;
     }
@@ -225,7 +225,7 @@ const SinkDefinition *SinkRegistry::isPropertySink(
   LLVM_DEBUG(dbgs() << "[SinkRegistry] Checking property sink: '" 
                     << objectName << "." << propertyName << "'\n");
   
-  // Try object-specific property first
+                                       
   std::string key = objectName + "." + propertyName;
   LLVM_DEBUG(dbgs() << "[SinkRegistry] Looking for key: '" << key << "'\n");
   auto it = propertySinkMap_.find(key);
@@ -235,7 +235,7 @@ const SinkDefinition *SinkRegistry::isPropertySink(
     return it->second;
   }
 
-  // Try generic property name (e.g., "innerHTML" works on any element)
+                                                                       
   LLVM_DEBUG(dbgs() << "[SinkRegistry] Looking for generic property: '" 
                     << propertyName << "'\n");
   auto it2 = propertySinkMap_.find(propertyName);
@@ -281,6 +281,6 @@ std::vector<const SinkDefinition *> SinkRegistry::getSinksByType(
   return result;
 }
 
-} // namespace hermes
+}                    
 
 #undef DEBUG_TYPE

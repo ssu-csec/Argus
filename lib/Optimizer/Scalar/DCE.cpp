@@ -29,38 +29,38 @@ static bool performFunctionDCE(Function *F) {
   bool changed = false;
   PostOrderAnalysis PO(F);
 
-  // Scan the function in post order (from end to start). We want to visit the
-  // uses of the instruction before we visit the instruction itself in order to
-  // allow the optimization to delete long chains of dead code.
+                                                                              
+                                                                               
+                                                               
   for (auto *BB : PO) {
-    // Scan the instructions in the block from end to start.
-    for (auto it = BB->rbegin(), e = BB->rend(); it != e; /* nothing */) {
+                                                            
+    for (auto it = BB->rbegin(), e = BB->rend(); it != e;              ) {
       Instruction *I = &*it;
-      // Move the iterator to the next instruction in the block. This will
-      // allow us to delete the current instruction.
+                                                                          
+                                                    
       ++it;
 
-      // If the instruction writes to memory then we can't remove it. Notice
-      // that it is okay to delete instructions that only read memory and are
-      // unused.
-      //
-      // Terminators don't have any uses but are never supposed to be removed
-      // as dead code.
-      //
-      // CreateScopeInst may not have any users, but it is lowered to
-      // HBCCreateEnvironmentInst which should always be emitted and DCE'd if
-      // appropriate.
-      //
-      // HasRestrictedGlobalPropertyInst doesn't have a result but should never
-      // be removed as they perform runtime validation.
+                                                                            
+                                                                             
+                
+        
+                                                                             
+                      
+        
+                                                                     
+                                                                             
+                     
+        
+                                                                               
+                                                       
       if (I->mayWriteMemory() || llvh::isa<TerminatorInst>(I) ||
           llvh::isa<CreateScopeInst>(I) ||
           llvh::isa<ThrowIfHasRestrictedGlobalPropertyInst>(I)) {
         continue;
       }
 
-      // If some other instruction is using the result of this instruction then
-      // we can't delete it.
+                                                                               
+                            
       if (I->getNumUsers())
         continue;
 
@@ -78,15 +78,15 @@ static bool performFunctionDCE(Function *F) {
 bool DCE::runOnModule(Module *M) {
   bool changed = false;
 
-  // A list of unused functions to deallocate from memory.
-  // We need to destroy the memory at the very end of this function because
-  // a dead function may have a variable that is referrenced by an inner
-  // function (which will also become dead once the outer function is removed).
-  // However we cannot destroy the outer function right away until we destroy
-  // the inner function.
+                                                          
+                                                                           
+                                                                        
+                                                                               
+                                                                             
+                        
   llvh::SmallVector<Function *, 16> toDestroy;
 
-  // Perform per-function DCE.
+                              
   for (auto &F : *M) {
     LLVM_DEBUG(
         dbgs() << "\tDCE: running on function \"" << F.getInternalName()
@@ -96,19 +96,19 @@ bool DCE::runOnModule(Module *M) {
 
   bool localChanged = false;
   do {
-    // A list of unused functions to remove from the module without being
-    // destroyed.
+                                                                         
+                 
     llvh::SmallVector<Function *, 16> toRemove;
     localChanged = false;
     for (auto &F : *M) {
-      // Try to remove unused functions. Notice that the top-level-function has
-      // no external users so we must check for it explicitly.
+                                                                               
+                                                              
       if (M->findCJSModule(&F)) {
-        // If the function is a top-level module.
+                                                 
         continue;
       }
-      // Don't delete the function if it is at global scope, or if it is the
-      // entry point of a module.
+                                                                            
+                                 
       if (!F.isGlobalScope() && &F != M->getTopLevelFunction() &&
           !F.hasUsers()) {
         toRemove.push_back(&F);
@@ -119,9 +119,9 @@ bool DCE::runOnModule(Module *M) {
       }
     }
 
-    // We erase the basic blocks and instructions from each function in
-    // toRemove, and also remove the function from the module. However
-    // the memory of the function remain alive.
+                                                                       
+                                                                      
+                                               
     for (auto *F : toRemove) {
       LLVM_DEBUG(
           dbgs() << "\tDCE: Erasing function \"" << F->getInternalName()
@@ -130,8 +130,8 @@ bool DCE::runOnModule(Module *M) {
     }
   } while (localChanged);
 
-  // Now that all instructions have been destroyed from each dead function,
-  // it's now safe to destroy them including the variables in them.
+                                                                           
+                                                                   
   for (auto *F : toDestroy) {
     assert(F->empty() && "All basic blocks should have been deleted.");
     Value::destroy(F);

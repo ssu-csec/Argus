@@ -61,24 +61,24 @@ class TargetMachine;
 class TargetOptions;
 
 MCStreamer *createNullStreamer(MCContext &Ctx);
-// Takes ownership of \p TAB and \p CE.
+                                       
 
-/// Create a machine code streamer which will print out assembly for the native
-/// target, suitable for compiling with a native assembler.
-///
-/// \param InstPrint - If given, the instruction printer to use. If not given
-/// the MCInst representation will be printed.  This method takes ownership of
-/// InstPrint.
-///
-/// \param CE - If given, a code emitter to use to show the instruction
-/// encoding inline with the assembly. This method takes ownership of \p CE.
-///
-/// \param TAB - If given, a target asm backend to use to show the fixup
-/// information in conjunction with encoding information. This method takes
-/// ownership of \p TAB.
-///
-/// \param ShowInst - Whether to show the MCInst representation inline with
-/// the assembly.
+                                                                               
+                                                           
+   
+                                                                             
+                                                                              
+              
+   
+                                                                       
+                                                                            
+   
+                                                                        
+                                                                           
+                        
+   
+                                                                           
+                 
 MCStreamer *
 createAsmStreamer(MCContext &Ctx, std::unique_ptr<formatted_raw_ostream> OS,
                   bool isVerboseAsm, bool useDwarfDirectory,
@@ -109,14 +109,14 @@ MCSymbolizer *createMCSymbolizer(const Triple &TT, LLVMOpInfoCallback GetOpInfo,
                                  void *DisInfo, MCContext *Ctx,
                                  std::unique_ptr<MCRelocationInfo> &&RelInfo);
 
-/// Target - Wrapper for Target specific information.
-///
-/// For registration purposes, this is a POD type so that targets can be
-/// registered without the use of static constructors.
-///
-/// Targets should implement a single global instance of this class (which
-/// will be zero initialized), and pass that instance to the TargetRegistry as
-/// part of their initialization.
+                                                     
+   
+                                                                        
+                                                      
+   
+                                                                          
+                                                                              
+                                 
 class Target {
 public:
   friend struct TargetRegistry;
@@ -135,9 +135,9 @@ public:
       *(*)(const Target &T, const Triple &TT, StringRef CPU, StringRef Features,
            const TargetOptions &Options, Optional<Reloc::Model> RM,
            Optional<CodeModel::Model> CM, CodeGenOpt::Level OL, bool JIT);
-  // If it weren't for layering issues (this header is in llvm/Support, but
-  // depends on MC?) this should take the Streamer by value rather than rvalue
-  // reference.
+                                                                           
+                                                                              
+               
   using AsmPrinterCtorTy = AsmPrinter *(*)(
       TargetMachine &TM, std::unique_ptr<MCStreamer> &&Streamer);
   using MCAsmBackendCtorTy = MCAsmBackend *(*)(const Target &T,
@@ -192,145 +192,145 @@ public:
       std::unique_ptr<MCRelocationInfo> &&RelInfo);
 
 private:
-  /// Next - The next registered target in the linked list, maintained by the
-  /// TargetRegistry.
+                                                                             
+                     
   Target *Next;
 
-  /// The target function for checking if an architecture is supported.
+                                                                       
   ArchMatchFnTy ArchMatchFn;
 
-  /// Name - The target name.
+                             
   const char *Name;
 
-  /// ShortDesc - A short description of the target.
+                                                    
   const char *ShortDesc;
 
-  /// BackendName - The name of the backend implementation. This must match the
-  /// name of the 'def X : Target ...' in TableGen.
+                                                                               
+                                                   
   const char *BackendName;
 
-  /// HasJIT - Whether this target supports the JIT.
+                                                    
   bool HasJIT;
 
-  /// MCAsmInfoCtorFn - Constructor function for this target's MCAsmInfo, if
-  /// registered.
+                                                                            
+                 
   MCAsmInfoCtorFnTy MCAsmInfoCtorFn;
 
-  /// MCInstrInfoCtorFn - Constructor function for this target's MCInstrInfo,
-  /// if registered.
+                                                                             
+                    
   MCInstrInfoCtorFnTy MCInstrInfoCtorFn;
 
-  /// MCInstrAnalysisCtorFn - Constructor function for this target's
-  /// MCInstrAnalysis, if registered.
+                                                                    
+                                     
   MCInstrAnalysisCtorFnTy MCInstrAnalysisCtorFn;
 
-  /// MCRegInfoCtorFn - Constructor function for this target's MCRegisterInfo,
-  /// if registered.
+                                                                              
+                    
   MCRegInfoCtorFnTy MCRegInfoCtorFn;
 
-  /// MCSubtargetInfoCtorFn - Constructor function for this target's
-  /// MCSubtargetInfo, if registered.
+                                                                    
+                                     
   MCSubtargetInfoCtorFnTy MCSubtargetInfoCtorFn;
 
-  /// TargetMachineCtorFn - Construction function for this target's
-  /// TargetMachine, if registered.
+                                                                   
+                                   
   TargetMachineCtorTy TargetMachineCtorFn;
 
-  /// MCAsmBackendCtorFn - Construction function for this target's
-  /// MCAsmBackend, if registered.
+                                                                  
+                                  
   MCAsmBackendCtorTy MCAsmBackendCtorFn;
 
-  /// MCAsmParserCtorFn - Construction function for this target's
-  /// MCTargetAsmParser, if registered.
+                                                                 
+                                       
   MCAsmParserCtorTy MCAsmParserCtorFn;
 
-  /// AsmPrinterCtorFn - Construction function for this target's AsmPrinter,
-  /// if registered.
+                                                                            
+                    
   AsmPrinterCtorTy AsmPrinterCtorFn;
 
-  /// MCDisassemblerCtorFn - Construction function for this target's
-  /// MCDisassembler, if registered.
+                                                                    
+                                    
   MCDisassemblerCtorTy MCDisassemblerCtorFn;
 
-  /// MCInstPrinterCtorFn - Construction function for this target's
-  /// MCInstPrinter, if registered.
+                                                                   
+                                   
   MCInstPrinterCtorTy MCInstPrinterCtorFn;
 
-  /// MCCodeEmitterCtorFn - Construction function for this target's
-  /// CodeEmitter, if registered.
+                                                                   
+                                 
   MCCodeEmitterCtorTy MCCodeEmitterCtorFn;
 
-  // Construction functions for the various object formats, if registered.
+                                                                          
   COFFStreamerCtorTy COFFStreamerCtorFn = nullptr;
   MachOStreamerCtorTy MachOStreamerCtorFn = nullptr;
   ELFStreamerCtorTy ELFStreamerCtorFn = nullptr;
   WasmStreamerCtorTy WasmStreamerCtorFn = nullptr;
 
-  /// Construction function for this target's null TargetStreamer, if
-  /// registered (default = nullptr).
+                                                                     
+                                     
   NullTargetStreamerCtorTy NullTargetStreamerCtorFn = nullptr;
 
-  /// Construction function for this target's asm TargetStreamer, if
-  /// registered (default = nullptr).
+                                                                    
+                                     
   AsmTargetStreamerCtorTy AsmTargetStreamerCtorFn = nullptr;
 
-  /// Construction function for this target's obj TargetStreamer, if
-  /// registered (default = nullptr).
+                                                                    
+                                     
   ObjectTargetStreamerCtorTy ObjectTargetStreamerCtorFn = nullptr;
 
-  /// MCRelocationInfoCtorFn - Construction function for this target's
-  /// MCRelocationInfo, if registered (default = llvh::createMCRelocationInfo)
+                                                                      
+                                                                              
   MCRelocationInfoCtorTy MCRelocationInfoCtorFn = nullptr;
 
-  /// MCSymbolizerCtorFn - Construction function for this target's
-  /// MCSymbolizer, if registered (default = llvh::createMCSymbolizer)
+                                                                  
+                                                                      
   MCSymbolizerCtorTy MCSymbolizerCtorFn = nullptr;
 
 public:
   Target() = default;
 
-  /// @name Target Information
-  /// @{
+                              
+        
 
-  // getNext - Return the next registered target.
+                                                 
   const Target *getNext() const { return Next; }
 
-  /// getName - Get the target name.
+                                    
   const char *getName() const { return Name; }
 
-  /// getShortDescription - Get a short description of the target.
+                                                                  
   const char *getShortDescription() const { return ShortDesc; }
 
-  /// getBackendName - Get the backend name.
+                                            
   const char *getBackendName() const { return BackendName; }
 
-  /// @}
-  /// @name Feature Predicates
-  /// @{
+        
+                              
+        
 
-  /// hasJIT - Check if this targets supports the just-in-time compilation.
+                                                                           
   bool hasJIT() const { return HasJIT; }
 
-  /// hasTargetMachine - Check if this target supports code generation.
+                                                                       
   bool hasTargetMachine() const { return TargetMachineCtorFn != nullptr; }
 
-  /// hasMCAsmBackend - Check if this target supports .o generation.
+                                                                    
   bool hasMCAsmBackend() const { return MCAsmBackendCtorFn != nullptr; }
 
-  /// hasMCAsmParser - Check if this target supports assembly parsing.
+                                                                      
   bool hasMCAsmParser() const { return MCAsmParserCtorFn != nullptr; }
 
-  /// @}
-  /// @name Feature Constructors
-  /// @{
+        
+                                
+        
 
-  /// createMCAsmInfo - Create a MCAsmInfo implementation for the specified
-  /// target triple.
-  ///
-  /// \param TheTriple This argument is used to determine the target machine
-  /// feature set; it should always be provided. Generally this should be
-  /// either the target triple from the module, or the target triple of the
-  /// host if that does not exist.
+                                                                           
+                    
+     
+                                                                            
+                                                                         
+                                                                           
+                                  
   MCAsmInfo *createMCAsmInfo(const MCRegisterInfo &MRI,
                              StringRef TheTriple) const {
     if (!MCAsmInfoCtorFn)
@@ -338,39 +338,39 @@ public:
     return MCAsmInfoCtorFn(MRI, Triple(TheTriple));
   }
 
-  /// createMCInstrInfo - Create a MCInstrInfo implementation.
-  ///
+                                                              
+     
   MCInstrInfo *createMCInstrInfo() const {
     if (!MCInstrInfoCtorFn)
       return nullptr;
     return MCInstrInfoCtorFn();
   }
 
-  /// createMCInstrAnalysis - Create a MCInstrAnalysis implementation.
-  ///
+                                                                      
+     
   MCInstrAnalysis *createMCInstrAnalysis(const MCInstrInfo *Info) const {
     if (!MCInstrAnalysisCtorFn)
       return nullptr;
     return MCInstrAnalysisCtorFn(Info);
   }
 
-  /// createMCRegInfo - Create a MCRegisterInfo implementation.
-  ///
+                                                               
+     
   MCRegisterInfo *createMCRegInfo(StringRef TT) const {
     if (!MCRegInfoCtorFn)
       return nullptr;
     return MCRegInfoCtorFn(Triple(TT));
   }
 
-  /// createMCSubtargetInfo - Create a MCSubtargetInfo implementation.
-  ///
-  /// \param TheTriple This argument is used to determine the target machine
-  /// feature set; it should always be provided. Generally this should be
-  /// either the target triple from the module, or the target triple of the
-  /// host if that does not exist.
-  /// \param CPU This specifies the name of the target CPU.
-  /// \param Features This specifies the string representation of the
-  /// additional target features.
+                                                                      
+     
+                                                                            
+                                                                         
+                                                                           
+                                  
+                                                           
+                                                                     
+                                 
   MCSubtargetInfo *createMCSubtargetInfo(StringRef TheTriple, StringRef CPU,
                                          StringRef Features) const {
     if (!MCSubtargetInfoCtorFn)
@@ -378,13 +378,13 @@ public:
     return MCSubtargetInfoCtorFn(Triple(TheTriple), CPU, Features);
   }
 
-  /// createTargetMachine - Create a target specific machine implementation
-  /// for the specified \p Triple.
-  ///
-  /// \param TT This argument is used to determine the target machine
-  /// feature set; it should always be provided. Generally this should be
-  /// either the target triple from the module, or the target triple of the
-  /// host if that does not exist.
+                                                                           
+                                  
+     
+                                                                     
+                                                                         
+                                                                           
+                                  
   TargetMachine *createTargetMachine(StringRef TT, StringRef CPU,
                                      StringRef Features,
                                      const TargetOptions &Options,
@@ -398,7 +398,7 @@ public:
                                CM, OL, JIT);
   }
 
-  /// createMCAsmBackend - Create a target specific assembly parser.
+                                                                    
   MCAsmBackend *createMCAsmBackend(const MCSubtargetInfo &STI,
                                    const MCRegisterInfo &MRI,
                                    const MCTargetOptions &Options) const {
@@ -407,10 +407,10 @@ public:
     return MCAsmBackendCtorFn(*this, STI, MRI, Options);
   }
 
-  /// createMCAsmParser - Create a target specific assembly parser.
-  ///
-  /// \param Parser The target independent parser implementation to use for
-  /// parsing and lexing.
+                                                                   
+     
+                                                                           
+                         
   MCTargetAsmParser *createMCAsmParser(const MCSubtargetInfo &STI,
                                        MCAsmParser &Parser,
                                        const MCInstrInfo &MII,
@@ -420,8 +420,8 @@ public:
     return MCAsmParserCtorFn(STI, Parser, MII, Options);
   }
 
-  /// createAsmPrinter - Create a target specific assembly printer pass.  This
-  /// takes ownership of the MCStreamer object.
+                                                                              
+                                               
   AsmPrinter *createAsmPrinter(TargetMachine &TM,
                                std::unique_ptr<MCStreamer> &&Streamer) const {
     if (!AsmPrinterCtorFn)
@@ -445,7 +445,7 @@ public:
     return MCInstPrinterCtorFn(T, SyntaxVariant, MAI, MII, MRI);
   }
 
-  /// createMCCodeEmitter - Create a target specific code emitter.
+                                                                  
   MCCodeEmitter *createMCCodeEmitter(const MCInstrInfo &II,
                                      const MCRegisterInfo &MRI,
                                      MCContext &Ctx) const {
@@ -454,14 +454,14 @@ public:
     return MCCodeEmitterCtorFn(II, MRI, Ctx);
   }
 
-  /// Create a target specific MCStreamer.
-  ///
-  /// \param T The target triple.
-  /// \param Ctx The target context.
-  /// \param TAB The target assembler backend object. Takes ownership.
-  /// \param OW The stream object.
-  /// \param Emitter The target independent assembler object.Takes ownership.
-  /// \param RelaxAll Relax all fixups?
+                                          
+     
+                                 
+                                    
+                                                                      
+                                  
+                                                                             
+                                       
   MCStreamer *createMCObjectStreamer(const Triple &T, MCContext &Ctx,
                                      std::unique_ptr<MCAsmBackend> &&TAB,
                                      std::unique_ptr<MCObjectWriter> &&OW,
@@ -547,10 +547,10 @@ public:
     return nullptr;
   }
 
-  /// createMCRelocationInfo - Create a target specific MCRelocationInfo.
-  ///
-  /// \param TT The target triple.
-  /// \param Ctx The target context.
+                                                                         
+     
+                                  
+                                    
   MCRelocationInfo *createMCRelocationInfo(StringRef TT, MCContext &Ctx) const {
     MCRelocationInfoCtorTy Fn = MCRelocationInfoCtorFn
                                     ? MCRelocationInfoCtorFn
@@ -558,18 +558,18 @@ public:
     return Fn(Triple(TT), Ctx);
   }
 
-  /// createMCSymbolizer - Create a target specific MCSymbolizer.
-  ///
-  /// \param TT The target triple.
-  /// \param GetOpInfo The function to get the symbolic information for
-  /// operands.
-  /// \param SymbolLookUp The function to lookup a symbol name.
-  /// \param DisInfo The pointer to the block of symbolic information for above
-  /// call
-  /// back.
-  /// \param Ctx The target context.
-  /// \param RelInfo The relocation information for this target. Takes
-  /// ownership.
+                                                                 
+     
+                                  
+                                                                       
+               
+                                                               
+                                                                               
+          
+           
+                                    
+                                                                      
+                
   MCSymbolizer *
   createMCSymbolizer(StringRef TT, LLVMOpInfoCallback GetOpInfo,
                      LLVMSymbolLookupCallback SymbolLookUp, void *DisInfo,
@@ -581,15 +581,15 @@ public:
               std::move(RelInfo));
   }
 
-  /// @}
+        
 };
 
-/// TargetRegistry - Generic interface to target specific features.
+                                                                   
 struct TargetRegistry {
-  // FIXME: Make this a namespace, probably just move all the Register*
-  // functions into Target (currently they all just set members on the Target
-  // anyway, and Target friends this class so those functions can...
-  // function).
+                                                                       
+                                                                             
+                                                                    
+               
   TargetRegistry() = delete;
 
   class iterator {
@@ -611,13 +611,13 @@ struct TargetRegistry {
     bool operator==(const iterator &x) const { return Current == x.Current; }
     bool operator!=(const iterator &x) const { return !operator==(x); }
 
-    // Iterator traversal: forward iteration only
-    iterator &operator++() { // Preincrement
+                                                 
+    iterator &operator++() {                
       assert(Current && "Cannot increment end iterator!");
       Current = Current->getNext();
       return *this;
     }
-    iterator operator++(int) { // Postincrement
+    iterator operator++(int) {                 
       iterator tmp = *this;
       ++*this;
       return tmp;
@@ -631,212 +631,212 @@ struct TargetRegistry {
     const Target *operator->() const { return &operator*(); }
   };
 
-  /// printRegisteredTargetsForVersion - Print the registered targets
-  /// appropriately for inclusion in a tool's version output.
+                                                                     
+                                                             
   static void printRegisteredTargetsForVersion(raw_ostream &OS);
 
-  /// @name Registry Access
-  /// @{
+                           
+        
 
   static iterator_range<iterator> targets();
 
-  /// lookupTarget - Lookup a target based on a target triple.
-  ///
-  /// \param Triple - The triple to use for finding a target.
-  /// \param Error - On failure, an error string describing why no target was
-  /// found.
+                                                              
+     
+                                                             
+                                                                             
+            
   static const Target *lookupTarget(const std::string &Triple,
                                     std::string &Error);
 
-  /// lookupTarget - Lookup a target based on an architecture name
-  /// and a target triple.  If the architecture name is non-empty,
-  /// then the lookup is done by architecture.  Otherwise, the target
-  /// triple is used.
-  ///
-  /// \param ArchName - The architecture to use for finding a target.
-  /// \param TheTriple - The triple to use for finding a target.  The
-  /// triple is updated with canonical architecture name if a lookup
-  /// by architecture is done.
-  /// \param Error - On failure, an error string describing why no target was
-  /// found.
+                                                                  
+                                                                  
+                                                                     
+                     
+     
+                                                                     
+                                                                     
+                                                                    
+                              
+                                                                             
+            
   static const Target *lookupTarget(const std::string &ArchName,
                                     Triple &TheTriple, std::string &Error);
 
-  /// @}
-  /// @name Target Registration
-  /// @{
+        
+                               
+        
 
-  /// RegisterTarget - Register the given target. Attempts to register a
-  /// target which has already been registered will be ignored.
-  ///
-  /// Clients are responsible for ensuring that registration doesn't occur
-  /// while another thread is attempting to access the registry. Typically
-  /// this is done by initializing all targets at program startup.
-  ///
-  /// @param T - The target being registered.
-  /// @param Name - The target name. This should be a static string.
-  /// @param ShortDesc - A short target description. This should be a static
-  /// string.
-  /// @param BackendName - The name of the backend. This should be a static
-  /// string that is the same for all targets that share a backend
-  /// implementation and must match the name used in the 'def X : Target ...' in
-  /// TableGen.
-  /// @param ArchMatchFn - The arch match checking function for this target.
-  /// @param HasJIT - Whether the target supports JIT code
-  /// generation.
+                                                                        
+                                                               
+     
+                                                                          
+                                                                          
+                                                                  
+     
+                                             
+                                                                    
+                                                                            
+             
+                                                                           
+                                                                  
+                                                                                
+               
+                                                                            
+                                                          
+                 
   static void RegisterTarget(Target &T, const char *Name, const char *ShortDesc,
                              const char *BackendName,
                              Target::ArchMatchFnTy ArchMatchFn,
                              bool HasJIT = false);
 
-  /// RegisterMCAsmInfo - Register a MCAsmInfo implementation for the
-  /// given target.
-  ///
-  /// Clients are responsible for ensuring that registration doesn't occur
-  /// while another thread is attempting to access the registry. Typically
-  /// this is done by initializing all targets at program startup.
-  ///
-  /// @param T - The target being registered.
-  /// @param Fn - A function to construct a MCAsmInfo for the target.
+                                                                     
+                   
+     
+                                                                          
+                                                                          
+                                                                  
+     
+                                             
+                                                                     
   static void RegisterMCAsmInfo(Target &T, Target::MCAsmInfoCtorFnTy Fn) {
     T.MCAsmInfoCtorFn = Fn;
   }
 
-  /// RegisterMCInstrInfo - Register a MCInstrInfo implementation for the
-  /// given target.
-  ///
-  /// Clients are responsible for ensuring that registration doesn't occur
-  /// while another thread is attempting to access the registry. Typically
-  /// this is done by initializing all targets at program startup.
-  ///
-  /// @param T - The target being registered.
-  /// @param Fn - A function to construct a MCInstrInfo for the target.
+                                                                         
+                   
+     
+                                                                          
+                                                                          
+                                                                  
+     
+                                             
+                                                                       
   static void RegisterMCInstrInfo(Target &T, Target::MCInstrInfoCtorFnTy Fn) {
     T.MCInstrInfoCtorFn = Fn;
   }
 
-  /// RegisterMCInstrAnalysis - Register a MCInstrAnalysis implementation for
-  /// the given target.
+                                                                             
+                       
   static void RegisterMCInstrAnalysis(Target &T,
                                       Target::MCInstrAnalysisCtorFnTy Fn) {
     T.MCInstrAnalysisCtorFn = Fn;
   }
 
-  /// RegisterMCRegInfo - Register a MCRegisterInfo implementation for the
-  /// given target.
-  ///
-  /// Clients are responsible for ensuring that registration doesn't occur
-  /// while another thread is attempting to access the registry. Typically
-  /// this is done by initializing all targets at program startup.
-  ///
-  /// @param T - The target being registered.
-  /// @param Fn - A function to construct a MCRegisterInfo for the target.
+                                                                          
+                   
+     
+                                                                          
+                                                                          
+                                                                  
+     
+                                             
+                                                                          
   static void RegisterMCRegInfo(Target &T, Target::MCRegInfoCtorFnTy Fn) {
     T.MCRegInfoCtorFn = Fn;
   }
 
-  /// RegisterMCSubtargetInfo - Register a MCSubtargetInfo implementation for
-  /// the given target.
-  ///
-  /// Clients are responsible for ensuring that registration doesn't occur
-  /// while another thread is attempting to access the registry. Typically
-  /// this is done by initializing all targets at program startup.
-  ///
-  /// @param T - The target being registered.
-  /// @param Fn - A function to construct a MCSubtargetInfo for the target.
+                                                                             
+                       
+     
+                                                                          
+                                                                          
+                                                                  
+     
+                                             
+                                                                           
   static void RegisterMCSubtargetInfo(Target &T,
                                       Target::MCSubtargetInfoCtorFnTy Fn) {
     T.MCSubtargetInfoCtorFn = Fn;
   }
 
-  /// RegisterTargetMachine - Register a TargetMachine implementation for the
-  /// given target.
-  ///
-  /// Clients are responsible for ensuring that registration doesn't occur
-  /// while another thread is attempting to access the registry. Typically
-  /// this is done by initializing all targets at program startup.
-  ///
-  /// @param T - The target being registered.
-  /// @param Fn - A function to construct a TargetMachine for the target.
+                                                                             
+                   
+     
+                                                                          
+                                                                          
+                                                                  
+     
+                                             
+                                                                         
   static void RegisterTargetMachine(Target &T, Target::TargetMachineCtorTy Fn) {
     T.TargetMachineCtorFn = Fn;
   }
 
-  /// RegisterMCAsmBackend - Register a MCAsmBackend implementation for the
-  /// given target.
-  ///
-  /// Clients are responsible for ensuring that registration doesn't occur
-  /// while another thread is attempting to access the registry. Typically
-  /// this is done by initializing all targets at program startup.
-  ///
-  /// @param T - The target being registered.
-  /// @param Fn - A function to construct an AsmBackend for the target.
+                                                                           
+                   
+     
+                                                                          
+                                                                          
+                                                                  
+     
+                                             
+                                                                       
   static void RegisterMCAsmBackend(Target &T, Target::MCAsmBackendCtorTy Fn) {
     T.MCAsmBackendCtorFn = Fn;
   }
 
-  /// RegisterMCAsmParser - Register a MCTargetAsmParser implementation for
-  /// the given target.
-  ///
-  /// Clients are responsible for ensuring that registration doesn't occur
-  /// while another thread is attempting to access the registry. Typically
-  /// this is done by initializing all targets at program startup.
-  ///
-  /// @param T - The target being registered.
-  /// @param Fn - A function to construct an MCTargetAsmParser for the target.
+                                                                           
+                       
+     
+                                                                          
+                                                                          
+                                                                  
+     
+                                             
+                                                                              
   static void RegisterMCAsmParser(Target &T, Target::MCAsmParserCtorTy Fn) {
     T.MCAsmParserCtorFn = Fn;
   }
 
-  /// RegisterAsmPrinter - Register an AsmPrinter implementation for the given
-  /// target.
-  ///
-  /// Clients are responsible for ensuring that registration doesn't occur
-  /// while another thread is attempting to access the registry. Typically
-  /// this is done by initializing all targets at program startup.
-  ///
-  /// @param T - The target being registered.
-  /// @param Fn - A function to construct an AsmPrinter for the target.
+                                                                              
+             
+     
+                                                                          
+                                                                          
+                                                                  
+     
+                                             
+                                                                       
   static void RegisterAsmPrinter(Target &T, Target::AsmPrinterCtorTy Fn) {
     T.AsmPrinterCtorFn = Fn;
   }
 
-  /// RegisterMCDisassembler - Register a MCDisassembler implementation for
-  /// the given target.
-  ///
-  /// Clients are responsible for ensuring that registration doesn't occur
-  /// while another thread is attempting to access the registry. Typically
-  /// this is done by initializing all targets at program startup.
-  ///
-  /// @param T - The target being registered.
-  /// @param Fn - A function to construct an MCDisassembler for the target.
+                                                                           
+                       
+     
+                                                                          
+                                                                          
+                                                                  
+     
+                                             
+                                                                           
   static void RegisterMCDisassembler(Target &T,
                                      Target::MCDisassemblerCtorTy Fn) {
     T.MCDisassemblerCtorFn = Fn;
   }
 
-  /// RegisterMCInstPrinter - Register a MCInstPrinter implementation for the
-  /// given target.
-  ///
-  /// Clients are responsible for ensuring that registration doesn't occur
-  /// while another thread is attempting to access the registry. Typically
-  /// this is done by initializing all targets at program startup.
-  ///
-  /// @param T - The target being registered.
-  /// @param Fn - A function to construct an MCInstPrinter for the target.
+                                                                             
+                   
+     
+                                                                          
+                                                                          
+                                                                  
+     
+                                             
+                                                                          
   static void RegisterMCInstPrinter(Target &T, Target::MCInstPrinterCtorTy Fn) {
     T.MCInstPrinterCtorFn = Fn;
   }
 
-  /// RegisterMCCodeEmitter - Register a MCCodeEmitter implementation for the
-  /// given target.
-  ///
-  /// Clients are responsible for ensuring that registration doesn't occur
-  /// while another thread is attempting to access the registry. Typically
-  /// this is done by initializing all targets at program startup.
-  ///
-  /// @param T - The target being registered.
-  /// @param Fn - A function to construct an MCCodeEmitter for the target.
+                                                                             
+                   
+     
+                                                                          
+                                                                          
+                                                                  
+     
+                                             
+                                                                          
   static void RegisterMCCodeEmitter(Target &T, Target::MCCodeEmitterCtorTy Fn) {
     T.MCCodeEmitterCtorFn = Fn;
   }
@@ -873,50 +873,50 @@ struct TargetRegistry {
     T.ObjectTargetStreamerCtorFn = Fn;
   }
 
-  /// RegisterMCRelocationInfo - Register an MCRelocationInfo
-  /// implementation for the given target.
-  ///
-  /// Clients are responsible for ensuring that registration doesn't occur
-  /// while another thread is attempting to access the registry. Typically
-  /// this is done by initializing all targets at program startup.
-  ///
-  /// @param T - The target being registered.
-  /// @param Fn - A function to construct an MCRelocationInfo for the target.
+                                                             
+                                          
+     
+                                                                          
+                                                                          
+                                                                  
+     
+                                             
+                                                                             
   static void RegisterMCRelocationInfo(Target &T,
                                        Target::MCRelocationInfoCtorTy Fn) {
     T.MCRelocationInfoCtorFn = Fn;
   }
 
-  /// RegisterMCSymbolizer - Register an MCSymbolizer
-  /// implementation for the given target.
-  ///
-  /// Clients are responsible for ensuring that registration doesn't occur
-  /// while another thread is attempting to access the registry. Typically
-  /// this is done by initializing all targets at program startup.
-  ///
-  /// @param T - The target being registered.
-  /// @param Fn - A function to construct an MCSymbolizer for the target.
+                                                     
+                                          
+     
+                                                                          
+                                                                          
+                                                                  
+     
+                                             
+                                                                         
   static void RegisterMCSymbolizer(Target &T, Target::MCSymbolizerCtorTy Fn) {
     T.MCSymbolizerCtorFn = Fn;
   }
 
-  /// @}
+        
 };
 
-//===--------------------------------------------------------------------===//
+                                                                              
 
-/// RegisterTarget - Helper template for registering a target, for use in the
-/// target's initialization function. Usage:
-///
-///
-/// Target &getTheFooTarget() { // The global target instance.
-///   static Target TheFooTarget;
-///   return TheFooTarget;
-/// }
-/// extern "C" void LLVMInitializeFooTargetInfo() {
-///   RegisterTarget<Triple::foo> X(getTheFooTarget(), "foo", "Foo
-///   description", "Foo" /* Backend Name */);
-/// }
+                                                                             
+                                            
+   
+   
+                                                              
+                                 
+                          
+     
+                                                   
+                                                                  
+                                              
+     
 template <Triple::ArchType TargetArchType = Triple::UnknownArch,
           bool HasJIT = false>
 struct RegisterTarget {
@@ -931,48 +931,48 @@ struct RegisterTarget {
   }
 };
 
-/// RegisterMCAsmInfo - Helper template for registering a target assembly info
-/// implementation.  This invokes the static "Create" method on the class to
-/// actually do the construction.  Usage:
-///
-/// extern "C" void LLVMInitializeFooTarget() {
-///   extern Target TheFooTarget;
-///   RegisterMCAsmInfo<FooMCAsmInfo> X(TheFooTarget);
-/// }
+                                                                              
+                                                                            
+                                         
+   
+                                               
+                                 
+                                                      
+     
 template <class MCAsmInfoImpl> struct RegisterMCAsmInfo {
   RegisterMCAsmInfo(Target &T) {
     TargetRegistry::RegisterMCAsmInfo(T, &Allocator);
   }
 
 private:
-  static MCAsmInfo *Allocator(const MCRegisterInfo & /*MRI*/,
+  static MCAsmInfo *Allocator(const MCRegisterInfo &        ,
                               const Triple &TT) {
     return new MCAsmInfoImpl(TT);
   }
 };
 
-/// RegisterMCAsmInfoFn - Helper template for registering a target assembly info
-/// implementation.  This invokes the specified function to do the
-/// construction.  Usage:
-///
-/// extern "C" void LLVMInitializeFooTarget() {
-///   extern Target TheFooTarget;
-///   RegisterMCAsmInfoFn X(TheFooTarget, TheFunction);
-/// }
+                                                                                
+                                                                  
+                         
+   
+                                               
+                                 
+                                                       
+     
 struct RegisterMCAsmInfoFn {
   RegisterMCAsmInfoFn(Target &T, Target::MCAsmInfoCtorFnTy Fn) {
     TargetRegistry::RegisterMCAsmInfo(T, Fn);
   }
 };
 
-/// RegisterMCInstrInfo - Helper template for registering a target instruction
-/// info implementation.  This invokes the static "Create" method on the class
-/// to actually do the construction.  Usage:
-///
-/// extern "C" void LLVMInitializeFooTarget() {
-///   extern Target TheFooTarget;
-///   RegisterMCInstrInfo<FooMCInstrInfo> X(TheFooTarget);
-/// }
+                                                                              
+                                                                              
+                                            
+   
+                                               
+                                 
+                                                          
+     
 template <class MCInstrInfoImpl> struct RegisterMCInstrInfo {
   RegisterMCInstrInfo(Target &T) {
     TargetRegistry::RegisterMCInstrInfo(T, &Allocator);
@@ -982,28 +982,28 @@ private:
   static MCInstrInfo *Allocator() { return new MCInstrInfoImpl(); }
 };
 
-/// RegisterMCInstrInfoFn - Helper template for registering a target
-/// instruction info implementation.  This invokes the specified function to
-/// do the construction.  Usage:
-///
-/// extern "C" void LLVMInitializeFooTarget() {
-///   extern Target TheFooTarget;
-///   RegisterMCInstrInfoFn X(TheFooTarget, TheFunction);
-/// }
+                                                                    
+                                                                            
+                                
+   
+                                               
+                                 
+                                                         
+     
 struct RegisterMCInstrInfoFn {
   RegisterMCInstrInfoFn(Target &T, Target::MCInstrInfoCtorFnTy Fn) {
     TargetRegistry::RegisterMCInstrInfo(T, Fn);
   }
 };
 
-/// RegisterMCInstrAnalysis - Helper template for registering a target
-/// instruction analyzer implementation.  This invokes the static "Create"
-/// method on the class to actually do the construction.  Usage:
-///
-/// extern "C" void LLVMInitializeFooTarget() {
-///   extern Target TheFooTarget;
-///   RegisterMCInstrAnalysis<FooMCInstrAnalysis> X(TheFooTarget);
-/// }
+                                                                      
+                                                                          
+                                                                
+   
+                                               
+                                 
+                                                                  
+     
 template <class MCInstrAnalysisImpl> struct RegisterMCInstrAnalysis {
   RegisterMCInstrAnalysis(Target &T) {
     TargetRegistry::RegisterMCInstrAnalysis(T, &Allocator);
@@ -1015,95 +1015,95 @@ private:
   }
 };
 
-/// RegisterMCInstrAnalysisFn - Helper template for registering a target
-/// instruction analyzer implementation.  This invokes the specified function
-/// to do the construction.  Usage:
-///
-/// extern "C" void LLVMInitializeFooTarget() {
-///   extern Target TheFooTarget;
-///   RegisterMCInstrAnalysisFn X(TheFooTarget, TheFunction);
-/// }
+                                                                        
+                                                                             
+                                   
+   
+                                               
+                                 
+                                                             
+     
 struct RegisterMCInstrAnalysisFn {
   RegisterMCInstrAnalysisFn(Target &T, Target::MCInstrAnalysisCtorFnTy Fn) {
     TargetRegistry::RegisterMCInstrAnalysis(T, Fn);
   }
 };
 
-/// RegisterMCRegInfo - Helper template for registering a target register info
-/// implementation.  This invokes the static "Create" method on the class to
-/// actually do the construction.  Usage:
-///
-/// extern "C" void LLVMInitializeFooTarget() {
-///   extern Target TheFooTarget;
-///   RegisterMCRegInfo<FooMCRegInfo> X(TheFooTarget);
-/// }
+                                                                              
+                                                                            
+                                         
+   
+                                               
+                                 
+                                                      
+     
 template <class MCRegisterInfoImpl> struct RegisterMCRegInfo {
   RegisterMCRegInfo(Target &T) {
     TargetRegistry::RegisterMCRegInfo(T, &Allocator);
   }
 
 private:
-  static MCRegisterInfo *Allocator(const Triple & /*TT*/) {
+  static MCRegisterInfo *Allocator(const Triple &       ) {
     return new MCRegisterInfoImpl();
   }
 };
 
-/// RegisterMCRegInfoFn - Helper template for registering a target register
-/// info implementation.  This invokes the specified function to do the
-/// construction.  Usage:
-///
-/// extern "C" void LLVMInitializeFooTarget() {
-///   extern Target TheFooTarget;
-///   RegisterMCRegInfoFn X(TheFooTarget, TheFunction);
-/// }
+                                                                           
+                                                                       
+                         
+   
+                                               
+                                 
+                                                       
+     
 struct RegisterMCRegInfoFn {
   RegisterMCRegInfoFn(Target &T, Target::MCRegInfoCtorFnTy Fn) {
     TargetRegistry::RegisterMCRegInfo(T, Fn);
   }
 };
 
-/// RegisterMCSubtargetInfo - Helper template for registering a target
-/// subtarget info implementation.  This invokes the static "Create" method
-/// on the class to actually do the construction.  Usage:
-///
-/// extern "C" void LLVMInitializeFooTarget() {
-///   extern Target TheFooTarget;
-///   RegisterMCSubtargetInfo<FooMCSubtargetInfo> X(TheFooTarget);
-/// }
+                                                                      
+                                                                           
+                                                         
+   
+                                               
+                                 
+                                                                  
+     
 template <class MCSubtargetInfoImpl> struct RegisterMCSubtargetInfo {
   RegisterMCSubtargetInfo(Target &T) {
     TargetRegistry::RegisterMCSubtargetInfo(T, &Allocator);
   }
 
 private:
-  static MCSubtargetInfo *Allocator(const Triple & /*TT*/, StringRef /*CPU*/,
-                                    StringRef /*FS*/) {
+  static MCSubtargetInfo *Allocator(const Triple &       , StringRef        ,
+                                    StringRef       ) {
     return new MCSubtargetInfoImpl();
   }
 };
 
-/// RegisterMCSubtargetInfoFn - Helper template for registering a target
-/// subtarget info implementation.  This invokes the specified function to
-/// do the construction.  Usage:
-///
-/// extern "C" void LLVMInitializeFooTarget() {
-///   extern Target TheFooTarget;
-///   RegisterMCSubtargetInfoFn X(TheFooTarget, TheFunction);
-/// }
+                                                                        
+                                                                          
+                                
+   
+                                               
+                                 
+                                                             
+     
 struct RegisterMCSubtargetInfoFn {
   RegisterMCSubtargetInfoFn(Target &T, Target::MCSubtargetInfoCtorFnTy Fn) {
     TargetRegistry::RegisterMCSubtargetInfo(T, Fn);
   }
 };
 
-/// RegisterTargetMachine - Helper template for registering a target machine
-/// implementation, for use in the target machine initialization
-/// function. Usage:
-///
-/// extern "C" void LLVMInitializeFooTarget() {
-///   extern Target TheFooTarget;
-///   RegisterTargetMachine<FooTargetMachine> X(TheFooTarget);
-/// }
+                                                                            
+                                                                
+                    
+   
+                                               
+                                 
+                                                              
+     
 template <class TargetMachineImpl> struct RegisterTargetMachine {
   RegisterTargetMachine(Target &T) {
     TargetRegistry::RegisterTargetMachine(T, &Allocator);
@@ -1118,13 +1118,13 @@ private:
   }
 };
 
-/// RegisterMCAsmBackend - Helper template for registering a target specific
-/// assembler backend. Usage:
-///
-/// extern "C" void LLVMInitializeFooMCAsmBackend() {
-///   extern Target TheFooTarget;
-///   RegisterMCAsmBackend<FooAsmLexer> X(TheFooTarget);
-/// }
+                                                                            
+                             
+   
+                                                     
+                                 
+                                                        
+     
 template <class MCAsmBackendImpl> struct RegisterMCAsmBackend {
   RegisterMCAsmBackend(Target &T) {
     TargetRegistry::RegisterMCAsmBackend(T, &Allocator);
@@ -1138,14 +1138,14 @@ private:
   }
 };
 
-/// RegisterMCAsmParser - Helper template for registering a target specific
-/// assembly parser, for use in the target machine initialization
-/// function. Usage:
-///
-/// extern "C" void LLVMInitializeFooMCAsmParser() {
-///   extern Target TheFooTarget;
-///   RegisterMCAsmParser<FooAsmParser> X(TheFooTarget);
-/// }
+                                                                           
+                                                                 
+                    
+   
+                                                    
+                                 
+                                                        
+     
 template <class MCAsmParserImpl> struct RegisterMCAsmParser {
   RegisterMCAsmParser(Target &T) {
     TargetRegistry::RegisterMCAsmParser(T, &Allocator);
@@ -1159,14 +1159,14 @@ private:
   }
 };
 
-/// RegisterAsmPrinter - Helper template for registering a target specific
-/// assembly printer, for use in the target machine initialization
-/// function. Usage:
-///
-/// extern "C" void LLVMInitializeFooAsmPrinter() {
-///   extern Target TheFooTarget;
-///   RegisterAsmPrinter<FooAsmPrinter> X(TheFooTarget);
-/// }
+                                                                          
+                                                                  
+                    
+   
+                                                   
+                                 
+                                                        
+     
 template <class AsmPrinterImpl> struct RegisterAsmPrinter {
   RegisterAsmPrinter(Target &T) {
     TargetRegistry::RegisterAsmPrinter(T, &Allocator);
@@ -1179,27 +1179,27 @@ private:
   }
 };
 
-/// RegisterMCCodeEmitter - Helper template for registering a target specific
-/// machine code emitter, for use in the target initialization
-/// function. Usage:
-///
-/// extern "C" void LLVMInitializeFooMCCodeEmitter() {
-///   extern Target TheFooTarget;
-///   RegisterMCCodeEmitter<FooCodeEmitter> X(TheFooTarget);
-/// }
+                                                                             
+                                                              
+                    
+   
+                                                      
+                                 
+                                                            
+     
 template <class MCCodeEmitterImpl> struct RegisterMCCodeEmitter {
   RegisterMCCodeEmitter(Target &T) {
     TargetRegistry::RegisterMCCodeEmitter(T, &Allocator);
   }
 
 private:
-  static MCCodeEmitter *Allocator(const MCInstrInfo & /*II*/,
-                                  const MCRegisterInfo & /*MRI*/,
-                                  MCContext & /*Ctx*/) {
+  static MCCodeEmitter *Allocator(const MCInstrInfo &       ,
+                                  const MCRegisterInfo &        ,
+                                  MCContext &        ) {
     return new MCCodeEmitterImpl();
   }
 };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_SUPPORT_TARGETREGISTRY_H
+#endif                                 

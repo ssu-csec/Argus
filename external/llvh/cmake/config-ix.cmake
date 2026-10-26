@@ -1,5 +1,5 @@
 if( WIN32 AND NOT CYGWIN )
-  # We consider Cygwin as another Unix
+                                      
   set(PURE_WINDOWS 1)
 endif()
 
@@ -13,16 +13,16 @@ include(CheckCompilerVersion)
 include(HandleLLVMStdlib)
 
 if( UNIX AND NOT (BEOS OR HAIKU) )
-  # Used by check_symbol_exists:
+                                
   list(APPEND CMAKE_REQUIRED_LIBRARIES "m")
 endif()
-# x86_64 FreeBSD 9.2 requires libcxxrt to be specified explicitly.
+                                                                  
 if( CMAKE_SYSTEM MATCHES "FreeBSD-9.2-RELEASE" AND
     CMAKE_SIZEOF_VOID_P EQUAL 8 )
   list(APPEND CMAKE_REQUIRED_LIBRARIES "cxxrt")
 endif()
 
-# include checks
+                
 check_include_file(dlfcn.h HAVE_DLFCN_H)
 check_include_file(errno.h HAVE_ERRNO_H)
 check_include_file(fcntl.h HAVE_FCNTL_H)
@@ -63,13 +63,13 @@ endif()
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
   check_include_file(linux/magic.h HAVE_LINUX_MAGIC_H)
   if(NOT HAVE_LINUX_MAGIC_H)
-    # older kernels use split files
+                                   
     check_include_file(linux/nfs_fs.h HAVE_LINUX_NFS_FS_H)
     check_include_file(linux/smb.h HAVE_LINUX_SMB_H)
   endif()
 endif()
 
-# library checks
+                
 if( NOT PURE_WINDOWS )
   check_library_exists(pthread pthread_create "" HAVE_LIBPTHREAD)
   if (HAVE_LIBPTHREAD)
@@ -77,7 +77,7 @@ if( NOT PURE_WINDOWS )
     check_library_exists(pthread pthread_rwlock_init "" HAVE_PTHREAD_RWLOCK_INIT)
     check_library_exists(pthread pthread_mutex_lock "" HAVE_PTHREAD_MUTEX_LOCK)
   else()
-    # this could be Android
+                           
     check_library_exists(c pthread_create "" PTHREAD_IN_LIBC)
     if (PTHREAD_IN_LIBC)
       check_library_exists(c pthread_getspecific "" HAVE_PTHREAD_GETSPECIFIC)
@@ -89,21 +89,21 @@ if( NOT PURE_WINDOWS )
   check_library_exists(rt clock_gettime "" HAVE_LIBRT)
 endif()
 
-# Check for libpfm.
+                   
 include(FindLibpfm)
 
 if(HAVE_LIBPTHREAD)
-  # We want to find pthreads library and at the moment we do want to
-  # have it reported as '-l<lib>' instead of '-pthread'.
-  # TODO: switch to -pthread once the rest of the build system can deal with it.
+                                                                    
+                                                        
+                                                                                
   set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
   set(THREADS_HAVE_PTHREAD_ARG Off)
   find_package(Threads REQUIRED)
   set(LLVM_PTHREAD_LIB ${CMAKE_THREAD_LIBS_INIT})
 endif()
 
-# Don't look for these libraries if we're using MSan, since uninstrumented third
-# party code may call MSan interceptors like strlen, leading to false positives.
+                                                                                
+                                                                                
 if(NOT LLVM_USE_SANITIZER MATCHES "Memory.*")
   set(HAVE_LIBZ 0)
   if(LLVM_ENABLE_ZLIB)
@@ -118,9 +118,9 @@ if(NOT LLVM_USE_SANITIZER MATCHES "Memory.*")
     endforeach()
   endif()
 
-  # Don't look for these libraries on Windows.
+                                              
   if (NOT PURE_WINDOWS)
-    # Skip libedit if using ASan as it contains memory leaks.
+                                                             
     if (LLVM_ENABLE_LIBEDIT AND HAVE_HISTEDIT_H AND NOT LLVM_USE_SANITIZER MATCHES ".*Address.*")
       check_library_exists(edit el_init "" HAVE_LIBEDIT)
     else()
@@ -168,14 +168,14 @@ if(HAVE_LIBXAR)
   set(XAR_LIB xar)
 endif()
 
-# function checks
+                 
 check_symbol_exists(arc4random "stdlib.h" HAVE_DECL_ARC4RANDOM)
 find_package(Backtrace)
 set(HAVE_BACKTRACE ${Backtrace_FOUND})
 set(BACKTRACE_HEADER ${Backtrace_HEADER})
 
-# Prevent check_symbol_exists from using API that is not supported for a given
-# deployment target.
+                                                                              
+                    
 check_c_compiler_flag("-Werror=unguarded-availability-new" "C_SUPPORTS_WERROR_UNGUARDED_AVAILABILITY_NEW")
 if(C_SUPPORTS_WERROR_UNGUARDED_AVAILABILITY_NEW)
   set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -Werror=unguarded-availability-new")
@@ -190,10 +190,10 @@ check_symbol_exists(isatty unistd.h HAVE_ISATTY)
 check_symbol_exists(futimens sys/stat.h HAVE_FUTIMENS)
 check_symbol_exists(futimes sys/time.h HAVE_FUTIMES)
 check_symbol_exists(posix_fallocate fcntl.h HAVE_POSIX_FALLOCATE)
-# AddressSanitizer conflicts with lib/Support/Unix/Signals.inc
-# Avoid sigaltstack on Apple platforms, where backtrace() cannot handle it
-# (rdar://7089625) and _Unwind_Backtrace is unusable because it cannot unwind
-# past the signal handler after an assertion failure (rdar://29866587).
+                                                              
+                                                                          
+                                                                             
+                                                                       
 if( HAVE_SIGNAL_H AND NOT LLVM_USE_SANITIZER MATCHES ".*Address.*" AND NOT APPLE )
   check_symbol_exists(sigaltstack signal.h HAVE_SIGALTSTACK)
 endif()
@@ -253,7 +253,7 @@ if( LLVM_USING_GLIBC )
   add_definitions( -D_GNU_SOURCE )
   list(APPEND CMAKE_REQUIRED_DEFINITIONS "-D_GNU_SOURCE")
 endif()
-# This check requires _GNU_SOURCE
+                                 
 check_symbol_exists(sched_getaffinity sched.h HAVE_SCHED_GETAFFINITY)
 check_symbol_exists(CPU_COUNT sched.h HAVE_CPU_COUNT)
 if (NOT PURE_WINDOWS)
@@ -267,7 +267,7 @@ if (NOT PURE_WINDOWS)
   endif()
 endif()
 
-# available programs checks
+                           
 function(llvm_find_program name)
   string(TOUPPER ${name} NAME)
   string(REGEX REPLACE "\\." "_" NAME ${NAME})
@@ -319,7 +319,7 @@ else()
   unset(HAVE_FFI_CALL CACHE)
 endif( LLVM_ENABLE_FFI )
 
-# Define LLVM_HAS_ATOMICS if gcc or MSVC atomic builtins are supported.
+                                                                       
 include(CheckAtomic)
 
 if( LLVM_ENABLE_PIC )
@@ -339,23 +339,23 @@ check_cxx_compiler_flag("-Wgnu-zero-variadic-macro-arguments"
 set(USE_NO_MAYBE_UNINITIALIZED 0)
 set(USE_NO_UNINITIALIZED 0)
 
-# Disable gcc's potentially uninitialized use analysis as it presents lots of
-# false positives.
+                                                                             
+                  
 if (CMAKE_COMPILER_IS_GNUCXX)
   check_cxx_compiler_flag("-Wmaybe-uninitialized" HAS_MAYBE_UNINITIALIZED)
   if (HAS_MAYBE_UNINITIALIZED)
     set(USE_NO_MAYBE_UNINITIALIZED 1)
   else()
-    # Only recent versions of gcc make the distinction between -Wuninitialized
-    # and -Wmaybe-uninitialized. If -Wmaybe-uninitialized isn't supported, just
-    # turn off all uninitialized use warnings.
+                                                                              
+                                                                               
+                                              
     check_cxx_compiler_flag("-Wuninitialized" HAS_UNINITIALIZED)
     set(USE_NO_UNINITIALIZED ${HAS_UNINITIALIZED})
   endif()
 endif()
 
-# By default, we target the host, but this can be overridden at CMake
-# invocation time.
+                                                                     
+                  
 include(GetHostTriple)
 get_host_triple(LLVM_INFERRED_HOST_TRIPLE)
 
@@ -363,7 +363,7 @@ set(LLVM_HOST_TRIPLE "${LLVM_INFERRED_HOST_TRIPLE}" CACHE STRING
     "Host on which LLVM binaries will run")
 
 if (NOT ${HERMES_LLVM})
-# Determine the native architecture.
+                                    
 string(TOLOWER "${LLVM_TARGET_ARCH}" LLVM_NATIVE_ARCH)
 if( LLVM_NATIVE_ARCH STREQUAL "host" )
   string(REGEX MATCH "^[^-]*" LLVM_NATIVE_ARCH ${LLVM_HOST_TRIPLE})
@@ -409,7 +409,7 @@ else ()
   message(FATAL_ERROR "Unknown architecture ${LLVM_NATIVE_ARCH}")
 endif ()
 
-# If build targets includes "host", then replace with native architecture.
+                                                                          
 list(FIND LLVM_TARGETS_TO_BUILD "host" idx)
 if( NOT idx LESS 0 )
   list(REMOVE_AT LLVM_TARGETS_TO_BUILD ${idx})
@@ -428,12 +428,12 @@ else ()
   set(LLVM_NATIVE_TARGETMC LLVMInitialize${LLVM_NATIVE_ARCH}TargetMC)
   set(LLVM_NATIVE_ASMPRINTER LLVMInitialize${LLVM_NATIVE_ARCH}AsmPrinter)
 
-  # We don't have an ASM parser for all architectures yet.
+                                                          
   if (EXISTS ${PROJECT_SOURCE_DIR}/lib/Target/${LLVM_NATIVE_ARCH}/AsmParser/CMakeLists.txt)
     set(LLVM_NATIVE_ASMPARSER LLVMInitialize${LLVM_NATIVE_ARCH}AsmParser)
   endif ()
 
-  # We don't have an disassembler for all architectures yet.
+                                                            
   if (EXISTS ${PROJECT_SOURCE_DIR}/lib/Target/${LLVM_NATIVE_ARCH}/Disassembler/CMakeLists.txt)
     set(LLVM_NATIVE_DISASSEMBLER LLVMInitialize${LLVM_NATIVE_ARCH}Disassembler)
   endif ()
@@ -445,16 +445,16 @@ if( MSVC )
   set(stricmp "_stricmp")
   set(strdup "_strdup")
 
-  # See if the DIA SDK is available and usable.
+                                               
   set(MSVC_DIA_SDK_DIR "$ENV{VSINSTALLDIR}DIA SDK")
 
-  # Due to a bug in MSVC 2013's installation software, it is possible
-  # for MSVC 2013 to write the DIA SDK into the Visual Studio 2012
-  # install directory.  If this happens, the installation is corrupt
-  # and there's nothing we can do.  It happens with enough frequency
-  # though that we should handle it.  We do so by simply checking that
-  # the DIA SDK folder exists.  Should this happen you will need to
-  # uninstall VS 2012 and then re-install VS 2013.
+                                                                     
+                                                                  
+                                                                    
+                                                                    
+                                                                      
+                                                                   
+                                                  
   if (IS_DIRECTORY ${MSVC_DIA_SDK_DIR})
     set(HAVE_DIA_SDK 1)
   else()
@@ -471,13 +471,13 @@ else()
   set(LLVM_ENABLE_DIA_SDK 0)
 endif( MSVC )
 
-# FIXME: Signal handler return type, currently hardcoded to 'void'
+                                                                  
 set(RETSIGTYPE void)
 
 if( LLVM_ENABLE_THREADS )
-  # Check if threading primitives aren't supported on this platform
-  # Disable threads on emscripten because it doesn't have a full implementation
-  # including support for pthread_sigmask
+                                                                   
+                                                                               
+                                         
   if( (NOT HAVE_PTHREAD_H AND NOT WIN32) OR EMSCRIPTEN )
     set(LLVM_ENABLE_THREADS 0)
   endif()
@@ -490,7 +490,7 @@ else( LLVM_ENABLE_THREADS )
 endif()
 
 if (LLVM_ENABLE_ZLIB )
-  # Check if zlib is available in the system.
+                                             
   if ( NOT HAVE_ZLIB_H OR NOT HAVE_LIBZ )
     set(LLVM_ENABLE_ZLIB 0)
   endif()
@@ -501,9 +501,9 @@ if (LLVM_ENABLE_DOXYGEN)
   find_package(Doxygen REQUIRED)
 
   if (DOXYGEN_FOUND)
-    # If we find doxygen and we want to enable doxygen by default create a
-    # global aggregate doxygen target for generating llvm and any/all
-    # subprojects doxygen documentation.
+                                                                          
+                                                                     
+                                        
     if (LLVM_BUILD_DOCS)
       add_custom_target(doxygen ALL)
     endif()
@@ -560,7 +560,7 @@ if(CMAKE_HOST_APPLE AND APPLE)
 endif()
 
 if (NOT ${HERMES_LLVM})
-# Keep the version requirements in sync with bindings/ocaml/README.txt.
+                                                                       
 include(FindOCaml)
 include(AddOCaml)
 if(WIN32 OR NOT LLVM_ENABLE_BINDINGS)
@@ -611,8 +611,8 @@ endfunction()
 
 set (PYTHON_MODULES
   pygments
-  # Some systems still don't have pygments.lexers.c_cpp which was introduced in
-  # version 2.0 in 2014...
+                                                                               
+                          
   pygments.lexers.c_cpp
   yaml
   )

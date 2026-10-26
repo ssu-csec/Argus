@@ -27,19 +27,19 @@ std::unique_ptr<SourceMap> SourceMapParser::parse(
 
   llvh::Optional<JSONValue *> parsedMap = jsonParser.parse();
   if (!parsedMap.hasValue()) {
-    // This does not need an error since `parse` should have emitted one.
+                                                                         
     return nullptr;
   }
 
   SMLoc genericLoc = SMLoc::getFromPointer(sourceMap.getBufferStart());
 
-  // Parse for JavaScript version 3 source map https://sourcemaps.info/spec.html
-  // Not yet implemented:
-  //  1. 'file' field
-  //  2. 'names' field
-  //  3. 'sourcesContent' field.
-  //  4. Index map.
-  //  5. Facebook segments extension.
+                                                                                
+                         
+                     
+                      
+                                
+                   
+                                     
   auto *json = llvh::dyn_cast_or_null<JSONObject>(parsedMap.getValue());
   if (json == nullptr) {
     sm.error(genericLoc, "Expected a source map object");
@@ -56,7 +56,7 @@ std::unique_ptr<SourceMap> SourceMapParser::parse(
     return nullptr;
   }
 
-  // sourceRoot is optional.
+                            
   std::string sourceRoot;
   auto *sourceRootJson =
       llvh::dyn_cast_or_null<JSONString>(json->get("sourceRoot"));
@@ -119,7 +119,7 @@ bool SourceMapParser::parseMappings(
 
   uint32_t curSegOffset = 0;
   while (curSegOffset < sourceMappings.size()) {
-    // Source map mappings may omit ";" for the last line.
+                                                          
     auto endSegOffset = sourceMappings.find_first_of(",;", curSegOffset);
     if (endSegOffset == llvh::StringLiteral::npos) {
       endSegOffset = sourceMappings.size();
@@ -134,7 +134,7 @@ bool SourceMapParser::parseMappings(
     const char *pSegEnd = sourceMappings.data() + endSegOffset;
 
     if (pCur == pSegEnd && lastSegmentInLine && segments.empty()) {
-      // The line is empty, so avoid doing any extra work.
+                                                          
       lines.emplace_back(std::move(segments));
     } else {
       llvh::Optional<SourceMap::Segment> segmentOpt =
@@ -157,10 +157,10 @@ bool SourceMapParser::parseMappings(
 
       segments.emplace_back(segmentOpt.getValue());
 
-      // TODO: assert pCur equals to pSegEnd.
+                                             
 
       if (lastSegmentInLine) {
-        // generated column should be reset for new line.
+                                                         
         state.generatedColumn = 0;
 
         lines.emplace_back(std::move(segments));
@@ -177,14 +177,14 @@ llvh::Optional<SourceMap::Segment> SourceMapParser::parseSegment(
     const char *pSegEnd) {
   SourceMap::Segment segment;
 
-  // Parse 1st field: generatedColumn.
+                                      
   OptValue<int32_t> val = base64vlq::decode(pCur, pSegEnd);
   if (!val.hasValue()) {
     return llvh::None;
   }
   segment.generatedColumn = state.generatedColumn + val.getValue();
 
-  // Parse 2nd field: sourceIndex.
+                                  
   val = base64vlq::decode(pCur, pSegEnd);
   if (!val.hasValue()) {
     return segment;
@@ -192,25 +192,25 @@ llvh::Optional<SourceMap::Segment> SourceMapParser::parseSegment(
   segment.representedLocation = SourceMap::Segment::SourceLocation();
   segment.representedLocation->sourceIndex = state.sourceIndex + val.getValue();
 
-  // Parse 3rd field: representedLine.
+                                      
   val = base64vlq::decode(pCur, pSegEnd);
   if (!val.hasValue()) {
-    // Segment can only be 1, 4 or 5 length.
+                                            
     return llvh::None;
   }
   segment.representedLocation->lineIndex =
       state.representedLine + val.getValue();
 
-  // Parse 4th field: representedColumn.
+                                        
   val = base64vlq::decode(pCur, pSegEnd);
   if (!val.hasValue()) {
-    // Segment can only be 1, 4 or 5 length.
+                                            
     return llvh::None;
   }
   segment.representedLocation->columnIndex =
       state.representedColumn + val.getValue();
 
-  // Parse 5th field: nameIndex.
+                                
   val = base64vlq::decode(pCur, pSegEnd);
   if (!val.hasValue()) {
     return segment;
@@ -220,4 +220,4 @@ llvh::Optional<SourceMap::Segment> SourceMapParser::parseSegment(
   return segment;
 }
 
-} // namespace hermes
+}                    

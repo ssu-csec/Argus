@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//===----------------------------------------------------------------------===//
-/// \file
-/// ES6.0 25.2.1 The GeneratorFunction constructor.
-//===----------------------------------------------------------------------===//
+                                                                                
+         
+                                                   
+                                                                                
 #include "JSLibInternal.h"
 
 namespace hermes {
@@ -43,8 +43,8 @@ Handle<JSObject> createGeneratorFunctionConstructor(Runtime &runtime) {
   dpf.writable = 0;
   dpf.enumerable = 0;
 
-  // The initial value of GeneratorFunction.prototype.constructor is the
-  // intrinsic object %GeneratorFunction%.
+                                                                        
+                                          
   defineProperty(
       runtime,
       proto,
@@ -52,8 +52,8 @@ Handle<JSObject> createGeneratorFunctionConstructor(Runtime &runtime) {
       cons,
       dpf);
 
-  // The value of GeneratorFunction.prototype.prototype is the
-  // %GeneratorPrototype% intrinsic object.
+                                                              
+                                           
   defineProperty(
       runtime,
       proto,
@@ -76,5 +76,67 @@ generatorFunctionConstructor(void *, Runtime &runtime, NativeArgs args) {
   return createDynamicFunction(runtime, args, DynamicFunctionKind::Generator);
 }
 
-} // namespace vm
-} // namespace hermes
+CallResult<HermesValue>
+asyncGeneratorFunctionConstructor(void *, Runtime &runtime, NativeArgs args) {
+  return createDynamicFunction(runtime, args, DynamicFunctionKind::AsyncGenerator);
+}
+
+Handle<JSObject> createAsyncGeneratorFunctionConstructor(Runtime &runtime) {
+  auto proto = Handle<JSObject>::vmcast(&runtime.asyncGeneratorFunctionPrototype);
+
+  auto cons = runtime.makeHandle(
+      NativeConstructor::create(
+          runtime,
+          Handle<JSObject>::vmcast(&runtime.functionConstructor),
+          nullptr,
+          asyncGeneratorFunctionConstructor,
+          1,
+          NativeConstructor::creatorFunction<JSGeneratorFunction>,
+          CellKind::JSGeneratorFunctionKind));
+
+  auto st = Callable::defineNameLengthAndPrototype(
+      cons,
+      runtime,
+      Predefined::getSymbolID(Predefined::AsyncGeneratorFunction),
+      1,
+      proto,
+      Callable::WritablePrototype::No,
+      false);
+  (void)st;
+  assert(
+      st != ExecutionStatus::EXCEPTION && "defineLengthAndPrototype() failed");
+
+  auto dpf = DefinePropertyFlags::getDefaultNewPropertyFlags();
+  dpf.writable = 0;
+  dpf.enumerable = 0;
+
+                                                                        
+                                          
+  defineProperty(
+      runtime,
+      proto,
+      Predefined::getSymbolID(Predefined::constructor),
+      cons,
+      dpf);
+
+                                                              
+                                           
+  defineProperty(
+      runtime,
+      proto,
+      Predefined::getSymbolID(Predefined::prototype),
+      Handle<>(&runtime.asyncGeneratorPrototype),
+      dpf);
+
+  defineProperty(
+      runtime,
+      proto,
+      Predefined::getSymbolID(Predefined::SymbolToStringTag),
+      runtime.getPredefinedStringHandle(Predefined::AsyncGeneratorFunction),
+      dpf);
+
+  return cons;
+}
+
+}                
+}                    

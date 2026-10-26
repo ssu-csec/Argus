@@ -20,18 +20,18 @@ namespace vm {
 
 using BuildMetadataCallback = void(const GCCell *, Metadata::Builder &);
 
-/// Forward declare all \c BuildMeta functions.
-/// These must be defined in other files.
+                                               
+                                         
 #define CELL_KIND(name) \
   void name##BuildMeta(const GCCell *, Metadata::Builder &);
 #include "hermes/VM/CellKinds.def"
 #undef CELL_KIND
 
-/// A MetadataTable is an association between CellKind and Metadata.
-///
-/// This is a reference to some static storage that holds the mapping.
-/// It should be passed by value since it is a trivially copyable reference,
-/// not the actual data.
+                                                                    
+   
+                                                                      
+                                                                            
+                        
 using MetadataTable = llvh::ArrayRef<Metadata>;
 
 static_assert(
@@ -42,7 +42,7 @@ Metadata buildMetadata(CellKind kind, BuildMetadataCallback *builder);
 
 void buildMetadataTable();
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
 #endif

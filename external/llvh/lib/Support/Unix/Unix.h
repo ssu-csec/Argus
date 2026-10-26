@@ -14,12 +14,12 @@
 #ifndef LLVM_LIB_SUPPORT_UNIX_UNIX_H
 #define LLVM_LIB_SUPPORT_UNIX_UNIX_H
 
-//===----------------------------------------------------------------------===//
-//=== WARNING: Implementation here must contain only generic UNIX code that
-//===          is guaranteed to work on all UNIX variants.
-//===----------------------------------------------------------------------===//
+                                                                                
+                                                                           
+                                                          
+                                                                                
 
-#include "llvh/Config/config.h" // Get autoconf configuration settings
+#include "llvh/Config/config.h"                                       
 #include "llvh/Support/Chrono.h"
 #include "llvh/Support/Errno.h"
 #include <algorithm>
@@ -53,13 +53,13 @@
 # include <fcntl.h>
 #endif
 
-/// This function builds an error message into \p ErrMsg using the \p prefix
-/// string and the Unix error number given by \p errnum. If errnum is -1, the
-/// default then the value of errno is used.
-/// Make an error message
-///
-/// If the error number can be converted to a string, it will be
-/// separated from prefix by ": ".
+                                                                            
+                                                                             
+                                            
+                         
+   
+                                                                
+                                  
 static inline bool MakeErrMsg(
   std::string* ErrMsg, const std::string& prefix, int errnum = -1) {
   if (!ErrMsg)
@@ -73,14 +73,14 @@ static inline bool MakeErrMsg(
 namespace llvh {
 namespace sys {
 
-/// Convert a struct timeval to a duration. Note that timeval can be used both
-/// as a time point and a duration. Be sure to check what the input represents.
+                                                                              
+                                                                               
 inline std::chrono::microseconds toDuration(const struct timeval &TV) {
   return std::chrono::seconds(TV.tv_sec) +
          std::chrono::microseconds(TV.tv_usec);
 }
 
-/// Convert a time point to struct timespec.
+                                            
 inline struct timespec toTimeSpec(TimePoint<> TP) {
   using namespace std::chrono;
 
@@ -90,7 +90,7 @@ inline struct timespec toTimeSpec(TimePoint<> TP) {
   return RetVal;
 }
 
-/// Convert a time point to struct timeval.
+                                           
 inline struct timeval toTimeVal(TimePoint<std::chrono::microseconds> TP) {
   using namespace std::chrono;
 
@@ -100,7 +100,7 @@ inline struct timeval toTimeVal(TimePoint<std::chrono::microseconds> TP) {
   return RetVal;
 }
 
-} // namespace sys
-} // namespace llvh
+}                 
+}                  
 
 #endif

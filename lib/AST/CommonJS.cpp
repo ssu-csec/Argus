@@ -19,7 +19,7 @@ ESTree::FunctionExpressionNode *wrapCJSModule(
 
   ESTree::NodeList argNames{};
 
-  // Identifiers for function arguments.
+                                        
   auto *exports = new (*context) ESTree::IdentifierNode(
       context->getIdentifier("exports").getUnderlyingPointer(), nullptr, false);
   auto *require = new (*context) ESTree::IdentifierNode(
@@ -46,4 +46,4 @@ ESTree::FunctionExpressionNode *wrapCJSModule(
   return wrappedFn;
 }
 
-} // namespace hermes
+}                    

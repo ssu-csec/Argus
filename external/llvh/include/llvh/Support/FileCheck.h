@@ -23,7 +23,7 @@
 
 namespace llvh {
 
-/// Contains info about various FileCheck options.
+                                                  
 struct FileCheckRequest {
   std::vector<std::string> CheckPrefixes;
   bool NoCanonicalizeWhiteSpace = false;
@@ -38,9 +38,9 @@ struct FileCheckRequest {
 };
 
 
-//===----------------------------------------------------------------------===//
-// Pattern Handling Code.
-//===----------------------------------------------------------------------===//
+                                                                                
+                         
+                                                                                
 
 namespace Check {
 enum FileCheckType {
@@ -53,11 +53,11 @@ enum FileCheckType {
   CheckLabel,
   CheckEmpty,
 
-  /// Indicates the pattern only matches the end of file. This is used for
-  /// trailing CHECK-NOTs.
+                                                                          
+                          
   CheckEOF,
 
-  /// Marks when parsing found a -NOT check combined with another CHECK suffix.
+                                                                               
   CheckBadNot
 };
 }
@@ -65,36 +65,36 @@ enum FileCheckType {
 class FileCheckPattern {
   SMLoc PatternLoc;
 
-  /// A fixed string to match as the pattern or empty if this pattern requires
-  /// a regex match.
+                                                                              
+                    
   StringRef FixedStr;
 
-  /// A regex string to match as the pattern or empty if this pattern requires
-  /// a fixed string to match.
+                                                                              
+                              
   std::string RegExStr;
 
-  /// Entries in this vector map to uses of a variable in the pattern, e.g.
-  /// "foo[[bar]]baz".  In this case, the RegExStr will contain "foobaz" and
-  /// we'll get an entry in this vector that tells us to insert the value of
-  /// bar at offset 3.
+                                                                           
+                                                                            
+                                                                            
+                      
   std::vector<std::pair<StringRef, unsigned>> VariableUses;
 
-  /// Maps definitions of variables to their parenthesized capture numbers.
-  ///
-  /// E.g. for the pattern "foo[[bar:.*]]baz", VariableDefs will map "bar" to
-  /// 1.
+                                                                           
+     
+                                                                             
+        
   std::map<StringRef, unsigned> VariableDefs;
 
   Check::FileCheckType CheckTy;
 
-  /// Contains the number of line this pattern is in.
+                                                     
   unsigned LineNumber;
 
 public:
   explicit FileCheckPattern(Check::FileCheckType Ty)
       : CheckTy(Ty) {}
 
-  /// Returns the location in source code.
+                                          
   SMLoc getLoc() const { return PatternLoc; }
 
   bool ParsePattern(StringRef PatternStr, StringRef Prefix, SourceMgr &SM,
@@ -123,23 +123,23 @@ private:
   size_t FindRegexVarEnd(StringRef Str, SourceMgr &SM);
 };
 
-//===----------------------------------------------------------------------===//
-// Check Strings.
-//===----------------------------------------------------------------------===//
+                                                                                
+                 
+                                                                                
 
-/// A check that we found in the input file.
+                                            
 struct FileCheckString {
-  /// The pattern to match.
+                           
   FileCheckPattern Pat;
 
-  /// Which prefix name this check matched.
+                                           
   StringRef Prefix;
 
-  /// The location in the match file that the check string was specified.
+                                                                         
   SMLoc Loc;
 
-  /// All of the strings that are disallowed from occurring between this match
-  /// string and the previous one (or start of file).
+                                                                              
+                                                     
   std::vector<FileCheckPattern> DagNotStrings;
 
   FileCheckString(const FileCheckPattern &P, StringRef S, SMLoc L)
@@ -161,41 +161,41 @@ struct FileCheckString {
                   const FileCheckRequest &Req) const;
 };
 
-/// FileCheck class takes the request and exposes various methods that
-/// use information from the request.
+                                                                      
+                                     
 class FileCheck {
   FileCheckRequest Req;
 
 public:
   FileCheck(FileCheckRequest Req) : Req(Req) {}
 
-  // Combines the check prefixes into a single regex so that we can efficiently
-  // scan for any of the set.
-  //
-  // The semantics are that the longest-match wins which matches our regex
-  // library.
+                                                                               
+                             
+    
+                                                                          
+             
   Regex buildCheckPrefixRegex();
 
-  /// Read the check file, which specifies the sequence of expected strings.
-  ///
-  /// The strings are added to the CheckStrings vector. Returns true in case of
-  /// an error, false otherwise.
+                                                                            
+     
+                                                                               
+                                
   bool ReadCheckFile(SourceMgr &SM, StringRef Buffer, Regex &PrefixRE,
                      std::vector<FileCheckString> &CheckStrings);
 
   bool ValidateCheckPrefixes();
 
-  /// Canonicalize whitespaces in the file. Line endings are replaced with
-  /// UNIX-style '\n'.
+                                                                          
+                      
   StringRef CanonicalizeFile(MemoryBuffer &MB,
                              SmallVectorImpl<char> &OutputBuffer);
 
-  /// Check the input to FileCheck provided in the \p Buffer against the \p
-  /// CheckStrings read from the check file.
-  ///
-  /// Returns false if the input fails to satisfy the checks.
+                                                                           
+                                            
+     
+                                                             
   bool CheckInput(SourceMgr &SM, StringRef Buffer,
                   ArrayRef<FileCheckString> CheckStrings);
 };
-} // namespace llvh
+}                  
 #endif

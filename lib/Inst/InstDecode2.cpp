@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//===----------------------------------------------------------------------===//
-/// \file
-/// Split opcode names into a separate file to avoid linking if not used.
-//===----------------------------------------------------------------------===//
+                                                                                
+         
+                                                                         
+                                                                                
 
 #include "hermes/Inst/InstDecode.h"
 
@@ -26,5 +26,5 @@ llvh::StringRef getOpCodeString(OpCode opCode) {
   return opCodeStrings[(int)opCode];
 };
 
-} // namespace inst
-} // namespace hermes
+}                  
+}                    

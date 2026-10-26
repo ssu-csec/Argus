@@ -14,8 +14,8 @@
 namespace hermes {
 namespace vm {
 
-/// This class exists for cases where the GC wants to fill some heap region
-/// with a non-object, just to allow a contiguous heap to "parse" correctly.
+                                                                           
+                                                                            
 class FillerCell : public VariableSizeRuntimeCell {
   friend void FillerCellBuildMeta(const GCCell *, Metadata::Builder &);
   static const VTable vt;
@@ -45,7 +45,7 @@ class FillerCell : public VariableSizeRuntimeCell {
   }
 };
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMES_VM_FILLERCELL_H
+#endif                          

@@ -38,7 +38,7 @@ enum Sym {
 };
 constexpr size_t NumSymbols = _SYMBOL_AFTER_LAST - _SYMBOL_BEFORE_FIRST - 1;
 
-/// \return a \c SymbolID of a predefined symbol.
+                                                 
 constexpr SymbolID getSymbolID(IProp predefined) {
   return SymbolID::unsafeCreateNotUniqued(predefined);
 }
@@ -55,9 +55,9 @@ constexpr bool isPredefined(SymbolID sym) {
   return sym.unsafeGetIndex() < _SYMBOL_AFTER_LAST;
 }
 
-} // namespace Predefined
+}                        
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMES_VM_PREDEFINED_H
+#endif                          

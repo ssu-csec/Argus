@@ -12,7 +12,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvh/Support/Errno.h"
-#include "llvh/Config/config.h" // Get autoconf configuration settings
+#include "llvh/Config/config.h"                                       
 #include "llvh/Support/raw_ostream.h"
 #include <string.h>
 
@@ -20,10 +20,10 @@
 #include <errno.h>
 #endif
 
-//===----------------------------------------------------------------------===//
-//=== WARNING: Implementation here must contain only TRULY operating system
-//===          independent code.
-//===----------------------------------------------------------------------===//
+                                                                                
+                                                                           
+                                
+                                                                                
 
 namespace llvh {
 namespace sys {
@@ -32,7 +32,7 @@ namespace sys {
 std::string StrError() {
   return StrError(errno);
 }
-#endif  // HAVE_ERRNO_H
+#endif                 
 
 std::string StrError(int errnum) {
   std::string str;
@@ -45,26 +45,26 @@ std::string StrError(int errnum) {
 #endif
 
 #ifdef HAVE_STRERROR_R
-  // strerror_r is thread-safe.
+                               
 #if defined(__GLIBC__) && defined(_GNU_SOURCE)
-  // glibc defines its own incompatible version of strerror_r
-  // which may not use the buffer supplied.
+                                                             
+                                           
   str = strerror_r(errnum, buffer, MaxErrStrLen - 1);
 #else
   strerror_r(errnum, buffer, MaxErrStrLen - 1);
   str = buffer;
 #endif
-#elif HAVE_DECL_STRERROR_S // "Windows Secure API"
+#elif HAVE_DECL_STRERROR_S                        
   strerror_s(buffer, MaxErrStrLen - 1, errnum);
   str = buffer;
 #elif defined(HAVE_STRERROR)
-  // Copy the thread un-safe result of strerror into
-  // the buffer as fast as possible to minimize impact
-  // of collision of strerror in multiple threads.
+                                                    
+                                                      
+                                                  
   str = strerror(errnum);
 #else
-  // Strange that this system doesn't even have strerror
-  // but, oh well, just use a generic message
+                                                        
+                                             
   raw_string_ostream stream(str);
   stream << "Error #" << errnum;
   stream.flush();
@@ -72,5 +72,5 @@ std::string StrError(int errnum) {
   return str;
 }
 
-}  // namespace sys
-}  // namespace llvh
+}                  
+}                   

@@ -17,8 +17,8 @@ namespace vm {
 Handle<JSObject> createDebuggerInternalObject(Runtime &runtime) {
   Handle<JSObject> intern = runtime.makeHandle(JSObject::create(runtime));
 
-  // Configurable property stored in the Debugger
-  // To be used when a debugger transitions to an attached state.
+                                                 
+                                                                 
   defineAccessor(
       runtime,
       intern,
@@ -30,8 +30,8 @@ Handle<JSObject> createDebuggerInternalObject(Runtime &runtime) {
       true,
       false);
 
-  // Configurable property to poll whether
-  // the VM will pause the debugger on exceptions.
+                                          
+                                                  
   defineAccessor(
       runtime,
       intern,
@@ -62,9 +62,9 @@ shouldPauseOnThrow(void *ctx, Runtime &runtime, NativeArgs args) {
   return HermesValue::encodeBoolValue(shouldPauseOnThrow);
 }
 
-#endif // HERMES_ENABLE_DEBUGGER
+#endif                          
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMES_ENABLE_DEBUGGER
+#endif                          

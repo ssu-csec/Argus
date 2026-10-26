@@ -29,14 +29,14 @@
 #include "llvh/Support/Options.h"
 #include <vector>
 
-//===----------------------------------------------------------------------===//
-//=== WARNING: Implementation here must contain only TRULY operating system
-//===          independent code.
-//===----------------------------------------------------------------------===//
+                                                                                
+                                                                           
+                                
+                                                                                
 
 using namespace llvh;
 
-// Use explicit storage to avoid accessing cl::opt in a signal handler.
+                                                                       
 static bool DisableSymbolicationFlag = false;
 #if 0
 static cl::opt<bool, true>
@@ -45,9 +45,9 @@ static cl::opt<bool, true>
                          cl::location(DisableSymbolicationFlag), cl::Hidden);
 #endif
 
-// Callbacks to run in signal handler must be lock-free because a signal handler
-// could be running as we add new callbacks. We don't add unbounded numbers of
-// callbacks, an array is therefore sufficient.
+                                                                                
+                                                                              
+                                               
 struct CallbackAndCookie {
   sys::SignalHandlerCallback Callback;
   void *Cookie;
@@ -57,7 +57,7 @@ struct CallbackAndCookie {
 static constexpr size_t MaxSignalHandlerCallbacks = 8;
 static CallbackAndCookie CallBacksToRun[MaxSignalHandlerCallbacks];
 
-// Signal-safe.
+               
 void sys::RunSignalHandlers() {
   for (size_t I = 0; I < MaxSignalHandlerCallbacks; ++I) {
     auto &RunMe = CallBacksToRun[I];
@@ -72,7 +72,7 @@ void sys::RunSignalHandlers() {
   }
 }
 
-// Signal-safe.
+               
 static void insertSignalHandler(sys::SignalHandlerCallback FnPtr,
                                 void *Cookie) {
   for (size_t I = 0; I < MaxSignalHandlerCallbacks; ++I) {
@@ -94,29 +94,29 @@ static bool findModulesAndOffsets(void **StackTrace, int Depth,
                                   const char *MainExecutableName,
                                   StringSaver &StrPool);
 
-/// Format a pointer value as hexadecimal. Zero pad it out so its always the
-/// same width.
+                                                                            
+               
 static FormattedNumber format_ptr(void *PC) {
-  // Each byte is two hex digits plus 2 for the 0x prefix.
+                                                          
   unsigned PtrWidth = 2 + 2 * sizeof(void *);
   return format_hex((uint64_t)PC, PtrWidth);
 }
 
-/// Helper that launches llvm-symbolizer and symbolizes a backtrace.
+                                                                    
 [[maybe_unused]]
 static bool printSymbolizedStackTrace(StringRef Argv0, void **StackTrace,
                                       int Depth, llvh::raw_ostream &OS) {
   if (DisableSymbolicationFlag)
     return false;
 
-  // Don't recursively invoke the llvm-symbolizer binary.
+                                                         
   if (Argv0.find("llvm-symbolizer") != std::string::npos)
     return false;
 
-  // FIXME: Subtract necessary number from StackTrace entries to turn return addresses
-  // into actual instruction addresses.
-  // Use llvm-symbolizer tool to symbolize the stack traces. First look for it
-  // alongside our binary, then in $PATH.
+                                                                                      
+                                       
+                                                                              
+                                         
   ErrorOr<std::string> LLVMSymbolizerPathOrErr = std::error_code();
   if (!Argv0.empty()) {
     StringRef Parent = llvh::sys::path::parent_path(Argv0);
@@ -129,8 +129,8 @@ static bool printSymbolizedStackTrace(StringRef Argv0, void **StackTrace,
     return false;
   const std::string &LLVMSymbolizerPath = *LLVMSymbolizerPathOrErr;
 
-  // If we don't know argv0 or the address of main() at this point, try
-  // to guess it anyway (it's possible on some platforms).
+                                                                       
+                                                          
   std::string MainExecutableName =
       Argv0.empty() ? sys::fs::getMainExecutable(nullptr, nullptr)
                     : (std::string)Argv0;
@@ -160,9 +160,9 @@ static bool printSymbolizedStackTrace(StringRef Argv0, void **StackTrace,
                                      StringRef(OutputFile), llvh::None};
   StringRef Args[] = {"llvm-symbolizer", "--functions=linkage", "--inlining",
 #ifdef _WIN32
-                      // Pass --relative-address on Windows so that we don't
-                      // have to add ImageBase from PE file.
-                      // FIXME: Make this the default for llvm-symbolizer.
+                                                                            
+                                                            
+                                                                          
                       "--relative-address",
 #endif
                       "--demangle"};
@@ -171,8 +171,8 @@ static bool printSymbolizedStackTrace(StringRef Argv0, void **StackTrace,
   if (RunResult != 0)
     return false;
 
-  // This report format is based on the sanitizer stack trace printer.  See
-  // sanitizer_stacktrace_printer.cc in compiler-rt.
+                                                                           
+                                                    
   auto OutputBuf = MemoryBuffer::getFile(OutputFile.c_str());
   if (!OutputBuf)
     return false;
@@ -186,8 +186,8 @@ static bool printSymbolizedStackTrace(StringRef Argv0, void **StackTrace,
       OS << '#' << frame_no++ << ' ' << format_ptr(StackTrace[i]) << '\n';
       continue;
     }
-    // Read pairs of lines (function name and file/line info) until we
-    // encounter empty line.
+                                                                      
+                            
     for (;;) {
       if (CurLine == Lines.end())
         return false;
@@ -210,7 +210,7 @@ static bool printSymbolizedStackTrace(StringRef Argv0, void **StackTrace,
   return true;
 }
 
-// Include the platform-specific parts of this class.
+                                                     
 #ifdef LLVM_ON_UNIX
 #include "Unix/Signals.inc"
 #endif

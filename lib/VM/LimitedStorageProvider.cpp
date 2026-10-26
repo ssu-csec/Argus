@@ -29,5 +29,5 @@ void LimitedStorageProvider::deleteStorageImpl(void *storage) {
   limit_ += AlignedStorage::size();
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

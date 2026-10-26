@@ -37,7 +37,7 @@ namespace vm {
 CallResult<Handle<SymbolID>> stringToSymbolID(
     Runtime &runtime,
     PseudoHandle<StringPrimitive> strPrim) {
-  // Unique the string.
+                       
   return runtime.getIdentifierTable().getSymbolHandleFromPrimitive(
       runtime, std::move(strPrim));
 }
@@ -48,12 +48,12 @@ CallResult<Handle<SymbolID>> valueToSymbolID(
   if (nameValHnd->isSymbol()) {
     return Handle<SymbolID>::vmcast(nameValHnd);
   }
-  // Convert the value to a string.
+                                   
   auto res = toString_RJS(runtime, nameValHnd);
   if (res == ExecutionStatus::EXCEPTION)
     return ExecutionStatus::EXCEPTION;
 
-  // Unique the string.
+                       
   return stringToSymbolID(runtime, std::move(*res));
 }
 
@@ -111,39 +111,39 @@ OptValue<uint32_t> toArrayIndex(StringView str) {
 }
 
 bool isSameValue(HermesValue x, HermesValue y) {
-  // Check for NaN before checking the tag. We have to do this because NaNs may
-  // differ in the sign bit, which may result in the tag comparison below
-  // incorrectly returning false.
+                                                                               
+                                                                         
+                                 
   if (LLVM_UNLIKELY(x.isNaN()) && y.isNaN())
     return true;
 
   if (x.getTag() != y.getTag()) {
-    // If the tags are different, they must be different.
+                                                         
     return false;
   }
   assert(
       !x.isEmpty() && !x.isNativeValue() &&
       "Empty and Native Value cannot be compared");
 
-  // Strings require deep comparison.
+                                     
   if (x.isString()) {
-    // For strings, we compare each character in sequence.
+                                                          
     return x.getString()->equals(y.getString());
   }
 
-  // Bigints also require deep comparison.
+                                          
   if (x.isBigInt()) {
-    // For bigints, perform the numerical comparison.
+                                                     
     return x.getBigInt()->compare(y.getBigInt()) == 0;
   }
 
-  // Otherwise they are identical if the raw bits are the same.
+                                                               
   return x.getRaw() == y.getRaw();
 }
 
 bool isSameValueZero(HermesValue x, HermesValue y) {
   if (x.isNumber() && y.isNumber() && x.getNumber() == y.getNumber()) {
-    // Takes care of +0 == -0.
+                              
     return true;
   }
   return isSameValue(x, y);
@@ -180,7 +180,7 @@ CallResult<HermesValue> ordinaryToPrimitive(
           return callRes.toCallResultHermesValue();
       }
 
-      // This method failed. Try the other one.
+                                               
       preferredType = PreferredType::NUMBER;
     } else {
       auto propRes = JSObject::getNamed_RJS(
@@ -197,16 +197,16 @@ CallResult<HermesValue> ordinaryToPrimitive(
           return callRes.toCallResultHermesValue();
       }
 
-      // This method failed. Try the other one.
+                                               
       preferredType = PreferredType::STRING;
     }
   }
 
-  // Nothing succeeded, time to give up.
+                                        
   return runtime.raiseTypeError("Cannot determine default value of object");
 }
 
-/// ES5.1 9.1
+             
 CallResult<HermesValue>
 toPrimitive_RJS(Runtime &runtime, Handle<> valueHandle, PreferredType hint) {
   assert(!valueHandle->isEmpty() && "empty value is not allowed");
@@ -215,7 +215,7 @@ toPrimitive_RJS(Runtime &runtime, Handle<> valueHandle, PreferredType hint) {
   if (!valueHandle->isObject())
     return *valueHandle;
 
-  // 4. Let exoticToPrim be GetMethod(input, @@toPrimitive).
+                                                            
   auto exoticToPrim = getMethod(
       runtime,
       valueHandle,
@@ -224,7 +224,7 @@ toPrimitive_RJS(Runtime &runtime, Handle<> valueHandle, PreferredType hint) {
   if (LLVM_UNLIKELY(exoticToPrim == ExecutionStatus::EXCEPTION)) {
     return ExecutionStatus::EXCEPTION;
   }
-  // 6. If exoticToPrim is not undefined, then
+                                              
   if (vmisa<Callable>(exoticToPrim->getHermesValue())) {
     auto callable = runtime.makeHandle<Callable>(
         dyn_vmcast<Callable>(exoticToPrim->getHermesValue()));
@@ -247,8 +247,8 @@ toPrimitive_RJS(Runtime &runtime, Handle<> valueHandle, PreferredType hint) {
         "Symbol.toPrimitive function must return a primitive");
   }
 
-  // 7. If hint is "default", let hint be "number".
-  // 8. Return OrdinaryToPrimitive(input,hint).
+                                                   
+                                               
   return ordinaryToPrimitive(
       Handle<JSObject>::vmcast(valueHandle),
       runtime,
@@ -260,7 +260,7 @@ bool toBoolean(HermesValue value) {
 #ifdef HERMES_SLOW_DEBUG
     case HermesValue::ETag::Invalid:
       llvm_unreachable("invalid value");
-#endif // HERMES_SLOW_DEBUG
+#endif                     
     case HermesValue::ETag::Empty:
       llvm_unreachable("empty value");
     case HermesValue::ETag::Native1:
@@ -288,7 +288,7 @@ bool toBoolean(HermesValue value) {
   }
 }
 
-/// ES5.1 9.8.1
+               
 static CallResult<PseudoHandle<StringPrimitive>> numberToString(
     Runtime &runtime,
     double m) LLVM_NO_SANITIZE("float-cast-overflow");
@@ -298,17 +298,17 @@ static CallResult<PseudoHandle<StringPrimitive>> numberToString(
     double m) {
   char buf8[hermes::NUMBER_TO_STRING_BUF_SIZE];
 
-  // Optimization: Fast-case for positive integers < 2^31
+                                                         
   int32_t n = static_cast<int32_t>(m);
   if (m == static_cast<double>(n) && n > 0) {
-    // Write base 10 digits in reverse from end of buf8.
+                                                        
     char *p = buf8 + sizeof(buf8);
     do {
       *--p = '0' + (n % 10);
       n /= 10;
     } while (n);
     size_t len = buf8 + sizeof(buf8) - p;
-    // Temporarily stop the propagation of removing.
+                                                    
     auto result = StringPrimitive::create(runtime, ASCIIRef(p, len));
     if (LLVM_UNLIKELY(result == ExecutionStatus::EXCEPTION)) {
       return ExecutionStatus::EXCEPTION;
@@ -329,7 +329,7 @@ static CallResult<PseudoHandle<StringPrimitive>> numberToString(
   if (m == -std::numeric_limits<double>::infinity())
     return getPredefined(Predefined::NegativeInfinity);
 
-  // After special cases, run the generic routine to convert.
+                                                             
   size_t len = hermes::numberToString(m, buf8, sizeof(buf8));
 
   auto result = StringPrimitive::create(runtime, ASCIIRef(buf8, len));
@@ -348,7 +348,7 @@ CallResult<PseudoHandle<StringPrimitive>> toString_RJS(
 #ifdef HERMES_SLOW_DEBUG
     case HermesValue::ETag::Invalid:
       llvm_unreachable("invalid value");
-#endif // HERMES_SLOW_DEBUG
+#endif                     
     case HermesValue::ETag::Empty:
       llvm_unreachable("empty value");
     case HermesValue::ETag::Native1:
@@ -399,17 +399,17 @@ CallResult<PseudoHandle<StringPrimitive>> toString_RJS(
 
 double parseIntWithRadix(const StringView str, int radix) {
   auto res =
-      hermes::parseIntWithRadix</* AllowNumericSeparator */ false>(str, radix);
+      hermes::parseIntWithRadix<                            false>(str, radix);
   return res ? res.getValue() : std::numeric_limits<double>::quiet_NaN();
 }
 
-/// ES5.1 9.3.1
+               
 static inline double stringToNumber(
     Runtime &runtime,
     Handle<StringPrimitive> strPrim) {
   auto &idTable = runtime.getIdentifierTable();
 
-  // Fast check for special values (no extraneous whitespace).
+                                                              
   if (runtime.symbolEqualsToStringPrim(
           Predefined::getSymbolID(Predefined::Infinity), *strPrim)) {
     return std::numeric_limits<double>::infinity();
@@ -426,12 +426,12 @@ static inline double stringToNumber(
     return std::numeric_limits<double>::quiet_NaN();
   }
 
-  // Trim string to the interval [begin, end).
+                                              
   auto orig = StringPrimitive::createStringView(runtime, strPrim);
   auto begin = orig.begin();
   auto end = orig.end();
 
-  // Move begin and end to ignore whitespace.
+                                             
   while (begin != end &&
          (isWhiteSpaceChar(*begin) || isLineTerminatorChar(*begin))) {
     ++begin;
@@ -440,17 +440,17 @@ static inline double stringToNumber(
          (isWhiteSpaceChar(*(end - 1)) || isLineTerminatorChar(*(end - 1)))) {
     --end;
   }
-  // Early return for empty strings (strings only containing whitespace).
+                                                                         
   if (begin == end) {
     return 0;
   }
 
-  // Trim the string.
+                     
   StringView str16 = orig.slice(begin, end);
 
-  // Slow check for special values.
-  // This should only run if user created a string with extra whitespace,
-  // since normal uses would get caught by the initial check.
+                                   
+                                                                         
+                                                             
   if (LLVM_UNLIKELY(str16.equals(idTable.getStringView(
           runtime, Predefined::getSymbolID(Predefined::Infinity))))) {
     return std::numeric_limits<double>::infinity();
@@ -470,9 +470,9 @@ static inline double stringToNumber(
 
   auto len = str16.length();
 
-  // Parse hex codes, since dtoa doesn't do it.
-  // FIXME: May be inaccurate for some hex values.
-  // We need to check other sources first.
+                                               
+                                                  
+                                          
   if (len > 2) {
     if (str16[0] == u'0' && letterToLower(str16[1]) == u'x') {
       return parseIntWithRadix(str16.slice(2), 16);
@@ -485,11 +485,11 @@ static inline double stringToNumber(
     }
   }
 
-  // Finally, copy 16 bit chars into 8 bit chars and call dtoa.
+                                                               
   llvh::SmallVector<char, 32> str8(len + 1);
   uint32_t i = 0;
   for (auto c16 : str16) {
-    // Check to ensure we only have valid number characters now.
+                                                                
     if ((u'0' <= c16 && c16 <= u'9') || c16 == u'.' ||
         letterToLower(c16) == u'e' || c16 == u'+' || c16 == u'-') {
       str8[i] = static_cast<char>(c16);
@@ -505,7 +505,7 @@ static inline double stringToNumber(
     return result;
   }
 
-  // If everything failed, return NaN.
+                                      
   return std::numeric_limits<double>::quiet_NaN();
 }
 
@@ -516,7 +516,7 @@ CallResult<HermesValue> toNumber_RJS(Runtime &runtime, Handle<> valueHandle) {
 #ifdef HERMES_SLOW_DEBUG
     case HermesValue::ETag::Invalid:
       llvm_unreachable("invalid value");
-#endif // HERMES_SLOW_DEBUG
+#endif                     
     case HermesValue::ETag::Empty:
       llvm_unreachable("empty value");
     case HermesValue::ETag::Native1:
@@ -550,7 +550,7 @@ CallResult<HermesValue> toNumber_RJS(Runtime &runtime, Handle<> valueHandle) {
     case HermesValue::ETag::Symbol:
       return runtime.raiseTypeError("Cannot convert Symbol to number");
     default:
-      // Already have a number, just return it.
+                                               
       return value;
   }
   return HermesValue::encodeUntrustedNumberValue(result);
@@ -572,7 +572,7 @@ CallResult<HermesValue> toNumeric_RJS(Runtime &runtime, Handle<> valueHandle) {
 }
 
 CallResult<HermesValue> toLength(Runtime &runtime, Handle<> valueHandle) {
-  constexpr double maxLength = 9007199254740991.0; // 2**53 - 1
+  constexpr double maxLength = 9007199254740991.0;             
   auto res = toIntegerOrInfinity(runtime, valueHandle);
   if (res == ExecutionStatus::EXCEPTION) {
     return ExecutionStatus::EXCEPTION;
@@ -647,7 +647,7 @@ CallResult<HermesValue> toIntegerOrInfinity(
   return HermesValue::encodeTrustedNumberValue(result);
 }
 
-/// Conversion of HermesValues to integers.
+                                           
 template <typename T>
 static inline CallResult<HermesValue> toInt(
     Runtime &runtime,
@@ -678,41 +678,41 @@ CallResult<HermesValue> toUInt8(Runtime &runtime, Handle<> valueHandle) {
 }
 
 uint8_t toUInt8Clamp(double number) {
-  // 3. If number is NaN, return +0.
-  // 4. If number <= 0, return +0.
-  // Not < so that NaN coerces to 0.
-  // NOTE: this check correctly rounds numbers less than 0.5
+                                    
+                                  
+                                    
+                                                            
   if (!(number >= 0.5)) {
     return 0;
   }
 
-  // 5. If number >= 255, return 255.
+                                     
   if (number > 255) {
     return 255;
   }
 
-  // The next steps are the equivalent of the spec's round-to-even requirement.
-  // Round up and then do the even/odd check.
+                                                                               
+                                             
   double toTruncate = number + 0.5;
   uint8_t x = static_cast<uint8_t>(toTruncate);
 
-  // If it was a tie (i.e. it ended in 0.5) then
+                                                
   if (x == toTruncate) {
-    // number ended in 0.5 and was rounded up, reduce by 1 if odd,
-    // else leave the same.
-    // That is the same as unsetting the least significant bit.
+                                                                  
+                           
+                                                               
     return (x & ~1);
   } else {
-    // number did not end in 0.5, don't need to check the parity.
+                                                                 
     return x;
   }
 }
 
 CallResult<HermesValue> toUInt8Clamp(Runtime &runtime, Handle<> valueHandle) {
-  // 1. Let number be toNumber_RJS(argument)
+                                            
   auto res = toNumber_RJS(runtime, valueHandle);
   if (res == ExecutionStatus::EXCEPTION) {
-    // 2. ReturnIfAbrupt(number)
+                                
     return ExecutionStatus::EXCEPTION;
   }
   return HermesValue::encodeUntrustedNumberValue(
@@ -734,7 +734,7 @@ CallResult<Handle<JSObject>> getPrimitivePrototype(
 #ifdef HERMES_SLOW_DEBUG
     case HermesValue::ETag::Invalid:
       llvm_unreachable("invalid value");
-#endif // HERMES_SLOW_DEBUG
+#endif                     
     case HermesValue::ETag::Empty:
       llvm_unreachable("empty value");
     case HermesValue::ETag::Native1:
@@ -769,7 +769,7 @@ CallResult<HermesValue> toObject(Runtime &runtime, Handle<> valueHandle) {
 #ifdef HERMES_SLOW_DEBUG
     case HermesValue::ETag::Invalid:
       llvm_unreachable("invalid value");
-#endif // HERMES_SLOW_DEBUG
+#endif                     
     case HermesValue::ETag::Empty:
       llvm_unreachable("empty value");
     case HermesValue::ETag::Native1:
@@ -828,14 +828,14 @@ ExecutionStatus amendPropAccessErrorMsgWithPropName(
     llvh::StringRef operationStr,
     SymbolID id) {
   if (!valueHandle->isNull() && !valueHandle->isUndefined()) {
-    // If value is not null/undefined, fall back to the original exception.
+                                                                           
     return ExecutionStatus::EXCEPTION;
   }
   assert(!runtime.getThrownValue().isEmpty() && "Error must have been thrown");
-  // Clear the error first because we will re-throw.
+                                                    
   runtime.clearThrownValue();
 
-  // Construct an error message that contains the property name.
+                                                                
   llvh::StringRef valueStr = valueHandle->isNull() ? "null" : "undefined";
   return runtime.raiseTypeError(
       TwineChar16("Cannot ") + operationStr + " property '" +
@@ -843,12 +843,12 @@ ExecutionStatus amendPropAccessErrorMsgWithPropName(
       valueStr);
 }
 
-/// Implement a BigInt vs. String comparison operation using a user-provided
-/// \p comparator. Note that \p leftHandle is a Handle<BigIntPrimitive> to
-/// ensure the caller is putting the BigInt in the lhs (and adjusting \p
-/// comparator appropriately).
-/// \return false if StringToBigInt( \p rightHandle ) is undefined, otherwise
-/// returns \p comparator ( \p leftHandle <=> \p righHandle ).
+                                                                            
+                                                                          
+                                                                        
+                              
+                                                                             
+                                                              
 static CallResult<bool> compareBigIntAndString(
     Runtime &runtime,
     Handle<BigIntPrimitive> leftHandle,
@@ -860,19 +860,19 @@ static CallResult<bool> compareBigIntAndString(
   if (LLVM_UNLIKELY(bigintRight == ExecutionStatus::EXCEPTION)) {
     return ExecutionStatus::EXCEPTION;
   }
-  if (bigintRight->isUndefined()) { // Non-compliance: should be undefined.
+  if (bigintRight->isUndefined()) {                                        
     return false;
   }
   assert(bigintRight->isBigInt() && "stringToBigInt resulted in non-bigint");
   return comparator(leftHandle->compare(bigintRight->getBigInt()));
 }
 
-/// Implement a BigInt vs. Number comparison operation using a user-provided
-/// \p comparator. Note that \p leftHandle is a Handle<BigIntPrimitive> to
-/// ensure the caller is putting the BigInt in the lhs (and adjusting \p
-/// comparator appropriately).
-/// \return false if \p right is NaN, otherwise returns
-/// \p comparator ( \p leftHandle <=> \p righHandle ).
+                                                                            
+                                                                          
+                                                                        
+                              
+                                                       
+                                                      
 static CallResult<bool> compareBigIntAndNumber(
     Runtime &runtime,
     Handle<BigIntPrimitive> leftHandle,
@@ -880,51 +880,51 @@ static CallResult<bool> compareBigIntAndNumber(
     bool (*comparator)(int)) {
   switch (std::fpclassify(right)) {
     case FP_NAN:
-      // BigInt comparison to NaN is always false.
+                                                  
       return false;
     case FP_INFINITE:
-      // If rhs is +infinite, it is greater than lhs; otherwise, it is less than
-      // rhs.
+                                                                                
+             
       return comparator(right > 0 ? -1 : 1);
     default:
       break;
   }
 
-  // Split the rhs into integral and fractional parts.
+                                                      
   double integralPart;
   const double fractionalPart = std::modf(right, &integralPart);
 
-  // Now use the rhs' integral part to create a new BigInt, which is compared to
-  // lhs.
+                                                                                
+         
   auto rightHandle = BigIntPrimitive::fromDouble(runtime, integralPart);
   if (LLVM_UNLIKELY(rightHandle == ExecutionStatus::EXCEPTION)) {
     return ExecutionStatus::EXCEPTION;
   }
 
-  // If rhs' integral part is different than lhs, then use the integral parts'
-  // comparison to decide the result.
+                                                                              
+                                     
   if (int comparisonResult = leftHandle->compare(rightHandle->getBigInt())) {
     return comparator(comparisonResult);
   }
 
-  // Lhs' and rhs' integral parts are equal, thus resort the rhs' fractional
-  // part.
+                                                                            
+          
   if (fractionalPart != 0) {
-    //  If rhs is negative, then it is smaller than lhs; otherwise, it is
-    //  greater.
+                                                                         
+                
     return comparator(right < 0 ? 1 : -1);
   }
 
-  // Lhs' and rhs' integral parts are equal, and rhs does not have a fractional
-  // part (it is zero), thus they are equal.
+                                                                               
+                                            
   return comparator(0);
 }
 
-/// Implement a comparison operator. First both operands a converted to
-/// primitives. If they both end up being strings, a lexicographical comparison
-/// is performed. Otherwise both operands are converted to numbers and the
-/// values are compared.
-/// \param oper is the comparison operator to use when comparing numbers.
+                                                                       
+                                                                               
+                                                                          
+                        
+                                                                         
 #define IMPLEMENT_COMPARISON_OP(name, oper)                           \
   CallResult<bool> name(                                              \
       Runtime &runtime, Handle<> leftHandle, Handle<> rightHandle) {  \
@@ -940,7 +940,7 @@ static CallResult<bool> compareBigIntAndNumber(
       return ExecutionStatus::EXCEPTION;                              \
     MutableHandle<> right(runtime, resRight.getValue());              \
                                                                       \
-    /* If both are strings, we must do a string comparison.*/         \
+                                                                      \
     if (left->isString() && right->isString()) {                      \
       return left->getString()->compare(right->getString()) oper 0;   \
     }                                                                 \
@@ -961,7 +961,7 @@ static CallResult<bool> compareBigIntAndNumber(
           [](int result) { return -result oper 0; });                 \
     }                                                                 \
                                                                       \
-    /* Convert both to a number and compare the numbers. */           \
+                                                                      \
     resLeft = toNumeric_RJS(runtime, left);                           \
     if (resLeft == ExecutionStatus::EXCEPTION)                        \
       return ExecutionStatus::EXCEPTION;                              \
@@ -1003,34 +1003,34 @@ namespace {
 
 enum class EqualityResult { Unknown = -1, NotEqual, Equal };
 
-/// Perform a fast equality check to see if a given double and a given
-/// BigInt are equal. If both numbers are small enough for a fast
-/// comparison, this will return `Equal` or `NotEqual`. Otherwise, if
-/// the numbers are not small enough to be quickly compared, this will
-/// return `Unknown`, which denotes that a non-fast-path check is needed.
+                                                                      
+                                                                 
+                                                                     
+                                                                      
+                                                                         
 EqualityResult areEqualSmallNumbers(const double x, BigIntPrimitive *y) {
-  // Doubles have a 53-bit mantissa, so only values from 0 to 2^53 - 1 are
-  // contiguously representable.
+                                                                          
+                                
   constexpr int64_t MaxSafeIntegerValueOfDouble =
       (int64_t{1} << std::numeric_limits<double>::digits) - 1;
 
-  // Do a quick pass for single digit values. This prevents us from
-  // having to instantiate a BigInt object for small numbers. We can
-  // only do this if we can cast our single BigInt digit to a double
-  // without loss of precision.
+                                                                   
+                                                                    
+                                                                    
+                               
   if (y->isTruncationToSingleDigitLossless(true)) {
     const auto yDigit =
         static_cast<bigint::SignedBigIntDigitType>(y->truncateToSingleDigit());
 
     if (std::abs(yDigit) < MaxSafeIntegerValueOfDouble) {
-      // `false` and `true` are safely castable directly to EqualityResults
+                                                                           
       return static_cast<EqualityResult>(static_cast<double>(yDigit) == x);
     }
   }
 
-  // y (the BigInt) is greater than MaxSafeIntegerValueOfDouble. Thus, if
-  // x (the double) is less than MaxSafeIntegerValueOfDouble they are
-  // certainly NotEqual.
+                                                                         
+                                                                     
+                        
   if (std::abs(x) < static_cast<double>(MaxSafeIntegerValueOfDouble)) {
     static_assert(
         std::numeric_limits<bigint::SignedBigIntDigitType>::max() >
@@ -1040,26 +1040,26 @@ EqualityResult areEqualSmallNumbers(const double x, BigIntPrimitive *y) {
 
   return EqualityResult::Unknown;
 }
-} // namespace
+}             
 
-/// ES11 7.2.15 Abstract Equality Comparison
+                                            
 CallResult<bool>
 abstractEqualityTest_RJS(Runtime &runtime, Handle<> xHandle, Handle<> yHandle) {
   MutableHandle<> x{runtime, xHandle.get()};
   MutableHandle<> y{runtime, yHandle.get()};
 
   while (true) {
-    // Combine tags for use in the switch statement. Use NativeValueTag as a
-    // placeholder for numbers.
+                                                                            
+                               
     assert(
         !x->isNativeValue() && !x->isEmpty() && "invalid value for comparison");
     assert(
         !y->isNativeValue() && !y->isEmpty() && "invalid value for comparison");
 
-    // The following macros are used to generate the switch cases using
-    // HermesValue::combineETags; an S in the name means it is a single ETag
-    // (e.g., ETag::Bool), while M means it is a multi ETag (e.g., ETag::Object1
-    // and ETag::Object2).
+                                                                       
+                                                                            
+                                                                                
+                          
 #define CASE_S_S(typeA, typeB)    \
   case HermesValue::combineETags( \
       HermesValue::ETag::typeA, HermesValue::ETag::typeB):
@@ -1076,21 +1076,21 @@ abstractEqualityTest_RJS(Runtime &runtime, Handle<> xHandle, Handle<> yHandle) {
   CASE_M_S(typeA, typeB##1)    \
   CASE_M_S(typeA, typeB##2)
 
-// NUMBER_TAG is a "virtual" ETag member that is used to tag numbers (which
-// don't have a tag assigned to them). It reuses ETag::Native1 there will
-// never be any native values in this part of the code.
+                                                                           
+                                                                         
+                                                       
 #define NUMBER_TAG Native1
 
-    // Tag numbers as with the "virtual" ETag member NUMBER_TAG, and use default
-    // tag values for everything else.
+                                                                                
+                                      
     HermesValue::ETag xType =
         x->isNumber() ? HermesValue::ETag::NUMBER_TAG : x->getETag();
     HermesValue::ETag yType =
         y->isNumber() ? HermesValue::ETag::NUMBER_TAG : y->getETag();
 
     switch (HermesValue::combineETags(xType, yType)) {
-      // 1. If Type(x) is the same as Type(y), then
-      // a. Return the result of performing Strict Equality Comparison x === y.
+                                                   
+                                                                               
       CASE_S_S(Undefined, Undefined)
       CASE_S_S(Null, Null) {
         return true;
@@ -1109,55 +1109,55 @@ abstractEqualityTest_RJS(Runtime &runtime, Handle<> xHandle, Handle<> yHandle) {
       CASE_M_M(Object, Object) {
         return x->getRaw() == y->getRaw();
       }
-      // 2. If x is null and y is undefined, return true.
-      // 3. If x is undefined and y is null, return true.
+                                                         
+                                                         
       CASE_S_S(Undefined, Null)
       CASE_S_S(Null, Undefined) {
         return true;
       }
-      // 4. If Type(x) is Number and Type(y) is String, return the result of the
-      // comparison x == ! ToNumber(y).
+                                                                                
+                                       
       CASE_S_M(NUMBER_TAG, Str) {
         return x->getNumber() ==
             stringToNumber(runtime, Handle<StringPrimitive>::vmcast(y));
       }
-      // 5. If Type(x) is String and Type(y) is Number, return the result of the
-      // comparison ! ToNumber(x) == y.
+                                                                                
+                                       
       CASE_M_S(Str, NUMBER_TAG) {
         return stringToNumber(runtime, Handle<StringPrimitive>::vmcast(x)) ==
             y->getNumber();
       }
-      // 6. If Type(x) is BigInt and Type(y) is String, then
+                                                            
       CASE_M_M(BigInt, Str) {
-        // a. Let n be ! StringToBigInt(y).
+                                           
         auto n = stringToBigInt(runtime, y);
         if (LLVM_UNLIKELY(n == ExecutionStatus::EXCEPTION)) {
           return ExecutionStatus::EXCEPTION;
         }
-        // b. If n is NaN, return false.
-        // N.B.: this has been amended in ES2023 to read
-        //       If n is undefined, return false.
+                                        
+                                                        
+                                                 
         if (n->isUndefined()) {
           return false;
         }
-        // c. Return the result of the comparison x == n.
+                                                         
         y = n.getValue();
         break;
       }
-      // 7. If Type(x) is String and Type(y) is BigInt, return the result of the
-      // comparison y == x.
+                                                                                
+                           
       CASE_M_M(Str, BigInt) {
         std::swap(x, y);
         break;
       }
-      // 8. If Type(x) is Boolean, return the result of the comparison !
-      // ToNumber(x) == y.
+                                                                        
+                          
       CASE_S_S(Bool, NUMBER_TAG) {
-        // Do both conversions and check numerical equality.
+                                                            
         return static_cast<double>(x->getBool()) == y->getNumber();
       }
       CASE_S_M(Bool, Str) {
-        // Do string parsing and check double equality.
+                                                       
         return static_cast<double>(x->getBool()) ==
             stringToNumber(runtime, Handle<StringPrimitive>::vmcast(y));
       }
@@ -1168,8 +1168,8 @@ abstractEqualityTest_RJS(Runtime &runtime, Handle<> xHandle, Handle<> yHandle) {
         x = HermesValue::encodeUntrustedNumberValue(x->getBool());
         break;
       }
-      // 9. If Type(y) is Boolean, return the result of the comparison x == !
-      // ToNumber(y).
+                                                                             
+                     
       CASE_S_S(NUMBER_TAG, Bool) {
         return x->getNumber() == static_cast<double>(y->getBool());
       }
@@ -1184,8 +1184,8 @@ abstractEqualityTest_RJS(Runtime &runtime, Handle<> xHandle, Handle<> yHandle) {
         y = HermesValue::encodeUntrustedNumberValue(y->getBool());
         break;
       }
-      // 10. If Type(x) is either String, Number, BigInt, or Symbol and Type(y)
-      // is Object, return the result of the comparison x == ToPrimitive(y).
+                                                                               
+                                                                            
       CASE_M_M(Str, Object)
       CASE_M_M(BigInt, Object)
       CASE_S_M(Symbol, Object)
@@ -1197,8 +1197,8 @@ abstractEqualityTest_RJS(Runtime &runtime, Handle<> xHandle, Handle<> yHandle) {
         y = status.getValue();
         break;
       }
-      // 11. If Type(x) is Object and Type(y) is either String, Number, BigInt,
-      // or Symbol, return the result of the comparison ToPrimitive(x) == y.
+                                                                               
+                                                                            
       CASE_M_M(Object, Str)
       CASE_M_M(Object, BigInt)
       CASE_M_S(Object, Symbol)
@@ -1210,10 +1210,10 @@ abstractEqualityTest_RJS(Runtime &runtime, Handle<> xHandle, Handle<> yHandle) {
         x = status.getValue();
         break;
       }
-      // 12. If Type(x) is BigInt and Type(y) is Number, or if Type(x) is
-      // Number and Type(y) is BigInt, then a. If x or y are any of NaN, +∞,
-      // or -∞, return false. b. If the mathematical value of x is equal to
-      // the mathematical value of y, return true; otherwise return false.
+                                                                         
+                                                                            
+                                                                           
+                                                                          
       CASE_M_S(BigInt, NUMBER_TAG) {
         std::swap(x, y);
         [[fallthrough]];
@@ -1236,7 +1236,7 @@ abstractEqualityTest_RJS(Runtime &runtime, Handle<> xHandle, Handle<> yHandle) {
         return xAsBigInt->getBigInt()->compare(y->getBigInt()) == 0;
       }
 
-      // 13. Return false.
+                          
       default:
         return false;
     }
@@ -1250,21 +1250,21 @@ abstractEqualityTest_RJS(Runtime &runtime, Handle<> xHandle, Handle<> yHandle) {
 }
 
 bool strictEqualityTest(HermesValue x, HermesValue y) {
-  // Numbers are special because they can have different tags and they don't
-  // obey bit-exact equality (because of NaN).
+                                                                            
+                                              
   if (x.isNumber())
     return y.isNumber() && x.getNumber() == y.getNumber();
-  // If they are not numbers and are bit exact, they must be the same.
+                                                                      
   if (x.getRaw() == y.getRaw())
     return true;
-  // All the rest of the cases need to have the same tags.
+                                                          
   if (x.getTag() != y.getTag())
     return false;
-  // Strings need deep comparison.
+                                  
   if (x.isString())
     return x.getString()->equals(y.getString());
 
-  // The only remaining case is bigint, which also needs a deep comparison.
+                                                                           
   return x.isBigInt() && x.getBigInt()->compare(y.getBigInt()) == 0;
 }
 
@@ -1282,7 +1282,7 @@ addOp_RJS(Runtime &runtime, Handle<> xHandle, Handle<> yHandle) {
   }
   auto yPrim = runtime.makeHandle(resY.getValue());
 
-  // If one of the values is a string, concatenate as strings.
+                                                              
   if (xPrim->isString() || yPrim->isString()) {
     auto resX = toString_RJS(runtime, xPrim);
     if (resX == ExecutionStatus::EXCEPTION) {
@@ -1299,18 +1299,18 @@ addOp_RJS(Runtime &runtime, Handle<> xHandle, Handle<> yHandle) {
     return StringPrimitive::concat(runtime, xStr, yStr);
   }
 
-  // xPrim and yPrim are primitives; hence, they are already bigints, or they
-  // will never be bigints.
+                                                                             
+                           
   if (LLVM_LIKELY(!xPrim->isBigInt())) {
-    // xPrim is not a bigint; thus this is Number + Number.
+                                                           
     auto res = toNumber_RJS(runtime, xPrim);
     if (LLVM_UNLIKELY(res == ExecutionStatus::EXCEPTION)) {
       return ExecutionStatus::EXCEPTION;
     }
     const double xNum = res->getNumber();
-    // N.B.: toNumber(yPrim) will raise an TypeError if yPrim is bigint, which
-    // is the correct exception to be raised when trying to perform
-    // Number + BigInt. This avoids the need to check if yPrim is a bigint.
+                                                                              
+                                                                   
+                                                                           
     res = toNumber_RJS(runtime, yPrim);
     if (LLVM_UNLIKELY(res == ExecutionStatus::EXCEPTION)) {
       return ExecutionStatus::EXCEPTION;
@@ -1319,8 +1319,8 @@ addOp_RJS(Runtime &runtime, Handle<> xHandle, Handle<> yHandle) {
     return HermesValue::encodeUntrustedNumberValue(xNum + yNum);
   }
 
-  // yPrim is a primitive; therefore it is already a BigInt, or it will never be
-  // one.
+                                                                                
+         
   if (!yPrim->isBigInt()) {
     return runtime.raiseTypeErrorForValue(
         "Cannot convert ", yHandle, " to BigInt");
@@ -1344,7 +1344,7 @@ static inline char toRadixChar(unsigned x, unsigned radix) {
   return chars[x];
 }
 
-/// \return the exponent component of the double \p x.
+                                                      
 static inline int doubleExponent(double x) {
   int e;
   std::frexp(x, &e);
@@ -1356,126 +1356,126 @@ numberToStringWithRadix(Runtime &runtime, double number, unsigned radix) {
   (void)MIN_RADIX;
   (void)MAX_RADIX;
   assert(MIN_RADIX <= radix && radix <= MAX_RADIX && "Invalid radix");
-  // Two parts of the final result: integer part and fractional part.
+                                                                     
   llvh::SmallString<64> result{};
 
-  // Used to store just the fractional part of the string (not including '.').
+                                                                              
   llvh::SmallString<32> fStr{};
 
-  // If negative, treat as if positive and add a '-' later.
+                                                           
   bool negative = false;
   if (number < 0) {
     negative = true;
     number = -number;
   }
 
-  // Split number into integer and fractional parts.
+                                                    
   double iPart;
   double fPart = std::modf(number, &iPart);
 
-  // If there's a fractional part, convert it and store in fStr.
+                                                                
   if (fPart != 0) {
-    // Distance to the next double value.
+                                         
     double next =
         std::nextafter(number, std::numeric_limits<double>::infinity());
     double minDenorm =
         std::nextafter(0.0, std::numeric_limits<double>::infinity());
 
-    // Precision of the input (half the distance to the next double).
-    // We only compute digits up to that precision.
-    // Ensure that delta > 0 by clamping it by the min denormalized positive
-    // double number.
+                                                                     
+                                                   
+                                                                            
+                     
     double delta = std::max(0.5 * (next - number), minDenorm);
 
     while (fPart > delta) {
-      // Multiply by radix to find the next digit.
+                                                  
       fPart *= radix;
       delta *= radix;
-      // Write the next digit.
+                              
       unsigned digit = static_cast<unsigned>(fPart);
       fStr.push_back(toRadixChar(digit, radix));
-      // Remove current digit from fPart to prepare for next iteration.
+                                                                       
       fPart -= digit;
-      // Round-to-even.
+                       
       if (fPart > 0.5 || (fPart == 0.5 && (digit & 1))) {
-        // Must round up, necessitating changing written digits.
+                                                                
         if (fPart + delta > 1) {
-          // Round because printing the next closest double would not give
-          // closer results than rounding. The distance between the next
-          // double and this one is large enough that at this point, we're
-          // doing worse than rounding up if we were to print out the next
-          // double precisely.
+                                                                          
+                                                                        
+                                                                          
+                                                                          
+                              
           while (true) {
-            // Rounding requires backtracking to fix everything up.
+                                                                   
             if (fStr.size() == 0) {
-              // Rounding failed to stop in the fractional part,
-              // so carry over to the integral part.
+                                                                
+                                                    
               ++iPart;
               break;
             }
-            // Iterator to the last digit of the string.
+                                                        
             char &c = fStr.back();
             unsigned digitForC = c <= '9' ? c - '0' : c - 'a' + 10;
             if (digitForC + 1 < radix) {
-              // Can increment this digit, and we're done.
+                                                          
               c = toRadixChar(digitForC + 1, radix);
               break;
             }
-            // We weren't able to increment, so this will be a trailing 0,
-            // which we don't want to keep around anyway. So, pop the last
-            // digit off the string and continue on.
+                                                                          
+                                                                          
+                                                    
             fStr.pop_back();
           }
-          // Rounded off the number, done writing the fractional string.
+                                                                        
           break;
         }
       }
     }
   }
 
-  // Now, create the integer part.
+                                  
   if (iPart == 0) {
     result.push_back('0');
   } else {
-    // Write the number backwards, then reverse it. This simplifies the code.
+                                                                             
 
-    // Physical mantissa size.
-    // Hidden bit is not included because it's not after the decimal point in
-    // the binary scientific notation representation of a double.
-    // We use this to calculate whether we have the precision required to know
-    // what the next digit is going to be.
+                              
+                                                                             
+                                                                 
+                                                                              
+                                          
     constexpr const int MANTISSA_SIZE = DBL_MANT_DIG - 1;
 
-    // Handle trailing zeros.
+                             
     while (doubleExponent(iPart / radix) > MANTISSA_SIZE) {
-      // (iPart / radix) doesn't have enough precision to be useful here,
-      // because its exponent is larger than the number of bits that the
-      // mantissa can encode. So, just put a trailing zero, divide by radix,
-      // and move on to the next digit.
+                                                                         
+                                                                        
+                                                                            
+                                       
       result.push_back('0');
       iPart /= radix;
     }
 
-    // Print the rest of the string when we know we have enough precision to
-    // do so.
+                                                                            
+             
     while (iPart > 0) {
-      // Cast digit to int because we know 2 <= digit <= 36.
+                                                            
       int digit = static_cast<int>(std::fmod(iPart, radix));
       result.push_back(toRadixChar(digit, radix));
       iPart = (iPart - digit) / radix;
     }
 
-    // Int string was generated in reverse, so flip it.
+                                                       
     std::reverse(result.begin(), result.end());
   }
 
-  // Concatenate the fractional string on if it exists.
+                                                       
   if (!fStr.empty()) {
     result += '.';
     result += fStr;
   }
 
-  // Account for negative numbers.
+                                  
   if (negative) {
     result.insert(result.begin(), '-');
   }
@@ -1541,8 +1541,8 @@ CallResult<IteratorRecord> getIterator(
     return ExecutionStatus::EXCEPTION;
   }
 
-  // We perform this check prior to returning, because every function in the JS
-  // library which gets an iterator immediately calls the 'next' function.
+                                                                               
+                                                                          
   if (!vmisa<Callable>(nextMethodRes->get())) {
     return runtime.raiseTypeError("'next' method on iterator must be callable");
   }
@@ -1609,10 +1609,10 @@ ExecutionStatus iteratorClose(
       ? ExecutionStatus::RETURNED
       : ExecutionStatus::EXCEPTION;
 
-  // 4. Let innerResult be GetMethod(iterator, "return").
-  // Do this lazily: innerResult is only actually used if GetMethod returns
-  // a callable which, when called, doesn't throw. Defer storing to innerResult
-  // until that point.
+                                                         
+                                                                           
+                                                                               
+                      
   auto returnRes = getMethod(
       runtime,
       iterator,
@@ -1629,36 +1629,36 @@ ExecutionStatus iteratorClose(
     auto innerResultRes = Callable::executeCall0(returnFn, runtime, iterator);
     if (LLVM_UNLIKELY(innerResultRes == ExecutionStatus::EXCEPTION)) {
       if (isUncatchableError(runtime.getThrownValue())) {
-        // If the call to return threw an uncatchable exception, that overrides
-        // the completion, since the point of an uncatchable exception is to
-        // prevent more JS from executing.
+                                                                               
+                                                                            
+                                          
         return ExecutionStatus::EXCEPTION;
       }
-      // If the error is catchable, suppress it temporarily below in lieu
-      // of the returnRes exception by writing to innerResultException.
-      // Spec text overwrites the value in `innerResult`.
+                                                                         
+                                                                       
+                                                         
     } else {
       innerResult = std::move(*innerResultRes);
     }
   }
-  // Runtime::thrownValue now contains the innerResult's exception if it
-  // was thrown.
-  // GetMethod error here is deliberately suppressed (no "?" in the spec).
+                                                                        
+                
+                                                                          
   if (completionStatus == ExecutionStatus::EXCEPTION) {
-    // 6. If completion.[[Type]] is throw, return Completion(completion).
-    // Note: Overrides the innerResult exception.
+                                                                         
+                                                 
     runtime.setThrownValue(*completion);
     return ExecutionStatus::EXCEPTION;
   }
   if (LLVM_UNLIKELY(!runtime.getThrownValue().isEmpty())) {
-    // 7. If innerResult.[[Type]] is throw, return Completion(innerResult).
-    // Note: innerResult exception is still in Runtime::thrownValue,
-    // so there is no need to set it again.
+                                                                           
+                                                                    
+                                           
     return ExecutionStatus::EXCEPTION;
   }
   if (!innerResult->isObject()) {
-    // 8. If Type(innerResult.[[Value]]) is not Object,
-    //    throw a TypeError exception.
+                                                       
+                                      
     return runtime.raiseTypeError("iterator.return() did not return an object");
   }
   return ExecutionStatus::RETURNED;
@@ -1667,23 +1667,23 @@ ExecutionStatus iteratorClose(
 CallResult<Handle<JSArray>> iterableToArray(
     Runtime &runtime,
     Handle<HermesValue> items) {
-  // IterableToList: 2a. Let iteratorRecord be ? GetIterator(items, sync).
+                                                                          
   CallResult<IteratorRecord> iteratorRecordRes = getIterator(runtime, items);
   if (LLVM_UNLIKELY(iteratorRecordRes == ExecutionStatus::EXCEPTION)) {
     return ExecutionStatus::EXCEPTION;
   }
   IteratorRecord iteratorRecord = *iteratorRecordRes;
 
-  // CreateArrayFromList: 1. Let array be ! ArrayCreate(0).
+                                                           
   auto arrRes = JSArray::create(runtime, 0, 0);
   assert(arrRes != ExecutionStatus::EXCEPTION && "could not create array");
   Handle<JSArray> array = *arrRes;
-  // CreateArrayFromList: 2. Let n be 0.
+                                        
   size_t n = 0;
 
   GCScopeMarkerRAII marker{runtime};
   for (;; marker.flush()) {
-    // IterableToList: 5.a. Set next to ? IteratorStep(iteratorRecord).
+                                                                       
     CallResult<Handle<JSObject>> nextRes =
         iteratorStep(runtime, iteratorRecord);
     if (LLVM_UNLIKELY(nextRes == ExecutionStatus::EXCEPTION)) {
@@ -1692,17 +1692,17 @@ CallResult<Handle<JSArray>> iterableToArray(
     if (!*nextRes) {
       break;
     }
-    // 5.b.i. Let nextValue be ? IteratorValue(next).
+                                                     
     CallResult<PseudoHandle<HermesValue>> nextValueRes =
         iteratorValue(runtime, *nextRes);
     if (LLVM_UNLIKELY(nextValueRes == ExecutionStatus::EXCEPTION)) {
       return ExecutionStatus::EXCEPTION;
     }
-    // CreateArrayFromList: 3.a Perform ! CreateDataPropertyOrThrow(array, !
-    // ToString(𝔽(n)), e).
+                                                                            
+                          
     JSArray::setElementAt(
         array, runtime, n, runtime.makeHandle(std::move(*nextValueRes)));
-    // CreateArrayFromList: 3.b Set n to n + 1.
+                                               
     n++;
   }
   if (LLVM_UNLIKELY(
@@ -1710,7 +1710,7 @@ CallResult<Handle<JSArray>> iterableToArray(
           ExecutionStatus::EXCEPTION)) {
     return ExecutionStatus::EXCEPTION;
   }
-  // 4. Return array.
+                     
   return array;
 }
 
@@ -1750,8 +1750,8 @@ CallResult<Handle<Callable>> speciesConstructor(
     Handle<JSObject> O,
     Runtime &runtime,
     Handle<Callable> defaultConstructor) {
-  // construct from the "constructor" property in self if that is defined, else
-  // use the default one.
+                                                                               
+                         
   auto res = JSObject::getNamed_RJS(
       O, runtime, Predefined::getSymbolID(Predefined::constructor));
   if (res == ExecutionStatus::EXCEPTION) {
@@ -1765,8 +1765,8 @@ CallResult<Handle<Callable>> speciesConstructor(
     return runtime.raiseTypeError(
         "Constructor must be an object if it is not undefined");
   }
-  // There is no @@species (no Symbols yet), so we'll assume that there was
-  // no other constructor specified.
+                                                                           
+                                    
   return defaultConstructor;
 }
 
@@ -1775,23 +1775,23 @@ CallResult<bool> isConstructor(Runtime &runtime, HermesValue value) {
 }
 
 CallResult<bool> isConstructor(Runtime &runtime, Callable *callable) {
-  // This is not a complete definition, since ES6 and later define member
-  // functions of objects to not be constructors; however, Hermes does not have
-  // ES6 classes implemented yet, so we cannot check for that case.
+                                                                         
+                                                                               
+                                                                   
   if (!callable) {
     return false;
   }
 
-  // We traverse the BoundFunction target chain to find the eventual target.
+                                                                            
   while (BoundFunction *b = dyn_vmcast<BoundFunction>(callable)) {
     callable = b->getTarget(runtime);
   }
 
-  // If it is a bytecode function, check the flags.
+                                                   
   if (auto *func = dyn_vmcast<JSFunction>(callable)) {
     auto *cb = func->getCodeBlock(runtime);
-    // Even though it doesn't make sense logically, we need to compile the
-    // function in order to access it flags.
+                                                                          
+                                            
     if (LLVM_UNLIKELY(cb->lazyCompile(runtime) == ExecutionStatus::EXCEPTION)) {
       return ExecutionStatus::EXCEPTION;
     }
@@ -1799,14 +1799,14 @@ CallResult<bool> isConstructor(Runtime &runtime, Callable *callable) {
         true);
   }
 
-  // We check for NativeFunction since those are defined to not be
-  // constructible, with the exception of NativeConstructor.
+                                                                  
+                                                            
   if (!vmisa<NativeFunction>(callable) || vmisa<NativeConstructor>(callable)) {
     return true;
   }
 
-  // JSCallableProxy is a NativeFunction, but may or may not be a
-  // constructor, so we ask it.
+                                                                 
+                               
   if (auto *cproxy = dyn_vmcast<JSCallableProxy>(callable)) {
     return cproxy->isConstructor(runtime);
   }
@@ -1816,7 +1816,7 @@ CallResult<bool> isConstructor(Runtime &runtime, Callable *callable) {
 
 CallResult<bool>
 ordinaryHasInstance(Runtime &runtime, Handle<> constructor, Handle<> object) {
-  // 1. If IsCallable(C) is false, return false.
+                                                
   if (!vmisa<Callable>(*constructor)) {
     return false;
   }
@@ -1824,27 +1824,27 @@ ordinaryHasInstance(Runtime &runtime, Handle<> constructor, Handle<> object) {
   Callable *ctor = vmcast<Callable>(*constructor);
 
   BoundFunction *bound;
-  // 2. If C has a [[BoundTargetFunction]] internal slot, then
+                                                              
   while (LLVM_UNLIKELY(bound = dyn_vmcast<BoundFunction>(ctor))) {
-    // 2a. Let BC be the value of C’s [[BoundTargetFunction]] internal slot.
-    // 2b. Return InstanceofOperator(O,BC) (see 12.9.4).
-    // Note that we can do this with the loop instead,
-    // because bound->getTarget() must be a Callable, and Callables cannot
-    // redefine @@hasInstance (non-configurable).
-    // Callables call this function directly from their @@hasInstance
-    // function.
+                                                                            
+                                                        
+                                                      
+                                                                          
+                                                 
+                                                                     
+                
     ctor = bound->getTarget(runtime);
   }
 
-  // At this point 'ctor' is the actual function with a prototype.
+                                                                  
   assert(ctor != nullptr && "ctor must not be null");
 
-  // 3. If Type(O) is not Object, return false.
+                                               
   if (LLVM_UNLIKELY(!object->isObject())) {
     return false;
   }
 
-  // 4. Let P be Get(C, "prototype").
+                                     
   auto propRes = JSObject::getNamed_RJS(
       runtime.makeHandle(ctor),
       runtime,
@@ -1853,7 +1853,7 @@ ordinaryHasInstance(Runtime &runtime, Handle<> constructor, Handle<> object) {
     return ExecutionStatus::EXCEPTION;
   }
 
-  // 5. If Type(P) is not Object, throw a TypeError exception.
+                                                              
   Handle<JSObject> ctorPrototype = runtime.makeHandle(
       PseudoHandle<JSObject>::dyn_vmcast(std::move(*propRes)));
   if (LLVM_UNLIKELY(!ctorPrototype)) {
@@ -1861,30 +1861,30 @@ ordinaryHasInstance(Runtime &runtime, Handle<> constructor, Handle<> object) {
         "function's '.prototype' is not an object in 'instanceof'");
   }
 
-  // 6.1.7.3 Invariants of the Essential Internal Methods notes that
-  // detection of infinite prototype chains is not enforceable as an
-  // invariant if exotic objects exist in the chain.  Most of the
-  // time, ScopedNativeDepthTracker will detect this. Here, we need to
-  // check that we're not repeating forever.  Since ordinary object
-  // chains are verified at the time the parent is set, we count Proxy
-  // objects.  Thus, any length chain of ordinary objects is ok.
+                                                                    
+                                                                    
+                                                                 
+                                                                      
+                                                                   
+                                                                      
+                                                                
   constexpr unsigned int kMaxProxyCount = 1024;
   unsigned int proxyCount = 0;
   MutableHandle<JSObject> head{runtime, vmcast<JSObject>(object.get())};
   GCScopeMarkerRAII gcScope{runtime};
-  // 6. Repeat
+              
   while (true) {
-    // 6a. Let O be O.[[GetPrototypeOf]]().
+                                           
     CallResult<PseudoHandle<JSObject>> parentRes =
         JSObject::getPrototypeOf(head, runtime);
     if (LLVM_UNLIKELY(parentRes == ExecutionStatus::EXCEPTION)) {
       return ExecutionStatus::EXCEPTION;
     }
-    // 6b. If O is null, return false.
+                                      
     if (!*parentRes) {
       return false;
     }
-    // 6c. If SameValue(P, O) is true, return true.
+                                                   
     if (parentRes->get() == ctorPrototype.get()) {
       return true;
     }
@@ -1904,13 +1904,13 @@ CallResult<bool> instanceOfOperator_RJS(
     Runtime &runtime,
     Handle<> object,
     Handle<> constructor) {
-  // 1. If Type(C) is not Object, throw a TypeError exception.
+                                                              
   if (LLVM_UNLIKELY(!constructor->isObject())) {
     return runtime.raiseTypeError(
         "right operand of 'instanceof' is not an object");
   }
 
-  // 2. Let instOfHandler be GetMethod(C,@@hasInstance).
+                                                        
   CallResult<PseudoHandle<>> instOfHandlerRes = JSObject::getNamed_RJS(
       Handle<JSObject>::vmcast(constructor),
       runtime,
@@ -1920,9 +1920,9 @@ CallResult<bool> instanceOfOperator_RJS(
   }
   auto instOfHandler = runtime.makeHandle(std::move(*instOfHandlerRes));
 
-  // 4. If instOfHandler is not undefined, then
+                                               
   if (!instOfHandler->isUndefined()) {
-    // 5. Return ToBoolean(Call(instOfHandler, C, «O»)).
+                                                        
     if (!vmisa<Callable>(*instOfHandler)) {
       return runtime.raiseTypeError("instanceof handler must be callable");
     }
@@ -1934,54 +1934,54 @@ CallResult<bool> instanceOfOperator_RJS(
     return toBoolean(callRes->get());
   }
 
-  // 6. If IsCallable(C) is false, throw a TypeError exception.
+                                                               
   if (!vmisa<Callable>(*constructor)) {
     return runtime.raiseTypeError(
         "right operand of 'instanceof' is not callable");
   }
 
-  // 7. Return OrdinaryHasInstance(C, O).
+                                         
   return ordinaryHasInstance(runtime, constructor, object);
 }
 
-/// ES6.0 7.2.8
-/// Returns true if the object is a JSRegExp or has a Symbol.match property that
-/// evaluates to true.
+               
+                                                                                
+                      
 CallResult<bool> isRegExp(Runtime &runtime, Handle<> arg) {
-  // 1. If Type(argument) is not Object, return false.
+                                                      
   if (!arg->isObject()) {
     return false;
   }
   Handle<JSObject> obj = Handle<JSObject>::vmcast(arg);
-  // 2. Let isRegExp be Get(argument, @@match).
+                                               
   auto propRes = JSObject::getNamed_RJS(
       obj, runtime, Predefined::getSymbolID(Predefined::SymbolMatch));
-  // 3. ReturnIfAbrupt(isRegExp).
+                                 
   if (LLVM_UNLIKELY(propRes == ExecutionStatus::EXCEPTION)) {
     return ExecutionStatus::EXCEPTION;
   }
-  // 4. If isRegExp is not undefined, return ToBoolean(isRegExp).
+                                                                 
   if (!(*propRes)->isUndefined()) {
     return toBoolean(propRes->get());
   }
-  // 5. If argument has a [[RegExpMatcher]] internal slot, return true.
-  // 6. Return false.
+                                                                       
+                     
   return vmisa<JSRegExp>(arg.get());
 }
 
 CallResult<Handle<StringPrimitive>> symbolDescriptiveString(
     Runtime &runtime,
     Handle<SymbolID> sym) {
-  // 1. Assert: Type(sym) is Symbol.
-  // 2. Let desc be sym's [[Description]] value.
-  // 3. If desc is undefined, set desc to the empty string.
-  // 4. Assert: Type(desc) is String.
+                                    
+                                                
+                                                           
+                                     
   auto desc = runtime.makeHandle<StringPrimitive>(
       runtime.getStringPrimFromSymbolID(*sym));
   SafeUInt32 descLen(desc->getStringLength());
   descLen.add(8);
 
-  // 5. Return the string-concatenation of "Symbol(", desc, and ")".
+                                                                    
   auto builder = StringBuilder::createStringBuilder(runtime, descLen);
   if (LLVM_UNLIKELY(builder == ExecutionStatus::EXCEPTION)) {
     return ExecutionStatus::EXCEPTION;
@@ -2040,7 +2040,7 @@ ExecutionStatus toPropertyDescriptor(
     MutableHandle<> &valueOrAccessor) {
   GCScopeMarkerRAII gcMarker{runtime};
 
-  // Verify that the attributes argument is also an object.
+                                                           
   auto attributes = Handle<JSObject>::dyn_vmcast(obj);
   if (!attributes) {
     return runtime.raiseTypeError(
@@ -2049,7 +2049,7 @@ ExecutionStatus toPropertyDescriptor(
 
   NamedPropertyDescriptor desc;
 
-  // Get enumerable property of the attributes.
+                                               
   if (JSObject::getNamedDescriptorPredefined(
           attributes, runtime, Predefined::enumerable, desc)) {
     auto propRes = JSObject::getNamed_RJS(
@@ -2064,7 +2064,7 @@ ExecutionStatus toPropertyDescriptor(
     flags.setEnumerable = true;
   }
 
-  // Get configurable property of the attributes.
+                                                 
   if (JSObject::getNamedDescriptorPredefined(
           attributes, runtime, Predefined::configurable, desc)) {
     auto propRes = JSObject::getNamed_RJS(
@@ -2079,7 +2079,7 @@ ExecutionStatus toPropertyDescriptor(
     flags.setConfigurable = true;
   }
 
-  // Get value property of the attributes.
+                                          
   if (JSObject::getNamedDescriptorPredefined(
           attributes, runtime, Predefined::value, desc)) {
     auto propRes = JSObject::getNamed_RJS(
@@ -2094,7 +2094,7 @@ ExecutionStatus toPropertyDescriptor(
     flags.setValue = true;
   }
 
-  // Get writable property of the attributes.
+                                             
   if (JSObject::getNamedDescriptorPredefined(
           attributes, runtime, Predefined::writable, desc)) {
     auto propRes = JSObject::getNamed_RJS(
@@ -2109,7 +2109,7 @@ ExecutionStatus toPropertyDescriptor(
     flags.setWritable = true;
   }
 
-  // Get getter property of the attributes.
+                                           
   MutableHandle<Callable> getterPtr{runtime};
   if (JSObject::getNamedDescriptorPredefined(
           attributes, runtime, Predefined::get, desc)) {
@@ -2132,7 +2132,7 @@ ExecutionStatus toPropertyDescriptor(
     }
   }
 
-  // Get setter property of the attributes.
+                                           
   MutableHandle<Callable> setterPtr{runtime};
   if (JSObject::getNamedDescriptorPredefined(
           attributes, runtime, Predefined::set, desc)) {
@@ -2155,7 +2155,7 @@ ExecutionStatus toPropertyDescriptor(
     }
   }
 
-  // Construct property accessor if getter/setter is set.
+                                                         
   if (flags.setSetter || flags.setGetter) {
     if (flags.setValue) {
       return runtime.raiseTypeError(
@@ -2180,7 +2180,7 @@ CallResult<HermesValue> objectFromPropertyDescriptor(
   DefinePropertyFlags dpf = DefinePropertyFlags::getDefaultNewPropertyFlags();
 
   if (!dpFlags.isAccessor()) {
-    // Data Descriptor
+                      
     auto result = JSObject::defineOwnProperty(
         obj,
         runtime,
@@ -2211,7 +2211,7 @@ CallResult<HermesValue> objectFromPropertyDescriptor(
       }
     }
   } else {
-    // Accessor
+               
     auto *accessor = vmcast<PropertyAccessor>(valueOrAccessor.get());
 
     auto getter = runtime.makeHandle(
@@ -2296,21 +2296,21 @@ CallResult<HermesValue> numberToBigInt(Runtime &runtime, double number) {
 }
 
 bool isIntegralNumber(double number) {
-  // 1. if Type(argument) is not Number, return false
-  // it is a number
+                                                     
+                   
 
-  // 2. if argument is NaN, +inf, -inf, return false
+                                                    
   if (std::isnan(number) || number == std::numeric_limits<double>::infinity() ||
       number == -std::numeric_limits<double>::infinity()) {
     return false;
   }
 
-  // 3. if floor(abs(R(argument))) != abs(R(argument)) return false
+                                                                   
   if (std::floor(std::abs(number)) != std::abs(number)) {
     return false;
   }
 
-  // 4. return true
+                   
   return true;
 }
 
@@ -2382,22 +2382,22 @@ CallResult<HermesValue> thisBigIntValue(Runtime &runtime, Handle<> value) {
 bool hasRestrictedGlobalProperty(Runtime &runtime, SymbolID N) {
   Handle<JSObject> globalObject = runtime.getGlobal();
 
-  // 1. Let ObjRec be envRec.[[ObjectRecord]].
-  // 2. Let globalObject be ObjRec.[[BindingObject]].
+                                              
+                                                     
 
-  // 3. Let existingProp be ? globalObject.[[GetOwnProperty]](N).
+                                                                 
   NamedPropertyDescriptor desc;
   JSObject *existingProp =
       JSObject::getNamedDescriptorUnsafe(globalObject, runtime, N, desc);
 
-  // 4. If existingProp is undefined, return false.
+                                                   
   if (!existingProp) {
     return false;
   }
 
-  // 5. If existingProp.[[Configurable]] is true, return false.
-  // 6. Return true.
+                                                               
+                    
   return !desc.flags.configurable;
 }
-} // namespace vm
-} // namespace hermes
+}                
+}                    

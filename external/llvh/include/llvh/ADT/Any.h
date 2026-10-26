@@ -57,23 +57,23 @@ public:
   Any(const Any &Other)
       : Storage(Other.Storage ? Other.Storage->clone() : nullptr) {}
 
-  // When T is Any or T is not copy-constructible we need to explicitly disable
-  // the forwarding constructor so that the copy constructor gets selected
-  // instead.
+                                                                               
+                                                                          
+             
   template <
       typename T,
       typename std::enable_if<
           llvh::conjunction<
               llvh::negation<std::is_same<typename std::decay<T>::type, Any>>,
-              // We also disable this overload when an `Any` object can be
-              // converted to the parameter type because in that case, this
-              // constructor may combine with that conversion during overload
-              // resolution for determining copy constructibility, and then
-              // when we try to determine copy constructibility below we may
-              // infinitely recurse. This is being evaluated by the standards
-              // committee as a potential DR in `std::any` as well, but we're
-              // going ahead and adopting it to work-around usage of `Any` with
-              // types that need to be implicitly convertible from an `Any`.
+                                                                          
+                                                                           
+                                                                             
+                                                                           
+                                                                            
+                                                                             
+                                                                             
+                                                                               
+                                                                            
               llvh::negation<std::is_convertible<Any, typename std::decay<T>::type>>,
               std::is_copy_constructible<typename std::decay<T>::type>>::value,
           int>::type = 0>
@@ -155,6 +155,6 @@ template <class T> T *any_cast(Any *Value) {
   return &static_cast<Any::StorageImpl<U> &>(*Value->Storage).Value;
 }
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_ADT_ANY_H
+#endif                  

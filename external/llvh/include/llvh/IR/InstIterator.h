@@ -27,17 +27,17 @@
 
 namespace llvh {
 
-// This class implements inst_begin() & inst_end() for
-// inst_iterator and const_inst_iterator's.
-//
+                                                      
+                                           
+  
 template <class BB_t, class BB_i_t, class BI_t, class II_t> class InstIterator {
   using BBty = BB_t;
   using BBIty = BB_i_t;
   using BIty = BI_t;
   using IIty = II_t;
-  BB_t *BBs; // BasicBlocksType
-  BB_i_t BB; // BasicBlocksType::iterator
-  BI_t BI;   // BasicBlock::iterator
+  BB_t *BBs;                   
+  BB_i_t BB;                             
+  BI_t BI;                          
 
 public:
   using iterator_category = std::bidirectional_iterator_tag;
@@ -46,10 +46,10 @@ public:
   using pointer = IIty *;
   using reference = IIty &;
 
-  // Default constructor
+                        
   InstIterator() = default;
 
-  // Copy constructor...
+                        
   template<typename A, typename B, typename C, typename D>
   InstIterator(const InstIterator<A,B,C,D> &II)
     : BBs(II.BBs), BB(II.BB), BI(II.BI) {}
@@ -59,7 +59,7 @@ public:
     : BBs(II.BBs), BB(II.BB), BI(II.BI) {}
 
   template<class M> InstIterator(M &m)
-    : BBs(&m.getBasicBlockList()), BB(BBs->begin()) {    // begin ctor
+    : BBs(&m.getBasicBlockList()), BB(BBs->begin()) {                 
     if (BB != BBs->end()) {
       BI = BB->begin();
       advanceToNextBB();
@@ -67,10 +67,10 @@ public:
   }
 
   template<class M> InstIterator(M &m, bool)
-    : BBs(&m.getBasicBlockList()), BB(BBs->end()) {    // end ctor
+    : BBs(&m.getBasicBlockList()), BB(BBs->end()) {               
   }
 
-  // Accessors to get at the underlying iterators...
+                                                    
   inline BBIty &getBasicBlockIterator()  { return BB; }
   inline BIty  &getInstructionIterator() { return BI; }
 
@@ -109,8 +109,8 @@ public:
 
 private:
   inline void advanceToNextBB() {
-    // The only way that the II could be broken is if it is now pointing to
-    // the end() of the current BasicBlock and there are successor BBs.
+                                                                           
+                                                                       
     while (BI == BB->end()) {
       ++BB;
       if (BB == BBs->end()) break;
@@ -158,6 +158,6 @@ inline const_inst_range instructions(const Function &F) {
   return const_inst_range(inst_begin(F), inst_end(F));
 }
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_IR_INSTITERATOR_H
+#endif                          

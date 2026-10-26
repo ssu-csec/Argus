@@ -11,19 +11,19 @@
 //
 //===----------------------------------------------------------------------===//
 
-//===----------------------------------------------------------------------===//
-// MIPS DSP data types
+                                                                                
+                      
 def mips_v2q15_ty: LLVMType<v2i16>;
 def mips_v4q7_ty: LLVMType<v4i8>;
 def mips_q31_ty: LLVMType<i32>;
 
-let TargetPrefix = "mips" in {  // All intrinsics start with "llvm.mips.".
+let TargetPrefix = "mips" in {                                            
 
-//===----------------------------------------------------------------------===//
-// MIPS DSP Rev 1
+                                                                                
+                 
 
-//===----------------------------------------------------------------------===//
-// Addition/subtraction
+                                                                                
+                       
 
 def int_mips_addu_qb : GCCBuiltin<"__builtin_mips_addu_qb">,
   Intrinsic<[llvm_v4i8_ty], [llvm_v4i8_ty, llvm_v4i8_ty],
@@ -77,16 +77,16 @@ def int_mips_modsub: GCCBuiltin<"__builtin_mips_modsub">,
 def int_mips_raddu_w_qb: GCCBuiltin<"__builtin_mips_raddu_w_qb">,
   Intrinsic<[llvm_i32_ty], [llvm_v4i8_ty], [IntrNoMem]>;
 
-//===----------------------------------------------------------------------===//
-// Absolute value
+                                                                                
+                 
 
 def int_mips_absq_s_ph: GCCBuiltin<"__builtin_mips_absq_s_ph">,
   Intrinsic<[mips_v2q15_ty], [mips_v2q15_ty], []>;
 def int_mips_absq_s_w: GCCBuiltin<"__builtin_mips_absq_s_w">,
   Intrinsic<[mips_q31_ty], [mips_q31_ty], []>;
 
-//===----------------------------------------------------------------------===//
-// Precision reduce/expand
+                                                                                
+                          
 
 def int_mips_precrq_qb_ph: GCCBuiltin<"__builtin_mips_precrq_qb_ph">,
   Intrinsic<[llvm_v4i8_ty], [mips_v2q15_ty, mips_v2q15_ty], [IntrNoMem]>;
@@ -117,8 +117,8 @@ def int_mips_preceu_ph_qbla: GCCBuiltin<"__builtin_mips_preceu_ph_qbla">,
 def int_mips_preceu_ph_qbra: GCCBuiltin<"__builtin_mips_preceu_ph_qbra">,
   Intrinsic<[mips_v2q15_ty], [llvm_v4i8_ty], [IntrNoMem]>;
 
-//===----------------------------------------------------------------------===//
-// Shift
+                                                                                
+        
 
 def int_mips_shll_qb: GCCBuiltin<"__builtin_mips_shll_qb">,
   Intrinsic<[llvm_v4i8_ty], [llvm_v4i8_ty, llvm_i32_ty], []>;
@@ -139,8 +139,8 @@ def int_mips_shra_r_w: GCCBuiltin<"__builtin_mips_shra_r_w">,
 def int_mips_shilo: GCCBuiltin<"__builtin_mips_shilo">,
   Intrinsic<[llvm_i64_ty], [llvm_i64_ty, llvm_i32_ty], [IntrNoMem]>;
 
-//===----------------------------------------------------------------------===//
-// Multiplication
+                                                                                
+                 
 
 def int_mips_muleu_s_ph_qbl: GCCBuiltin<"__builtin_mips_muleu_s_ph_qbl">,
   Intrinsic<[mips_v2q15_ty], [llvm_v4i8_ty, mips_v2q15_ty], []>;
@@ -169,8 +169,8 @@ def int_mips_multu: GCCBuiltin<"__builtin_mips_multu">,
   Intrinsic<[llvm_i64_ty], [llvm_i32_ty, llvm_i32_ty],
             [IntrNoMem, Commutative]>;
 
-//===----------------------------------------------------------------------===//
-// Dot product with accumulate/subtract
+                                                                                
+                                       
 
 def int_mips_dpau_h_qbl: GCCBuiltin<"__builtin_mips_dpau_h_qbl">,
   Intrinsic<[llvm_i64_ty], [llvm_i64_ty, llvm_v4i8_ty, llvm_v4i8_ty],
@@ -193,8 +193,8 @@ def int_mips_dpaq_sa_l_w: GCCBuiltin<"__builtin_mips_dpaq_sa_l_w">,
 def int_mips_dpsq_sa_l_w: GCCBuiltin<"__builtin_mips_dpsq_sa_l_w">,
   Intrinsic<[llvm_i64_ty], [llvm_i64_ty, mips_q31_ty, mips_q31_ty], []>;
 
-//===----------------------------------------------------------------------===//
-// Comparison
+                                                                                
+             
 
 def int_mips_cmpu_eq_qb: GCCBuiltin<"__builtin_mips_cmpu_eq_qb">,
   Intrinsic<[], [llvm_v4i8_ty, llvm_v4i8_ty], [Commutative]>;
@@ -215,8 +215,8 @@ def int_mips_cmp_lt_ph: GCCBuiltin<"__builtin_mips_cmp_lt_ph">,
 def int_mips_cmp_le_ph: GCCBuiltin<"__builtin_mips_cmp_le_ph">,
   Intrinsic<[], [mips_v2q15_ty, mips_v2q15_ty], []>;
 
-//===----------------------------------------------------------------------===//
-// Extracting
+                                                                                
+             
 
 def int_mips_extr_s_h: GCCBuiltin<"__builtin_mips_extr_s_h">,
   Intrinsic<[llvm_i32_ty], [llvm_i64_ty, llvm_i32_ty], []>;
@@ -231,8 +231,8 @@ def int_mips_extp: GCCBuiltin<"__builtin_mips_extp">,
 def int_mips_extpdp: GCCBuiltin<"__builtin_mips_extpdp">,
   Intrinsic<[llvm_i32_ty], [llvm_i64_ty, llvm_i32_ty], []>;
 
-//===----------------------------------------------------------------------===//
-// Misc
+                                                                                
+       
 
 def int_mips_wrdsp: GCCBuiltin<"__builtin_mips_wrdsp">,
   Intrinsic<[], [llvm_i32_ty, llvm_i32_ty], []>;
@@ -270,8 +270,8 @@ def int_mips_lhx: GCCBuiltin<"__builtin_mips_lhx">,
 def int_mips_lwx: GCCBuiltin<"__builtin_mips_lwx">,
   Intrinsic<[llvm_i32_ty], [llvm_ptr_ty, llvm_i32_ty], [IntrReadMem, IntrArgMemOnly]>;
 
-//===----------------------------------------------------------------------===//
-// MIPS DSP Rev 2
+                                                                                
+                 
 
 def int_mips_absq_s_qb: GCCBuiltin<"__builtin_mips_absq_s_qb">,
   Intrinsic<[mips_v4q7_ty], [mips_v4q7_ty], []>;
@@ -391,11 +391,11 @@ def int_mips_subuh_qb: GCCBuiltin<"__builtin_mips_subuh_qb">,
 def int_mips_subuh_r_qb: GCCBuiltin<"__builtin_mips_subuh_r_qb">,
   Intrinsic<[llvm_v4i8_ty], [llvm_v4i8_ty, llvm_v4i8_ty], [IntrNoMem]>;
 
-//===----------------------------------------------------------------------===//
-// MIPS MSA
+                                                                                
+           
 
-//===----------------------------------------------------------------------===//
-// Addition/subtraction
+                                                                                
+                       
 
 def int_mips_add_a_b : GCCBuiltin<"__builtin_msa_add_a_b">,
   Intrinsic<[llvm_v16i8_ty], [llvm_v16i8_ty, llvm_v16i8_ty],
@@ -837,8 +837,8 @@ def int_mips_div_u_w : GCCBuiltin<"__builtin_msa_div_u_w">,
 def int_mips_div_u_d : GCCBuiltin<"__builtin_msa_div_u_d">,
   Intrinsic<[llvm_v2i64_ty], [llvm_v2i64_ty, llvm_v2i64_ty], [IntrNoMem]>;
 
-// This instruction is part of the MSA spec but it does not share the
-// __builtin_msa prefix because it operates on GP registers.
+                                                                     
+                                                            
 def int_mips_dlsa : GCCBuiltin<"__builtin_mips_dlsa">,
   Intrinsic<[llvm_i64_ty], [llvm_i64_ty, llvm_i64_ty, llvm_i32_ty],
             [IntrNoMem]>;
@@ -1281,8 +1281,8 @@ def int_mips_ldi_w : GCCBuiltin<"__builtin_msa_ldi_w">,
 def int_mips_ldi_d : GCCBuiltin<"__builtin_msa_ldi_d">,
   Intrinsic<[llvm_v2i64_ty], [llvm_i32_ty], [IntrNoMem]>;
 
-// This instruction is part of the MSA spec but it does not share the
-// __builtin_msa prefix because it operates on the GPR registers.
+                                                                     
+                                                                 
 def int_mips_lsa : GCCBuiltin<"__builtin_mips_lsa">,
   Intrinsic<[llvm_i32_ty], [llvm_i32_ty, llvm_i32_ty, llvm_i32_ty],
             [IntrNoMem]>;

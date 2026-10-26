@@ -27,11 +27,11 @@ void BasicBlockExecutionInfo::resizeFuncStatMap(
     FunctionStatisticMap &funcStat,
     uint16_t pointIndex) {
   assert(funcStat.empty());
-  // If entrypoint block's pointIndex is zero(index overflow) we know
-  // there are more than 2^16 basic blocks and overflowed blocks share
-  // index zero so resize to maximum block number.
-  // Note: in this case the stats table is inaccurate - all overflowed blocks
-  // share the zero-index entry.
+                                                                     
+                                                                      
+                                                  
+                                                                             
+                                
   const uint32_t kMaxBlockNumbers = 1 << 16;
   funcStat.resize(pointIndex == 0 ? kMaxBlockNumbers : pointIndex + 1);
 }
@@ -58,15 +58,15 @@ void BasicBlockExecutionInfo::dump(llvh::raw_ostream &OS) {
     auto md5Result = doMD5Checksum(funcEntry.first->getOpcodeArray());
     json.emitKeyValue("checksum", md5Result.digest().str());
 
-    // hbcdump will be responsible to check overflow scenario(index-zero entry
-    // is not empty).
+                                                                              
+                     
     const auto &funcStat = funcEntry.second;
     json.emitKey("basic_blocks");
     uint16_t profileIndex = 0;
     json.openArray();
     for (const auto &blockStat : funcStat) {
       json.openDict();
-      // profile_index is used as the identifier for basic block.
+                                                                 
       json.emitKeyValue("profile_index", profileIndex);
       json.emitKeyValue("execution_count", (double)blockStat.first);
       json.emitKeyValue("order", (double)blockStat.second);
@@ -81,7 +81,7 @@ void BasicBlockExecutionInfo::dump(llvh::raw_ostream &OS) {
   OS.flush();
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMESVM_PROFILER_BB
+#endif                        

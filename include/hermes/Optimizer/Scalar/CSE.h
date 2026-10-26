@@ -13,7 +13,7 @@
 
 namespace hermes {
 
-/// Deletes simple dead code patterns.
+                                      
 class CSE : public FunctionPass {
  public:
   explicit CSE() : FunctionPass("CSE") {}
@@ -22,6 +22,6 @@ class CSE : public FunctionPass {
   bool runOnFunction(Function *F) override;
 };
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_OPTIMIZER_SCALAR_CSE_H
+#endif                                 

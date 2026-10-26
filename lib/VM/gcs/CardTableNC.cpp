@@ -24,7 +24,7 @@ namespace hermes {
 namespace vm {
 
 void CardTable::dirtyCardsForAddressRange(const void *low, const void *high) {
-  // If high is in the middle of some card, ensure that we dirty that card.
+                                                                           
   high = reinterpret_cast<const char *>(high) + kCardSize - 1;
   dirtyRange(addressToIndex(low), addressToIndex(high));
 }
@@ -50,8 +50,8 @@ void CardTable::updateAfterCompaction(const void *newLevel) {
   assert(
       firstCleanCardIndex <= kValidIndices &&
       firstCleanCardIndex >= kFirstUsedIndex && "Invalid index.");
-  // Dirty the occupied cards (below the level), and clean the cards above the
-  // level.
+                                                                              
+           
   dirtyRange(kFirstUsedIndex, firstCleanCardIndex);
   cleanRange(firstCleanCardIndex, kValidIndices);
 }
@@ -84,21 +84,21 @@ void CardTable::updateBoundaries(
   assert(
       boundary->index() == addressToIndex(boundary->address()) &&
       "Precondition: boundary's index must correspond to its address in this table.");
-  // We must always have just crossed the boundary of the next card:
+                                                                    
   assert(
       start <= boundary->address() && boundary->address() < end &&
       "Precondition: must have crossed boundary.");
-  // The object may be large, and may cross multiple cards, but first
-  // handle the first card.
+                                                                     
+                           
   boundaries_[boundary->index()] =
       (boundary->address() - start) >> LogHeapAlign;
   boundary->bump();
 
-  // Now we must fill in the remainder of the card boundaries crossed by the
-  // allocation.  We use a logarithmic scheme, so we fill in one card
-  // with -1, 2 with -2, etc., where each negative value k indicates
-  // that we should go backwards by 2^(-k - 1) cards, and consult the
-  // table there.
+                                                                            
+                                                                     
+                                                                    
+                                                                     
+                 
   int8_t currentExp = 0;
   unsigned currentIndexDelta = 1;
   unsigned numWithCurrentExp = 0;
@@ -109,8 +109,8 @@ void CardTable::updateBoundaries(
       numWithCurrentExp = 0;
       currentExp++;
       currentIndexDelta *= 2;
-      // Note that 7 bits handles object sizes up to 2^128, so we
-      // don't have to worry about overflow of the int8_t.
+                                                                 
+                                                          
     }
     boundary->bump();
   }
@@ -119,9 +119,9 @@ void CardTable::updateBoundaries(
 GCCell *CardTable::firstObjForCard(unsigned index) const {
   int8_t val = boundaries_[index];
 
-  // If val is negative, it means skip backwards some number of cards.
-  // In general, for an object crossing 2^N cards, a query for one of
-  // those cards will examine at most N entries in the table.
+                                                                      
+                                                                     
+                                                             
   while (val < 0) {
     index -= 1 << decodeExp(val);
     val = boundaries_[index];
@@ -151,11 +151,11 @@ void CardTable::unprotectBoundaryTable() {
   protectBoundaryTableWork(
       &boundaries_[0], kValidIndices, oscompat::ProtectMode::ReadWrite);
 }
-#endif // HERMES_EXTRA_DEBUG
+#endif                      
 
 #ifdef HERMES_SLOW_DEBUG
 void CardTable::verifyBoundaries(char *start, char *level) const {
-  // Start should be card-aligned.
+                                  
   assert(isCardAligned(start));
   for (unsigned index = addressToIndex(start); index < kValidIndices; index++) {
     const char *boundary = indexToAddress(index);
@@ -163,20 +163,20 @@ void CardTable::verifyBoundaries(char *start, char *level) const {
       break;
     }
     GCCell *cell = firstObjForCard(index);
-    // Should be a valid cell.
+                              
     assert(
         cell->isValid() &&
         "Card object boundary is broken: firstObjForCard yields invalid cell.");
     char *cellPtr = reinterpret_cast<char *>(cell);
-    // And it should extend across the card boundary.
+                                                     
     assert(
         cellPtr <= boundary &&
         boundary < (cellPtr + cell->getAllocatedSize()) &&
         "Card object boundary is broken: first obj doesn't extend into card");
   }
 }
-#endif // HERMES_SLOW_DEBUG
+#endif                     
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 #undef DEBUG_TYPE

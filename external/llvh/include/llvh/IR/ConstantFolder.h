@@ -24,14 +24,14 @@
 
 namespace llvh {
 
-/// ConstantFolder - Create constants with minimum, target independent, folding.
+                                                                                
 class ConstantFolder {
 public:
   explicit ConstantFolder() = default;
 
-  //===--------------------------------------------------------------------===//
-  // Binary Operators
-  //===--------------------------------------------------------------------===//
+                                                                                
+                     
+                                                                                
 
   Constant *CreateAdd(Constant *LHS, Constant *RHS,
                       bool HasNUW = false, bool HasNSW = false) const {
@@ -118,9 +118,9 @@ public:
     return ConstantExpr::get(Opc, LHS, RHS);
   }
 
-  //===--------------------------------------------------------------------===//
-  // Unary Operators
-  //===--------------------------------------------------------------------===//
+                                                                                
+                    
+                                                                                
 
   Constant *CreateNeg(Constant *C,
                       bool HasNUW = false, bool HasNSW = false) const {
@@ -135,9 +135,9 @@ public:
     return ConstantExpr::getNot(C);
   }
 
-  //===--------------------------------------------------------------------===//
-  // Memory Instructions
-  //===--------------------------------------------------------------------===//
+                                                                                
+                        
+                                                                                
 
   Constant *CreateGetElementPtr(Type *Ty, Constant *C,
                                 ArrayRef<Constant *> IdxList) const {
@@ -145,9 +145,9 @@ public:
   }
 
   Constant *CreateGetElementPtr(Type *Ty, Constant *C, Constant *Idx) const {
-    // This form of the function only exists to avoid ambiguous overload
-    // warnings about whether to convert Idx to ArrayRef<Constant *> or
-    // ArrayRef<Value *>.
+                                                                        
+                                                                       
+                         
     return ConstantExpr::getGetElementPtr(Ty, C, Idx);
   }
 
@@ -163,9 +163,9 @@ public:
 
   Constant *CreateInBoundsGetElementPtr(Type *Ty, Constant *C,
                                         Constant *Idx) const {
-    // This form of the function only exists to avoid ambiguous overload
-    // warnings about whether to convert Idx to ArrayRef<Constant *> or
-    // ArrayRef<Value *>.
+                                                                        
+                                                                       
+                         
     return ConstantExpr::getInBoundsGetElementPtr(Ty, C, Idx);
   }
 
@@ -174,9 +174,9 @@ public:
     return ConstantExpr::getInBoundsGetElementPtr(Ty, C, IdxList);
   }
 
-  //===--------------------------------------------------------------------===//
-  // Cast/Conversion Operators
-  //===--------------------------------------------------------------------===//
+                                                                                
+                              
+                                                                                
 
   Constant *CreateCast(Instruction::CastOps Op, Constant *C,
                        Type *DestTy) const {
@@ -225,9 +225,9 @@ public:
     return ConstantExpr::getTruncOrBitCast(C, DestTy);
   }
 
-  //===--------------------------------------------------------------------===//
-  // Compare Instructions
-  //===--------------------------------------------------------------------===//
+                                                                                
+                         
+                                                                                
 
   Constant *CreateICmp(CmpInst::Predicate P, Constant *LHS,
                        Constant *RHS) const {
@@ -239,9 +239,9 @@ public:
     return ConstantExpr::getCompare(P, LHS, RHS);
   }
 
-  //===--------------------------------------------------------------------===//
-  // Other Instructions
-  //===--------------------------------------------------------------------===//
+                                                                                
+                       
+                                                                                
 
   Constant *CreateSelect(Constant *C, Constant *True, Constant *False) const {
     return ConstantExpr::getSelect(C, True, False);
@@ -272,6 +272,6 @@ public:
   }
 };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_IR_CONSTANTFOLDER_H
+#endif                            

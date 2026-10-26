@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// The TypedArray objects, see ES6 22.2 (Table 49)
+                                                  
 
 #ifndef TYPED_ARRAY
 #error "TYPED_ARRAY must exist before including this file"

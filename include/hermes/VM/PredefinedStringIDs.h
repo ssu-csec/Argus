@@ -17,24 +17,24 @@
 namespace hermes {
 namespace vm {
 
-/// \return the SymbolID corresponding to string \p str if it is one of the
-/// predefined strings.  Returns None otherwise.
+                                                                           
+                                                
 llvh::Optional<vm::SymbolID> getPredefinedStringID(llvh::StringRef str);
 
-/// the length of each predefined property.
+                                           
 extern const llvh::ArrayRef<uint8_t> predefPropertyLengths;
 
-/// the length of each predefined string.
+                                         
 extern const llvh::ArrayRef<uint8_t> predefStringLengths;
 
-/// the length of each predefined string.
+                                         
 extern const llvh::ArrayRef<uint8_t> predefSymbolLengths;
 
-/// an array of all concatenated predefined strings immediately
-/// followed by all concatenated predefined symbols, all ASCII.
+                                                               
+                                                               
 extern const llvh::ArrayRef<char> predefStringAndSymbolChars;
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMES_VM_PREDEFINEDSTRINGIDS_H
+#endif                                   

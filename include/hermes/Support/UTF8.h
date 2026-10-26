@@ -17,41 +17,41 @@
 
 namespace hermes {
 
-/// Maximum number of bytes in a valid UTF-8 codepoint
+                                                      
 constexpr size_t UTF8CodepointMaxBytes = 6;
 
-/// Encode a unicode code point as a UTF-8 sequence of bytes.
+                                                             
 void encodeUTF8(char *&dst, uint32_t cp);
 
-/// Check whether a byte is a regular ASCII or a UTF8 starting byte.
-/// \return true if it is UTF8 starting byte.
+                                                                    
+                                             
 inline bool isUTF8Start(char ch) {
   return (ch & 0x80) != 0;
 }
 
-/// \return true if this is a UTF-8 leading byte.
+                                                 
 inline bool isUTF8LeadingByte(char ch) {
   return (ch & 0xC0) == 0xC0;
 }
 
-/// \return true if this is a UTF-8 continuation byte, or in other words, this
-/// is a byte in the "middle" of a UTF-8 codepoint.
+                                                                              
+                                                   
 inline static bool isUTF8ContinuationByte(char ch) {
   return (ch & 0xC0) == 0x80;
 }
 
-/// \return true if this is a valid ASCII character.
-/// As in the range of 0-127.
+                                                    
+                             
 template <typename Char>
 bool isASCII(Char c) {
-  // We start with a mask representing all valid set bits of ASCII. Flip the
-  // mask, so it now represents all invalid bits. Test if any bit is set that
-  // would make it an invalid ASCII character.
+                                                                            
+                                                                             
+                                              
   constexpr uint32_t asciiMask = 0x7f;
   return (c & static_cast<Char>(~asciiMask)) == 0;
 }
 
-/// \return true if this is a pure ASCII char sequence.
+                                                       
 template <typename Iter>
 inline bool isAllASCII(Iter begin, Iter end) {
   while (begin < end) {
@@ -62,17 +62,17 @@ inline bool isAllASCII(Iter begin, Iter end) {
   return true;
 }
 
-/// Overload for char* and uint8_t*.
+                                    
 bool isAllASCII(const uint8_t *start, const uint8_t *end);
 
 inline bool isAllASCII(const char *start, const char *end) {
   return isAllASCII((const uint8_t *)start, (const uint8_t *)end);
 }
 
-/// Decode a sequence of UTF8 encoded bytes when it is known that the first byte
-/// is a start of an UTF8 sequence.
-/// \tparam allowSurrogates when false, values in the surrogate range are
-///     reported as errors
+                                                                                
+                                   
+                                                                         
+                          
 template <bool allowSurrogates, typename F>
 uint32_t _decodeUTF8SlowPath(const char *&from, F error) {
   uint32_t ch = (uint32_t)from[0];
@@ -161,44 +161,44 @@ uint32_t _decodeUTF8SlowPath(const char *&from, F error) {
   return result;
 }
 
-/// Scans back from \p ptr until the start of the previous UTF-8 codepoint.
-/// Logically, this is equivalent to `--ptr` in the codepoint space.
-/// It could be a regular ASCII character, or a multi-byte encoded character.
-/// This function assumes that the input is valid!
+                                                                           
+                                                                    
+                                                                             
+                                                  
 inline const char *previousUTF8Start(const char *ptr) {
   --ptr;
-  // If the previous codepoint is ASCII, we are done.
+                                                     
   if (!(*ptr & 0x80))
     return ptr;
-  // Scan backwards until we find a leading byte (11xxxxxx)
+                                                           
   while ((*ptr & 0xC0) != 0xC0)
     --ptr;
   return ptr;
 }
 
-/// Decode a sequence of UTF8 encoded bytes into a Unicode codepoint.
-/// In case of decoding errors, the provided callback is invoked with an
-/// apropriate messsage and UNICODE_REPLACEMENT_CHARACTER is returned.
-///
-/// \tparam allowSurrogates when false, values in the surrogate range are
-///     reported as errors
-/// \param error callback invoked with an error message
-/// \return the codepoint
+                                                                     
+                                                                        
+                                                                      
+   
+                                                                         
+                          
+                                                       
+                         
 template <bool allowSurrogates, typename F>
 inline uint32_t decodeUTF8(const char *&from, F error) {
-  if (LLVM_LIKELY((*from & 0x80) == 0)) // Ordinary ASCII?
+  if (LLVM_LIKELY((*from & 0x80) == 0))                   
     return *from++;
 
   return _decodeUTF8SlowPath<allowSurrogates>(from, error);
 }
 
-/// Encode a 32-bit value, into UTF16. If the value is a part of a surrogate
-/// pair, it is encoded without any conversion.
+                                                                            
+                                               
 template <typename OutIt>
 inline void encodeUTF16(OutIt &dest, uint32_t cp) {
   if (LLVM_LIKELY(cp < 0x10000)) {
     *dest = (uint16_t)cp;
-    ++dest; // Use pre-increment in case this is an iterator.
+    ++dest;                                                  
   } else {
     assert(cp <= UNICODE_MAX_VALUE && "invalid Unicode value");
     cp -= 0x10000;
@@ -209,9 +209,9 @@ inline void encodeUTF16(OutIt &dest, uint32_t cp) {
   }
 }
 
-/// Decode a UTF-8 sequence, which is assumed to be valid, but may possibly
-/// contain explicitly encoded surrogate pairs, into a UTF-16 sequence.
-/// \return the updated destination iterator
+                                                                           
+                                                                       
+                                            
 template <typename OutIt>
 inline OutIt convertUTF8WithSurrogatesToUTF16(
     OutIt dest,
@@ -224,44 +224,44 @@ inline OutIt convertUTF8WithSurrogatesToUTF16(
   return dest;
 }
 
-/// Convert a UTF-16 encoded string \p input to UTF-8 stored in \p dest,
-/// encoding each surrogate halves individually into UTF-8.
-/// This is the inverse function of convertUTF8WithSurrogatesToUTF16.
-/// Note the result is not valid utf-8 if it contains surrogate values.
-/// Only use it to get the internal representation of utf-8 strings in hermes
-/// compiler.
+                                                                        
+                                                           
+                                                                     
+                                                                       
+                                                                             
+             
 void convertUTF16ToUTF8WithSingleSurrogates(
     std::string &dest,
     llvh::ArrayRef<char16_t> input);
 
-/// Convert a UTF-16 encoded string \p input to UTF-8 stored in \p dest,
-/// replacing unpaired surrogates halves with the Unicode replacement character.
-/// \param maxCharacters If non-zero, the maximum number of characters to
-///   convert.
-/// \return false if the string was truncated, true if the whole string was
-///   written out successfully.
+                                                                        
+                                                                                
+                                                                         
+              
+                                                                           
+                               
 bool convertUTF16ToUTF8WithReplacements(
     std::string &dest,
     llvh::ArrayRef<char16_t> input,
     size_t maxCharacters = 0);
 
-/// Convert a UTF-16 encoded string \p input to a pre-allocated UTF-8 buffer
-/// \p outBuffer of length \p outBufferLength, replacing unpaired surrogates
-/// halves with the Unicode replacement character.
-/// \return a std::pair with the first element being the number of UTF-16
-///   characters converted, and the second element being the number of UTF-8
-///   characters written
+                                                                            
+                                                                            
+                                                  
+                                                                         
+                                                                            
+                        
 std::pair<uint32_t, uint32_t> convertUTF16ToUTF8BufferWithReplacements(
     llvh::MutableArrayRef<uint8_t> outBuffer,
     llvh::ArrayRef<char16_t> input);
 
-/// Convert a UTF-8 encoded string (with surrogates) \p input to a UTF-8 one
-/// (without surrogates), storing the conversion in \p output. Output characters
-/// are appended to \p output.
+                                                                            
+                                                                                
+                              
 void convertUTF8WithSurrogatesToUTF8WithReplacements(
     std::string &output,
     llvh::StringRef input);
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_SUPPORT_UTF8_H
+#endif                         

@@ -147,7 +147,7 @@ void JSONEmitter::primitiveEmitString(llvh::StringRef str) {
   };
   while (begin8 != end8) {
     uint32_t cp = decodeUTF8<true>(begin8, errorHandler);
-    // Escape non-ascii characters.
+                                   
     if (cp > 0x7F) {
       llvh::SmallVector<char16_t, 2> utf16Chars;
       auto insert = std::back_inserter(utf16Chars);
@@ -159,7 +159,7 @@ void JSONEmitter::primitiveEmitString(llvh::StringRef str) {
       continue;
     }
     if (cp == '\"' || cp == '\\' || cp == '/') {
-      // escape quotation mark, slash, forward slash by adding a '\'.
+                                                                     
       OS << '\\';
     }
     if (cp >= 0x20) {
@@ -201,7 +201,7 @@ void JSONEmitter::emitValue(llvh::ArrayRef<char16_t> val) {
     }
     if (curr >= 0x20) {
       if (curr == '\"' || curr == '\\' || curr == '/') {
-        // escape quotation mark, slash, forward slash by adding a '\'.
+                                                                       
         OS << '\\';
       }
       OS << (char)curr;
@@ -237,14 +237,14 @@ void JSONEmitter::endJSONL() {
 }
 
 void JSONEmitter::willEmitValue() {
-  // Allow the top-level value to be set. TODO: guard against multiple
-  // top-level values.
+                                                                      
+                      
   if (states_.empty())
     return;
   State &state = states_.back();
   assert(!state.needsKey && "Expected a key");
-  // Emit a comma if necessary. The next value certainly needs a comma, and if
-  // we are a dictionary we expect a key next.
+                                                                              
+                                              
   if (state.needsComma)
     OS << ',';
   state.needsKey = (state.type == State::Dict);

@@ -58,10 +58,10 @@ namespace llvh {
       return !operator==(x);
     }
 
-    // FIXME: Make this the iterator's operator*() after the 4.0 release.
-    // operator*() had a different meaning in earlier releases, so we're
-    // temporarily not giving this iterator an operator*() to avoid a subtle
-    // semantics break.
+                                                                         
+                                                                        
+                                                                            
+                       
     Type *getIndexedType() const {
       if (auto *T = CurTy.dyn_cast<Type *>())
         return T;
@@ -70,7 +70,7 @@ namespace llvh {
 
     Value *getOperand() const { return const_cast<Value *>(&**OpIt); }
 
-    generic_gep_type_iterator& operator++() {   // Preincrement
+    generic_gep_type_iterator& operator++() {                  
       Type *Ty = getIndexedType();
       if (auto *STy = dyn_cast<SequentialType>(Ty)) {
         CurTy = STy->getElementType();
@@ -81,24 +81,24 @@ namespace llvh {
       return *this;
     }
 
-    generic_gep_type_iterator operator++(int) { // Postincrement
+    generic_gep_type_iterator operator++(int) {                 
       generic_gep_type_iterator tmp = *this; ++*this; return tmp;
     }
 
-    // All of the below API is for querying properties of the "outer type", i.e.
-    // the type that contains the indexed type. Most of the time this is just
-    // the type that was visited immediately prior to the indexed type, but for
-    // the first element this is an unbounded array of the GEP's source element
-    // type, for which there is no clearly corresponding IR type (we've
-    // historically used a pointer type as the outer type in this case, but
-    // pointers will soon lose their element type).
-    //
-    // FIXME: Most current users of this class are just interested in byte
-    // offsets (a few need to know whether the outer type is a struct because
-    // they are trying to replace a constant with a variable, which is only
-    // legal for arrays, e.g. canReplaceOperandWithVariable in SimplifyCFG.cpp);
-    // we should provide a more minimal API here that exposes not much more than
-    // that.
+                                                                                
+                                                                             
+                                                                               
+                                                                               
+                                                                       
+                                                                           
+                                                   
+      
+                                                                          
+                                                                             
+                                                                           
+                                                                                
+                                                                                
+            
 
     bool isStruct() const { return CurTy.is<StructType *>(); }
     bool isSequential() const { return CurTy.is<Type *>(); }
@@ -151,10 +151,10 @@ namespace llvh {
 
   template<typename T>
   inline generic_gep_type_iterator<const T *>
-  gep_type_end(Type * /*Op0*/, ArrayRef<T> A) {
+  gep_type_end(Type *        , ArrayRef<T> A) {
     return generic_gep_type_iterator<const T *>::end(A.end());
   }
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_IR_GETELEMENTPTRTYPEITERATOR_H
+#endif                                       

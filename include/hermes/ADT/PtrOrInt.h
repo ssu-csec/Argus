@@ -13,11 +13,11 @@
 
 namespace hermes {
 
-/// This class encapsulates a word containing either a pointer or an integer
-/// index with one fewer bits than the width of a pointer. The lowest bit
-/// in the word indicates whether it is a pointer or integer: 1 means integer,
-/// 0 - pointer. (Obviously the pointer needs to be aligned to something more
-/// than 1).
+                                                                            
+                                                                         
+                                                                              
+                                                                             
+            
 template <class T>
 class PtrOrInt {
   static_assert(
@@ -25,18 +25,18 @@ class PtrOrInt {
       "int must not be larger than intptr_t");
   T *data_;
 
-  /// Bitcast the pointer as int for manipulation. Note that this doesn't
-  /// decode a previously encoded int value.
+                                                                         
+                                            
   intptr_t intbits() const {
     return reinterpret_cast<intptr_t>(data_);
   }
 
-  /// Encode an int into a pointer by shifting and tagging it.
+                                                              
   static T *encodeInt(int x) {
     return reinterpret_cast<T *>(((intptr_t)x << 1) + 1);
   }
 
-  /// Decode a previously encoded int.
+                                      
   static int decodeInt(intptr_t x) {
     return (int)(x >> 1);
   }
@@ -72,25 +72,25 @@ class PtrOrInt {
     return *getPointer();
   }
 
-  /// Obtain a modifiable reference to the pointer. We need this so we can
-  /// call gc->mark()
+                                                                          
+                     
   T *&getPointerRef() {
     assert(isPointer() && "value is not a pointer");
     return data_;
   }
 
-  /// Assign an integer value.
+                              
   PtrOrInt<T> &operator=(int x) {
     data_ = encodeInt(x);
     return *this;
   }
 
-  /// Assign a pointer value.
+                             
   PtrOrInt<T> &operator=(T *ptr) {
     data_ = ptr;
     return *this;
   }
 };
 
-} // namespace hermes
-#endif // HERMES_ADT_PTRORINT_H
+}                    
+#endif                         

@@ -34,32 +34,32 @@ namespace hbc {
 
 using llvh::ArrayRef;
 
-// This class represents the in-memory representation of the bytecode function.
+                                                                               
 class BytecodeFunction {
-  /// The bytecode executable. If this function contains switch statements, then
-  /// the jump tables are also inlined in a 4-byte aligned block at the end of
-  /// this vector.
-  /// During execution, this vector can be executed directly because the vector
-  /// storage will be 4-byte aligned.
-  /// During serialisation, the jump tables and opcodes have to be separated so
-  /// that the jump tables can be realigned based on the overall bytecode
-  /// layout.
+                                                                                
+                                                                              
+                  
+                                                                               
+                                     
+                                                                               
+                                                                         
+             
   const std::vector<opcode_atom_t> opcodesAndJumpTables_;
 
-  /// Header that stores all the metadata of this function.
+                                                           
   FunctionHeader header_;
 
-  /// Offsets of this function in debug info.
+                                             
   DebugOffsets debugOffsets_{};
 
-  /// List of exception handlers.
+                                 
   std::vector<HBCExceptionHandlerInfo> exceptions_;
 
-  /// Data to lazily compile this BytecodeFunction, if applicable.
+                                                                  
   std::unique_ptr<LazyCompilationData> lazyCompilationData_{};
 
  public:
-  /// Used during serialization. \p opcodes will be swapped after this call.
+                                                                            
   explicit BytecodeFunction(
       std::vector<opcode_atom_t> &&opcodesAndJumpTables,
       FunctionHeader &&header,
@@ -91,20 +91,20 @@ class BytecodeFunction {
     return header_.flags.strictMode;
   }
 
-  /// Return the entire opcode array for execution, including the inlined jump
-  /// tables.
+                                                                              
+             
   ArrayRef<opcode_atom_t> getOpcodeArray() const {
     return opcodesAndJumpTables_;
   }
 
-  /// Return only the opcodes for serialisation. The jump tables need to be
-  /// accessed separately so they can be correctly inlined.
+                                                                           
+                                                           
   ArrayRef<opcode_atom_t> getOpcodesOnly() const {
     return {opcodesAndJumpTables_.data(), header_.bytecodeSizeInBytes};
   }
 
-  /// Return the jump table portion of the opcode array. This is useful for the
-  /// bytecode serialisation code when it is aligning the jump tables.
+                                                                               
+                                                                      
   ArrayRef<uint32_t> getJumpTablesOnly() const;
 
   bool hasExceptionHandlers() const {
@@ -141,91 +141,91 @@ class BytecodeFunction {
     lazyCompilationData_ = std::move(data);
   }
 
-  /// \return true if the function should be compiled lazily.
+                                                             
   bool isLazy() const {
     return (bool)lazyCompilationData_;
   }
 };
 
-// This class represents the in-memory representation of the bytecode module.
+                                                                             
 class BytecodeModule {
   using FunctionList = std::vector<std::unique_ptr<BytecodeFunction>>;
   using SerializableBufferTy = std::vector<unsigned char>;
 
-  /// A list of bytecode functions.
+                                   
   FunctionList functions_{};
 
-  /// Index of the top level function, code that gets executed in the global
-  /// scope.
+                                                                            
+            
   uint32_t globalFunctionIndex_{};
 
-  /// Run-length encoding representing the kinds of strings in the table.
+                                                                         
   std::vector<StringKind::Entry> stringKinds_;
 
-  /// The list of identifier hashes, corresponding to the string entries
-  /// marked as identifiers, in order.
+                                                                        
+                                      
   std::vector<uint32_t> identifierHashes_;
 
-  /// The global string table, a list of <offset, length> pair to represent
-  /// each string in the string storage.
+                                                                           
+                                        
   std::vector<StringTableEntry> stringTable_;
 
-  /// The global string storage. A sequence of bytes.
+                                                     
   std::vector<unsigned char> stringStorage_;
 
-  /// The bigint digit table. This is a list of pairs of (offset, lengths)
-  /// into bigIntStorage_.
+                                                                          
+                          
   std::vector<bigint::BigIntTableEntry> bigIntTable_;
 
-  /// The buffer with bigint literal bytes.
+                                           
   std::vector<uint8_t> bigIntStorage_;
 
-  /// The regexp bytecode buffer.
+                                 
   std::vector<unsigned char> regExpStorage_;
 
-  /// The regexp bytecode table. This is a list of pairs of (offset, lengths)
-  /// into regExpStorage_.
+                                                                             
+                          
   std::vector<RegExpTableEntry> regExpTable_;
 
-  /// A table containing debug info (if compiled with -g).
+                                                          
   DebugInfo debugInfo_;
 
-  /// Array Buffer table.
+                         
   SerializableBufferTy arrayBuffer_;
 
-  /// Object Key Buffer table.
+                              
   SerializableBufferTy objKeyBuffer_;
 
-  /// Object Value Buffer table.
+                                
   SerializableBufferTy objValBuffer_;
 
-  /// The segment ID corresponding to this BytecodeModule.
-  /// This uniquely identifies this BytecodeModule within a set of modules
-  /// which were compiled at the same time (and will correspond to a set of
-  /// RuntimeModules in a Domain).
+                                                          
+                                                                          
+                                                                           
+                                  
   uint32_t segmentID_;
 
-  /// Table which indicates where to find the different CommonJS modules.
-  /// Mapping from {filename ID => function index}.
+                                                                         
+                                                   
   std::vector<std::pair<uint32_t, uint32_t>> cjsModuleTable_{};
 
-  /// Table which indicates where to find the different CommonJS modules.
-  /// Used if the modules have been statically resolved.
-  /// Mapping from {global module ID => function index}.
+                                                                         
+                                                        
+                                                        
   std::vector<std::pair<uint32_t, uint32_t>> cjsModuleTableStatic_{};
 
-  /// Mapping function ids to the string table offsets that store their
-  /// non-default source code representation that would be used by `toString`.
-  /// These are only available when functions are declared with source
-  /// visibility directives such as 'show source', 'hide source', etc.
+                                                                       
+                                                                              
+                                                                      
+                                                                      
   std::vector<std::pair<uint32_t, uint32_t>> functionSourceTable_{};
 
-  /// Storing information about the bytecode, needed when it is loaded by the
-  /// runtime.
+                                                                             
+              
   BytecodeOptions options_{};
 
  public:
-  /// Used during serialization.
+                                
   explicit BytecodeModule(
       uint32_t functionCount,
       std::vector<StringKind::Entry> &&stringKinds,
@@ -265,7 +265,7 @@ class BytecodeModule {
     functions_.resize(functionCount);
   }
 
-  /// Create a simple BytecodeModule with only functionCount set.
+                                                                 
   explicit BytecodeModule(uint32_t functionCount) {
     functions_.resize(functionCount);
   }
@@ -281,7 +281,7 @@ class BytecodeModule {
     return globalFunctionIndex_;
   }
 
-  /// Add a new bytecode function to the module at \p index.
+                                                            
   void setFunction(uint32_t index, std::unique_ptr<BytecodeFunction> F);
 
   BytecodeFunction &getFunction(unsigned index);
@@ -294,7 +294,7 @@ class BytecodeModule {
     return stringKinds_;
   }
 
-  /// \return the number of identifiers.
+                                        
   uint32_t getIdentifierCount() const {
     return identifierHashes_.size();
   }
@@ -368,18 +368,18 @@ class BytecodeModule {
     return arrayBuffer_;
   }
 
-  /// Returns the amount of bytes in the object key buffer
+                                                          
   uint32_t getObjectKeyBufferSize() const {
     return objKeyBuffer_.size();
   }
 
-  /// Returns the amount of bytes in the object value buffer
+                                                            
   uint32_t getObjectValueBufferSize() const {
     return objValBuffer_.size();
   }
 
-  /// Returns a pair of arrays, where the first array represents the
-  /// object keys and the second array represents the object values.
+                                                                    
+                                                                    
   std::pair<ArrayRef<unsigned char>, ArrayRef<unsigned char>> getObjectBuffer()
       const {
     return {
@@ -387,8 +387,8 @@ class BytecodeModule {
         ArrayRef<unsigned char>(objValBuffer_)};
   }
 
-  /// Returns a pair, where the first element is the key buffer starting at
-  /// keyIdx and the second element is the value buffer starting at valIdx
+                                                                           
+                                                                          
   std::pair<ArrayRef<unsigned char>, ArrayRef<unsigned char>>
   getObjectBufferAtOffset(unsigned keyIdx, unsigned valIdx) const {
     return {
@@ -396,7 +396,7 @@ class BytecodeModule {
         ArrayRef<unsigned char>(objValBuffer_).slice(valIdx)};
   }
 
-  /// Populate the source map \p sourceMap with the debug information.
+                                                                      
   void populateSourceMap(SourceMapGenerator *sourceMap) const;
 
   BytecodeOptions getBytecodeOptions() const {
@@ -404,8 +404,8 @@ class BytecodeModule {
   }
 };
 
-} // namespace hbc
-} // namespace hermes
+}                 
+}                    
 #pragma GCC diagnostic pop
 
 #endif

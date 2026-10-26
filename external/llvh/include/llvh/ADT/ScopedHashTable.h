@@ -67,7 +67,7 @@ public:
                                     const K &key, const V &val,
                                     AllocatorTy &Allocator) {
     ScopedHashTableVal *New = Allocator.template Allocate<ScopedHashTableVal>();
-    // Set up the value.
+                        
     new (New) ScopedHashTableVal(key, val);
     New->NextInScope = nextInScope;
     New->NextForKey = nextForKey;
@@ -75,7 +75,7 @@ public:
   }
 
   template <typename AllocatorTy> void Destroy(AllocatorTy &Allocator) {
-    // Free memory referenced by the item.
+                                          
     this->~ScopedHashTableVal();
     Allocator.Deallocate(this);
   }
@@ -84,14 +84,14 @@ public:
 template <typename K, typename V, typename KInfo = DenseMapInfo<K>,
           typename AllocatorTy = MallocAllocator>
 class ScopedHashTableScope {
-  /// HT - The hashtable that we are active for.
+                                                
   ScopedHashTable<K, V, KInfo, AllocatorTy> &HT;
 
-  /// PrevScope - This is the scope that we are shadowing in HT.
+                                                                
   ScopedHashTableScope *PrevScope;
 
-  /// LastValInScope - This is the last value that was inserted for this scope
-  /// or null if none have been inserted yet.
+                                                                              
+                                             
   ScopedHashTableVal<K, V> *LastValInScope;
 
 public:
@@ -137,12 +137,12 @@ public:
     return Node != RHS.Node;
   }
 
-  inline ScopedHashTableIterator& operator++() {          // Preincrement
+  inline ScopedHashTableIterator& operator++() {                         
     assert(Node && "incrementing past end()");
     Node = Node->getNextForKey();
     return *this;
   }
-  ScopedHashTableIterator operator++(int) {        // Postincrement
+  ScopedHashTableIterator operator++(int) {                        
     ScopedHashTableIterator tmp = *this; ++*this; return tmp;
   }
 };
@@ -150,8 +150,8 @@ public:
 template <typename K, typename V, typename KInfo, typename AllocatorTy>
 class ScopedHashTable {
 public:
-  /// ScopeTy - This is a helpful typedef that allows clients to get easy access
-  /// to the name of the scope for this hash table.
+                                                                                
+                                                   
   using ScopeTy = ScopedHashTableScope<K, V, KInfo, AllocatorTy>;
   using size_type = unsigned;
 
@@ -175,11 +175,11 @@ public:
     assert(!CurScope && TopLevelMap.empty() && "Scope imbalance!");
   }
 
-  /// Access to the allocator.
+                              
   AllocatorTy &getAllocator() { return Allocator; }
   const AllocatorTy &getAllocator() const { return Allocator; }
 
-  /// Return 1 if the specified key is in the table, 0 otherwise.
+                                                                 
   size_type count(const K &Key) const {
     return TopLevelMap.count(Key);
   }
@@ -210,10 +210,10 @@ public:
   ScopeTy *getCurScope() { return CurScope; }
   const ScopeTy *getCurScope() const { return CurScope; }
 
-  /// insertIntoScope - This inserts the specified key/value at the specified
-  /// (possibly not the current) scope.  While it is ok to insert into a scope
-  /// that isn't the current one, it isn't ok to insert *underneath* an existing
-  /// value of the specified key.
+                                                                             
+                                                                              
+                                                                                
+                                 
   void insertIntoScope(ScopeTy *S, const K &Key, const V &Val) {
     assert(S && "No scope active!");
     ScopedHashTableVal<K, V> *&KeyEntry = TopLevelMap[Key];
@@ -223,8 +223,8 @@ public:
   }
 };
 
-/// ScopedHashTableScope ctor - Install this as the current scope for the hash
-/// table.
+                                                                              
+          
 template <typename K, typename V, typename KInfo, typename Allocator>
 ScopedHashTableScope<K, V, KInfo, Allocator>::
   ScopedHashTableScope(ScopedHashTable<K, V, KInfo, Allocator> &ht) : HT(ht) {
@@ -238,9 +238,9 @@ ScopedHashTableScope<K, V, KInfo, Allocator>::~ScopedHashTableScope() {
   assert(HT.CurScope == this && "Scope imbalance!");
   HT.CurScope = PrevScope;
 
-  // Pop and delete all values corresponding to this scope.
+                                                           
   while (ScopedHashTableVal<K, V> *ThisEntry = LastValInScope) {
-    // Pop this value out of the TopLevelMap.
+                                             
     if (!ThisEntry->getNextForKey()) {
       assert(HT.TopLevelMap[ThisEntry->getKey()] == ThisEntry &&
              "Scope imbalance!");
@@ -251,14 +251,14 @@ ScopedHashTableScope<K, V, KInfo, Allocator>::~ScopedHashTableScope() {
       KeyEntry = ThisEntry->getNextForKey();
     }
 
-    // Pop this value out of the scope.
+                                       
     LastValInScope = ThisEntry->getNextInScope();
 
-    // Delete this entry.
+                         
     ThisEntry->Destroy(HT.getAllocator());
   }
 }
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_ADT_SCOPEDHASHTABLE_H
+#endif                              

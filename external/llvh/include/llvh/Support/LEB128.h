@@ -19,25 +19,25 @@
 
 namespace llvh {
 
-/// Utility function to encode a SLEB128 value to an output stream. Returns
-/// the length in bytes of the encoded value.
+                                                                           
+                                             
 inline unsigned encodeSLEB128(int64_t Value, raw_ostream &OS,
                               unsigned PadTo = 0) {
   bool More;
   unsigned Count = 0;
   do {
     uint8_t Byte = Value & 0x7f;
-    // NOTE: this assumes that this signed shift is an arithmetic right shift.
+                                                                              
     Value >>= 7;
     More = !((((Value == 0 ) && ((Byte & 0x40) == 0)) ||
               ((Value == -1) && ((Byte & 0x40) != 0))));
     Count++;
     if (More || Count < PadTo)
-      Byte |= 0x80; // Mark this byte to show that more bytes will follow.
+      Byte |= 0x80;                                                       
     OS << char(Byte);
   } while (More);
 
-  // Pad with 0x80 and emit a terminating byte at the end.
+                                                          
   if (Count < PadTo) {
     uint8_t PadValue = Value < 0 ? 0x7f : 0x00;
     for (; Count < PadTo - 1; ++Count)
@@ -48,25 +48,25 @@ inline unsigned encodeSLEB128(int64_t Value, raw_ostream &OS,
   return Count;
 }
 
-/// Utility function to encode a SLEB128 value to a buffer. Returns
-/// the length in bytes of the encoded value.
+                                                                   
+                                             
 inline unsigned encodeSLEB128(int64_t Value, uint8_t *p, unsigned PadTo = 0) {
   uint8_t *orig_p = p;
   unsigned Count = 0;
   bool More;
   do {
     uint8_t Byte = Value & 0x7f;
-    // NOTE: this assumes that this signed shift is an arithmetic right shift.
+                                                                              
     Value >>= 7;
     More = !((((Value == 0 ) && ((Byte & 0x40) == 0)) ||
               ((Value == -1) && ((Byte & 0x40) != 0))));
     Count++;
     if (More || Count < PadTo)
-      Byte |= 0x80; // Mark this byte to show that more bytes will follow.
+      Byte |= 0x80;                                                       
     *p++ = Byte;
   } while (More);
 
-  // Pad with 0x80 and emit a terminating byte at the end.
+                                                          
   if (Count < PadTo) {
     uint8_t PadValue = Value < 0 ? 0x7f : 0x00;
     for (; Count < PadTo - 1; ++Count)
@@ -76,8 +76,8 @@ inline unsigned encodeSLEB128(int64_t Value, uint8_t *p, unsigned PadTo = 0) {
   return (unsigned)(p - orig_p);
 }
 
-/// Utility function to encode a ULEB128 value to an output stream. Returns
-/// the length in bytes of the encoded value.
+                                                                           
+                                             
 inline unsigned encodeULEB128(uint64_t Value, raw_ostream &OS,
                               unsigned PadTo = 0) {
   unsigned Count = 0;
@@ -86,11 +86,11 @@ inline unsigned encodeULEB128(uint64_t Value, raw_ostream &OS,
     Value >>= 7;
     Count++;
     if (Value != 0 || Count < PadTo)
-      Byte |= 0x80; // Mark this byte to show that more bytes will follow.
+      Byte |= 0x80;                                                       
     OS << char(Byte);
   } while (Value != 0);
 
-  // Pad with 0x80 and emit a null byte at the end.
+                                                   
   if (Count < PadTo) {
     for (; Count < PadTo - 1; ++Count)
       OS << '\x80';
@@ -100,8 +100,8 @@ inline unsigned encodeULEB128(uint64_t Value, raw_ostream &OS,
   return Count;
 }
 
-/// Utility function to encode a ULEB128 value to a buffer. Returns
-/// the length in bytes of the encoded value.
+                                                                   
+                                             
 inline unsigned encodeULEB128(uint64_t Value, uint8_t *p,
                               unsigned PadTo = 0) {
   uint8_t *orig_p = p;
@@ -111,11 +111,11 @@ inline unsigned encodeULEB128(uint64_t Value, uint8_t *p,
     Value >>= 7;
     Count++;
     if (Value != 0 || Count < PadTo)
-      Byte |= 0x80; // Mark this byte to show that more bytes will follow.
+      Byte |= 0x80;                                                       
     *p++ = Byte;
   } while (Value != 0);
 
-  // Pad with 0x80 and emit a null byte at the end.
+                                                   
   if (Count < PadTo) {
     for (; Count < PadTo - 1; ++Count)
       *p++ = '\x80';
@@ -125,7 +125,7 @@ inline unsigned encodeULEB128(uint64_t Value, uint8_t *p,
   return (unsigned)(p - orig_p);
 }
 
-/// Utility function to decode a ULEB128 value.
+                                               
 inline uint64_t decodeULEB128(const uint8_t *p, unsigned *n = nullptr,
                               const uint8_t *end = nullptr,
                               const char **error = nullptr) {
@@ -158,7 +158,7 @@ inline uint64_t decodeULEB128(const uint8_t *p, unsigned *n = nullptr,
   return Value;
 }
 
-/// Utility function to decode a SLEB128 value.
+                                               
 inline int64_t decodeSLEB128(const uint8_t *p, unsigned *n = nullptr,
                              const uint8_t *end = nullptr,
                              const char **error = nullptr) {
@@ -178,7 +178,7 @@ inline int64_t decodeSLEB128(const uint8_t *p, unsigned *n = nullptr,
     Value |= (int64_t(Byte & 0x7f) << Shift);
     Shift += 7;
   } while (Byte >= 128);
-  // Sign extend negative numbers.
+                                  
   if (Byte & 0x40)
     Value |= (-1ULL) << Shift;
   if (n)
@@ -186,12 +186,12 @@ inline int64_t decodeSLEB128(const uint8_t *p, unsigned *n = nullptr,
   return Value;
 }
 
-/// Utility function to get the size of the ULEB128-encoded value.
+                                                                  
 extern unsigned getULEB128Size(uint64_t Value);
 
-/// Utility function to get the size of the SLEB128-encoded value.
+                                                                  
 extern unsigned getSLEB128Size(int64_t Value);
 
-} // namespace llvh
+}                  
 
-#endif // LLVM_SYSTEM_LEB128_H
+#endif                        

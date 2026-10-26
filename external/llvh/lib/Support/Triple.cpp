@@ -123,7 +123,7 @@ StringRef Triple::getArchTypePrefix(ArchType Kind) {
 
   case xcore:       return "xcore";
 
-  // NVPTX intrinsics are namespaced under nvvm.
+                                                
   case nvptx:       return "nvvm";
   case nvptx64:     return "nvvm";
 
@@ -262,7 +262,7 @@ Triple::ArchType Triple::getArchTypeForLLVMName(StringRef Name) {
     .Case("aarch64", aarch64)
     .Case("aarch64_be", aarch64_be)
     .Case("arc", arc)
-    .Case("arm64", aarch64) // "arm64" is an alias for "aarch64"
+    .Case("arm64", aarch64)                                     
     .Case("arm", arm)
     .Case("armeb", armeb)
     .Case("avr", avr)
@@ -360,12 +360,12 @@ static Triple::ArchType parseARMArch(StringRef ArchName) {
   if (ArchName.empty())
     return Triple::UnknownArch;
 
-  // Thumb only exists in v4+
+                             
   if (ISA == ARM::ISAKind::THUMB &&
       (ArchName.startswith("v2") || ArchName.startswith("v3")))
     return Triple::UnknownArch;
 
-  // Thumb only for v6m
+                       
   ARM::ProfileKind Profile = ARM::parseArchProfile(ArchName);
   unsigned Version = ARM::parseArchVersion(ArchName);
   if (Profile == ARM::ProfileKind::M && Version == 6) {
@@ -381,7 +381,7 @@ static Triple::ArchType parseARMArch(StringRef ArchName) {
 static Triple::ArchType parseArch(StringRef ArchName) {
   auto AT = StringSwitch<Triple::ArchType>(ArchName)
     .Cases("i386", "i486", "i586", "i686", Triple::x86)
-    // FIXME: Do we need to support these?
+                                          
     .Cases("i786", "i886", "i986", Triple::x86)
     .Cases("amd64", "x86_64", "x86_64h", Triple::x86_64)
     .Cases("powerpc", "ppc", "ppc32", Triple::ppc)
@@ -439,8 +439,8 @@ static Triple::ArchType parseArch(StringRef ArchName) {
     .Case("renderscript64", Triple::renderscript64)
     .Default(Triple::UnknownArch);
 
-  // Some architectures require special parsing logic just to compute the
-  // ArchType result.
+                                                                         
+                     
   if (AT == Triple::UnknownArch) {
     if (ArchName.startswith("arm") || ArchName.startswith("thumb") ||
         ArchName.startswith("aarch64"))
@@ -550,7 +550,7 @@ static Triple::SubArchType parseSubArch(StringRef SubArchName) {
 
   StringRef ARMSubArch = ARM::getCanonicalArchName(SubArchName);
 
-  // For now, this is the small part. Early return.
+                                                   
   if (ARMSubArch.empty())
     return StringSwitch<Triple::SubArchType>(SubArchName)
       .EndsWith("kalimba3", Triple::KalimbaSubArch_v3)
@@ -558,7 +558,7 @@ static Triple::SubArchType parseSubArch(StringRef SubArchName) {
       .EndsWith("kalimba5", Triple::KalimbaSubArch_v5)
       .Default(Triple::NoSubArch);
 
-  // ARM sub arch.
+                  
   switch(ARM::parseArch(ARMSubArch)) {
   case ARM::ArchKind::ARMV4:
     return Triple::NoSubArch;
@@ -698,17 +698,17 @@ static Triple::ObjectFormatType getDefaultFormat(const Triple &T) {
   llvm_unreachable("unknown architecture");
 }
 
-/// Construct a triple from the string representation provided.
-///
-/// This stores the string representation and parses the various pieces into
-/// enum members.
+                                                               
+   
+                                                                            
+                 
 Triple::Triple(const Twine &Str)
     : Data(Str.str()), Arch(UnknownArch), SubArch(NoSubArch),
       Vendor(UnknownVendor), OS(UnknownOS), Environment(UnknownEnvironment),
       ObjectFormat(UnknownObjectFormat) {
-  // Do minimal parsing by hand here.
+                                     
   SmallVector<StringRef, 4> Components;
-  StringRef(Data).split(Components, '-', /*MaxSplit*/ 3);
+  StringRef(Data).split(Components, '-',              3);
   if (Components.size() > 0) {
     Arch = parseArch(Components[0]);
     SubArch = parseSubArch(Components[0]);
@@ -736,12 +736,12 @@ Triple::Triple(const Twine &Str)
     ObjectFormat = getDefaultFormat(*this);
 }
 
-/// Construct a triple from string representations of the architecture,
-/// vendor, and OS.
-///
-/// This joins each argument into a canonical string representation and parses
-/// them into enum members. It leaves the environment unknown and omits it from
-/// the string representation.
+                                                                       
+                   
+   
+                                                                              
+                                                                               
+                              
 Triple::Triple(const Twine &ArchStr, const Twine &VendorStr, const Twine &OSStr)
     : Data((ArchStr + Twine('-') + VendorStr + Twine('-') + OSStr).str()),
       Arch(parseArch(ArchStr.str())),
@@ -752,11 +752,11 @@ Triple::Triple(const Twine &ArchStr, const Twine &VendorStr, const Twine &OSStr)
   ObjectFormat = getDefaultFormat(*this);
 }
 
-/// Construct a triple from string representations of the architecture,
-/// vendor, OS, and environment.
-///
-/// This joins each argument into a canonical string representation and parses
-/// them into enum members.
+                                                                       
+                                
+   
+                                                                              
+                           
 Triple::Triple(const Twine &ArchStr, const Twine &VendorStr, const Twine &OSStr,
                const Twine &EnvironmentStr)
     : Data((ArchStr + Twine('-') + VendorStr + Twine('-') + OSStr + Twine('-') +
@@ -775,15 +775,15 @@ std::string Triple::normalize(StringRef Str) {
   bool IsMinGW32 = false;
   bool IsCygwin = false;
 
-  // Parse into components.
+                           
   SmallVector<StringRef, 4> Components;
   Str.split(Components, '-');
 
-  // If the first component corresponds to a known architecture, preferentially
-  // use it for the architecture.  If the second component corresponds to a
-  // known vendor, preferentially use it for the vendor, etc.  This avoids silly
-  // component movement when a component parses as (eg) both a valid arch and a
-  // valid os.
+                                                                               
+                                                                           
+                                                                                
+                                                                               
+              
   ArchType Arch = UnknownArch;
   if (Components.size() > 0)
     Arch = parseArch(Components[0]);
@@ -803,27 +803,27 @@ std::string Triple::normalize(StringRef Str) {
   if (Components.size() > 4)
     ObjectFormat = parseFormat(Components[4]);
 
-  // Note which components are already in their final position.  These will not
-  // be moved.
+                                                                               
+              
   bool Found[4];
   Found[0] = Arch != UnknownArch;
   Found[1] = Vendor != UnknownVendor;
   Found[2] = OS != UnknownOS;
   Found[3] = Environment != UnknownEnvironment;
 
-  // If they are not there already, permute the components into their canonical
-  // positions by seeing if they parse as a valid architecture, and if so moving
-  // the component to the architecture position etc.
+                                                                               
+                                                                                
+                                                    
   for (unsigned Pos = 0; Pos != array_lengthof(Found); ++Pos) {
     if (Found[Pos])
-      continue; // Already in the canonical position.
+      continue;                                      
 
     for (unsigned Idx = 0; Idx != Components.size(); ++Idx) {
-      // Do not reparse any components that already matched.
+                                                            
       if (Idx < array_lengthof(Found) && Found[Idx])
         continue;
 
-      // Does this component parse as valid for the target position?
+                                                                    
       bool Valid = false;
       StringRef Comp = Components[Idx];
       switch (Pos) {
@@ -852,54 +852,54 @@ std::string Triple::normalize(StringRef Str) {
         break;
       }
       if (!Valid)
-        continue; // Nope, try the next component.
+        continue;                                 
 
-      // Move the component to the target position, pushing any non-fixed
-      // components that are in the way to the right.  This tends to give
-      // good results in the common cases of a forgotten vendor component
-      // or a wrongly positioned environment.
+                                                                         
+                                                                         
+                                                                         
+                                             
       if (Pos < Idx) {
-        // Insert left, pushing the existing components to the right.  For
-        // example, a-b-i386 -> i386-a-b when moving i386 to the front.
-        StringRef CurrentComponent(""); // The empty component.
-        // Replace the component we are moving with an empty component.
+                                                                          
+                                                                       
+        StringRef CurrentComponent("");                        
+                                                                       
         std::swap(CurrentComponent, Components[Idx]);
-        // Insert the component being moved at Pos, displacing any existing
-        // components to the right.
+                                                                           
+                                   
         for (unsigned i = Pos; !CurrentComponent.empty(); ++i) {
-          // Skip over any fixed components.
+                                            
           while (i < array_lengthof(Found) && Found[i])
             ++i;
-          // Place the component at the new position, getting the component
-          // that was at this position - it will be moved right.
+                                                                           
+                                                                
           std::swap(CurrentComponent, Components[i]);
         }
       } else if (Pos > Idx) {
-        // Push right by inserting empty components until the component at Idx
-        // reaches the target position Pos.  For example, pc-a -> -pc-a when
-        // moving pc to the second position.
+                                                                              
+                                                                            
+                                            
         do {
-          // Insert one empty component at Idx.
-          StringRef CurrentComponent(""); // The empty component.
+                                               
+          StringRef CurrentComponent("");                        
           for (unsigned i = Idx; i < Components.size();) {
-            // Place the component at the new position, getting the component
-            // that was at this position - it will be moved right.
+                                                                             
+                                                                  
             std::swap(CurrentComponent, Components[i]);
-            // If it was placed on top of an empty component then we are done.
+                                                                              
             if (CurrentComponent.empty())
               break;
-            // Advance to the next component, skipping any fixed components.
+                                                                            
             while (++i < array_lengthof(Found) && Found[i])
               ;
           }
-          // The last component was pushed off the end - append it.
+                                                                   
           if (!CurrentComponent.empty())
             Components.push_back(CurrentComponent);
 
-          // Advance Idx to the component's new position.
+                                                         
           while (++Idx < array_lengthof(Found) && Found[Idx])
             ;
-        } while (Idx < Pos); // Add more until the final position is reached.
+        } while (Idx < Pos);                                                 
       }
       assert(Pos < Components.size() && Components[Pos] == Comp &&
              "Component moved wrong!");
@@ -908,14 +908,14 @@ std::string Triple::normalize(StringRef Str) {
     }
   }
 
-  // Replace empty components with "unknown" value.
+                                                   
   for (unsigned i = 0, e = Components.size(); i < e; ++i) {
     if (Components[i].empty())
       Components[i] = "unknown";
   }
 
-  // Special case logic goes here.  At this point Arch, Vendor and OS have the
-  // correct values for the computed components.
+                                                                              
+                                                
   std::string NormalizedEnvironment;
   if (Environment == Triple::Android && Components[3].startswith("androideabi")) {
     StringRef AndroidVersion = Components[3].drop_front(strlen("androideabi"));
@@ -927,7 +927,7 @@ std::string Triple::normalize(StringRef Str) {
     }
   }
 
-  // SUSE uses "gnueabi" to mean "gnueabihf"
+                                            
   if (Vendor == Triple::SUSE && Environment == llvh::Triple::GNUEABI)
     Components[3] = "gnueabihf";
 
@@ -957,7 +957,7 @@ std::string Triple::normalize(StringRef Str) {
     }
   }
 
-  // Stick the corrected components back together to form the normalized string.
+                                                                                
   std::string Normalized;
   for (unsigned i = 0, e = Components.size(); i != e; ++i) {
     if (i) Normalized += '-';
@@ -967,29 +967,29 @@ std::string Triple::normalize(StringRef Str) {
 }
 
 StringRef Triple::getArchName() const {
-  return StringRef(Data).split('-').first;           // Isolate first component
+  return StringRef(Data).split('-').first;                                     
 }
 
 StringRef Triple::getVendorName() const {
-  StringRef Tmp = StringRef(Data).split('-').second; // Strip first component
-  return Tmp.split('-').first;                       // Isolate second component
+  StringRef Tmp = StringRef(Data).split('-').second;                         
+  return Tmp.split('-').first;                                                  
 }
 
 StringRef Triple::getOSName() const {
-  StringRef Tmp = StringRef(Data).split('-').second; // Strip first component
-  Tmp = Tmp.split('-').second;                       // Strip second component
-  return Tmp.split('-').first;                       // Isolate third component
+  StringRef Tmp = StringRef(Data).split('-').second;                         
+  Tmp = Tmp.split('-').second;                                                
+  return Tmp.split('-').first;                                                 
 }
 
 StringRef Triple::getEnvironmentName() const {
-  StringRef Tmp = StringRef(Data).split('-').second; // Strip first component
-  Tmp = Tmp.split('-').second;                       // Strip second component
-  return Tmp.split('-').second;                      // Strip third component
+  StringRef Tmp = StringRef(Data).split('-').second;                         
+  Tmp = Tmp.split('-').second;                                                
+  return Tmp.split('-').second;                                              
 }
 
 StringRef Triple::getOSAndEnvironmentName() const {
-  StringRef Tmp = StringRef(Data).split('-').second; // Strip first component
-  return Tmp.split('-').second;                      // Strip second component
+  StringRef Tmp = StringRef(Data).split('-').second;                         
+  return Tmp.split('-').second;                                               
 }
 
 static unsigned EatNumber(StringRef &Str) {
@@ -997,10 +997,10 @@ static unsigned EatNumber(StringRef &Str) {
   unsigned Result = 0;
 
   do {
-    // Consume the leading digit.
+                                 
     Result = Result*10 + (Str[0] - '0');
 
-    // Eat the digit.
+                     
     Str = Str.substr(1);
   } while (!Str.empty() && Str[0] >= '0' && Str[0] <= '9');
 
@@ -1009,19 +1009,19 @@ static unsigned EatNumber(StringRef &Str) {
 
 static void parseVersionFromName(StringRef Name, unsigned &Major,
                                  unsigned &Minor, unsigned &Micro) {
-  // Any unset version defaults to 0.
+                                     
   Major = Minor = Micro = 0;
 
-  // Parse up to three components.
+                                  
   unsigned *Components[3] = {&Major, &Minor, &Micro};
   for (unsigned i = 0; i != 3; ++i) {
     if (Name.empty() || Name[0] < '0' || Name[0] > '9')
       break;
 
-    // Consume the leading number.
+                                  
     *Components[i] = EatNumber(Name);
 
-    // Consume the separator, if present.
+                                         
     if (Name.startswith("."))
       Name = Name.substr(1);
   }
@@ -1040,7 +1040,7 @@ void Triple::getEnvironmentVersion(unsigned &Major, unsigned &Minor,
 void Triple::getOSVersion(unsigned &Major, unsigned &Minor,
                           unsigned &Micro) const {
   StringRef OSName = getOSName();
-  // Assume that the OS portion of the triple starts with the canonical name.
+                                                                             
   StringRef OSTypeName = getOSTypeName(getOS());
   if (OSName.startswith(OSTypeName))
     OSName = OSName.substr(OSTypeName.size());
@@ -1057,10 +1057,10 @@ bool Triple::getMacOSXVersion(unsigned &Major, unsigned &Minor,
   switch (getOS()) {
   default: llvm_unreachable("unexpected OS for Darwin triple");
   case Darwin:
-    // Default to darwin8, i.e., MacOSX 10.4.
+                                             
     if (Major == 0)
       Major = 8;
-    // Darwin version numbers are skewed from OS X versions.
+                                                            
     if (Major < 4)
       return false;
     Micro = 0;
@@ -1068,7 +1068,7 @@ bool Triple::getMacOSXVersion(unsigned &Major, unsigned &Minor,
     Major = 10;
     break;
   case MacOSX:
-    // Default to 10.4.
+                       
     if (Major == 0) {
       Major = 10;
       Minor = 4;
@@ -1079,10 +1079,10 @@ bool Triple::getMacOSXVersion(unsigned &Major, unsigned &Minor,
   case IOS:
   case TvOS:
   case WatchOS:
-    // Ignore the version from the triple.  This is only handled because the
-    // the clang driver combines OS X and IOS support into a common Darwin
-    // toolchain that wants to know the OS X version number even when targeting
-    // IOS.
+                                                                            
+                                                                          
+                                                                               
+           
     Major = 10;
     Minor = 4;
     Micro = 0;
@@ -1097,10 +1097,10 @@ void Triple::getiOSVersion(unsigned &Major, unsigned &Minor,
   default: llvm_unreachable("unexpected OS for Darwin triple");
   case Darwin:
   case MacOSX:
-    // Ignore the version from the triple.  This is only handled because the
-    // the clang driver combines OS X and IOS support into a common Darwin
-    // toolchain that wants to know the iOS version number even when targeting
-    // OS X.
+                                                                            
+                                                                          
+                                                                              
+            
     Major = 5;
     Minor = 0;
     Micro = 0;
@@ -1108,7 +1108,7 @@ void Triple::getiOSVersion(unsigned &Major, unsigned &Minor,
   case IOS:
   case TvOS:
     getOSVersion(Major, Minor, Micro);
-    // Default to 5.0 (or 7.0 for arm64).
+                                         
     if (Major == 0)
       Major = (getArch() == aarch64) ? 7 : 5;
     break;
@@ -1123,10 +1123,10 @@ void Triple::getWatchOSVersion(unsigned &Major, unsigned &Minor,
   default: llvm_unreachable("unexpected OS for Darwin triple");
   case Darwin:
   case MacOSX:
-    // Ignore the version from the triple.  This is only handled because the
-    // the clang driver combines OS X and IOS support into a common Darwin
-    // toolchain that wants to know the iOS version number even when targeting
-    // OS X.
+                                                                            
+                                                                          
+                                                                              
+            
     Major = 2;
     Minor = 0;
     Micro = 0;
@@ -1174,7 +1174,7 @@ void Triple::setObjectFormat(ObjectFormatType Kind) {
 }
 
 void Triple::setArchName(StringRef Str) {
-  // Work around a miscompilation bug for Twines in gcc 4.0.3.
+                                                              
   SmallString<64> Triple;
   Triple += Str;
   Triple += "-";
@@ -1323,7 +1323,7 @@ Triple Triple::get32BitArchVariant() const {
   case Triple::shave:
   case Triple::wasm32:
   case Triple::renderscript32:
-    // Already 32-bit.
+                      
     break;
 
   case Triple::aarch64:        T.setArch(Triple::arm);     break;
@@ -1385,7 +1385,7 @@ Triple Triple::get64BitArchVariant() const {
   case Triple::x86_64:
   case Triple::wasm64:
   case Triple::renderscript64:
-    // Already 64-bit.
+                      
     break;
 
   case Triple::arm:             T.setArch(Triple::aarch64);    break;
@@ -1411,7 +1411,7 @@ Triple Triple::get64BitArchVariant() const {
 
 Triple Triple::getBigEndianArchVariant() const {
   Triple T(*this);
-  // Already big endian.
+                        
   if (!isLittleEndian())
     return T;
   switch (getArch()) {
@@ -1444,8 +1444,8 @@ Triple Triple::getBigEndianArchVariant() const {
   case Triple::renderscript32:
   case Triple::renderscript64:
 
-  // ARM is intentionally unsupported here, changing the architecture would
-  // drop any arch suffixes.
+                                                                           
+                            
   case Triple::arm:
   case Triple::thumb:
     T.setArch(UnknownArch);
@@ -1476,8 +1476,8 @@ Triple Triple::getLittleEndianArchVariant() const {
   case Triple::sparcv9:
   case Triple::systemz:
 
-  // ARM is intentionally unsupported here, changing the architecture would
-  // drop any arch suffixes.
+                                                                           
+                            
   case Triple::armeb:
   case Triple::thumbeb:
     T.setArch(UnknownArch);
@@ -1541,7 +1541,7 @@ bool Triple::isLittleEndian() const {
 }
 
 bool Triple::isCompatibleWith(const Triple &Other) const {
-  // ARM and Thumb triples are compatible, if subarch, vendor and OS match.
+                                                                           
   if ((getArch() == Triple::thumb && Other.getArch() == Triple::arm) ||
       (getArch() == Triple::arm && Other.getArch() == Triple::thumb) ||
       (getArch() == Triple::thumbeb && Other.getArch() == Triple::armeb) ||
@@ -1556,7 +1556,7 @@ bool Triple::isCompatibleWith(const Triple &Other) const {
              getObjectFormat() == Other.getObjectFormat();
   }
 
-  // If vendor is apple, ignore the version number.
+                                                   
   if (getVendor() == Triple::Apple)
     return getArch() == Other.getArch() && getSubArch() == Other.getSubArch() &&
            getVendor() == Other.getVendor() && getOS() == Other.getOS();
@@ -1565,7 +1565,7 @@ bool Triple::isCompatibleWith(const Triple &Other) const {
 }
 
 std::string Triple::merge(const Triple &Other) const {
-  // If vendor is apple, pick the triple with the larger version number.
+                                                                        
   if (getVendor() == Triple::Apple)
     if (Other.isOSVersionLT(*this))
       return str();
@@ -1578,7 +1578,7 @@ StringRef Triple::getARMCPUForArch(StringRef MArch) const {
     MArch = getArchName();
   MArch = ARM::getCanonicalArchName(MArch);
 
-  // Some defaults are forced.
+                              
   switch (getOS()) {
   case llvh::Triple::FreeBSD:
   case llvh::Triple::NetBSD:
@@ -1586,7 +1586,7 @@ StringRef Triple::getARMCPUForArch(StringRef MArch) const {
       return "arm1176jzf-s";
     break;
   case llvh::Triple::Win32:
-    // FIXME: this is invalid for WindowsCE
+                                           
     return "cortex-a9";
   case llvh::Triple::MacOSX:
   case llvh::Triple::IOS:
@@ -1606,8 +1606,8 @@ StringRef Triple::getARMCPUForArch(StringRef MArch) const {
   if (!CPU.empty() && !CPU.equals("invalid"))
     return CPU;
 
-  // If no specific architecture version is requested, return the minimum CPU
-  // required by the OS and environment.
+                                                                             
+                                        
   switch (getOS()) {
   case llvh::Triple::NetBSD:
     switch (getEnvironment()) {

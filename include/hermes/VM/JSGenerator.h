@@ -14,14 +14,14 @@
 namespace hermes {
 namespace vm {
 
-/// ES6.0 25.3 Generator Objects.
-/// Stores the GeneratorInnerFunction associated with the generator.
-/// The GeneratorInnerFunction is stored separately from the JSGenerator
-/// due to the fact that it needs to store the same information as a standard
-/// JSFunction, but must not be directly accessible by user code.
-/// If the GeneratorInnerFunction was merged into JSGenerator, it would result
-/// in large amounts of code duplication in terms of calling convention and
-/// field storage.
+                                 
+                                                                    
+                                                                        
+                                                                             
+                                                                 
+                                                                              
+                                                                           
+                  
 class JSGenerator final : public JSObject {
   using Super = JSObject;
   friend void JSGeneratorBuildMeta(const GCCell *cell, Metadata::Builder &mb);
@@ -41,7 +41,7 @@ class JSGenerator final : public JSObject {
       Handle<GeneratorInnerFunction> innerFunction,
       Handle<JSObject> parentHandle);
 
-  /// \return the inner function.
+                                 
   static PseudoHandle<GeneratorInnerFunction> getInnerFunction(
       Runtime &runtime,
       JSGenerator *self) {
@@ -56,11 +56,11 @@ class JSGenerator final : public JSObject {
       : JSObject(runtime, *parent, *clazz) {}
 
  private:
-  /// The GeneratorInnerFunction that is called when this generator is advanced.
+                                                                                
   GCPointer<GeneratorInnerFunction> innerFunction_;
 };
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
 #endif

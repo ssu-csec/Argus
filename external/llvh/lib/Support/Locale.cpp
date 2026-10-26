@@ -14,6 +14,6 @@ bool isPrint(int UCS) {
   return llvh::sys::unicode::isPrintable(UCS);
 }
 
-} // namespace locale
-} // namespace sys
-} // namespace llvh
+}                    
+}                 
+}                  

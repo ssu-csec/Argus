@@ -31,7 +31,7 @@ void CheckHeapWellFormedAcceptor::accept(const GCCell *ptr) {
 }
 
 void CheckHeapWellFormedAcceptor::acceptWeak(GCCell *&ptr) {
-  // A weak pointer has the same well-formed-ness checks as a normal pointer.
+                                                                             
   accept(ptr);
 }
 
@@ -61,12 +61,12 @@ void CheckHeapWellFormedAcceptor::acceptSym(SymbolID sym) {
   assert(
       gc.getCallbacks().isSymbolLive(sym) &&
       "Symbol is marked but is not live");
-  // Check that the string used by this symbol is valid.
+                                                        
   accept(
       static_cast<const GCCell *>(gc.getCallbacks().getStringForSymbol(sym)));
 }
 
 #endif
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

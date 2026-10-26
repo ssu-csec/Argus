@@ -29,9 +29,9 @@ namespace llvh {
 template <typename T, typename ToIndexT = identity<unsigned>>
   class IndexedMap {
     using IndexT = typename ToIndexT::argument_type;
-    // Prefer SmallVector with zero inline storage over std::vector. IndexedMaps
-    // can grow very large and SmallVector grows more efficiently as long as T
-    // is trivially copyable.
+                                                                                
+                                                                              
+                             
     using StorageT = SmallVector<T, 0>;
 
     StorageT storage_;
@@ -80,6 +80,6 @@ template <typename T, typename ToIndexT = identity<unsigned>>
     }
   };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_ADT_INDEXEDMAP_H
+#endif                         

@@ -1,3 +1,6 @@
+#include <chrono>
+#include <cstdio>
+#include <cstdlib>
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
@@ -52,6 +55,11 @@
 #include "zip/src/zip.h"
 
 #include <sstream>
+#include <cerrno>
+#include <cstdlib>
+#include <cstring>
+#include <fcntl.h>
+#include <unistd.h>
 
 #define DEBUG_TYPE "hermes"
 
@@ -78,8 +86,8 @@ using llvh::cl::value_desc;
 using llvh::cl::values;
 using llvh::cl::ValuesClass;
 
-/// Encapsulate a compiler flag: for example, "-fflag/-fno-flag", or
-/// "-Wflag/-Wno-flag".
+                                                                    
+                       
 class CLFlag {
   std::string yesName_;
   std::string yesHelp_;
@@ -93,11 +101,11 @@ class CLFlag {
   CLFlag(const CLFlag &) = delete;
   void operator=(CLFlag &) = delete;
 
-  /// \param flagChar is the character that will be prepended to the flag name.
-  /// \param name is the name for the command line option
-  /// \param defaultValue is the default if neither is specified.
-  /// \param desc is the description starting with lower case like " inlining of
-  /// functions".
+                                                                               
+                                                         
+                                                                 
+                                                                                
+                 
   CLFlag(
       char flagChar,
       const llvh::Twine &name,
@@ -120,8 +128,8 @@ class CLFlag {
             llvh::cl::cat(category)),
         defaultValue_(defaultValue) {}
 
-  /// Resolve the value of the flag depending on which command line option is
-  /// present and which one is last.
+                                                                             
+                                    
   bool getValue() const {
     if (yes_.getPosition() > no_.getPosition())
       return true;
@@ -130,7 +138,7 @@ class CLFlag {
     return defaultValue_;
   }
 
-  /// Casting to bool always makes sense, so no "explicit" needed here.
+                                                                       
   operator bool() const {
     return getValue();
   }
@@ -242,7 +250,7 @@ static llvh::cl::alias _PrettyDisassemble(
     Hidden,
     llvh::cl::aliasopt(Pretty));
 
-/// Unused option kept for backwards compatibility.
+                                                   
 static opt<bool> unused_HermesParser(
     "hermes-parser",
     desc("Treat the input as JavaScript"),
@@ -279,11 +287,18 @@ static opt<bool> EagerCompilation(
     desc("Force fully eager compilation"),
     cat(CompilerCategory));
 
-/// The following flags are exported so it may be used by the VM driver as well.
+                                                                                
 opt<bool> BasicBlockProfiling(
     "basic-block-profiling",
     init(false),
     desc("Enable basic block profiling (HBC only)"));
+
+opt<bool> EnableTDZ(
+    "enable-tdz",
+    desc("Emit temporal dead zone checks (requires block scoping)."),
+    init(false),
+    Hidden,
+    cat(CompilerCategory));
 
 opt<bool> EnableBlockScoping(
     "block-scoping",
@@ -307,8 +322,8 @@ opt<bool> ES6Class(
 opt<bool>
     EnableEval("enable-eval", init(true), desc("Enable support for eval()"));
 
-// This is normally a compiler option, but it also applies to strings given
-// to eval or the Function constructor.
+                                                                           
+                                       
 opt<bool> VerifyIR(
     "verify-ir",
 #ifdef HERMES_SLOW_DEBUG
@@ -342,7 +357,7 @@ enum BytecodeFormatKind {
   HBC,
 };
 
-// Enable Debug Options to be specified on the command line
+                                                           
 static opt<BytecodeFormatKind> BytecodeFormat(
     "target",
     init(HBC),
@@ -627,13 +642,77 @@ static CLFlag UseUnsafeIntrinsics(
     false,
     "Recognize and lower Asm.js/Wasm unsafe compiler intrinsics.",
     CompilerCategory);
-} // namespace cl
+}                
 
 namespace {
 
-// =================================================================
-// [Hephaistos] wholepage.js 전용 JSON 파싱 에러 방지 전처리기
-// =================================================================
+                                                                            
+struct ArgusFrontendStage {
+  const char *phase;
+  std::chrono::steady_clock::time_point began;
+  explicit ArgusFrontendStage(const char *p):phase(p),began(std::chrono::steady_clock::now()) {record("BEGIN",0);}
+  ~ArgusFrontendStage() {record("END",std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now()-began).count());}
+  void record(const char *event,long long duration) {
+    const char *path=std::getenv("ARGUS_FRONTEND_METRICS");
+    if (!path || !*path) return;
+    if (FILE *f=std::fopen(path,"a")) {
+      auto now=std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+      std::fprintf(f,"{\"event\":\"%s\",\"phase\":\"%s\",\"monotonic_ns\":%lld,\"duration_ns\":%lld}\n",event,phase,(long long)now,duration);
+      std::fclose(f);
+    }
+  }
+};
+template<class Fn> auto argusMeasure(const char *name,Fn &&fn)->decltype(fn()) {
+  ArgusFrontendStage stage(name);return fn();
+}
+
+
+
+                                                                          
+                                                                         
+bool writeAuditCapture(
+    const char *prefix,
+    const char *suffix,
+    llvh::StringRef bytes) {
+  std::string path = std::string(prefix) + suffix;
+  int fd;
+  do {
+    fd = ::open(path.c_str(), O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0600);
+  } while (fd < 0 && errno == EINTR);
+  if (fd < 0) {
+    llvh::errs() << "[ARGUS_AUDIT_CAPTURE] Cannot create " << path
+                 << ": errno=" << errno << "\n";
+    return false;
+  }
+  size_t offset = 0;
+  while (offset < bytes.size()) {
+    size_t count = bytes.size() - offset;
+    if (count > 1024 * 1024)
+      count = 1024 * 1024;
+    ssize_t written = ::write(fd, bytes.data() + offset, count);
+    if (written < 0 && errno == EINTR)
+      continue;
+    if (written <= 0) {
+      const int error = errno;
+      ::close(fd);
+      llvh::errs() << "[ARGUS_AUDIT_CAPTURE] Incomplete write " << path
+                   << ": errno=" << error << "\n";
+      return false;
+    }
+    offset += static_cast<size_t>(written);
+  }
+                                                                               
+  if (::close(fd) != 0) {
+    llvh::errs() << "[ARGUS_AUDIT_CAPTURE] Close failed " << path
+                 << ": errno=" << errno << "\n";
+    return false;
+  }
+  return true;
+}
+
+                                                                    
+                                                  
+                                                                    
 std::unique_ptr<llvh::MemoryBuffer> sanitizeWholePageJS(
     std::unique_ptr<llvh::MemoryBuffer> buffer) {
   if (!buffer) return nullptr;
@@ -642,11 +721,11 @@ std::unique_ptr<llvh::MemoryBuffer> sanitizeWholePageJS(
   
   std::string newContent = buffer->getBuffer().str();
 
-  // [핵심 무기] '{ "...' 형태의 JSON 블록인지 확인하고 통째로 지우는 람다 함수
+                                                      
   auto nukeIfJson = [&](size_t startPos) -> size_t {
     if (startPos >= newContent.size()) return startPos;
     
-    // 만약 `[{` 형태로 시작하는 JSON 배열이라면 전체를 날리기 위해 시작점을 `[`로 잡음
+                                                          
     bool isArrayWrapped = false;
     size_t actualStart = startPos;
     if (newContent[startPos] == '[') {
@@ -661,11 +740,11 @@ std::unique_ptr<llvh::MemoryBuffer> sanitizeWholePageJS(
 
     if (newContent[startPos] != '{') return actualStart;
     
-    // 다음 글자가 따옴표(") 인지 확인 (JSON Object의 Key 시작)
+                                                
     size_t nextQuote = newContent.find_first_not_of(" \t\n\r", startPos + 1);
     if (nextQuote == std::string::npos || newContent[nextQuote] != '"') return actualStart;
     
-    // 따옴표가 닫히는 곳 찾기
+                    
     size_t quoteEnd = nextQuote + 1;
     while (quoteEnd < newContent.size()) {
         if (newContent[quoteEnd] == '"' && newContent[quoteEnd-1] != '\\') break;
@@ -673,11 +752,11 @@ std::unique_ptr<llvh::MemoryBuffer> sanitizeWholePageJS(
     }
     if (quoteEnd >= newContent.size()) return actualStart;
     
-    // 문자열 바로 다음에 콜론(:)이 온다면 이것은 100% JSON 상태 데이터!
+                                                  
     size_t colonPos = newContent.find_first_not_of(" \t\n\r", quoteEnd + 1);
     if (colonPos == std::string::npos || newContent[colonPos] != ':') return actualStart;
 
-    // 괄호 {} 깊이를 추적하여 해당 JSON 객체의 끝(})을 정확히 찾아냄
+                                               
     int depth = 0;
     size_t endPos = startPos;
     bool inStr = false;
@@ -695,45 +774,45 @@ std::unique_ptr<llvh::MemoryBuffer> sanitizeWholePageJS(
             else if (c == '{') depth++;
             else if (c == '}') {
                 depth--;
-                if (depth == 0) break; // 완벽한 JSON 블록의 끝
+                if (depth == 0) break;                  
             }
         }
     }
 
-    // 만약 `[{...}]` 였다면 닫는 `]` 도 찾아 지움
+                                      
     if (isArrayWrapped && depth == 0 && endPos < newContent.size()) {
         size_t arrayEnd = newContent.find_first_not_of(" \t\n\r", endPos + 1);
         if (arrayEnd != std::string::npos && newContent[arrayEnd] == ']') {
             endPos = arrayEnd;
-            // 배열 닫고 세미콜론이나 콤마가 있으면 같이 날림 (옵션)
+                                              
             size_t trailing = newContent.find_first_not_of(" \t\n\r", endPos + 1);
             if (trailing != std::string::npos && (newContent[trailing] == ';' || newContent[trailing] == ',')) {
                 endPos = trailing;
             }
         } else {
-            // ] 로 안닫히면 잘못 찾아온거임
+                                
             return actualStart; 
         }
     }
 
-    // JSON 덩어리를 줄바꿈(\n)만 남기고 완벽하게 공백 처리하여 라인 넘버 보존
+                                                   
     if (depth == 0 && endPos < newContent.size()) {
         for (size_t i = actualStart; i <= endPos; ++i) {
             if (newContent[i] != '\n') newContent[i] = ' ';
         }
         llvh::errs() << "[Hephaistos] NUKED pure JSON payload at offset " << actualStart << "\n";
-        return endPos + 1; // 지운 직후의 위치 반환
+        return endPos + 1;                
     }
     return actualStart;
   };
 
-  // 1. 파일의 맨 처음이 뜬금없는 JSON으로 시작하는 경우 타격
+                                        
   size_t fileStart = newContent.find_first_not_of(" \t\n\r");
   if (fileStart != std::string::npos) {
       fileStart = nukeIfJson(fileStart);
   }
 
-  // 2. 무한루프 패턴(for(;;);) 제거 및 그 직후에 숨어있는 JSON 타격
+                                                 
   const char* patterns[] = {"for (;;);", "for (; ;);"};
   for (const char* pattern : patterns) {
     size_t pos = 0;
@@ -742,7 +821,7 @@ std::unique_ptr<llvh::MemoryBuffer> sanitizeWholePageJS(
       bool safe = false;
       if (pos == 0) safe = true;
       else {
-          // var e = "for(;;);" 같은 문자열 내부 함정 피하기
+                                                
           size_t prev = newContent.find_last_not_of(" \t\r", pos - 1);
           if (prev == std::string::npos || newContent[prev] == '\n' || newContent[prev] == '}' || newContent[prev] == ';') {
               safe = true;
@@ -752,7 +831,7 @@ std::unique_ptr<llvh::MemoryBuffer> sanitizeWholePageJS(
           for (size_t i = 0; i < patternLen; ++i) newContent[pos + i] = ' ';
           llvh::errs() << "[Hephaistos] Sanitized for(;;); at offset " << pos << "\n";
           
-          // 지운 직후에 JSON이 오면 즉각 타격
+                                  
           size_t nextCode = newContent.find_first_not_of(" \t\n\r", pos + patternLen);
           if (nextCode != std::string::npos) {
               pos = nukeIfJson(nextCode);
@@ -765,16 +844,16 @@ std::unique_ptr<llvh::MemoryBuffer> sanitizeWholePageJS(
     }
   }
 
-  // 3. 크롤러 주석(// ====) 뒤에 오는 JSON 타격 (\r\n 문제 완벽 무시)
+                                                     
   size_t searchPos = 0;
   std::string delim = "// ====";
   while ((searchPos = newContent.find(delim, searchPos)) != std::string::npos) {
-    // searchPos 라인의 끝을 찾은 다음부터 코드 시작 지점 탐색
+                                           
     size_t eol = newContent.find('\n', searchPos);
     if (eol == std::string::npos) break;
     size_t codeStart = eol + 1;
     
-    // 이어서 나오는 주석이나 빈 줄 스킵
+                          
     while (codeStart < newContent.size()) {
         size_t firstNonSpace = newContent.find_first_not_of(" \t\r", codeStart);
         if (firstNonSpace == std::string::npos) break;
@@ -789,13 +868,13 @@ std::unique_ptr<llvh::MemoryBuffer> sanitizeWholePageJS(
             continue;
         }
         codeStart = firstNonSpace;
-        break; // 진짜 코드가 시작되는 지점
+        break;                  
     }
 
     if (codeStart < newContent.size()) {
         size_t afterNuke = nukeIfJson(codeStart);
         if (afterNuke > codeStart) {
-            searchPos = afterNuke; // 연속으로 JSON이 올 수도 있으므로 위치 갱신
+            searchPos = afterNuke;                              
             continue;
         }
     }
@@ -804,41 +883,41 @@ std::unique_ptr<llvh::MemoryBuffer> sanitizeWholePageJS(
 
   return llvh::MemoryBuffer::getMemBufferCopy(newContent, filename);
 }
-// =================================================================
+                                                                    
 
 struct ModuleInSegment {
-  /// Index of the module, to be used as the ID when generating IR.
+                                                                   
   uint32_t id;
 
-  /// Input source file. May be a JavaScript source file or an HBC file.
+                                                                        
   std::unique_ptr<llvh::MemoryBuffer> file;
 
-  /// SourceMap file. nullptr if not specified by the user.
+                                                           
   std::unique_ptr<llvh::MemoryBuffer> sourceMap;
 };
 
-/// Encodes a list of files that are part of a given segment.
+                                                             
 using SegmentTableEntry = std::vector<ModuleInSegment>;
 
-/// Mapping from segment index to the file buffers in that segment.
-/// For a given table, table[i][j] is the j-indexed file in segment i.
-/// Use an std::map to ensure that the order of iteration is guaranteed here,
-/// allowing the assumption that the segments have strictly increasing
-/// module IDs. The entry point must be found at table[0][0].
-/// If multiple segments or multiple input files are not being used,
-/// the only input will be at table[0][0].
+                                                                   
+                                                                      
+                                                                             
+                                                                      
+                                                             
+                                                                    
+                                          
 using SegmentTable = std::map<uint32_t, SegmentTableEntry>;
 
-/// Mapping from file name to module ID. File names are relative to the input
-/// root path (directory / zip file) and normalized with
-/// remove_leading_dotslash.
+                                                                             
+                                                        
+                            
 using ModuleIDsTable = llvh::DenseMap<llvh::StringRef, uint32_t>;
 
-/// Read a file at path \p path into a memory buffer. If \p stdinOk is set,
-/// allow "-" to mean stdin.
-/// \param silent if true, don't print an error message on failure.
-/// \return the memory buffer, or nullptr on error, in
-/// which case an error message will have been printed to llvh::errs().
+                                                                           
+                            
+                                                                   
+                                                      
+                                                                       
 std::unique_ptr<llvh::MemoryBuffer> memoryBufferFromFile(
     llvh::StringRef path,
     bool stdinOk = false,
@@ -854,11 +933,11 @@ std::unique_ptr<llvh::MemoryBuffer> memoryBufferFromFile(
   return std::move(*fileBuf);
 }
 
-/// Read a file from \p path relative to the root of the zip file \p zip
-/// into a memory buffer. Print error messages to llvh::errs().
-/// \param zip the zip file to read from (must not be null).
-/// \param path the path in the zip file, must be null-terminated.
-/// \return the read file, nullptr on error.
+                                                                        
+                                                               
+                                                            
+                                                                  
+                                            
 std::unique_ptr<llvh::MemoryBuffer>
 memoryBufferFromZipFile(zip_t *zip, const char *path, bool silent = false) {
   assert(zip && "zip file must not be null");
@@ -875,7 +954,7 @@ memoryBufferFromZipFile(zip_t *zip, const char *path, bool silent = false) {
 
   size_t size = zip_entry_size(zip);
 
-  // Read data from the file, ensuring null termination of the data.
+                                                                    
   std::unique_ptr<llvh::MemoryBuffer> buf =
       llvh::WritableMemoryBuffer::getNewMemBuffer(size, path);
   zip_entry_noallocread(zip, const_cast<char *>(buf->getBufferStart()), size);
@@ -884,30 +963,30 @@ memoryBufferFromZipFile(zip_t *zip, const char *path, bool silent = false) {
   return buf;
 }
 
-/// Manage an output file safely.
+                                 
 class OutputStream {
  public:
-  /// Creates an empty object.
+                              
   OutputStream() : os_(nullptr) {}
-  /// Create an object which initially holds the \p defaultStream.
+                                                                  
   OutputStream(llvh::raw_ostream &defaultStream) : os_(&defaultStream) {}
 
   ~OutputStream() {
     discard();
   }
 
-  /// Replaces the stream with an open stream to a temporary file
-  /// named based on \p fileName.  This method will write error
-  /// messages, if any, to llvh::errs().  This method can only be
-  /// called once on an object.  \return true if the temp file was
-  /// created and false otherwise.  If the object is destroyed without
-  /// close() being called, the temp file is removed.
+                                                                 
+                                                               
+                                                                 
+                                                                  
+                                                                      
+                                                     
   bool open(llvh::Twine fileName, llvh::sys::fs::OpenFlags openFlags) {
     assert(!fdos_ && "OutputStream::open() can be called only once.");
 
-    // Newer versions of llvm have a safe createUniqueFile overload
-    // which takes OpenFlags.  Hermes's llvm doesn't, so we have to do
-    // it this way, which is a hypothetical race.
+                                                                   
+                                                                      
+                                                 
     std::error_code EC = llvh::sys::fs::getPotentiallyUniqueFileName(
         fileName + ".%%%%%%", tempName_);
     if (EC) {
@@ -928,10 +1007,10 @@ class OutputStream {
     return true;
   }
 
-  /// If a temporary file was created, it is renamed to \p fileName.
-  /// If renaming fails, it will be deleted.  This method will write
-  /// error messages, if any, to llvh::errs().  \return true if a temp
-  /// file was never created or was renamed here; or false otherwise.
+                                                                    
+                                                                    
+                                                                      
+                                                                     
   bool close() {
     if (!fdos_) {
       return true;
@@ -948,7 +1027,7 @@ class OutputStream {
     return true;
   }
 
-  /// If a temporary file was created, it is deleted.
+                                                     
   void discard() {
     if (!fdos_) {
       return;
@@ -971,15 +1050,15 @@ class OutputStream {
   std::string fileName_;
 };
 
-/// Loads global definitions from MemoryBuffer and adds the definitions to \p
-/// declFileList.
-/// \return true on success, false on error.
+                                                                             
+                 
+                                            
 bool loadGlobalDefinition(
     Context &context,
     std::unique_ptr<llvh::MemoryBuffer> content,
     DeclarationFileListTy &declFileList) {
   parser::JSParser jsParser(context, std::move(content));
-  auto parsedJs = jsParser.parse();
+  auto parsedJs = argusMeasure("JS_PARSE",[&]{return jsParser.parse();});
   if (!parsedJs)
     return false;
   jsParser.registerMagicURLs();
@@ -988,7 +1067,7 @@ bool loadGlobalDefinition(
   return true;
 }
 
-/// Attempt to guess the best error output options by inspecting stderr
+                                                                       
 SourceErrorOutputOptions guessErrorOutputOptions() {
   SourceErrorOutputOptions result;
 
@@ -998,7 +1077,7 @@ SourceErrorOutputOptions guessErrorOutputOptions() {
     result.preferredMaxErrorWidth = llvh::sys::Process::StandardErrColumns();
   }
 
-  // Respect MaxDiagnosticWidth if nonzero
+                                          
   if (cl::MaxDiagnosticWidth < 0) {
     result.preferredMaxErrorWidth = SourceErrorOutputOptions::UnlimitedWidth;
   } else if (cl::MaxDiagnosticWidth > 0) {
@@ -1007,11 +1086,11 @@ SourceErrorOutputOptions guessErrorOutputOptions() {
   return result;
 }
 
-/// Parse the given files and return a single AST pointer.
-/// \p sourceMap any parsed source map associated with \p fileBuf.
-/// \p sourceMapTranslator input source map coordinate translator.
-/// \return A pointer to the new validated AST, nullptr if parsing failed.
-/// If using CJS modules, return a FunctionExpressionNode, else a ProgramNode.
+                                                          
+                                                                  
+                                                                  
+                                                                          
+                                                                              
 ESTree::NodePtr parseJS(
     std::shared_ptr<Context> &context,
     sem::SemContext &semCtx,
@@ -1019,10 +1098,11 @@ ESTree::NodePtr parseJS(
     std::unique_ptr<SourceMap> sourceMap = nullptr,
     std::shared_ptr<SourceMapTranslator> sourceMapTranslator = nullptr,
     bool wrapCJSModule = false) {
+  ArgusFrontendStage parseStage("PARSE_JS_TOTAL");
   assert(fileBuf && "Need a file to compile");
   assert(context && "Need a context to compile using");
-  // This value will be set to true if the parser detected the 'use static
-  // builtin' directive in the source.
+                                                                          
+                                      
   bool useStaticBuiltinDetected = false;
 
   bool isLargeFile = fileBuf->getBufferSize() >=
@@ -1054,9 +1134,9 @@ ESTree::NodePtr parseJS(
 #endif
   {
     parser::JSParser jsParser(*context, fileBufId, mode);
-    parsedJs = jsParser.parse();
-    // If we are using lazy parse mode, we should have already detected the
-    // 'use static builtin' directive and magic URLs in the pre-parsing stage.
+    parsedJs = argusMeasure("JS_PARSE",[&]{return jsParser.parse();});
+                                                                           
+                                                                              
     if (parsedJs && mode != parser::LazyParse) {
       useStaticBuiltinDetected = jsParser.getUseStaticBuiltin();
       jsParser.registerMagicURLs();
@@ -1082,7 +1162,7 @@ ESTree::NodePtr parseJS(
     hermes::dumpESTreeJSON(
         llvh::outs(),
         parsedAST,
-        cl::Pretty /* pretty */,
+        cl::Pretty             ,
         cl::IncludeEmptyASTNodes ? ESTreeDumpMode::DumpAll
                                  : ESTreeDumpMode::HideEmpty,
         context->getSourceErrorManager(),
@@ -1092,11 +1172,11 @@ ESTree::NodePtr parseJS(
     return parsedAST;
   }
   if (cl::DumpTarget == DumpJS) {
-    hermes::generateJS(llvh::outs(), parsedAST, cl::Pretty /* pretty */);
+    hermes::generateJS(llvh::outs(), parsedAST, cl::Pretty             );
     return parsedAST;
   }
 
-  if (!hermes::sem::validateAST(*context, semCtx, parsedAST)) {
+  if (!argusMeasure("AST_VALIDATE",[&]{return hermes::sem::validateAST(*context, semCtx, parsedAST);})) {
     return nullptr;
   }
 
@@ -1104,7 +1184,7 @@ ESTree::NodePtr parseJS(
     hermes::dumpESTreeJSON(
         llvh::outs(),
         parsedAST,
-        cl::Pretty /* pretty */,
+        cl::Pretty             ,
         cl::IncludeEmptyASTNodes ? ESTreeDumpMode::DumpAll
                                  : ESTreeDumpMode::HideEmpty,
         context->getSourceErrorManager(),
@@ -1113,21 +1193,21 @@ ESTree::NodePtr parseJS(
                               : ESTreeRawProp::Exclude);
   }
   if (cl::DumpTarget == DumpTransformedJS) {
-    hermes::generateJS(llvh::outs(), parsedAST, cl::Pretty /* pretty */);
+    hermes::generateJS(llvh::outs(), parsedAST, cl::Pretty             );
   }
 
   return parsedAST;
 }
 
-/// Apply custom logic for flag initialization.
+                                               
 void setFlagDefaults() {
-  // We haven't been given any file names; just use "-", which acts as stdin.
+                                                                             
   if (cl::InputFilenames.empty()) {
     cl::InputFilenames.push_back("-");
   }
 
-  // If bytecode mode is not explicitly specified, check the input extension.
-  // of the input file.
+                                                                             
+                       
   if (!cl::BytecodeMode && cl::InputFilenames.size() == 1 &&
       llvh::sys::path::extension(cl::InputFilenames[0]) == ".hbc") {
     cl::BytecodeMode = true;
@@ -1142,11 +1222,11 @@ void setFlagDefaults() {
   }
 }
 
-/// Validate command line flags.
-/// \return true if the flags are valid, false if not. On a false return, an
-/// error will have been printed to stderr.
+                                
+                                                                            
+                                           
 bool validateFlags() {
-  // Helper to print an error message and return false.
+                                                       
   bool errored = false;
   auto err = [&errored](const char *msg) {
     if (!errored) {
@@ -1155,15 +1235,15 @@ bool validateFlags() {
     }
   };
 
-  // Validate strict vs non strict mode.
+                                        
   if (cl::NonStrictMode && cl::StrictMode) {
     err("Error! Cannot use both -strict and -non-strict");
   }
 
-  // Validate bytecode output file.
+                                   
   if (cl::DumpTarget == EmitBundle && cl::BytecodeOutputFilename.empty() &&
       oscompat::isatty(STDOUT_FILENO)) {
-    // To skip this check and trash the terminal, use -out /dev/stdout.
+                                                                       
     err("Refusing to write binary bundle to terminal.\n"
         "Specify output file with -out filename.");
   }
@@ -1172,7 +1252,7 @@ bool validateFlags() {
     err("Can't specify both -lazy and -eager");
   }
 
-  // Validate lazy compilation flags.
+                                     
   if (cl::LazyCompilation) {
     if (cl::BytecodeFormat != cl::BytecodeFormatKind::HBC)
       err("-lazy only works with -target=HBC");
@@ -1184,7 +1264,7 @@ bool validateFlags() {
       err("-lazy doesn't make sense with bytecode");
     }
     if (!cl::CustomOptimize.empty()) {
-      // We don't currently pass these around to be applied later.
+                                                                  
       err("-lazy doesn't allow custom optimizations");
     }
     if (cl::CommonJS) {
@@ -1192,7 +1272,7 @@ bool validateFlags() {
     }
   }
 
-  // Validate flags for more than one input file.
+                                                 
   if (cl::InputFilenames.size() > 1) {
     if (cl::BytecodeMode)
       err("Hermes can only load one bytecode file.");
@@ -1202,7 +1282,7 @@ bool validateFlags() {
       err("Multiple files must use CommonJS modules.");
   }
 
-  // Validate source map output flags.
+                                      
   if (cl::OutputSourceMap) {
     if (cl::BytecodeOutputFilename.empty())
       err("-output-source-map requires -out to be set");
@@ -1212,7 +1292,7 @@ bool validateFlags() {
       err("-output-source-map only works with -emit-binary");
   }
 
-  // Validate bytecode dumping flags.
+                                     
   if (cl::BytecodeMode && cl::DumpTarget != Execute) {
     if (cl::BytecodeFormat != cl::BytecodeFormatKind::HBC)
       err("Only Hermes bytecode files may be dumped");
@@ -1229,14 +1309,14 @@ bool validateFlags() {
   return !errored;
 }
 
-/// Apply the -Werror, -Wno-error, -Werror=<category> and -Wno-error=<category>
-/// flags to \c sm from left to right.
+                                                                               
+                                      
 static void setWarningsAreErrorsFromFlags(SourceErrorManager &sm) {
   std::vector<Warning>::iterator yesIt = cl::Werror.begin();
   std::vector<Warning>::iterator noIt = cl::Wnoerror.begin();
-  // Argument positions are indices into argv and start at 1 (or 2 if there's a
-  // subcommand). See llvh::cl::CommandLineParser::ParseCommandLineOptions().
-  // In this loop, position 0 represents the lack of a value.
+                                                                               
+                                                                             
+                                                             
   unsigned noPos = 0, yesPos = 0;
   while (true) {
     if (noIt != cl::Wnoerror.end()) {
@@ -1289,8 +1369,8 @@ void initializeDumpOptions(
   dumpSettings.passes = stringListOptToDenseSet(passes);
 }
 
-/// Create a Context, respecting the command line flags.
-/// \return the Context.
+                                                        
+                        
 std::shared_ptr<Context> createContext(
     std::unique_ptr<Context::ResolutionTable> resolutionTable,
     std::vector<uint32_t> segments) {
@@ -1312,10 +1392,11 @@ std::shared_ptr<Context> createContext(
   }
   codeGenOpts.instrumentIR = cl::InstrumentIR;
   codeGenOpts.enableBlockScoping = cl::EnableBlockScoping;
+  codeGenOpts.enableTDZ = cl::EnableTDZ;
 
   OptimizationSettings optimizationOpts;
 
-  // Enable aggressiveNonStrictModeOptimizations if the target is HBC.
+                                                                      
   optimizationOpts.aggressiveNonStrictModeOptimizations =
       cl::BytecodeFormat == cl::BytecodeFormatKind::HBC;
 
@@ -1324,8 +1405,8 @@ std::shared_ptr<Context> createContext(
 
   optimizationOpts.reusePropCache = cl::ReusePropCache;
 
-  // When the setting is auto-detect, we will set the correct value after
-  // parsing.
+                                                                         
+             
   optimizationOpts.staticBuiltins =
       cl::StaticBuiltins == cl::StaticBuiltinSetting::ForceOn;
   optimizationOpts.staticRequire = cl::StaticRequire;
@@ -1338,7 +1419,7 @@ std::shared_ptr<Context> createContext(
       std::move(resolutionTable),
       std::move(segments));
 
-  // Default is non-strict mode.
+                                
   context->setStrictMode(!cl::NonStrictMode && cl::StrictMode);
   context->setEnableEval(cl::EnableEval);
   context->setConvertES6Classes(cl::ES6Class);
@@ -1356,8 +1437,8 @@ std::shared_ptr<Context> createContext(
   context->getSourceErrorManager().setErrorLimit(cl::ErrorLimit);
 
   {
-    // Set default lazy mode using defaults from CompileFlags to keep it in one
-    // place.
+                                                                               
+             
     hermes::hbc::CompileFlags defaultFlags{};
     context->setPreemptiveFileCompilationThreshold(
         defaultFlags.preemptiveFileCompilationThreshold);
@@ -1367,15 +1448,15 @@ std::shared_ptr<Context> createContext(
 
   if (cl::EagerCompilation || cl::DumpTarget != Execute ||
       cl::OptimizationLevel > cl::OptLevel::Og) {
-    // Make sure nothing is lazy
+                                
     context->setLazyCompilation(false);
   } else if (cl::LazyCompilation) {
-    // Make sure everything is lazy
+                                   
     context->setLazyCompilation(true);
     context->setPreemptiveFileCompilationThreshold(0);
     context->setPreemptiveFunctionCompilationThreshold(0);
   } else {
-    // By default with no optimization, use lazy compilation for "large" files
+                                                                              
     context->setLazyCompilation(true);
   }
 
@@ -1408,17 +1489,17 @@ std::shared_ptr<Context> createContext(
   } else if (cl::DebugInfoLevel == cl::DebugLevel::g2) {
     context->setDebugInfoSetting(DebugInfoSetting::SOURCE_MAP);
   } else {
-    // -g1 or -g0. If -g0, we'll strip debug info later.
+                                                        
     context->setDebugInfoSetting(DebugInfoSetting::THROWING);
   }
   context->setEmitAsyncBreakCheck(cl::EmitAsyncBreakCheck);
   return context;
 }
 
-/// Parse \p file into a JSON value.
-/// \param alloc the allocator to use for JSON parsing.
-/// \return a metadata JSONObject allocated in the user-specified allocator,
-/// nullptr on failure. All error messages are printed to stderr.
+                                    
+                                                       
+                                                                            
+                                                                 
 ::hermes::parser::JSONValue *parseJSONFile(
     std::unique_ptr<llvh::MemoryBuffer> &file,
     ::hermes::parser::JSLexer::Allocator &alloc) {
@@ -1435,9 +1516,9 @@ std::shared_ptr<Context> createContext(
   return root.getValue();
 }
 
-/// Given the root path to the directory or zip file, the file name, and
-/// a zip struct that represents the zip file if it's a zip, return
-/// the memory buffer of the file content.
+                                                                        
+                                                                   
+                                          
 std::unique_ptr<llvh::MemoryBuffer> getFileFromDirectoryOrZip(
     zip_t *zip,
     llvh::StringRef rootPath,
@@ -1454,10 +1535,10 @@ std::unique_ptr<llvh::MemoryBuffer> getFileFromDirectoryOrZip(
   return sanitizeWholePageJS(std::move(buf));
 }
 
-/// Read a module IDs table. It maps every file name to its unique global module
-/// ID. Prints out error messages to stderr in case of failure.
-/// \param metadata the full metadata JSONObject. Contains "moduleIDs".
-/// \return the module IDs table read from the metadata, None on failure.
+                                                                                
+                                                               
+                                                                       
+                                                                         
 llvh::Optional<ModuleIDsTable> readModuleIDs(
     ::hermes::parser::JSONObject *metadata) {
   assert(metadata && "No metadata to read module IDs from");
@@ -1506,14 +1587,14 @@ llvh::Optional<ModuleIDsTable> readModuleIDs(
   return result;
 }
 
-/// Read input filenames from the given path and populate the files in \p
-/// fileBufs.
-/// In case of failure, ensure fileBufs is empty.
-/// \param inputPath the path to the directory or zip file containing metadata
-/// and files.
-/// \param[out] fileBufs table of file buffers.
-/// \param alloc the allocator to use for JSON parsing of metadata.
-/// \return a pointer to the metadata JSON object, nullptr on failure.
+                                                                         
+             
+                                                 
+                                                                              
+              
+                                               
+                                                                   
+                                                                      
 ::hermes::parser::JSONObject *readInputFilenamesFromDirectoryOrZip(
     llvh::StringRef inputPath,
     SegmentTable &fileBufs,
@@ -1529,12 +1610,12 @@ llvh::Optional<ModuleIDsTable> readModuleIDs(
 
   auto *metadataVal = parseJSONFile(metadataBuf, alloc);
   if (!metadataVal) {
-    // parseJSONFile prints any error messages.
+                                               
     return nullptr;
   }
 
-  // Pull data from the metadata JSON object into C++ data structures.
-  // The metadata format is documented at doc/Modules.md.
+                                                                      
+                                                         
 
   auto *metadata = dyn_cast<parser::JSONObject>(metadataVal);
   if (!metadata) {
@@ -1549,17 +1630,17 @@ llvh::Optional<ModuleIDsTable> readModuleIDs(
     return nullptr;
   }
 
-  // Module IDs in metadata, None if none could be read.
+                                                        
   auto externalModuleIDs = readModuleIDs(metadata);
-  // Module ID table used for assigning auto-incrementing module IDs if we
-  // don't have external module IDs.
+                                                                          
+                                    
   ModuleIDsTable automaticModuleIDs;
   uint32_t nextAutomaticModuleID = 0;
 
   for (auto it : *segments) {
     uint32_t segmentID;
     if (it.first->str().getAsInteger(10, segmentID)) {
-      // getAsInteger returns true to signal error.
+                                                   
       llvh::errs() << "Metadata segment IDs must be unsigned integers: Found "
                    << it.first->str() << '\n';
       return nullptr;
@@ -1602,7 +1683,7 @@ llvh::Optional<ModuleIDsTable> readModuleIDs(
         }
         moduleID = emplaceRes.first->second;
       }
-      // mapBuf is optional, so simply pass it through if it's null.
+                                                                    
       segmentBufs.push_back({moduleID, std::move(fileBuf), std::move(mapBuf)});
     }
 
@@ -1619,19 +1700,19 @@ llvh::Optional<ModuleIDsTable> readModuleIDs(
   return metadata;
 }
 
-/// A map from segment ID to the deserialized base bytecode of that segment.
+                                                                            
 using BaseBytecodeMap =
     llvh::DenseMap<uint32_t, std::unique_ptr<hbc::BCProviderFromBuffer>>;
 
-/// Load the base bytecode provider from given file buffer \fileBuf.
-/// \return the base bytecode provider, or nullptr if an error happened.
+                                                                    
+                                                                        
 std::unique_ptr<hbc::BCProviderFromBuffer> loadBaseBytecodeProvider(
     std::unique_ptr<llvh::MemoryBuffer> fileBuf) {
   if (!fileBuf) {
     llvh::errs() << "Unable to read from base bytecode file.\n";
     return nullptr;
   }
-  // Transfer ownership to an owned memory buffer.
+                                                  
   auto ownedBuf = std::make_unique<OwnedMemoryBuffer>(std::move(fileBuf));
   auto ret = hbc::BCProviderFromBuffer::createBCProviderFromBuffer(
       std::move(ownedBuf));
@@ -1642,12 +1723,12 @@ std::unique_ptr<hbc::BCProviderFromBuffer> loadBaseBytecodeProvider(
   return std::move(ret.first);
 }
 
-/// Read the base bytecode provider map from either a directory or a zip file.
-/// This is used when commonjs is used and we need to optimize for delta
-/// bytecode updates. A metadata.hbc.json file is expected to exist in the
-/// directory or zip, which contains a map from segment ID to the file name of
-/// the base bytecode file for that segment.
-/// Returns whether the read succeeded.
+                                                                              
+                                                                        
+                                                                          
+                                                                              
+                                            
+                                       
 bool readBaseBytecodeFromDirectoryOrZip(
     BaseBytecodeMap &map,
     llvh::StringRef inputPath,
@@ -1662,12 +1743,12 @@ bool readBaseBytecodeFromDirectoryOrZip(
 
   auto *manifestVal = parseJSONFile(manifestBuf, alloc);
   if (!manifestVal) {
-    // parseJSONFile prints any error messages.
+                                               
     return false;
   }
 
-  // Pull data from the manifest JSON object into C++ data structures.
-  // The manifest format is documented at doc/Modules.md.
+                                                                      
+                                                         
 
   auto *manifest = dyn_cast<parser::JSONArray>(manifestVal);
   if (!manifest) {
@@ -1692,7 +1773,7 @@ bool readBaseBytecodeFromDirectoryOrZip(
     }
     uint32_t segmentID;
     if (flavor->str().substr(prefix.size()).getAsInteger(10, segmentID)) {
-      // getAsInteger returns true to signal error.
+                                                   
       llvh::errs() << "flavor must be a string that prefix a number with "
                    << prefix << ". Found " << flavor->str() << '\n';
       return false;
@@ -1723,7 +1804,7 @@ bool readBaseBytecodeFromDirectoryOrZip(
   return true;
 }
 
-/// Read base bytecode and returns whether it succeeded.
+                                                        
 bool readBaseBytecodeMap(
     BaseBytecodeMap &map,
     llvh::StringRef inputPath,
@@ -1746,11 +1827,11 @@ bool readBaseBytecodeMap(
   return true;
 }
 
-/// Read a resolution table. Given a file name, it maps every require string
-/// to the actual file which must be required.
-/// Prints out error messages to stderr in case of failure.
-/// \param metadata the full metadata JSONObject. Contains "resolutionTable".
-/// \return the resolution table read from the metadata, nullptr on failure.
+                                                                            
+                                              
+                                                           
+                                                                             
+                                                                            
 std::unique_ptr<Context::ResolutionTable> readResolutionTable(
     ::hermes::parser::JSONObject *metadata) {
   assert(metadata && "No metadata to read resolution table from");
@@ -1803,13 +1884,13 @@ std::unique_ptr<Context::ResolutionTable> readResolutionTable(
   return result;
 }
 
-/// Generate IR for CJS modules into the Module \p M for the source files in
-/// \p fileBufs if IR generation was requested. Otherwise, just parse the files.
-/// Treat the first element in fileBufs as the entry point.
-/// \param sourceMapGen the parsed versions of the input source maps,
-/// in the order in which the files were compiled.
-/// \return true on success, false on error, in which case an error will be
-/// printed.
+                                                                            
+                                                                                
+                                                           
+                                                                     
+                                                  
+                                                                           
+            
 bool generateIRForSourcesAsCJSModules(
     Module &M,
     sem::SemContext &semCtx,
@@ -1821,22 +1902,22 @@ bool generateIRForSourcesAsCJSModules(
   llvh::sys::path::remove_filename(rootPath, llvh::sys::path::Style::posix);
   bool generateIR = cl::DumpTarget >= DumpIR;
 
-  // Construct a MemoryBuffer for our global entry point.
+                                                         
   llvh::SmallString<64> entryPointFilename{
       fileBufs[0][0].file->getBufferIdentifier()};
   llvh::sys::path::replace_path_prefix(
       entryPointFilename, rootPath, "./", llvh::sys::path::Style::posix);
 
-  // The top-level function is empty, due to the fact that it is not intended to
-  // be executed. The Runtime must choose and execute the correct entry point
-  // (main) module, from which other modules may be `require`d.
+                                                                                
+                                                                             
+                                                               
   auto globalMemBuffer = llvh::MemoryBuffer::getMemBufferCopy("", "<global>");
 
   auto *globalAST = parseJS(context, semCtx, std::move(globalMemBuffer));
   if (generateIR) {
-    // If we aren't planning to do anything with the IR,
-    // don't attempt to generate it.
-    generateIRFromESTree(globalAST, &M, declFileList, {});
+                                                        
+                                    
+    argusMeasure("CJS_GLOBAL_IR_GENERATION",[&]{return generateIRFromESTree(globalAST, &M, declFileList, {});});
   }
 
   std::vector<std::unique_ptr<SourceMap>> inputSourceMaps{};
@@ -1852,14 +1933,14 @@ bool generateIRForSourcesAsCJSModules(
       llvh::SmallString<64> filename{fileBuf->getBufferIdentifier()};
 
       if (sourceMapGen && generatedModuleIDs.count(moduleInSegment.id) == 0) {
-        // This is the first time we're generating IR for this module.
+                                                                      
         sources.push_back(fileBuf->getBufferIdentifier());
         if (moduleInSegment.sourceMap) {
           SourceErrorManager sm;
           auto inputMap =
               SourceMapParser::parse(*moduleInSegment.sourceMap, sm);
           if (!inputMap) {
-            // parse() returns nullptr on failure and reports its own errors.
+                                                                             
             return false;
           }
           inputSourceMaps.push_back(std::move(inputMap));
@@ -1872,14 +1953,14 @@ bool generateIRForSourcesAsCJSModules(
 
       llvh::sys::path::replace_path_prefix(
           filename, rootPath, "./", llvh::sys::path::Style::posix);
-      // TODO: use sourceMapTranslator for CJS module.
+                                                      
       auto *ast = parseJS(
           context,
           semCtx,
           std::move(fileBuf),
-          /*sourceMap*/ nullptr,
-          /*sourceMapTranslator*/ nullptr,
-          /*wrapCJSModule*/ true);
+                        nullptr,
+                                  nullptr,
+                            true);
       if (!ast) {
         return false;
       }
@@ -1907,8 +1988,8 @@ bool generateIRForSourcesAsCJSModules(
   return true;
 }
 
-/// Disassemble the BCProvider \p bytecode to the output stream specified by the
-/// command line flags. \return a CompileResult for the disassembly.
+                                                                                
+                                                                    
 CompileResult disassembleBytecode(std::unique_ptr<hbc::BCProvider> bytecode) {
   assert(
       cl::BytecodeFormat == cl::BytecodeFormatKind::HBC &&
@@ -1935,8 +2016,8 @@ CompileResult disassembleBytecode(std::unique_ptr<hbc::BCProvider> bytecode) {
   return Success;
 }
 
-/// Process the bytecode file given in \p fileBuf. Disassemble it if requested,
-/// otherwise return it as the CompileResult artifact. \return a compile result.
+                                                                               
+                                                                                
 CompileResult processBytecodeFile(std::unique_ptr<llvh::MemoryBuffer> fileBuf) {
   assert(cl::BytecodeMode && "Input files must be bytecode");
   assert(
@@ -1973,9 +2054,9 @@ CompileResult processBytecodeFile(std::unique_ptr<llvh::MemoryBuffer> fileBuf) {
   }
 }
 
-/// Compile the given module \p M with the options \p genOptions in a form
-/// suitable for immediate execution (i.e. no expectation of persistence).
-/// \return the compile result.
+                                                                          
+                                                                          
+                               
 CompileResult generateBytecodeForExecution(
     Module &M,
     const BytecodeGenerationOptions &genOptions) {
@@ -1998,10 +2079,10 @@ CompileResult generateBytecodeForExecution(
   return result;
 }
 
-/// Compile the module \p M with the options \p genOptions, serializing the
-/// result to \p OS. If sourceMapGenOrNull is not null, populate it.
-/// \return the CompileResult.
-/// The corresponding base bytecode will be removed from \baseBytecodeMap.
+                                                                           
+                                                                    
+                              
+                                                                          
 CompileResult generateBytecodeForSerialization(
     raw_ostream &OS,
     Module &M,
@@ -2010,14 +2091,14 @@ CompileResult generateBytecodeForSerialization(
     hermes::OptValue<uint32_t> segment,
     SourceMapGenerator *sourceMapGenOrNull,
     BaseBytecodeMap &baseBytecodeMap) {
-  // Serialize the bytecode to the file.
+                                        
   if (cl::BytecodeFormat == cl::BytecodeFormatKind::HBC) {
     std::unique_ptr<hbc::BCProviderFromBuffer> baseBCProvider = nullptr;
     auto itr = baseBytecodeMap.find(segment ? *segment : 0);
     if (itr != baseBytecodeMap.end()) {
       baseBCProvider = std::move(itr->second);
-      // We want to erase it from the map because unique_ptr can only
-      // have one owner.
+                                                                     
+                        
       baseBytecodeMap.erase(itr);
     }
     auto bytecodeModule = hbc::generateBytecode(
@@ -2047,9 +2128,9 @@ CompileResult generateBytecodeForSerialization(
   return Success;
 }
 
-/// Compiles the given files \p fileBufs with the context \p context,
-/// respecting the command line flags.
-/// \return a CompileResult containing the compilation status and artifacts.
+                                                                     
+                                      
+                                                                            
 CompileResult processSourceFiles(
     std::shared_ptr<Context> context,
     SegmentTable fileBufs) {
@@ -2088,10 +2169,10 @@ CompileResult processSourceFiles(
   }
 #endif
 
-  // A list of parsed global definition files.
+                                              
   DeclarationFileListTy declFileList;
 
-  // Load the runtime library.
+                              
   std::unique_ptr<llvh::MemoryBuffer> libBuffer;
   switch (cl::BytecodeFormat) {
     case cl::BytecodeFormatKind::HBC:
@@ -2102,7 +2183,7 @@ CompileResult processSourceFiles(
     return LoadGlobalsFailed;
   }
 
-  // Load the global property definitions.
+                                          
   for (const auto &fileName : cl::IncludeGlobals) {
     auto fileBuf = memoryBufferFromFile(fileName);
     if (!fileBuf)
@@ -2114,7 +2195,7 @@ CompileResult processSourceFiles(
     }
   }
 
-  // Create the source map if requested.
+                                        
   llvh::Optional<SourceMapGenerator> sourceMapGen{};
   if (cl::OutputSourceMap) {
     sourceMapGen = SourceMapGenerator{};
@@ -2124,8 +2205,8 @@ CompileResult processSourceFiles(
   sem::SemContext semCtx{};
 
   if (cl::CommonJS) {
-    // Allow the IR generation function to populate inputSourceMaps to ensure
-    // proper source map ordering.
+                                                                             
+                                  
     if (!generateIRForSourcesAsCJSModules(
             M,
             semCtx,
@@ -2150,7 +2231,7 @@ CompileResult processSourceFiles(
       SourceErrorManager sm;
       sourceMap = SourceMapParser::parse(*mainFileBuf.sourceMap, sm);
       if (!sourceMap) {
-        // parse() returns nullptr on failure and reports its own errors.
+                                                                         
         return InputFileError;
       }
     }
@@ -2170,21 +2251,21 @@ CompileResult processSourceFiles(
     if (cl::DumpTarget < DumpIR) {
       return Success;
     }
-    generateIRFromESTree(ast, &M, declFileList, {});
+    argusMeasure("IR_GENERATION",[&]{return generateIRFromESTree(ast, &M, declFileList, {});});
   }
 
-  // Bail out if there were any errors. We can't ensure that the module is in
-  // a valid state.
+                                                                             
+                   
   if (auto N = context->getSourceErrorManager().getErrorCount()) {
     llvh::errs() << "Emitted " << N << " errors. exiting.\n";
     return ParsingFailed;
   }
 
-  // Run custom optimization pipeline.
+                                      
   if (!cl::CustomOptimize.empty()) {
     std::vector<std::string> opts(
         cl::CustomOptimize.begin(), cl::CustomOptimize.end());
-    if (!runCustomOptimizationPasses(M, opts)) {
+    if (!argusMeasure("CUSTOM_PASSES",[&]{return runCustomOptimizationPasses(M, opts);})) {
       llvh::errs() << "Invalid custom optimizations selected.\n\n"
                    << PassManager::getCustomPassText();
       return InvalidFlags;
@@ -2203,13 +2284,13 @@ CompileResult processSourceFiles(
     }
   }
 
-  // Bail out if there were any errors during optimization.
+                                                           
   if (auto N = context->getSourceErrorManager().getErrorCount()) {
     llvh::errs() << "Emitted " << N << " errors. exiting.\n";
     return OptimizationFailed;
   }
 
-  // In dbg builds, verify the module before we emit bytecode.
+                                                              
   if (cl::VerifyIR) {
     bool failedVerification = verifyModule(M, &llvh::errs());
     if (failedVerification) {
@@ -2220,6 +2301,7 @@ CompileResult processSourceFiles(
   }
 
   if (cl::DumpTarget == DumpIR) {
+    ArgusFrontendStage dumpStage("IR_OUTPUT");
     M.dump();
     return Success;
   }
@@ -2235,19 +2317,19 @@ CompileResult processSourceFiles(
   genOptions.optimizationEnabled = cl::OptimizationLevel > cl::OptLevel::Og;
   genOptions.prettyDisassemble = cl::Pretty;
   genOptions.basicBlockProfiling = cl::BasicBlockProfiling;
-  // The static builtin setting should be set correctly after command line
-  // options parsing and js parsing. Set the bytecode header flag here.
+                                                                          
+                                                                       
   genOptions.staticBuiltinsEnabled = context->getStaticBuiltinOptimization();
   genOptions.padFunctionBodiesPercent = cl::PadFunctionBodiesPercent;
 
-  // If the user requests to output a source map, then do not also emit debug
-  // info into the bytecode.
+                                                                             
+                            
   genOptions.stripDebugInfoSection =
       cl::OutputSourceMap || cl::DebugInfoLevel == cl::DebugLevel::g0;
 
   genOptions.stripFunctionNames = cl::StripFunctionNames;
 
-  // If the dump target is None, return bytecode in an executable form.
+                                                                       
   if (cl::DumpTarget == Execute) {
     assert(
         !sourceMapGen &&
@@ -2292,7 +2374,7 @@ CompileResult processSourceFiles(
       if (!manifestOS.open(manifestPath, F_Text))
         return OutputFileError;
     }
-    JSONEmitter manifest{manifestOS.os(), /* pretty */ true};
+    JSONEmitter manifest{manifestOS.os(),              true};
     manifest.openArray();
 
     for (const auto segment : context->getSegments()) {
@@ -2320,7 +2402,7 @@ CompileResult processSourceFiles(
       if (!fileOS.close())
         return OutputFileError;
 
-      // Add to the manifest.
+                             
       manifest.openDict();
       manifest.emitKeyValue("resource", llvh::sys::path::filename(base));
       manifest.emitKeyValue("flavor", flavor);
@@ -2337,7 +2419,7 @@ CompileResult processSourceFiles(
     result = Success;
   }
 
-  // Output the source map if requested.
+                                        
   if (cl::OutputSourceMap) {
     OutputStream OS;
     if (!OS.open(base.str() + ".map", F_Text))
@@ -2350,9 +2432,9 @@ CompileResult processSourceFiles(
   return result;
 }
 
-/// Print the Hermes version to the stream \p s, outputting the \p vmStr (which
-/// may be empty).
-/// \param features when true, print the list of enabled features.
+                                                                               
+                  
+                                                                  
 void printHermesVersion(
     llvh::raw_ostream &s,
     const char *vmStr = "",
@@ -2378,7 +2460,7 @@ void printHermesVersion(
   }
 }
 
-} // namespace
+}             
 
 namespace hermes {
 namespace driver {
@@ -2395,30 +2477,55 @@ OutputFormatKind outputFormatFromCommandLineOptions() {
 }
 
 CompileResult compileFromCommandLineOptions() {
+  ArgusFrontendStage totalStage("DRIVER_TOTAL");
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_STATS)
   if (cl::PrintStats)
     hermes::EnableStatistics();
 #endif
 
-  // Set up and validate flags.
+                               
   setFlagDefaults();
   if (!validateFlags())
     return InvalidFlags;
 
-  // Load input files.
+                                                                           
+  const char *auditPrefix = std::getenv("ARGUS_AUDIT_CAPTURE_PREFIX");
+  const char *auditOnlyText = std::getenv("ARGUS_AUDIT_CAPTURE_ONLY");
+  const bool auditOnly = auditOnlyText && std::string(auditOnlyText) == "1";
+  if ((auditOnlyText && !auditOnly) || (auditOnly && !auditPrefix)) {
+    llvh::errs() << "[ARGUS_AUDIT_CAPTURE] CAPTURE_ONLY requires value 1 and a prefix\n";
+    return InvalidFlags;
+  }
+  if (auditPrefix &&
+      (auditPrefix[0] != '/' ||
+       auditPrefix[std::strlen(auditPrefix) - 1] == '/' ||
+       cl::InputFilenames.size() != 1 || cl::InputFilenames[0] == "-")) {
+    llvh::errs() << "[ARGUS_AUDIT_CAPTURE] Require an absolute file prefix and one direct file\n";
+    return InvalidFlags;
+  }
+
+                      
   SegmentTable fileBufs{};
 
-  // Allocator for the metadata table.
+                                      
   ::hermes::parser::JSLexer::Allocator metadataAlloc;
 
-  // Resolution table in metadata, null if none could be read.
+                                                              
   std::unique_ptr<Context::ResolutionTable> resolutionTable = nullptr;
 
-  // Segment IDs in metadata.
+                             
   std::vector<uint32_t> segments;
 
-  // Attempt to open the first file as a Zip file.
+                                                  
   struct zip_t *zip = zip_open(cl::InputFilenames[0].data(), 0, 'r');
+
+  if (auditPrefix &&
+      (zip || !llvh::sys::fs::is_regular_file(cl::InputFilenames[0]))) {
+    if (zip)
+      zip_close(zip);
+    llvh::errs() << "[ARGUS_AUDIT_CAPTURE] Directory, ZIP, and non-regular inputs are unsupported\n";
+    return InvalidFlags;
+  }
 
   if (llvh::sys::fs::is_directory(cl::InputFilenames[0]) || zip) {
     ::hermes::parser::JSONObject *metadata =
@@ -2434,7 +2541,7 @@ CompileResult compileFromCommandLineOptions() {
 
     resolutionTable = readResolutionTable(metadata);
   } else {
-    // If we aren't reading from a dir or a zip, we have only one segment.
+                                                                          
     segments.push_back(0);
 
     uint32_t nextModuleID = 0;
@@ -2445,7 +2552,38 @@ CompileResult compileFromCommandLineOptions() {
       if (!fileBuf)
         return InputFileError;
       
+      const size_t auditBeforeSize = auditPrefix ? fileBuf->getBufferSize() : 0;
+      const bool auditLegacySuffix = auditPrefix &&
+          fileBuf->getBufferIdentifier().endswith("wholepage.js");
+      if (auditPrefix &&
+          (!writeAuditCapture(auditPrefix, ".before.bin", fileBuf->getBuffer()) ||
+           !writeAuditCapture(auditPrefix, ".identifier.txt", fileBuf->getBufferIdentifier())))
+        return OutputFileError;
+
       fileBuf = sanitizeWholePageJS(std::move(fileBuf));
+
+      if (auditPrefix) {
+        if (!fileBuf || !writeAuditCapture(auditPrefix, ".after.bin", fileBuf->getBuffer()))
+          return OutputFileError;
+        std::string metadata =
+            "{\n  \"capture_complete\": true,\n"
+            "  \"direct_file_only\": true,\n"
+            "  \"buffer_terminator_included\": false,\n"
+            "  \"legacy_suffix_applied\": " +
+            std::string(auditLegacySuffix ? "true" : "false") +
+            ",\n  \"legacy_suffix_applied_means\": \"filename matched legacy suffix guard; not a claim that bytes changed\",\n"
+            "  \"capture_only\": " + std::string(auditOnly ? "true" : "false") +
+            ",\n  \"parser_not_entered\": " + std::string(auditOnly ? "true" : "null") +
+            ",\n  \"capture_point\": \"immediately after sanitizer, before parser or analysis\"" +
+            ",\n  \"before_bytes\": " + std::to_string(auditBeforeSize) +
+            ",\n  \"after_bytes\": " + std::to_string(fileBuf->getBufferSize()) + "\n}\n";
+        if (!writeAuditCapture(auditPrefix, ".metadata.json", metadata))
+          return OutputFileError;
+        if (auditOnly) {
+          llvh::errs() << "[ARGUS_AUDIT_CAPTURE] CAPTURE_ONLY completed; parser and analysis not entered\n";
+          return Success;
+        }
+      }
       auto emplaceRes = moduleIDs.try_emplace(filename, nextModuleID);
       auto moduleID = emplaceRes.first->second;
       if (emplaceRes.second) {
@@ -2454,9 +2592,9 @@ CompileResult compileFromCommandLineOptions() {
       entry.push_back({moduleID, std::move(fileBuf), nullptr});
     }
 
-    // Read input source map if available.
+                                          
     if (!cl::InputSourceMap.empty()) {
-      // TODO: support multiple JS sources from command line.
+                                                             
       if (cl::InputFilenames.size() != 1) {
         llvh::errs()
             << "Error: only support single js file for input source map."
@@ -2465,7 +2603,7 @@ CompileResult compileFromCommandLineOptions() {
       }
       assert(entry.size() == 1 && "Can't have more than one entries.");
       entry[0].sourceMap =
-          memoryBufferFromFile(cl::InputSourceMap, /*stdinOk*/ false);
+          memoryBufferFromFile(cl::InputSourceMap,             false);
     }
 
     fileBufs.emplace(0, std::move(entry));
@@ -2482,7 +2620,7 @@ CompileResult compileFromCommandLineOptions() {
     return processSourceFiles(context, std::move(fileBufs));
   }
 }
-} // namespace driver
-} // namespace hermes
+}                    
+}                    
 
 #undef DEBUG_TYPE

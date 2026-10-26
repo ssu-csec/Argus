@@ -17,57 +17,57 @@ using llvh::isa;
 namespace hermes {
 
 enum TermKind {
-  NormalTermKind, // None of the below categories
-  LambdaTermKind, // Functions
-  CallTermKind, // Call sites
-  EscapeTermKind, // Terms invented to represent values coming from or going to
-                  // outside the scope of analysis
-  ObjectTermKind, // Objects
-  LoadPropertyTermKind, // Load property (currently does not deal with inherited
-                        // props)
-  StoreOwnPropertyTermKind, // Store own property
-  StorePropertyTermKind, // Store property
-  PropertyTermKind, // Property and a value
-  ArrayTermKind, // Arrays
-  ModuleTermKind // Modules
+  NormalTermKind,                                
+  LambdaTermKind,             
+  CallTermKind,              
+  EscapeTermKind,                                                              
+                                                  
+  ObjectTermKind,           
+  LoadPropertyTermKind,                                                         
+                                 
+  StoreOwnPropertyTermKind,                      
+  StorePropertyTermKind,                  
+  PropertyTermKind,                        
+  ArrayTermKind,          
+  ModuleTermKind           
 };
 
-/// Terms are needed in the constraint graph to capture different kinds of
-/// values.  The same Hermes "Value" could be in different roles.  For example
-/// a Function value acts as a lambda, but we also use it to mean the return
-/// value of the Function.  For CallInst, in one role we use it as a receptor
-/// for lambda terms that arrive as callees; in another role, we use CallInst
-/// to mean the value produced by the call.
-/// Here is the abstract base class to implement the Term functionality.
+                                                                          
+                                                                              
+                                                                            
+                                                                             
+                                                                             
+                                           
+                                                                        
 class Term {
  public:
   Term(Value *v, unsigned id) : value_id_(id), value_(v) {}
 
   virtual ~Term() = default;
 
-  /// Unique numeric id for each term, used in printing.
+                                                        
   unsigned value_id_{0};
 
-  /// Value associated with the term.
+                                     
   Value *value_{nullptr};
 
-  /// The kind of this Term, used in RTTI.
+                                          
   TermKind kind_{TermKind::NormalTermKind};
   static bool classof(const Term *) {
     return true;
   }
 
-  /// The set of terms that flow in into this term.
+                                                   
   llvh::DenseSet<Term *> ins_;
 
-  /// The set of terms to which this term flows into.
+                                                     
   llvh::DenseSet<Term *> outs_;
 #ifndef NDEBUG
   virtual std::string getPrintStr() = 0;
 #endif
 };
 
-/// Term representing an ordinary value in the constraint graph.
+                                                                
 class NormalTerm : public Term {
  public:
   NormalTerm(Value *v, unsigned id) : Term(v, id) {
@@ -113,7 +113,7 @@ class NormalTerm : public Term {
   }
 };
 
-/// Term representing a Function in the constraint graph.
+                                                         
 class LambdaTerm : public Term {
  public:
   LambdaTerm(Function *f, unsigned id) : Term(f, id) {
@@ -136,7 +136,7 @@ class LambdaTerm : public Term {
   }
 };
 
-/// Term representing a Call site in the constraint graph
+                                                         
 class CallTerm : public Term {
  public:
   CallTerm(CallInst *c, unsigned id) : Term(c, id) {
@@ -157,10 +157,10 @@ class CallTerm : public Term {
   }
 };
 
-/// Term representing values that either escape in or out.
-/// In EscapeTerm, the value_ field represents the reason
-/// we introduced this escaped value. This is necessary so as
-/// to bound the distinct EscapeTerms generated.
+                                                          
+                                                         
+                                                             
+                                                
 class EscapeTerm : public Term {
  public:
   EscapeTerm(Value *v, unsigned id) : Term(v, id) {
@@ -183,16 +183,16 @@ class EscapeTerm : public Term {
   }
 };
 
-/// Term representing an allocated object in the constraint graph.
-/// The reference to this term (ai below) is the unaliased handled to
-/// the object which is the handle we use for matching stores and loads.
+                                                                  
+                                                                     
+                                                                        
 class ObjectTerm : public Term {
  public:
-  /// The set of properties created at Object creation time.
+                                                            
   llvh::DenseSet<Literal *> owns_;
 
-  // We use ObjectTerm also for allocations using ConstructInst, and
-  // in future, plan to use it for Arrays as well.
+                                                                    
+                                                  
   ObjectTerm(Instruction *ai, llvh::DenseSet<Literal *> &owns, unsigned id)
       : Term(ai, id), owns_(owns) {
     kind_ = TermKind::ObjectTermKind;
@@ -316,7 +316,7 @@ class StorePropertyTerm : public Term {
 class PropertyTerm : public Term {
  public:
   Value *prop_;
-  Value *obj_; // do we need this?
+  Value *obj_;                    
 
   PropertyTerm(Value *v, Value *prop, Value *obj, unsigned id)
       : Term(v, id), prop_(prop), obj_(obj) {
@@ -369,6 +369,6 @@ class ModuleTerm : public Term {
     return t->kind_ == TermKind::ModuleTermKind;
   }
 };
-} // namespace hermes
+}                    
 
-#endif // HERMES_OPTIMIZER_SCALAR_TERM_H
+#endif                                  

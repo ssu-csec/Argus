@@ -19,7 +19,7 @@
 #include "llvh/Support/WindowsError.h"
 #include <malloc.h>
 
-// The Windows.h header must be after LLVM and standard headers.
+                                                                
 #include "WindowsSupport.h"
 
 #include <direct.h>
@@ -32,28 +32,28 @@
  #pragma comment(lib, "shell32.lib")
 #endif
 
-//===----------------------------------------------------------------------===//
-//=== WARNING: Implementation here must contain only Win32 specific code
-//===          and must not be UNIX code
-//===----------------------------------------------------------------------===//
+                                                                                
+                                                                        
+                                        
+                                                                                
 
 #ifdef __MINGW32__
-// This ban should be lifted when MinGW 1.0+ has defined this value.
+                                                                    
 #  define _HEAPOK (-2)
 #endif
 
 using namespace llvh;
 
-// This function retrieves the page size using GetNativeSystemInfo() and is
-// present solely so it can be called once to initialize the self_process member
-// below.
+                                                                           
+                                                                                
+         
 static unsigned computePageSize() {
-  // GetNativeSystemInfo() provides the physical page size which may differ
-  // from GetSystemInfo() in 32-bit applications running under WOW64.
+                                                                           
+                                                                     
   SYSTEM_INFO info;
   GetNativeSystemInfo(&info);
-  // FIXME: FileOffset in MapViewOfFile() should be aligned to not dwPageSize,
-  // but dwAllocationGranularity.
+                                                                              
+                                 
   return static_cast<unsigned>(info.dwPageSize);
 }
 
@@ -89,20 +89,20 @@ void Process::GetTimeUsage(TimePoint<> &elapsed, std::chrono::nanoseconds &user_
   sys_time = toDuration(KernelTime);
 }
 
-// Some LLVM programs such as bugpoint produce core files as a normal part of
-// their operation. To prevent the disk from filling up, this configuration
-// item does what's necessary to prevent their generation.
+                                                                             
+                                                                           
+                                                          
 void Process::PreventCoreFiles() {
-  // Windows does have the concept of core files, called minidumps.  However,
-  // disabling minidumps for a particular application extends past the lifetime
-  // of that application, which is the incorrect behavior for this API.
-  // Additionally, the APIs require elevated privileges to disable and re-
-  // enable minidumps, which makes this untenable. For more information, see
-  // WerAddExcludedApplication and WerRemoveExcludedApplication (Vista and
-  // later).
-  //
-  // Windows also has modal pop-up message boxes.  As this method is used by
-  // bugpoint, preventing these pop-ups is additionally important.
+                                                                             
+                                                                               
+                                                                       
+                                                                          
+                                                                            
+                                                                          
+            
+    
+                                                                            
+                                                                  
   SetErrorMode(SEM_FAILCRITICALERRORS |
                SEM_NOGPFAULTERRORBOX |
                SEM_NOOPENFILEERRORBOX);
@@ -110,17 +110,17 @@ void Process::PreventCoreFiles() {
   coreFilesPrevented = true;
 }
 
-/// Returns the environment variable \arg Name's value as a string encoded in
-/// UTF-8. \arg Name is assumed to be in UTF-8 encoding.
+                                                                             
+                                                        
 Optional<std::string> Process::GetEnv(StringRef Name) {
-  // Convert the argument to UTF-16 to pass it to _wgetenv().
+                                                             
   SmallVector<wchar_t, 128> NameUTF16;
   if (windows::UTF8ToUTF16(Name, NameUTF16))
     return None;
 
-  // Environment variable can be encoded in non-UTF8 encoding, and there's no
-  // way to know what the encoding is. The only reliable way to look up
-  // multibyte environment variable is to use GetEnvironmentVariableW().
+                                                                             
+                                                                       
+                                                                        
   SmallVector<wchar_t, MAX_PATH> Buf;
   size_t Size = MAX_PATH;
   do {
@@ -131,43 +131,43 @@ Optional<std::string> Process::GetEnv(StringRef Name) {
     if (Size == 0 && GetLastError() == ERROR_ENVVAR_NOT_FOUND)
       return None;
 
-    // Try again with larger buffer.
+                                    
   } while (Size > Buf.capacity());
   Buf.set_size(Size);
 
-  // Convert the result from UTF-16 to UTF-8.
+                                             
   SmallVector<char, MAX_PATH> Res;
   if (windows::UTF16ToUTF8(Buf.data(), Size, Res))
     return None;
   return std::string(Res.data());
 }
 
-/// Perform wildcard expansion of Arg, or just push it into Args if it doesn't
-/// have wildcards or doesn't match any files.
+                                                                              
+                                              
 static std::error_code WildcardExpand(StringRef Arg,
                                       SmallVectorImpl<const char *> &Args,
                                       StringSaver &Saver) {
   std::error_code EC;
 
-  // Don't expand Arg if it does not contain any wildcard characters. This is
-  // the common case. Also don't wildcard expand /?. Always treat it as an
-  // option.
+                                                                             
+                                                                          
+            
   if (Arg.find_first_of("*?") == StringRef::npos || Arg == "/?" ||
       Arg == "-?") {
     Args.push_back(Arg.data());
     return EC;
   }
 
-  // Convert back to UTF-16 so we can call FindFirstFileW.
+                                                          
   SmallVector<wchar_t, MAX_PATH> ArgW;
   EC = windows::UTF8ToUTF16(Arg, ArgW);
   if (EC)
     return EC;
 
-  // Search for matching files.
-  // FIXME:  This assumes the wildcard is only in the file name and not in the
-  // directory portion of the file path.  For example, it doesn't handle
-  // "*\foo.c" nor "s?c\bar.cpp".
+                               
+                                                                              
+                                                                        
+                                 
   WIN32_FIND_DATAW FileData;
   HANDLE FindHandle = FindFirstFileW(ArgW.data(), &FileData);
   if (FindHandle == INVALID_HANDLE_VALUE) {
@@ -175,7 +175,7 @@ static std::error_code WildcardExpand(StringRef Arg,
     return EC;
   }
 
-  // Extract any directory part of the argument.
+                                                
   SmallString<MAX_PATH> Dir = Arg;
   sys::path::remove_filename(Dir);
   const int DirSize = Dir.size();
@@ -187,7 +187,7 @@ static std::error_code WildcardExpand(StringRef Arg,
     if (EC)
       break;
 
-    // Append FileName to Dir, and remove it afterwards.
+                                                        
     llvh::sys::path::append(Dir, FileName);
     Args.push_back(Saver.save(StringRef(Dir)).data());
     Dir.resize(DirSize);
@@ -198,24 +198,24 @@ static std::error_code WildcardExpand(StringRef Arg,
 }
 
 static std::error_code GetExecutableName(SmallVectorImpl<char> &Filename) {
-  // The first argument may contain just the name of the executable (e.g.,
-  // "clang") rather than the full path, so swap it with the full path.
+                                                                          
+                                                                       
   wchar_t ModuleName[MAX_PATH];
   size_t Length = ::GetModuleFileNameW(NULL, ModuleName, MAX_PATH);
   if (Length == 0 || Length == MAX_PATH) {
     return mapWindowsError(GetLastError());
   }
 
-  // If the first argument is a shortened (8.3) name (which is possible even
-  // if we got the module name), the driver will have trouble distinguishing it
-  // (e.g., clang.exe v. clang++.exe), so expand it now.
+                                                                            
+                                                                               
+                                                        
   Length = GetLongPathNameW(ModuleName, ModuleName, MAX_PATH);
   if (Length == 0)
     return mapWindowsError(GetLastError());
   if (Length > MAX_PATH) {
-    // We're not going to try to deal with paths longer than MAX_PATH, so we'll
-    // treat this as an error.  GetLastError() returns ERROR_SUCCESS, which
-    // isn't useful, so we'll hardcode an appropriate error value.
+                                                                               
+                                                                           
+                                                                  
     return mapWindowsError(ERROR_INSUFFICIENT_BUFFER);
   }
 
@@ -241,7 +241,7 @@ windows::GetCommandLineArguments(SmallVectorImpl<const char *> &Args,
 
   SmallVector<const char *, 20> TmpArgs;
   StringSaver Saver(Alloc);
-  cl::TokenizeWindowsCommandLine(Cmd, Saver, TmpArgs, /*MarkEOLs=*/false);
+  cl::TokenizeWindowsCommandLine(Cmd, Saver, TmpArgs,              false);
 
   for (const char *Arg : TmpArgs) {
     EC = WildcardExpand(Arg, Args, Saver);
@@ -283,7 +283,7 @@ bool Process::StandardErrIsDisplayed() {
 }
 
 bool Process::FileDescriptorIsDisplayed(int fd) {
-  DWORD Mode;  // Unused
+  DWORD Mode;           
   return (GetConsoleMode((HANDLE)_get_osfhandle(fd), &Mode) != 0);
 }
 
@@ -303,7 +303,7 @@ unsigned Process::StandardErrColumns() {
   return Columns;
 }
 
-// The terminal always has colors.
+                                  
 bool Process::FileDescriptorHasColors(int fd) {
   return FileDescriptorIsDisplayed(fd);
 }
@@ -440,7 +440,7 @@ const char *Process::ResetColor() {
   return 0;
 }
 
-// Include GetLastError() in a fatal error message.
+                                                   
 static void ReportLastErrorFatal(const char *Msg) {
   std::string ErrMsg;
   MakeErrMsg(&ErrMsg, Msg);

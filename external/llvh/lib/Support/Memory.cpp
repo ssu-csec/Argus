@@ -16,7 +16,7 @@
 #include "llvh/Config/llvm-config.h"
 #include "llvh/Support/Valgrind.h"
 
-// Include the platform-specific parts of this class.
+                                                     
 #ifdef LLVM_ON_UNIX
 #include "Unix/Memory.inc"
 #endif

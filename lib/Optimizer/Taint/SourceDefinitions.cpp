@@ -11,9 +11,9 @@
 using namespace hermes;
 using namespace hermes::taint;
 
-//===----------------------------------------------------------------------===//
-// SourceRegistry Implementation
-//===----------------------------------------------------------------------===//
+                                                                                
+                                
+                                                                                
 
 SourceRegistry &SourceRegistry::getInstance() {
   static SourceRegistry instance;
@@ -28,8 +28,8 @@ SourceRegistry::SourceRegistry() {
 }
 
 void SourceRegistry::initializeSources() {
-  // ===== Navigator Sources =====
-  // User-Agent and Browser Information
+                                  
+                                       
   sources_.emplace_back(
       "navigator.userAgent",
       SourceType::PROPERTY_ACCESS,
@@ -91,7 +91,7 @@ void SourceRegistry::initializeSources() {
       "oscpu",
       ReturnKind::PRIMITIVE);
 
-  // Hardware and Device Information
+                                    
   sources_.emplace_back(
       "navigator.hardwareConcurrency",
       SourceType::PROPERTY_ACCESS,
@@ -111,7 +111,7 @@ void SourceRegistry::initializeSources() {
       "maxTouchPoints",
       ReturnKind::PRIMITIVE);
 
-  // Geolocation
+                
   sources_.emplace_back(
       "navigator.geolocation",
       SourceType::PROPERTY_ACCESS,
@@ -119,7 +119,7 @@ void SourceRegistry::initializeSources() {
       "geolocation",
       ReturnKind::OBJECT);
 
-  // Plugins and Media Devices
+                              
   sources_.emplace_back(
       "navigator.plugins",
       SourceType::PROPERTY_ACCESS,
@@ -139,7 +139,7 @@ void SourceRegistry::initializeSources() {
       "mediaDevices",
       ReturnKind::OBJECT);
 
-  // ===== Screen Sources =====
+                               
   sources_.emplace_back(
       "screen.width",
       SourceType::PROPERTY_ACCESS,
@@ -183,7 +183,7 @@ void SourceRegistry::initializeSources() {
       "orientation",
       ReturnKind::OBJECT);
 
-  // ===== Document Sources (Read) =====
+                                        
   sources_.emplace_back(
       "document.cookie",
       SourceType::PROPERTY_ACCESS,
@@ -221,7 +221,7 @@ void SourceRegistry::initializeSources() {
       "title",
       ReturnKind::PRIMITIVE);
 
-  // ===== Location Sources =====
+                                 
   sources_.emplace_back(
       "location.href",
       SourceType::PROPERTY_ACCESS,
@@ -277,7 +277,7 @@ void SourceRegistry::initializeSources() {
       "origin",
       ReturnKind::PRIMITIVE);
 
-  // ===== Window Sources =====
+                               
   sources_.emplace_back(
       "window.name",
       SourceType::PROPERTY_ACCESS,
@@ -321,7 +321,7 @@ void SourceRegistry::initializeSources() {
       "devicePixelRatio",
       ReturnKind::PRIMITIVE);
 
-  // ===== Storage Sources (Read) =====
+                                       
   sources_.emplace_back(
       "localStorage.getItem",
       SourceType::METHOD_CALL,
@@ -337,7 +337,7 @@ void SourceRegistry::initializeSources() {
       ReturnKind::PRIMITIVE,
       true);
 
-  // ===== Date/Time Sources =====
+                                  
   sources_.emplace_back(
       "Date.now",
       SourceType::METHOD_CALL,
@@ -348,7 +348,7 @@ void SourceRegistry::initializeSources() {
   sources_.emplace_back(
       "Date", SourceType::CONSTRUCTION, "Date", "", ReturnKind::OBJECT);
 
-  // ===== Performance Sources =====
+                                    
   sources_.emplace_back(
       "performance.now",
       SourceType::METHOD_CALL,
@@ -375,7 +375,7 @@ void SourceRegistry::initializeSources() {
       "memory",
       ReturnKind::OBJECT);
 
-  // ===== Network/Fetch Sources =====
+                                      
   sources_.emplace_back(
       "fetch",
       SourceType::GLOBAL_FUNCTION,
@@ -404,7 +404,7 @@ void SourceRegistry::initializeSources() {
       ReturnKind::PRIMITIVE,
       true);
 
-  // ===== Selection Sources =====
+                                  
   sources_.emplace_back(
       "window.getSelection",
       SourceType::METHOD_CALL,
@@ -420,7 +420,7 @@ void SourceRegistry::initializeSources() {
       ReturnKind::OBJECT,
       true);
 
-  // ===== Clipboard Sources =====
+                                  
   sources_.emplace_back(
       "navigator.clipboard.readText",
       SourceType::METHOD_CALL,
@@ -438,7 +438,7 @@ void SourceRegistry::initializeSources() {
       true,
       true);
 
-  // ===== History Sources =====
+                                
   sources_.emplace_back(
       "history.length",
       SourceType::PROPERTY_ACCESS,
@@ -452,7 +452,7 @@ void SourceRegistry::initializeSources() {
       "state",
       ReturnKind::OBJECT);
 
-  // ===== IndexedDB Sources =====
+                                  
   sources_.emplace_back(
       "indexedDB.open",
       SourceType::METHOD_CALL,
@@ -461,7 +461,7 @@ void SourceRegistry::initializeSources() {
       ReturnKind::OBJECT,
       true);
 
-  // ===== WebSocket Sources =====
+                                  
   sources_.emplace_back(
       "WebSocket",
       SourceType::CONSTRUCTION,
@@ -469,7 +469,7 @@ void SourceRegistry::initializeSources() {
       "",
       ReturnKind::OBJECT);
 
-  // ===== Canvas Fingerprinting Sources =====
+                                              
   sources_.emplace_back(
       "CanvasRenderingContext2D.getImageData",
       SourceType::METHOD_CALL,
@@ -493,7 +493,7 @@ void SourceRegistry::initializeSources() {
       true,
       true);
 
-  // ===== WebGL Fingerprinting Sources =====
+                                             
   sources_.emplace_back(
       "WebGLRenderingContext.getParameter",
       SourceType::METHOD_CALL,
@@ -509,7 +509,7 @@ void SourceRegistry::initializeSources() {
       ReturnKind::ARRAY,
       true);
 
-  // ===== AudioContext Fingerprinting Sources =====
+                                                    
   sources_.emplace_back(
       "AudioContext",
       SourceType::CONSTRUCTION,
@@ -524,7 +524,7 @@ void SourceRegistry::initializeSources() {
       ReturnKind::OBJECT,
       true);
 
-  // ===== Battery API Sources =====
+                                    
   sources_.emplace_back(
       "navigator.getBattery",
       SourceType::METHOD_CALL,
@@ -534,7 +534,7 @@ void SourceRegistry::initializeSources() {
       true,
       true);
 
-  // ===== Connection API Sources =====
+                                       
   sources_.emplace_back(
       "navigator.connection",
       SourceType::PROPERTY_ACCESS,
@@ -542,7 +542,7 @@ void SourceRegistry::initializeSources() {
       "connection",
       ReturnKind::OBJECT);
 
-  // ===== MediaDevices Sources =====
+                                     
   sources_.emplace_back(
       "navigator.mediaDevices.enumerateDevices",
       SourceType::METHOD_CALL,
@@ -560,7 +560,7 @@ void SourceRegistry::initializeSources() {
       true,
       true);
 
-  // ===== Gamepad API Sources =====
+                                    
   sources_.emplace_back(
       "navigator.getGamepads",
       SourceType::METHOD_CALL,
@@ -569,7 +569,7 @@ void SourceRegistry::initializeSources() {
       ReturnKind::ARRAY,
       true);
 
-  // ===== Notification API Sources =====
+                                         
   sources_.emplace_back(
       "Notification.permission",
       SourceType::PROPERTY_ACCESS,
@@ -577,7 +577,7 @@ void SourceRegistry::initializeSources() {
       "permission",
       ReturnKind::PRIMITIVE);
 
-  // ===== Sensor API Sources =====
+                                   
   sources_.emplace_back(
       "DeviceOrientationEvent",
       SourceType::CONSTRUCTION,
@@ -591,7 +591,7 @@ void SourceRegistry::initializeSources() {
       "",
       ReturnKind::OBJECT);
 
-  // ===== PostMessage Sources =====
+                                    
   sources_.emplace_back(
       "MessageEvent.data",
       SourceType::PROPERTY_ACCESS,
@@ -605,7 +605,7 @@ void SourceRegistry::initializeSources() {
       "origin",
       ReturnKind::PRIMITIVE);
 
-  // ===== Form Input Sources =====
+                                   
   sources_.emplace_back(
       "HTMLInputElement.value",
       SourceType::PROPERTY_ACCESS,
@@ -625,7 +625,7 @@ void SourceRegistry::initializeSources() {
       "value",
       ReturnKind::PRIMITIVE);
 
-  // ===== File API Sources =====
+                                 
   sources_.emplace_back(
       "FileReader.result",
       SourceType::PROPERTY_ACCESS,
@@ -645,7 +645,7 @@ void SourceRegistry::initializeSources() {
       "size",
       ReturnKind::PRIMITIVE);
 
-  // ===== Crypto Sources =====
+                               
   sources_.emplace_back(
       "crypto.getRandomValues",
       SourceType::METHOD_CALL,
@@ -663,7 +663,7 @@ void SourceRegistry::initializeSources() {
 }
 
 void SourceRegistry::initializeEventTypes() {
-  // Mouse Events
+                 
   eventType_.insert("click");
   eventType_.insert("dblclick");
   eventType_.insert("mousedown");
@@ -675,25 +675,25 @@ void SourceRegistry::initializeEventTypes() {
   eventType_.insert("mouseout");
   eventType_.insert("contextmenu");
 
-  // Keyboard Events
+                    
   eventType_.insert("keydown");
   eventType_.insert("keyup");
   eventType_.insert("keypress");
 
-  // Form Events
+                
   eventType_.insert("submit");
   eventType_.insert("input");
   eventType_.insert("change");
   eventType_.insert("focus");
   eventType_.insert("blur");
 
-  // Touch Events
+                 
   eventType_.insert("touchstart");
   eventType_.insert("touchend");
   eventType_.insert("touchmove");
   eventType_.insert("touchcancel");
 
-  // Drag Events
+                
   eventType_.insert("drag");
   eventType_.insert("dragstart");
   eventType_.insert("dragend");
@@ -702,29 +702,29 @@ void SourceRegistry::initializeEventTypes() {
   eventType_.insert("dragover");
   eventType_.insert("drop");
 
-  // Clipboard Events
+                     
   eventType_.insert("copy");
   eventType_.insert("cut");
   eventType_.insert("paste");
 
-  // Network Events
+                   
   eventType_.insert("online");
   eventType_.insert("offline");
 
-  // Message Events
+                   
   eventType_.insert("message");
   eventType_.insert("messageerror");
 
-  // Storage Events
+                   
   eventType_.insert("storage");
 
-  // Device Events
+                  
   eventType_.insert("deviceorientation");
   eventType_.insert("devicemotion");
 }
 
 void SourceRegistry::initializeEventData() {
-  // Mouse Event Properties
+                           
   eventDataProps_.insert("clientX");
   eventDataProps_.insert("clientY");
   eventDataProps_.insert("screenX");
@@ -737,7 +737,7 @@ void SourceRegistry::initializeEventData() {
   eventDataProps_.insert("buttons");
   eventDataProps_.insert("relatedTarget");
 
-  // Keyboard Event Properties
+                              
   eventDataProps_.insert("key");
   eventDataProps_.insert("code");
   eventDataProps_.insert("keyCode");
@@ -748,18 +748,18 @@ void SourceRegistry::initializeEventData() {
   eventDataProps_.insert("shiftKey");
   eventDataProps_.insert("metaKey");
 
-  // Touch Event Properties
+                           
   eventDataProps_.insert("touches");
   eventDataProps_.insert("targetTouches");
   eventDataProps_.insert("changedTouches");
 
-  // Drag Event Properties
+                          
   eventDataProps_.insert("dataTransfer");
 
-  // Clipboard Event Properties
+                               
   eventDataProps_.insert("clipboardData");
 
-  // Generic Event Properties
+                             
   eventDataProps_.insert("target");
   eventDataProps_.insert("currentTarget");
   eventDataProps_.insert("type");
@@ -771,12 +771,12 @@ void SourceRegistry::initializeEventData() {
 
 void SourceRegistry::buildMaps() {
   for (const auto &source : sources_) {
-    // Build property map
+                         
     if (!source.propertyName.empty()) {
       propertyMap_[source.propertyName].push_back(&source);
     }
 
-    // Build object map
+                       
     if (!source.objectName.empty()) {
       objectMap_[source.objectName].push_back(&source);
     }
@@ -784,8 +784,8 @@ void SourceRegistry::buildMaps() {
 }
 
 bool SourceRegistry::isSourceProperty(LoadPropertyInst *LPI) const {
-  // TODO: Implement proper object tracking
-  // For now, do simple property name matching
+                                           
+                                              
   if (auto *litProp = llvh::dyn_cast<LiteralString>(LPI->getProperty())) {
     llvh::StringRef propName = litProp->getValue().str();
     return propertyMap_.count(propName) > 0;
@@ -794,14 +794,14 @@ bool SourceRegistry::isSourceProperty(LoadPropertyInst *LPI) const {
 }
 
 bool SourceRegistry::isSourceCall(CallInst *CI) const {
-  // TODO: Implement proper call target analysis
-  // Check if it's a method call on a known source object
+                                                
+                                                         
   return false;
 }
 
 bool SourceRegistry::isSourceConstructor(ConstructInst *CI) const {
-  // TODO: Implement constructor tracking
-  // Check if the constructor is for a known source type
+                                         
+                                                        
   return false;
 }
 

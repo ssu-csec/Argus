@@ -34,10 +34,10 @@ struct MallocGC::MarkingAcceptor final : public RootAndSlotAcceptorDefault,
   MallocGC &gc;
   std::vector<CellHeader *> worklist_;
 
-  /// markedSymbols_ represents which symbols have been proven live so far in
-  /// a collection. True means that it is live, false means that it could
-  /// possibly be garbage. At the end of the collection, it is guaranteed that
-  /// the falses are garbage.
+                                                                             
+                                                                         
+                                                                              
+                             
   llvh::BitVector markedSymbols_;
 
   MarkingAcceptor(MallocGC &gc)
@@ -57,18 +57,18 @@ struct MallocGC::MarkingAcceptor final : public RootAndSlotAcceptorDefault,
         "Marked a pointer that the GC didn't allocate");
     CellHeader *header = CellHeader::from(cell);
 #ifdef HERMESVM_SANITIZE_HANDLES
-    /// Make the acceptor idempotent: allow it to be called multiple
-    /// times on the same slot during a collection.  Do this by
-    /// recognizing when the pointer is already a "new" pointer.
+                                                                    
+                                                               
+                                                                
     if (gc.newPointers_.count(header)) {
       return;
     }
-    // With handle-san on, handle moving pointers here.
+                                                       
     if (header->isMarked()) {
       cell = header->getForwardingPointer()->data();
     } else {
-      // It hasn't been seen before, move it.
-      // At this point, also trim the object.
+                                             
+                                             
       const gcheapsize_t origSize = cell->getAllocatedSize();
       const gcheapsize_t trimmedSize =
           cell->getVT()->getTrimmedSize(cell, origSize);
@@ -81,8 +81,8 @@ struct MallocGC::MarkingAcceptor final : public RootAndSlotAcceptorDefault,
             reinterpret_cast<VariableSizeRuntimeCell *>(newLocation->data());
         newVarCell->setSizeFromGC(trimmedSize);
       }
-      // Make sure to put an element on the worklist that is at the updated
-      // location. Don't update the stale address that is about to be free'd.
+                                                                           
+                                                                             
       header->markWithForwardingPointer(newLocation);
       worklist_.push_back(newLocation);
       gc.newPointers_.insert(newLocation);
@@ -94,22 +94,22 @@ struct MallocGC::MarkingAcceptor final : public RootAndSlotAcceptorDefault,
     }
 #else
     if (!header->isMarked()) {
-      // Only add to the worklist if it hasn't been marked yet.
+                                                               
       header->mark();
-      // Trim the cell. This is fine to do with malloc'ed memory because the
-      // original size is retained by malloc.
+                                                                            
+                                             
       gcheapsize_t origSize = cell->getAllocatedSize();
       gcheapsize_t newSize = cell->getVT()->getTrimmedSize(cell, origSize);
       if (newSize != origSize) {
         static_cast<VariableSizeRuntimeCell *>(cell)->setSizeFromGC(newSize);
       }
       worklist_.push_back(header);
-      // Move the pointer from the old pointers to the new pointers.
+                                                                    
       gc.pointers_.erase(header);
       gc.newPointers_.insert(header);
     }
-    // Else the cell is already marked and either on the worklist or already
-    // visited entirely, do nothing.
+                                                                            
+                                    
 #endif
   }
 
@@ -119,7 +119,7 @@ struct MallocGC::MarkingAcceptor final : public RootAndSlotAcceptorDefault,
     }
     CellHeader *header = CellHeader::from(ptr);
 
-    // Reset weak root if target GCCell is dead.
+                                                
 #ifdef HERMESVM_SANITIZE_HANDLES
     ptr = header->isMarked() ? header->getForwardingPointer()->data() : nullptr;
 #else
@@ -159,12 +159,12 @@ struct MallocGC::MarkingAcceptor final : public RootAndSlotAcceptorDefault,
 };
 
 gcheapsize_t MallocGC::Size::storageFootprint() const {
-  // MallocGC uses no storage from the StorageProvider.
+                                                       
   return 0;
 }
 
 gcheapsize_t MallocGC::Size::minStorageFootprint() const {
-  // MallocGC uses no storage from the StorageProvider.
+                                                       
   return 0;
 }
 
@@ -196,34 +196,34 @@ MallocGC::~MallocGC() {
 
 void MallocGC::collectBeforeAlloc(std::string cause, uint32_t size) {
   const auto growSizeLimit = [this, size](gcheapsize_t sizeLimit) {
-    // Either double the size limit, or increase to size, at a max of maxSize_.
+                                                                               
     return std::min(maxSize_, std::max(sizeLimit * 2, size));
   };
   if (size > sizeLimit_) {
     sizeLimit_ = growSizeLimit(sizeLimit_);
   }
   if (size > maxSize_) {
-    // No way to handle the allocation no matter what.
+                                                      
     oom(make_error_code(OOMError::MaxHeapReached));
   }
   assert(
       size <= sizeLimit_ &&
       "Should be guaranteed not to be asking for more space than the heap can "
       "provide");
-  // Check for memory pressure conditions to do a collection.
-  // Use subtraction to prevent overflow.
+                                                             
+                                         
 #ifndef HERMESVM_SANITIZE_HANDLES
   if (allocatedBytes_ < sizeLimit_ - size) {
     return;
   }
 #endif
-  // Do a collection if the sanitization of handles is requested or if there
-  // is memory pressure.
+                                                                            
+                        
   collect(std::move(cause));
-  // While we still can't fill the allocation, keep growing.
+                                                            
   while (allocatedBytes_ >= sizeLimit_ - size) {
     if (sizeLimit_ == maxSize_) {
-      // Can't grow memory any higher, OOM.
+                                           
       oom(make_error_code(OOMError::MaxHeapReached));
     }
     sizeLimit_ = growSizeLimit(sizeLimit_);
@@ -236,7 +236,7 @@ void MallocGC::checkWellFormed() {
   CheckHeapWellFormedAcceptor acceptor(*this);
   DroppingAcceptor<CheckHeapWellFormedAcceptor> nameAcceptor{acceptor};
   markRoots(nameAcceptor, true);
-  markWeakRoots(acceptor, /*markLongLived*/ true);
+  markWeakRoots(acceptor,                   true);
   for (CellHeader *header : pointers_) {
     GCCell *cell = header->data();
     assert(cell->isValid() && "Invalid cell encountered in heap");
@@ -260,7 +260,7 @@ void MallocGC::clearUnmarkedPropertyMaps() {
 }
 #endif
 
-void MallocGC::collect(std::string cause, bool /*canEffectiveOOM*/) {
+void MallocGC::collect(std::string cause, bool                    ) {
   assert(noAllocLevel_ == 0 && "no GC allowed right now");
   using std::chrono::steady_clock;
   LLVM_DEBUG(llvh::dbgs() << "Beginning collection");
@@ -274,7 +274,7 @@ void MallocGC::collect(std::string cause, bool /*canEffectiveOOM*/) {
 
   resetStats();
 
-  // Begin the collection phases.
+                                 
   {
     GCCycle cycle{*this, "GC Full collection"};
     MarkingAcceptor acceptor(*this);
@@ -286,36 +286,36 @@ void MallocGC::collect(std::string cause, bool /*canEffectiveOOM*/) {
     drainMarkStack(acceptor);
 
     markWeakMapEntrySlots(acceptor);
-    // Update weak roots references.
-    markWeakRoots(acceptor, /*markLongLived*/ true);
+                                    
+    markWeakRoots(acceptor,                   true);
 
-    // Free the unused symbols.
+                               
     gcCallbacks_.freeSymbols(acceptor.markedSymbols_);
-    // By the end of the marking loop, all pointers left in pointers_ are dead.
+                                                                               
     for (CellHeader *header : pointers_) {
 #ifndef HERMESVM_SANITIZE_HANDLES
-      // If handle sanitization isn't on, these pointers should all be dead.
+                                                                            
       assert(!header->isMarked() && "Live pointer left in dead heap section");
 #endif
       GCCell *cell = header->data();
-      // Extract before running any potential finalizers.
+                                                         
       const auto freedSize = cell->getAllocatedSize();
-      // Run the finalizer if it exists and the cell is actually dead.
+                                                                      
       if (!header->isMarked()) {
         cell->getVT()->finalizeIfExists(cell, *this);
 #ifndef NDEBUG
-        // Update statistics.
+                             
         if (cell->getVT()->finalize_) {
           ++numFinalizedObjects_;
         }
 #endif
-        // Pointers that aren't marked now weren't moved, and are dead instead.
+                                                                               
         if (isTrackingIDs()) {
           untrackObject(cell, freedSize);
         }
       }
 #ifndef NDEBUG
-      // Before free'ing, fill with a dead value for debugging
+                                                              
       std::fill_n(reinterpret_cast<char *>(cell), freedSize, kInvalidHeapValue);
 #endif
       free(header);
@@ -323,17 +323,17 @@ void MallocGC::collect(std::string cause, bool /*canEffectiveOOM*/) {
 
 #ifndef NDEBUG
 #ifdef HERMESVM_SANITIZE_HANDLES
-    // If handle sanitization is on, pointers_ is unmodified from before the
-    // collection, and the number of collected objects is the difference between
-    // the pointers before, and the pointers after the collection.
+                                                                            
+                                                                                
+                                                                  
     assert(
         pointers_.size() >= newPointers_.size() &&
         "There cannot be more new pointers than there are old pointers");
     numCollectedObjects_ = pointers_.size() - newPointers_.size();
 #else
-    // If handle sanitization is not on, live pointers are removed from
-    // pointers_ so the number of collected objects is equal to the size of
-    // pointers_.
+                                                                       
+                                                                           
+                 
     numCollectedObjects_ = pointers_.size();
 #endif
     numReachableObjects_ = newPointers_.size();
@@ -343,18 +343,18 @@ void MallocGC::collect(std::string cause, bool /*canEffectiveOOM*/) {
     assert(
         newPointers_.empty() &&
         "newPointers_ should be empty between collections");
-    // Clear all the mark bits in pointers_.
+                                            
     for (CellHeader *header : pointers_) {
       assert(header->isMarked() && "Should only be live pointers left");
       header->unmark();
     }
   }
 
-  // End of the collection phases, begin cleanup and stat recording.
+                                                                    
 #ifdef HERMES_SLOW_DEBUG
   checkWellFormed();
 #endif
-  // Grow the size limit if the heap is still more than 75% full.
+                                                                 
   if (allocatedBytes_ >= sizeLimit_ * 3 / 4) {
     sizeLimit_ = std::min(maxSize_, sizeLimit_ * 2);
   }
@@ -370,18 +370,18 @@ void MallocGC::collect(std::string cause, bool /*canEffectiveOOM*/) {
       std::chrono::duration_cast<std::chrono::milliseconds>(
           wallEnd - wallStart),
       std::chrono::duration_cast<std::chrono::milliseconds>(cpuEnd - cpuStart),
-      /*allocated*/ BeforeAndAfter{allocatedBefore, allocatedBytes_},
-      // MallocGC only allocates memory as it is used so there is no distinction
-      // between the allocated bytes and the heap size.
-      /*size*/ BeforeAndAfter{allocatedBefore, allocatedBytes_},
-      // TODO: MallocGC doesn't yet support credit/debit external memory, so
-      // it has no data for these numbers.
-      /*external*/ BeforeAndAfter{externalBefore, externalBytes_},
-      /*survivalRatio*/
+                    BeforeAndAfter{allocatedBefore, allocatedBytes_},
+                                                                                
+                                                       
+               BeforeAndAfter{allocatedBefore, allocatedBytes_},
+                                                                            
+                                          
+                   BeforeAndAfter{externalBefore, externalBytes_},
+                       
       allocatedBefore ? (allocatedBytes_ * 1.0) / allocatedBefore : 0,
-      /*tags*/ {}};
+               {}};
 
-  recordGCStats(event, /* onMutator */ true);
+  recordGCStats(event,                 true);
   checkTripwire(allocatedBytes_ + externalBytes_);
 }
 
@@ -404,12 +404,12 @@ void MallocGC::markWeakMapEntrySlots(MarkingAcceptor &acceptor) {
       if (!slot.key || !slot.owner)
         return;
       GCCell *ownerMapCell = slot.owner.getNoBarrierUnsafe(getPointerBase());
-      // If the owner structure isn't reachable, no need to mark the values.
+                                                                            
       if (!CellHeader::from(ownerMapCell)->isMarked())
         return;
       GCCell *cell = slot.key.getNoBarrierUnsafe(getPointerBase());
-      // The WeakRef object must be marked for the mapped value to
-      // be marked (unless there are other strong refs to the value).
+                                                                  
+                                                                     
       if (!CellHeader::from(cell)->isMarked())
         return;
       acceptor.accept(slot.mappedValue);
@@ -418,7 +418,7 @@ void MallocGC::markWeakMapEntrySlots(MarkingAcceptor &acceptor) {
     drainMarkStack(acceptor);
   } while (newlyMarkedValue);
 
-  // If either a key or its owning map is dead, set the mapped value to Empty.
+                                                                              
   weakMapEntrySlots_.forEach([this](WeakMapEntrySlot &slot) {
     if (!slot.key || !slot.owner) {
       slot.mappedValue = HermesValue::encodeEmptyValue();
@@ -471,15 +471,15 @@ void MallocGC::resetStats() {
 void MallocGC::getHeapInfo(HeapInfo &info) {
   GCBase::getHeapInfo(info);
   info.allocatedBytes = allocatedBytes_;
-  // MallocGC does not have a heap size.
+                                        
   info.heapSize = 0;
   info.externalBytes = externalBytes_;
 }
 void MallocGC::getHeapInfoWithMallocSize(HeapInfo &info) {
   getHeapInfo(info);
   GCBase::getHeapInfoWithMallocSize(info);
-  // Note that info.mallocSizeEstimate is initialized by the call to
-  // GCBase::getHeapInfoWithMallocSize.
+                                                                    
+                                       
   for (CellHeader *header : pointers_) {
     GCCell *cell = header->data();
     info.mallocSizeEstimate += cell->getVT()->getMallocSize(cell);
@@ -488,7 +488,7 @@ void MallocGC::getHeapInfoWithMallocSize(HeapInfo &info) {
 
 void MallocGC::getCrashManagerHeapInfo(CrashManager::HeapInformation &info) {
   info.used_ = allocatedBytes_;
-  // MallocGC does not have a heap size.
+                                        
   info.size_ = 0;
 }
 
@@ -530,19 +530,19 @@ void MallocGC::debitExternalMemory(GCCell *, uint32_t size) {
   externalBytes_ -= size;
 }
 
-/// @name Forward instantiations
-/// @{
+                                
+      
 
-template void *MallocGC::alloc</*FixedSize*/ true, HasFinalizer::Yes>(
+template void *MallocGC::alloc<              true, HasFinalizer::Yes>(
     uint32_t size);
-template void *MallocGC::alloc</*FixedSize*/ false, HasFinalizer::Yes>(
+template void *MallocGC::alloc<              false, HasFinalizer::Yes>(
     uint32_t size);
-template void *MallocGC::alloc</*FixedSize*/ true, HasFinalizer::No>(
+template void *MallocGC::alloc<              true, HasFinalizer::No>(
     uint32_t size);
-template void *MallocGC::alloc</*FixedSize*/ false, HasFinalizer::No>(
+template void *MallocGC::alloc<              false, HasFinalizer::No>(
     uint32_t size);
-/// @}
+      
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 #undef DEBUG_TYPE

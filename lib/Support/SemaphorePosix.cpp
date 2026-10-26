@@ -29,34 +29,34 @@ sem_t *Semaphore::getSemaphorePtr() {
 
 bool Semaphore::open(const char *semaphorePrefix) {
 #ifdef __APPLE__
-  // Generate a unique name for the semaphore by postfixing semaphorePrefix with
-  // the thread ID. This ensures that no other semaphore will be created with
-  // the same name, avoiding unintentional sharing.
+                                                                                
+                                                                             
+                                                   
   llvh::SmallVector<char, 64> semaphoreName;
   llvh::raw_svector_ostream OS(semaphoreName);
 
-  // oscompat::global_thread_id returns the OS level thread ID, and is thus
-  // system unique.
+                                                                           
+                   
   OS << semaphorePrefix << oscompat::global_thread_id() << '\0';
 
-  // Create a named semaphore with read/write. Use O_EXCL as an extra protection
-  // layer -- sem_open will fail if semaphoreName is not unique.
+                                                                                
+                                                                
   semPtr_ = sem_open(
-      semaphoreName.data(), O_CREAT | O_EXCL, S_IRUSR | S_IWUSR, /*value*/ 0);
+      semaphoreName.data(), O_CREAT | O_EXCL, S_IRUSR | S_IWUSR,           0);
   if (semPtr_ == SEM_FAILED) {
     perror("sem_open");
     return false;
   }
   assert(semPtr_ != nullptr && "sem_open should have succeeded");
 
-  // Now unlink the semaphore from its temporary name. This ensures that no
-  // other Semaphore will share the underlying OS object.
+                                                                           
+                                                         
   if (sem_unlink(semaphoreName.data()) != 0) {
     perror("sem_unlink");
     return false;
   }
 #else
-  auto ret = sem_init(&sem_, /*pshared*/ 0, /*value*/ 0);
+  auto ret = sem_init(&sem_,             0,           0);
   if (ret != 0) {
     perror("sem_init");
     return false;
@@ -98,6 +98,6 @@ bool Semaphore::wait() {
   return true;
 }
 
-} // namespace hermes
+}                    
 
-#endif // not _WINDOWS
+#endif                

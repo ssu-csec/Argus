@@ -16,13 +16,13 @@
 
 namespace hermes {
 
-/// Like malloc, but calls hermes_fatal on a null return.
+                                                         
 LLVM_ATTRIBUTE_RETURNS_NONNULL LLVM_ATTRIBUTE_RETURNS_NOALIAS void *
 checkedMalloc(size_t size);
 
-/// Like checkedMalloc, but computes the total size in an overflow safe way.
-/// This is declared inline so that constants can be propagated into the 'size'
-/// parameter, optimizing the division.
+                                                                            
+                                                                               
+                                       
 LLVM_ATTRIBUTE_RETURNS_NONNULL LLVM_ATTRIBUTE_RETURNS_NOALIAS inline void *
 checkedMalloc2(size_t count, size_t size) {
   size_t totalSize = count * size;
@@ -32,10 +32,10 @@ checkedMalloc2(size_t count, size_t size) {
   return checkedMalloc(totalSize);
 }
 
-/// Like checkedMalloc2, but zero-initializes the allocation.
+                                                             
 LLVM_ATTRIBUTE_RETURNS_NONNULL LLVM_ATTRIBUTE_RETURNS_NOALIAS void *
 checkedCalloc(size_t count, size_t size);
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_SUPPORT_CHECKEDMALLOC_H
+#endif                                  

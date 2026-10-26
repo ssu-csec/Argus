@@ -18,8 +18,8 @@
 
 namespace llvh {
 
-// Define macros to aid in expanding a comma separated series with the index of
-// the series pasted onto the last token.
+                                                                               
+                                         
 #define LLVM_COMMA_JOIN1(x) x ## 0
 #define LLVM_COMMA_JOIN2(x) LLVM_COMMA_JOIN1(x), x ## 1
 #define LLVM_COMMA_JOIN3(x) LLVM_COMMA_JOIN2(x), x ## 2
@@ -53,54 +53,54 @@ namespace llvh {
 #define LLVM_COMMA_JOIN31(x) LLVM_COMMA_JOIN30(x), x ## 30
 #define LLVM_COMMA_JOIN32(x) LLVM_COMMA_JOIN31(x), x ## 31
 
-/// Class which can simulate a type-safe variadic function.
-///
-/// The VariadicFunction class template makes it easy to define
-/// type-safe variadic functions where all arguments have the same
-/// type.
-///
-/// Suppose we need a variadic function like this:
-///
-///   ResultT Foo(const ArgT &A_0, const ArgT &A_1, ..., const ArgT &A_N);
-///
-/// Instead of many overloads of Foo(), we only need to define a helper
-/// function that takes an array of arguments:
-///
-///   ResultT FooImpl(ArrayRef<const ArgT *> Args) {
-///     // 'Args[i]' is a pointer to the i-th argument passed to Foo().
-///     ...
-///   }
-///
-/// and then define Foo() like this:
-///
-///   const VariadicFunction<ResultT, ArgT, FooImpl> Foo;
-///
-/// VariadicFunction takes care of defining the overloads of Foo().
-///
-/// Actually, Foo is a function object (i.e. functor) instead of a plain
-/// function.  This object is stateless and its constructor/destructor
-/// does nothing, so it's safe to create global objects and call Foo(...) at
-/// any time.
-///
-/// Sometimes we need a variadic function to have some fixed leading
-/// arguments whose types may be different from that of the optional
-/// arguments.  For example:
-///
-///   bool FullMatch(const StringRef &S, const RE &Regex,
-///                  const ArgT &A_0, ..., const ArgT &A_N);
-///
-/// VariadicFunctionN is for such cases, where N is the number of fixed
-/// arguments.  It is like VariadicFunction, except that it takes N more
-/// template arguments for the types of the fixed arguments:
-///
-///   bool FullMatchImpl(const StringRef &S, const RE &Regex,
-///                      ArrayRef<const ArgT *> Args) { ... }
-///   const VariadicFunction2<bool, const StringRef&,
-///                           const RE&, ArgT, FullMatchImpl>
-///       FullMatch;
-///
-/// Currently VariadicFunction and friends support up-to 3
-/// fixed leading arguments and up-to 32 optional arguments.
+                                                           
+   
+                                                               
+                                                                  
+         
+   
+                                                  
+   
+                                                                          
+   
+                                                                       
+                                              
+   
+                                                    
+                                                                       
+           
+       
+   
+                                    
+   
+                                                         
+   
+                                                                   
+   
+                                                                        
+                                                                      
+                                                                            
+             
+   
+                                                                    
+                                                                    
+                            
+   
+                                                         
+                                                            
+   
+                                                                       
+                                                                        
+                                                            
+   
+                                                             
+                                                             
+                                                     
+                                                             
+                    
+   
+                                                          
+                                                            
 template <typename ResultT, typename ArgT,
           ResultT (*Func)(ArrayRef<const ArgT *>)>
 struct VariadicFunction {
@@ -292,7 +292,7 @@ struct VariadicFunction3 {
 #undef LLVM_DEFINE_OVERLOAD
 };
 
-// Cleanup the macro namespace.
+                               
 #undef LLVM_COMMA_JOIN1
 #undef LLVM_COMMA_JOIN2
 #undef LLVM_COMMA_JOIN3
@@ -326,6 +326,6 @@ struct VariadicFunction3 {
 #undef LLVM_COMMA_JOIN31
 #undef LLVM_COMMA_JOIN32
 
-} // end namespace llvh
+}                      
 
-#endif  // LLVM_ADT_VARIADICFUNCTION_H
+#endif                                

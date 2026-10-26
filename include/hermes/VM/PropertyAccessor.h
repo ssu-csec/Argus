@@ -13,7 +13,7 @@
 namespace hermes {
 namespace vm {
 
-/// This object is the value of a property which has a getter and/or setter.
+                                                                            
 class PropertyAccessor final : public GCCell {
  public:
   PropertyAccessor(
@@ -39,7 +39,7 @@ class PropertyAccessor final : public GCCell {
   create(Runtime &runtime, Handle<Callable> getter, Handle<Callable> setter);
 };
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMES_VM_PROPERTYACCESSOR_H
+#endif                                

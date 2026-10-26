@@ -22,8 +22,8 @@ bool RandomSeedParser::parse(
   if (End == ArgStart) {
     return O.error("'" + Arg + "' value invalid for random seed argument!");
   }
-  // No error is false.
+                       
   return false;
 }
 
-} // namespace cl
+}                

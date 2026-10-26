@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//===----------------------------------------------------------------------===//
-/// \file
-/// ES6.0 22.1.5 Array Iterator Objects
-//===----------------------------------------------------------------------===//
+                                                                                
+         
+                                       
+                                                                                
 #include "JSLibInternal.h"
 
 #include "hermes/VM/JSArray.h"
@@ -50,5 +50,5 @@ arrayIteratorPrototypeNext(void *, Runtime &runtime, NativeArgs args) {
   return JSArrayIterator::nextElement(O, runtime);
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

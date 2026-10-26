@@ -17,20 +17,20 @@
 //
 //===----------------------------------------------------------------------===//
 
-// NOTE: NO INCLUDE GUARD DESIRED!
+                                  
 
-// Provide definitions of macros so that users of this file do not have to
-// define everything to use it...
+                                                                          
+                                 
 
-// Declare the enumerator for each libcall, along with its default name. Some
-// libcalls have different names on particular OSes or architectures. These
-// are set in InitLibcallNames() in TargetLoweringBase.cpp and/or by targets
-// using TargetLoweringBase::setLibcallName()
+                                                                             
+                                                                           
+                                                                            
+                                             
 #ifndef HANDLE_LIBCALL
 #error "HANDLE_LIBCALL must be defined"
 #endif
 
-// Integer
+          
 HANDLE_LIBCALL(SHL_I16, "__ashlhi3")
 HANDLE_LIBCALL(SHL_I32, "__ashlsi3")
 HANDLE_LIBCALL(SHL_I64, "__ashldi3")
@@ -87,7 +87,7 @@ HANDLE_LIBCALL(CTLZ_I32, "__clzsi2")
 HANDLE_LIBCALL(CTLZ_I64, "__clzdi2")
 HANDLE_LIBCALL(CTLZ_I128, "__clzti2")
 
-// Floating-point
+                 
 HANDLE_LIBCALL(ADD_F32, "__addsf3")
 HANDLE_LIBCALL(ADD_F64, "__adddf3")
 HANDLE_LIBCALL(ADD_F80, "__addxf3")
@@ -256,7 +256,7 @@ HANDLE_LIBCALL(FMAX_F80, "fmaxl")
 HANDLE_LIBCALL(FMAX_F128, "fmaxl")
 HANDLE_LIBCALL(FMAX_PPCF128, "fmaxl")
 
-// Conversion
+             
 HANDLE_LIBCALL(FPEXT_F32_PPCF128, "__gcc_stoq")
 HANDLE_LIBCALL(FPEXT_F64_PPCF128, "__gcc_dtoq")
 HANDLE_LIBCALL(FPEXT_F80_F128, "__extendxftf2")
@@ -338,7 +338,7 @@ HANDLE_LIBCALL(UINTTOFP_I128_F80, "__floatuntixf")
 HANDLE_LIBCALL(UINTTOFP_I128_F128, "__floatuntitf")
 HANDLE_LIBCALL(UINTTOFP_I128_PPCF128, "__floatuntitf")
 
-// Comparison
+             
 HANDLE_LIBCALL(OEQ_F32, "__eqsf2")
 HANDLE_LIBCALL(OEQ_F64, "__eqdf2")
 HANDLE_LIBCALL(OEQ_F128, "__eqtf2")
@@ -372,13 +372,13 @@ HANDLE_LIBCALL(O_F64, "__unorddf2")
 HANDLE_LIBCALL(O_F128, "__unordtf2")
 HANDLE_LIBCALL(O_PPCF128, "__gcc_qunord")
 
-// Memory
+         
 HANDLE_LIBCALL(MEMCPY, "memcpy")
 HANDLE_LIBCALL(MEMMOVE, "memmove")
 HANDLE_LIBCALL(MEMSET, "memset")
 HANDLE_LIBCALL(BZERO, nullptr)
 
-// Element-wise unordered-atomic memory of different sizes
+                                                          
 HANDLE_LIBCALL(MEMCPY_ELEMENT_UNORDERED_ATOMIC_1, "__llvm_memcpy_element_unordered_atomic_1")
 HANDLE_LIBCALL(MEMCPY_ELEMENT_UNORDERED_ATOMIC_2, "__llvm_memcpy_element_unordered_atomic_2")
 HANDLE_LIBCALL(MEMCPY_ELEMENT_UNORDERED_ATOMIC_4, "__llvm_memcpy_element_unordered_atomic_4")
@@ -395,14 +395,14 @@ HANDLE_LIBCALL(MEMSET_ELEMENT_UNORDERED_ATOMIC_4, "__llvm_memset_element_unorder
 HANDLE_LIBCALL(MEMSET_ELEMENT_UNORDERED_ATOMIC_8, "__llvm_memset_element_unordered_atomic_8")
 HANDLE_LIBCALL(MEMSET_ELEMENT_UNORDERED_ATOMIC_16, "__llvm_memset_element_unordered_atomic_16")
 
-// Exception handling
+                     
 HANDLE_LIBCALL(UNWIND_RESUME, "_Unwind_Resume")
 
-// Note: there are two sets of atomics libcalls; see
-// <https://llvm.org/docs/Atomics.html> for more info on the
-// difference between them.
+                                                    
+                                                            
+                           
 
-// Atomic '__sync_*' libcalls.
+                              
 HANDLE_LIBCALL(SYNC_VAL_COMPARE_AND_SWAP_1, "__sync_val_compare_and_swap_1")
 HANDLE_LIBCALL(SYNC_VAL_COMPARE_AND_SWAP_2, "__sync_val_compare_and_swap_2")
 HANDLE_LIBCALL(SYNC_VAL_COMPARE_AND_SWAP_4, "__sync_val_compare_and_swap_4")
@@ -464,7 +464,7 @@ HANDLE_LIBCALL(SYNC_FETCH_AND_UMIN_4, "__sync_fetch_and_umin_4")
 HANDLE_LIBCALL(SYNC_FETCH_AND_UMIN_8, "__sync_fetch_and_umin_8")
 HANDLE_LIBCALL(SYNC_FETCH_AND_UMIN_16, "__sync_fetch_and_umin_16")
 
-// Atomic `__atomic_*' libcalls.
+                                
 HANDLE_LIBCALL(ATOMIC_LOAD, "__atomic_load")
 HANDLE_LIBCALL(ATOMIC_LOAD_1, "__atomic_load_1")
 HANDLE_LIBCALL(ATOMIC_LOAD_2, "__atomic_load_2")
@@ -524,10 +524,10 @@ HANDLE_LIBCALL(ATOMIC_FETCH_NAND_4, "__atomic_fetch_nand_4")
 HANDLE_LIBCALL(ATOMIC_FETCH_NAND_8, "__atomic_fetch_nand_8")
 HANDLE_LIBCALL(ATOMIC_FETCH_NAND_16, "__atomic_fetch_nand_16")
 
-// Stack Protector Fail
+                       
 HANDLE_LIBCALL(STACKPROTECTOR_CHECK_FAIL, "__stack_chk_fail")
 
-// Deoptimization
+                 
 HANDLE_LIBCALL(DEOPTIMIZE, "__llvm_deoptimize")
 
 HANDLE_LIBCALL(UNKNOWN_LIBCALL, nullptr)

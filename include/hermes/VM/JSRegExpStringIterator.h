@@ -13,8 +13,8 @@
 namespace hermes {
 namespace vm {
 
-/// RegExpStringIterator object.
-/// See ES11 21.2.7.2 for Properties of RegExp String Iterator Instances.
+                                
+                                                                         
 class JSRegExpStringIterator : public JSObject {
   using Super = JSObject;
 
@@ -39,7 +39,7 @@ class JSRegExpStringIterator : public JSObject {
       bool global,
       bool fullUnicode);
 
-  /// Iterate to the next element and return.
+                                             
   static CallResult<HermesValue> nextElement(
       Handle<JSRegExpStringIterator> self,
       Runtime &runtime);
@@ -60,25 +60,25 @@ class JSRegExpStringIterator : public JSObject {
         unicode_(unicode) {}
 
  private:
-  /// [[IteratingRegExp]]
-  // Note: despite what the name is suggesting, it's actually unsafe to use
-  // JSRegExp here. See regExpConstructorInternal for more details.
+                         
+                                                                           
+                                                                   
   GCPointer<JSObject> iteratedRegExp_;
 
-  /// [[IteratedString]]
+                        
   GCPointer<StringPrimitive> iteratedString_;
 
-  /// [[Global]]
+                
   bool global_;
 
-  /// [[Unicode]]
+                 
   bool unicode_;
 
-  /// [[Done]]
+              
   bool done_{false};
 };
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMES_VM_JSREGEXPSTRINGITERATOR_H
+#endif                                      

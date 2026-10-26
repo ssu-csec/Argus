@@ -14,8 +14,8 @@
 namespace hermes {
 namespace vm {
 
-//===----------------------------------------------------------------------===//
-// class HandleRootOwner
+                                                                                
+                        
 
 const PinnedHermesValue HandleRootOwner::nullPointer_{
     HermesValue::encodeNullptrObjectValueUnsafe()};
@@ -38,24 +38,24 @@ void HandleRootOwner::markGCScopes(RootAcceptor &acceptor) {
     gcScope->mark(acceptor);
 }
 
-//===----------------------------------------------------------------------===//
-// class GCScope
+                                                                                
+                
 
 GCScope::~GCScope() {
-  // Pop ourselves from the scope list.
+                                       
   runtime_.topGCScope_ = prevScope_;
 
-  // Free the dynamically allocated chunks, which are all chunks except the
-  // first one.
+                                                                           
+               
   auto it = chunks_.begin();
   auto e = chunks_.end();
 
   assert(it != e && "must have at least one chunk");
-  ++it; // Skip the first chunk
-  // Invalidate all the values outside of the chunk in case they are used.
+  ++it;                        
+                                                                          
   invalidateFreedHandleValues(0, chunks_[0]);
   for (; it != e; ++it)
-    ::free(*it); // The chunk was allocated with malloc()
+    ::free(*it);                                         
 
 #ifdef HERMESVM_DEBUG_TRACK_GCSCOPE_HANDLES
   gcScopeHandleTracker.record(name_, maxAllocatedHandles_);
@@ -65,25 +65,25 @@ GCScope::~GCScope() {
 PinnedHermesValue *GCScope::_newChunkAndPHV(HermesValue value) {
   assert(next_ == curChunkEnd_ && "current chunk is not exhausted");
 
-  // Move to the next chunk.
+                            
   ++curChunkIndex_;
 
-  // Do we need to allocate a new chunk?
+                                        
   if (curChunkIndex_ == chunks_.size()) {
-    // Allocate memory with malloc() to prevent initialization.
+                                                               
     void *mem = checkedMalloc2(CHUNK_SIZE, sizeof(PinnedHermesValue));
     chunks_.push_back(static_cast<PinnedHermesValue *>(mem));
 
-    // Initialize the new chunk.
+                                
     next_ = chunks_.back();
   } else {
-    // Point to the start of the next chunk.
+                                            
     next_ = chunks_[curChunkIndex_];
   }
 
   curChunkEnd_ = next_ + CHUNK_SIZE;
 
-  /// Initialize the new handle with the specified value and return.
+                                                                    
   return new (next_++) PinnedHermesValue(value);
 }
 
@@ -92,11 +92,11 @@ void GCScope::mark(RootAcceptor &acceptor) {
     PinnedHermesValue *first = *it;
     PinnedHermesValue *last = *it + CHUNK_SIZE;
 
-    // If this is the current chunk, it is not yet full.
+                                                        
     if (curChunkEnd_ == last)
       last = next_;
 
-    // Mark the handles.
+                        
     for (; first != last; ++first)
       acceptor.acceptNullable(*first);
   }
@@ -122,7 +122,7 @@ GCScopeHandleTracker gcScopeHandleTracker;
 
 GCScopeHandleTracker::~GCScopeHandleTracker() {
   {
-    // Sort by number of handles.
+                                 
     std::vector<CountMapT::value_type> histogram(
         countMap_.begin(), countMap_.end());
     std::sort(
@@ -145,7 +145,7 @@ GCScopeHandleTracker::~GCScopeHandleTracker() {
   }
 
   {
-    // Sort by name.
+                    
     std::vector<NameMapT::value_type> byName(nameMap_.begin(), nameMap_.end());
     std::sort(
         byName.begin(),
@@ -165,5 +165,5 @@ GCScopeHandleTracker::~GCScopeHandleTracker() {
 
 #endif
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

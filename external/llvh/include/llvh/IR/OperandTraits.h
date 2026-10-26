@@ -19,13 +19,13 @@
 
 namespace llvh {
 
-//===----------------------------------------------------------------------===//
-//                          FixedNumOperand Trait Class
-//===----------------------------------------------------------------------===//
+                                                                                
+                                                       
+                                                                                
 
-/// FixedNumOperandTraits - determine the allocation regime of the Use array
-/// when it is a prefix to the User object, and the number of Use objects is
-/// known at compile time.
+                                                                            
+                                                                            
+                          
 
 template <typename SubClass, unsigned ARITY>
 struct FixedNumOperandTraits {
@@ -43,12 +43,12 @@ struct FixedNumOperandTraits {
   }
 };
 
-//===----------------------------------------------------------------------===//
-//                          OptionalOperand Trait Class
-//===----------------------------------------------------------------------===//
+                                                                                
+                                                       
+                                                                                
 
-/// OptionalOperandTraits - when the number of operands may change at runtime.
-/// Naturally it may only decrease, because the allocations may not change.
+                                                                              
+                                                                           
 
 template <typename SubClass, unsigned ARITY = 1>
 struct OptionalOperandTraits : public FixedNumOperandTraits<SubClass, ARITY> {
@@ -57,13 +57,13 @@ struct OptionalOperandTraits : public FixedNumOperandTraits<SubClass, ARITY> {
   }
 };
 
-//===----------------------------------------------------------------------===//
-//                          VariadicOperand Trait Class
-//===----------------------------------------------------------------------===//
+                                                                                
+                                                       
+                                                                                
 
-/// VariadicOperandTraits - determine the allocation regime of the Use array
-/// when it is a prefix to the User object, and the number of Use objects is
-/// only known at allocation time.
+                                                                            
+                                                                            
+                                  
 
 template <typename SubClass, unsigned MINARITY = 0>
 struct VariadicOperandTraits {
@@ -81,16 +81,16 @@ struct VariadicOperandTraits {
   }
 };
 
-//===----------------------------------------------------------------------===//
-//                          HungoffOperand Trait Class
-//===----------------------------------------------------------------------===//
+                                                                                
+                                                      
+                                                                                
 
-/// HungoffOperandTraits - determine the allocation regime of the Use array
-/// when it is not a prefix to the User object, but allocated at an unrelated
-/// heap address.
-///
-/// This is the traits class that is needed when the Use array must be
-/// resizable.
+                                                                           
+                                                                             
+                 
+   
+                                                                      
+              
 
 template <unsigned MINARITY = 1>
 struct HungoffOperandTraits {
@@ -105,9 +105,9 @@ struct HungoffOperandTraits {
   }
 };
 
-/// Macro for generating in-class operand accessor declarations.
-/// It should only be called in the public section of the interface.
-///
+                                                                
+                                                                    
+   
 #define DECLARE_TRANSPARENT_OPERAND_ACCESSORS(VALUECLASS) \
   public: \
   inline VALUECLASS *getOperand(unsigned) const; \
@@ -122,7 +122,7 @@ struct HungoffOperandTraits {
   public: \
   inline unsigned getNumOperands() const
 
-/// Macro for generating out-of-class operand accessor definitions
+                                                                  
 #define DEFINE_TRANSPARENT_OPERAND_ACCESSORS(CLASS, VALUECLASS) \
 CLASS::op_iterator CLASS::op_begin() { \
   return OperandTraits<CLASS>::op_begin(this); \
@@ -158,6 +158,6 @@ template <int Idx_nocapture> const Use &CLASS::Op() const { \
 }
 
 
-} // End llvm namespace
+}                      
 
 #endif

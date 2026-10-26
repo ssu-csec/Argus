@@ -13,7 +13,7 @@
 
 namespace hermes {
 
-/// Performs Asm.js/Wasm simplification.
+                                        
 class WasmSimplify : public FunctionPass {
  public:
   explicit WasmSimplify() : FunctionPass("WasmSimplify") {}
@@ -22,7 +22,7 @@ class WasmSimplify : public FunctionPass {
   bool runOnFunction(Function *F) override;
 };
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_OPTIMIZER_WASM_WASMSIMPLIFY_H
-#endif // HERMES_RUN_WASM
+#endif                                        
+#endif                   

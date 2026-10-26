@@ -25,8 +25,8 @@ using llvh::cast;
 
 namespace hermes {
 
-/// \returns true if the type \p T is side effect free in the context of
-/// binary operations.
+                                                                        
+                      
 bool isSideEffectFree(Type T);
 
 class ThrowIfHasRestrictedGlobalPropertyInst : public Instruction {
@@ -65,15 +65,15 @@ class ThrowIfHasRestrictedGlobalPropertyInst : public Instruction {
   }
 };
 
-/// Base class for instructions that are used for scope creation (e.g.,
-/// HBCCreateEnvironment, CreateScopeInst, etc). All these operands have the
-/// descriptor for the scope they are creating as the last operand.
+                                                                       
+                                                                            
+                                                                   
 class ScopeCreationInst : public Instruction {
   ScopeCreationInst(const ScopeCreationInst &) = delete;
   void operator=(const ScopeCreationInst &) = delete;
 
-  // Make pushOperand private to ensure derived classes only add operands via
-  // the constructor.
+                                                                             
+                     
   using Instruction::pushOperand;
 
  protected:
@@ -139,8 +139,8 @@ class NestedScopeCreationInst : public ScopeCreationInst {
     return llvh::cast<ScopeCreationInst>(getOperand(ParentScopeIdx));
   }
 
-  // Should be used late in the compilation pipeline after MovSpill runs -- the
-  // scope register may not be a fast register, and thus the cast would fail.
+                                                                               
+                                                                             
   Value *getParentScopeNoCast() const {
     return getOperand(ParentScopeIdx);
   }
@@ -158,13 +158,13 @@ class NestedScopeCreationInst : public ScopeCreationInst {
   }
 };
 
-/// Base class for instructions that have exactly one operand. It guarantees
-/// that only one operand is pushed and it provides getSingleOperand().
+                                                                            
+                                                                       
 class SingleOperandInst : public Instruction {
   SingleOperandInst(const SingleOperandInst &) = delete;
   void operator=(const SingleOperandInst &) = delete;
 
-  // Make pushOperand private to ensure derived classes don't use it.
+                                                                     
   using Instruction::pushOperand;
 
  protected:
@@ -199,8 +199,8 @@ class SingleOperandInst : public Instruction {
   }
 };
 
-/// Subclasses of this class are all able to terminate a basic
-/// block. Thus, these are all the flow control type of operations.
+                                                              
+                                                                   
 class TerminatorInst : public Instruction {
   TerminatorInst(const TerminatorInst &) = delete;
   void operator=(const TerminatorInst &) = delete;
@@ -525,8 +525,8 @@ class AllocStackInst : public Instruction {
       const AllocStackInst *src,
       llvh::ArrayRef<Value *> operands)
       : AllocStackInst(cast<Label>(operands[0])->get()) {
-    // NOTE: we are playing a little trick here since the Label is not heap
-    // allocated.
+                                                                           
+                 
   }
 
   Identifier getVariableName() const {
@@ -767,9 +767,9 @@ class CreateFunctionInst : public Instruction {
       : Instruction(kind) {
     setType(Type::createClosure());
     pushOperand(code);
-    // N.B.: All non-HBC CreateFunctionInst have a ScopeCreationInst as the
-    // environment, but that is not necessarily true about the HBC variants; the
-    // environment could be an HBCSpillMov.
+                                                                           
+                                                                                
+                                           
     pushOperand(environment);
   }
 
@@ -811,8 +811,8 @@ class CallInst : public Instruction {
   CallInst(const CallInst &) = delete;
   void operator=(const CallInst &) = delete;
 
-  // Forces the code to use the appropriate getters instead of relying on
-  // hard-coded offsets when accessing the arguments.
+                                                                         
+                                                     
   using Instruction::getOperand;
 
   LiteralString *textifiedCallee;
@@ -835,21 +835,21 @@ class CallInst : public Instruction {
   }
 
  public:
-  /// Constant used to indicate that a CallInst does not have a textified
-  /// callee.
+                                                                         
+             
   static constexpr LiteralString *kNoTextifiedCallee = nullptr;
 
   enum { CalleeIdx, NewTargetIdx, ThisIdx };
 
   using ArgumentList = llvh::SmallVector<Value *, 2>;
 
-  /// A textified version of the callee, e.g., in
-  ///
-  ///  a.b[0].c()
-  ///
-  /// this will be the literal string "a.b[0].c". This is then used to emit
-  /// nicer error messages if the callee is not a callable. If no textified
-  /// version of the callee is available this will be nullptr.
+                                                 
+     
+                 
+     
+                                                                           
+                                                                           
+                                                              
   LiteralString *getTextifiedCallee() const {
     return textifiedCallee;
   }
@@ -859,15 +859,15 @@ class CallInst : public Instruction {
   Value *getNewTarget() const {
     return getOperand(NewTargetIdx);
   }
-  /// Get argument 0, the value for 'this'.
+                                           
   Value *getThis() const {
     return getOperand(ThisIdx);
   }
-  /// Get argument by index. 'this' is argument 0.
+                                                  
   Value *getArgument(unsigned idx) {
     return getOperand(ThisIdx + idx);
   }
-  /// Set the value \p v at index \p idx. 'this' is argument 0.
+                                                               
   void setArgument(Value *V, unsigned idx) {
     setOperand(V, ThisIdx + idx);
   }
@@ -910,10 +910,10 @@ class ConstructInst : public CallInst {
   ConstructInst(const ConstructInst &) = delete;
   void operator=(const ConstructInst &) = delete;
 
-  // This class doesn't support the textified callee feature; thus make
-  // getTextifiedCallee and kNoTextifiedCallee private on this subclass.
-  // Accessing getTextifiedCallee via (the base class) CallInst is harmless as
-  // it will always return kNoTextifiedCallee.
+                                                                       
+                                                                        
+                                                                              
+                                              
   using CallInst::getTextifiedCallee;
   using CallInst::kNoTextifiedCallee;
 
@@ -946,16 +946,16 @@ class ConstructInst : public CallInst {
   }
 };
 
-/// Call a VM builtin with the specified number and undefined as the "this"
-/// parameter.
+                                                                           
+              
 class CallBuiltinInst : public CallInst {
   CallBuiltinInst(const CallBuiltinInst &) = delete;
   void operator=(const CallBuiltinInst &) = delete;
 
-  // This class doesn't support the textified callee feature; thus make
-  // getTextifiedCallee and kNoTextifiedCallee private on this subclass.
-  // Accessing getTextifiedCallee via (the base class) CallInst is harmless as
-  // it will always return kNoTextifiedCallee.
+                                                                       
+                                                                        
+                                                                              
+                                              
   using CallInst::getTextifiedCallee;
   using CallInst::kNoTextifiedCallee;
 
@@ -1031,7 +1031,7 @@ class GetBuiltinClosureInst : public Instruction {
 };
 
 #ifdef HERMES_RUN_WASM
-/// Call an unsafe compiler intrinsic.
+                                      
 class CallIntrinsicInst : public Instruction {
   CallIntrinsicInst(const CallIntrinsicInst &) = delete;
   void operator=(const CallIntrinsicInst &) = delete;
@@ -1089,12 +1089,12 @@ class CallIntrinsicInst : public Instruction {
 
 class HBCCallNInst : public CallInst {
  public:
-  /// The minimum number of args supported by a CallN instruction, including
-  /// 'this'.
+                                                                            
+             
   static constexpr uint32_t kMinArgs = 1;
 
-  /// The maximum (inclusive) number of args supported by a CallN instruction,
-  /// including 'this'.
+                                                                              
+                       
   static constexpr uint32_t kMaxArgs = 4;
 
   explicit HBCCallNInst(
@@ -1110,7 +1110,7 @@ class HBCCallNInst : public CallInst {
             newTarget,
             thisValue,
             args) {
-    // +1 for 'this'.
+                     
     assert(
         kMinArgs <= args.size() + 1 && args.size() + 1 <= kMaxArgs &&
         "Invalid arg count for HBCCallNInst");
@@ -1576,9 +1576,9 @@ class HBCAllocObjectFromBufferInst : public Instruction {
   using ObjectPropertyMap =
       llvh::SmallVector<std::pair<Literal *, Literal *>, 4>;
 
-  /// \sizeHint is a hint for the VM regarding the final size of this object.
-  /// It is the number of entries in the object declaration including
-  /// non-literal ones. \prop_map is all the literal key/value entries.
+                                                                             
+                                                                     
+                                                                       
   explicit HBCAllocObjectFromBufferInst(
       LiteralNumber *sizeHint,
       const ObjectPropertyMap &prop_map)
@@ -1604,12 +1604,12 @@ class HBCAllocObjectFromBufferInst : public Instruction {
     return {};
   }
 
-  /// Number of consecutive literal key/value pairs in the object.
+                                                                  
   unsigned getKeyValuePairCount() const {
     return (getNumOperands() - FirstKeyIdx) / 2;
   }
 
-  /// Return the \index 'd sequential literal key/value pair.
+                                                             
   std::pair<Literal *, Literal *> getKeyValuePair(unsigned index) const {
     return std::pair<Literal *, Literal *>{
         cast<Literal>(getOperand(FirstKeyIdx + 2 * index)),
@@ -1636,7 +1636,7 @@ class AllocArrayInst : public Instruction {
 
   explicit AllocArrayInst(ArrayValueList &val_list, LiteralNumber *sizeHint)
       : Instruction(ValueKind::AllocArrayInstKind) {
-    // TODO: refine this type annotation to "array" ?.
+                                                      
     setType(Type::createObject());
     pushOperand(sizeHint);
     for (auto val : val_list) {
@@ -1648,24 +1648,24 @@ class AllocArrayInst : public Instruction {
       llvh::ArrayRef<Value *> operands)
       : Instruction(src, operands) {}
 
-  /// Return the size of array to be allocated.
+                                               
   LiteralNumber *getSizeHint() const {
     return cast<LiteralNumber>(getOperand(SizeHintIdx));
   }
 
-  /// Number of consecutive literal elements in the array.
+                                                          
   unsigned getElementCount() const {
     return getNumOperands() - 1;
   }
 
-  /// Return the real position and value of the \p index's non-elision
-  /// element.
+                                                                      
+              
   Value *getArrayElement(unsigned index) const {
     return getOperand(ElementStartIdx + index);
   }
 
-  /// Returns the index of the first non-literal element.
-  /// Returns -1 if every element is a literal.
+                                                         
+                                               
   int getFirstNonLiteralIndex() const {
     for (unsigned i = 0, e = getElementCount(); i < e; ++i) {
       if (!llvh::isa<Literal>(getArrayElement(i)))
@@ -1674,7 +1674,7 @@ class AllocArrayInst : public Instruction {
     return -1;
   }
 
-  /// Returns true if ths is an array with only literal elements.
+                                                                 
   bool isLiteralArray() const {
     return getFirstNonLiteralIndex() == -1;
   }
@@ -1759,18 +1759,18 @@ class CreateRegExpInst : public Instruction {
 
 class UnaryOperatorInst : public SingleOperandInst {
  public:
-  /// JavaScript Binary operators as defined in the ECMA spec.
-  /// http://www.ecma-international.org/ecma-262/7.0/index.html#sec-unary-operators
+                                                              
+                                                                                   
   enum class OpKind {
-    DeleteKind, // delete
-    VoidKind, // void
-    TypeofKind, // typeof
-    PlusKind, // +
-    MinusKind, // -
-    TildeKind, // ~
-    BangKind, // !
-    IncKind, // + 1
-    DecKind, // - 1
+    DeleteKind,          
+    VoidKind,        
+    TypeofKind,          
+    PlusKind,     
+    MinusKind,     
+    TildeKind,     
+    BangKind,     
+    IncKind,       
+    DecKind,       
     LAST_OPCODE
   };
 
@@ -1778,23 +1778,23 @@ class UnaryOperatorInst : public SingleOperandInst {
   UnaryOperatorInst(const UnaryOperatorInst &) = delete;
   void operator=(const UnaryOperatorInst &) = delete;
 
-  /// The operator kind.
+                        
   OpKind op_;
 
-  // A list of textual representation of the operators above.
+                                                             
   static const char *opStringRepr[(int)OpKind::LAST_OPCODE];
 
  public:
-  /// \return the binary operator kind.
+                                       
   OpKind getOperatorKind() const {
     return op_;
   }
 
-  // Convert the operator string \p into the enum representation or assert
-  // fail if the string is invalud.
+                                                                          
+                                   
   static OpKind parseOperator(llvh::StringRef op);
 
-  /// \return the string representation of the operator.
+                                                        
   llvh::StringRef getOperatorStr() {
     return opStringRepr[static_cast<int>(op_)];
   }
@@ -1820,56 +1820,56 @@ class UnaryOperatorInst : public SingleOperandInst {
 
 class BinaryOperatorInst : public Instruction {
  public:
-  /// JavaScript Binary operators as defined in the ECMA spec.
-  /// http://ecma-international.org/ecma-262/5.1/#sec-11
+                                                              
+                                                        
   enum class OpKind {
-    IdentityKind, // nop (assignment operator, no arithmetic op)
-    EqualKind, // ==
-    NotEqualKind, // !=
-    StrictlyEqualKind, // ===
-    StrictlyNotEqualKind, // !==
-    LessThanKind, // <
-    LessThanOrEqualKind, // <=
-    GreaterThanKind, // >
-    GreaterThanOrEqualKind, // >=
-    LeftShiftKind, // <<  (<<=)
-    RightShiftKind, // >>  (>>=)
-    UnsignedRightShiftKind, // >>> (>>>=)
-    AddKind, // +   (+=)
-    SubtractKind, // -   (-=)
-    MultiplyKind, // *   (*=)
-    DivideKind, // /   (/=)
-    ModuloKind, // %   (%=)
-    OrKind, // |   (|=)
-    XorKind, // ^   (^=)
-    AndKind, // &   (^=)
-    ExponentiationKind, // ** (**=)
-    AssignShortCircuitOrKind, // ||= (only for assignment)
-    AssignShortCircuitAndKind, // &&= (only for assignment)
-    AssignNullishCoalesceKind, // ??= (only for assignment)
-    InKind, // "in"
-    InstanceOfKind, // instanceof
+    IdentityKind,                                               
+    EqualKind,      
+    NotEqualKind,      
+    StrictlyEqualKind,       
+    StrictlyNotEqualKind,       
+    LessThanKind,     
+    LessThanOrEqualKind,      
+    GreaterThanKind,     
+    GreaterThanOrEqualKind,      
+    LeftShiftKind,             
+    RightShiftKind,             
+    UnsignedRightShiftKind,              
+    AddKind,            
+    SubtractKind,            
+    MultiplyKind,            
+    DivideKind,            
+    ModuloKind,            
+    OrKind,            
+    XorKind,            
+    AndKind,            
+    ExponentiationKind,            
+    AssignShortCircuitOrKind,                             
+    AssignShortCircuitAndKind,                             
+    AssignNullishCoalesceKind,                             
+    InKind,        
+    InstanceOfKind,              
     LAST_OPCODE
   };
 
-  // A list of textual representation of the operators above.
+                                                             
   static const char *opStringRepr[(int)OpKind::LAST_OPCODE];
 
-  // A list of textual representation of the assignment operators that match the
-  // operators above.
+                                                                                
+                     
   static const char *assignmentOpStringRepr[(int)OpKind::LAST_OPCODE];
 
  private:
   BinaryOperatorInst(const BinaryOperatorInst &) = delete;
   void operator=(const BinaryOperatorInst &) = delete;
 
-  /// The operator kind.
+                        
   OpKind op_;
 
  public:
   enum { LeftHandSideIdx, RightHandSideIdx };
 
-  /// \return the binary operator kind.
+                                       
   OpKind getOperatorKind() const {
     return op_;
   }
@@ -1881,19 +1881,19 @@ class BinaryOperatorInst : public Instruction {
     return getOperand(RightHandSideIdx);
   }
 
-  // Convert the operator string \p into the enum representation or assert
-  // fail if the string is invalud.
+                                                                          
+                                   
   static OpKind parseOperator(llvh::StringRef op);
 
-  // Convert the assignment operator string \p into the enum representation or
-  // assert fail if the string is invalud.
+                                                                              
+                                          
   static OpKind parseAssignmentOperator(llvh::StringRef op);
 
-  // Get the operator that allows you to swap the operands, if one exists.
-  // >= becomes <= and + becomes +.
+                                                                          
+                                   
   static llvh::Optional<OpKind> tryGetReverseOperator(OpKind op);
 
-  /// \return the string representation of the operator.
+                                                        
   llvh::StringRef getOperatorStr() {
     return opStringRepr[static_cast<int>(op_)];
   }
@@ -1923,8 +1923,8 @@ class BinaryOperatorInst : public Instruction {
     return kindIsA(V->getKind(), ValueKind::BinaryOperatorInstKind);
   }
 
-  /// Calculate the side effect of a binary operator, given inferred types of
-  /// its arguments.
+                                                                             
+                    
   static SideEffectKind
   getBinarySideEffect(Type leftTy, Type rightTy, OpKind op);
 };
@@ -2002,17 +2002,17 @@ class SwitchInst : public TerminatorInst {
   using ValueListType = llvh::SmallVector<Literal *, 8>;
   using BasicBlockListType = llvh::SmallVector<BasicBlock *, 8>;
 
-  /// \returns the number of switch case values.
+                                                
   unsigned getNumCasePair() const;
 
-  /// Returns the n'th pair of value-basicblock that represent a case
-  /// destination.
+                                                                     
+                  
   std::pair<Literal *, BasicBlock *> getCasePair(unsigned i) const;
 
-  /// \returns the destination of the default target.
+                                                     
   BasicBlock *getDefaultDestination() const;
 
-  /// \returns the input value. This is the value we switch on.
+                                                               
   Value *getInputValue() const;
 
   explicit SwitchInst(
@@ -2279,8 +2279,8 @@ class TryStartInst : public TerminatorInst {
   TryStartInst(const TryStartInst &) = delete;
   void operator=(const TryStartInst &) = delete;
 
-  // CatchTarget is positioned before TryBody in the successor list,
-  // so that during Post Order Scan, we lay out TryBody first.
+                                                                    
+                                                              
  public:
   enum { CatchTargetBlockIdx, TryBodyBlockIdx };
 
@@ -2354,25 +2354,25 @@ class PhiInst : public Instruction {
   using ValueListType = llvh::SmallVector<Value *, 8>;
   using BasicBlockListType = llvh::SmallVector<BasicBlock *, 8>;
 
-  /// \returns the number of phi incoming values.
+                                                 
   unsigned getNumEntries() const;
 
-  /// Returns the n'th pair of value-basicblock that represent a case
-  /// destination.
+                                                                     
+                  
   std::pair<Value *, BasicBlock *> getEntry(unsigned i) const;
 
-  /// Update the n'th pair of value-basicblock that represent a case
-  /// destination.
+                                                                    
+                  
   void updateEntry(unsigned i, Value *val, BasicBlock *BB);
 
-  /// Add a pair of value-basicblock that represent a case destination.
+                                                                       
   void addEntry(Value *val, BasicBlock *BB);
 
-  /// Remove an entry pair (incoming basic block and value) at index \p index.
+                                                                              
   void removeEntry(unsigned index);
 
-  /// Remove an entry pair (incoming basic block and value) for incoming block
-  // \p BB.
+                                                                              
+           
   void removeEntry(BasicBlock *BB);
 
   explicit PhiInst(
@@ -2419,10 +2419,10 @@ class MovInst : public SingleOperandInst {
   }
 };
 
-/// ImplicitMovInst may be emitted as part of lowering to express instructions
-/// which perform a Mov as part of their implementation, to registers not
-/// explicitly marked as a destination. They serve as IR optimization barriers
-/// but emit no bytecode.
+                                                                              
+                                                                         
+                                                                              
+                         
 class ImplicitMovInst : public SingleOperandInst {
  public:
   explicit ImplicitMovInst(Value *input)
@@ -2525,7 +2525,7 @@ class GetNewTargetInst : public Instruction {
   }
 };
 
-/// Throw if the operand is "empty", otherwise return it.
+                                                         
 class ThrowIfEmptyInst : public Instruction {
   ThrowIfEmptyInst(const ThrowIfEmptyInst &) = delete;
   void operator=(const ThrowIfEmptyInst &) = delete;
@@ -2683,31 +2683,31 @@ class SwitchImmInst : public TerminatorInst {
   using ValueListType = llvh::SmallVector<LiteralNumber *, 8>;
   using BasicBlockListType = llvh::SmallVector<BasicBlock *, 8>;
 
-  /// \returns the number of switch case values.
+                                                
   unsigned getNumCasePair() const {
-    // The number of cases is computed as the total number of operands, minus
-    // the input value and the default basic block. Take this number and divide
-    // it in two, because we are counting pairs.
+                                                                             
+                                                                               
+                                                
     return (getNumOperands() - FirstCaseIdx) / 2;
   }
 
-  /// Returns the n'th pair of value-basicblock that represent a case
-  /// destination.
+                                                                     
+                  
   std::pair<LiteralNumber *, BasicBlock *> getCasePair(unsigned i) const {
-    // The values and lables are twined together. Find the index of the pair
-    // that we are fetching and return the two values.
+                                                                            
+                                                      
     unsigned base = i * 2 + FirstCaseIdx;
     return std::make_pair(
         cast<LiteralNumber>(getOperand(base)),
         cast<BasicBlock>(getOperand(base + 1)));
   }
 
-  /// \returns the destination of the default target.
+                                                     
   BasicBlock *getDefaultDestination() const {
     return cast<BasicBlock>(getOperand(DefaultBlockIdx));
   }
 
-  /// \returns the input value. This is the value we switch on.
+                                                               
   Value *getInputValue() const {
     return getOperand(InputIdx);
   }
@@ -2720,10 +2720,10 @@ class SwitchImmInst : public TerminatorInst {
     return cast<LiteralNumber>(getOperand(SizeIdx))->asUInt32();
   }
 
-  /// \p input is the discriminator value.
-  /// \p defaultBlock is the block to jump to if nothing matches.
-  /// \p minValue the smallest (integer) value of all switch cases.
-  /// \p size     the difference between minValue and the largest value + 1.
+                                          
+                                                                 
+                                                                   
+                                                                            
   explicit SwitchImmInst(
       Value *input,
       BasicBlock *defaultBlock,
@@ -2961,8 +2961,8 @@ class HBCLoadConstInst : public SingleOperandInst {
   }
 };
 
-/// Load a formal parameter. Parameter 0 is "this", the rest of the params start
-/// at index 1.
+                                                                                
+               
 class HBCLoadParamInst : public SingleOperandInst {
   HBCLoadParamInst(const HBCLoadParamInst &) = delete;
   void operator=(const HBCLoadParamInst &) = delete;
@@ -2992,9 +2992,9 @@ class HBCLoadParamInst : public SingleOperandInst {
   }
 };
 
-/// Load the "this" parameter in non-strict mode, which coerces it to an object,
-/// boxing primitives and converting "null" and "undefined" to the global
-/// object.
+                                                                                
+                                                                         
+           
 class HBCGetThisNSInst : public Instruction {
   HBCGetThisNSInst(const HBCGetThisNSInst &) = delete;
   void operator=(const HBCGetThisNSInst &) = delete;
@@ -3019,7 +3019,7 @@ class HBCGetThisNSInst : public Instruction {
   }
 };
 
-// Get `arguments.length`, without having to create a real array.
+                                                                 
 class HBCGetArgumentsLengthInst : public SingleOperandInst {
   HBCGetArgumentsLengthInst(const HBCGetArgumentsLengthInst &) = delete;
   void operator=(const HBCGetArgumentsLengthInst &) = delete;
@@ -3049,7 +3049,7 @@ class HBCGetArgumentsLengthInst : public SingleOperandInst {
   }
 };
 
-// Get `arguments[i]` without having to create a real array.
+                                                            
 class HBCGetArgumentsPropByValInst : public Instruction {
   HBCGetArgumentsPropByValInst(const HBCGetArgumentsPropByValInst &) = delete;
   void operator=(const HBCGetArgumentsPropByValInst &) = delete;
@@ -3087,8 +3087,8 @@ class HBCGetArgumentsPropByValInst : public Instruction {
   }
 };
 
-// Create a real array for `arguments` for when getting the length and elements
-// by index isn't enough.
+                                                                               
+                         
 class HBCReifyArgumentsInst : public SingleOperandInst {
   HBCReifyArgumentsInst(const HBCReifyArgumentsInst &) = delete;
   void operator=(const HBCReifyArgumentsInst &) = delete;
@@ -3120,17 +3120,17 @@ class HBCReifyArgumentsInst : public SingleOperandInst {
   }
 };
 
-/// Create a 'this' object to be filled in by a constructor.
+                                                            
 class HBCCreateThisInst : public Instruction {
   HBCCreateThisInst(const HBCCreateThisInst &) = delete;
   void operator=(const HBCCreateThisInst &) = delete;
 
  public:
-  enum { PrototypeIdx, ClosureIdx };
+  enum { NewTargetIdx, ClosureIdx };
 
-  explicit HBCCreateThisInst(Value *prototype, Value *closure)
+  explicit HBCCreateThisInst(Value *newTarget, Value *closure)
       : Instruction(ValueKind::HBCCreateThisInstKind) {
-    pushOperand(prototype);
+    pushOperand(newTarget);
     pushOperand(closure);
   }
   explicit HBCCreateThisInst(
@@ -3138,8 +3138,8 @@ class HBCCreateThisInst : public Instruction {
       llvh::ArrayRef<Value *> operands)
       : Instruction(src, operands) {}
 
-  Value *getPrototype() const {
-    return getOperand(PrototypeIdx);
+  Value *getNewTarget() const {
+    return getOperand(NewTargetIdx);
   }
   Value *getClosure() const {
     return getOperand(ClosureIdx);
@@ -3158,15 +3158,15 @@ class HBCCreateThisInst : public Instruction {
   }
 };
 
-/// Call a constructor. thisValue can be created with HBCCreateThisInst.
+                                                                        
 class HBCConstructInst : public CallInst {
   HBCConstructInst(const HBCConstructInst &) = delete;
   void operator=(const HBCConstructInst &) = delete;
 
-  // This class doesn't support the textified callee feature; thus make
-  // getTextifiedCallee and kNoTextifiedCallee private on this subclass.
-  // Accessing getTextifiedCallee via (the base class) CallInst is harmless as
-  // it will always return kNoTextifiedCallee.
+                                                                       
+                                                                        
+                                                                              
+                                              
   using CallInst::getTextifiedCallee;
   using CallInst::kNoTextifiedCallee;
 
@@ -3193,7 +3193,7 @@ class HBCConstructInst : public CallInst {
   }
 };
 
-/// Choose between 'this' and the object returned by a constructor.
+                                                                   
 class HBCGetConstructedObjectInst : public Instruction {
   HBCGetConstructedObjectInst(const HBCGetConstructedObjectInst &) = delete;
   void operator=(const HBCGetConstructedObjectInst &) = delete;
@@ -3214,8 +3214,8 @@ class HBCGetConstructedObjectInst : public Instruction {
       : Instruction(src, operands) {}
 
   Value *getThisValue() const {
-    // While originally a HBCCreateThisInst, it may have been replaced by a mov
-    // or similar.
+                                                                               
+                  
     return getOperand(ThisValueIdx);
   }
   Value *getConstructorReturnValue() const {
@@ -3273,7 +3273,7 @@ class HBCCallDirectInst : public CallInst {
   }
 };
 
-/// Creating a closure in HBC requires an explicit environment.
+                                                               
 class HBCCreateFunctionInst : public CreateFunctionInst {
   HBCCreateFunctionInst(const HBCCreateFunctionInst &) = delete;
   void operator=(const HBCCreateFunctionInst &) = delete;
@@ -3294,8 +3294,8 @@ class HBCCreateFunctionInst : public CreateFunctionInst {
   }
 };
 
-/// Identical to a Mov, except it should never be eliminated.
-/// Elimination will undo spilling and cause failures during bc gen.
+                                                             
+                                                                    
 class HBCSpillMovInst : public SingleOperandInst {
   HBCSpillMovInst(const HBCSpillMovInst &) = delete;
   void operator=(const HBCSpillMovInst &) = delete;
@@ -3329,7 +3329,7 @@ class CompareBranchInst : public TerminatorInst {
   CompareBranchInst(const CompareBranchInst &) = delete;
   void operator=(const CompareBranchInst &) = delete;
 
-  /// The operator kind.
+                        
   BinaryOperatorInst::OpKind op_;
 
  public:
@@ -3351,7 +3351,7 @@ class CompareBranchInst : public TerminatorInst {
     return cast<BasicBlock>(getOperand(FalseBlockIdx));
   }
 
-  /// \return the string representation of the operator.
+                                                        
   llvh::StringRef getOperatorStr() {
     return BinaryOperatorInst::opStringRepr[static_cast<int>(op_)];
   }
@@ -3435,7 +3435,7 @@ class CreateGeneratorInst : public CreateFunctionInst {
   }
 };
 
-/// Creating a closure in HBC requires an explicit environment.
+                                                               
 class HBCCreateGeneratorInst : public CreateGeneratorInst {
   HBCCreateGeneratorInst(const HBCCreateGeneratorInst &) = delete;
   void operator=(const HBCCreateGeneratorInst &) = delete;
@@ -3625,7 +3625,7 @@ class IteratorCloseInst : public Instruction {
   }
 };
 
-/// A bytecode version of llvm_unreachable, for use in stubs and similar.
+                                                                         
 class UnreachableInst : public Instruction {
   UnreachableInst(const UnreachableInst &) = delete;
   void operator=(const UnreachableInst &) = delete;
@@ -3650,6 +3650,6 @@ class UnreachableInst : public Instruction {
   }
 };
 
-} // end namespace hermes
+}                        
 
 #endif

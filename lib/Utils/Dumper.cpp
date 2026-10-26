@@ -5,6 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#include <chrono>
+#include <cstdio>
+#include <cstdlib>
 #include <cctype>
 #include <string>
 
@@ -91,7 +94,7 @@ unsigned InstructionNamer::getNumber(Value *T) {
 }
 
 void IRPrinter::printTypeLabel(Type T) {
-  // We don't print type annotations for unknown types.
+                                                       
   if (T.isAnyType())
     return;
   os << " : " << T;
@@ -124,7 +127,7 @@ void IRPrinter::printValueLabel(Instruction *I, Value *V, unsigned opIndex) {
   } else if (auto LN = dyn_cast<LiteralNumber>(V)) {
     const auto Num = LN->getValue();
     if (Num == 0 && std::signbit(Num)) {
-      // Ensure we output -0 correctly
+                                      
       os << "-0";
     } else {
       char buf[NUMBER_TO_STRING_BUF_SIZE];
@@ -273,7 +276,7 @@ void IRPrinter::printInstruction(Instruction *I) {
     }
   }
 
-  // Print the use list if there is any user for the instruction.
+                                                                 
   if (!codeGenOpts.dumpUseList || I->getUsers().empty())
     return;
 
@@ -367,9 +370,24 @@ void IRPrinter::visitModule(const Module &M) {
   ScopeNamer.clear();
   visitScope(*M.getInitialScope());
 
-  // Use IRVisitor dispatch to visit each individual function.
-  for (auto &F : M)
-    visit(F);
+                                                
+  auto begin=std::chrono::steady_clock::now();
+  unsigned long long functions=0;
+  const char *metricsPath=std::getenv("ARGUS_IR_METRICS");
+  auto report=[&](const char *phase) {
+    if (!metricsPath || !*metricsPath) return;
+    if (FILE *f=std::fopen(metricsPath,"w")) {
+      std::fprintf(f,"{\"phase\":\"%s\",\"functions\":%llu,\"elapsed_ns\":%lld}\n",phase,functions,
+        (long long)std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now()-begin).count());
+      std::fclose(f);
+    }
+  };
+  report("START");
+  for (auto &F : M) {
+    visit(F); ++functions;
+    if ((functions & 127)==0) report("PRINTING");
+  }
+  report("COMPLETE");
 }
 
 void IRPrinter::visitScope(const ScopeDesc &S) {
@@ -384,7 +402,7 @@ void IRPrinter::visitFunction(const Function &F) {
   os.indent(Indent);
   BBNamer.clear();
   InstNamer.clear();
-  // Number all instructions sequentially.
+                                          
   for (auto &BB : *UF)
     for (auto &I : BB) {
       InstNamer.getNumber(&I);
@@ -402,7 +420,7 @@ void IRPrinter::visitFunction(const Function &F) {
     os << "\n";
   }
 
-  // Use IRVisitor dispatch to visit the basic blocks.
+                                                      
   for (auto &BB : F) {
     visit(BB);
   }
@@ -418,7 +436,7 @@ void IRPrinter::visitBasicBlock(const BasicBlock &BB) {
   os << "%BB" << BBNamer.getNumber(UBB) << ":\n";
   Indent += 2;
 
-  // Use IRVisitor dispatch to visit the instructions.
+                                                      
   for (auto &I : BB) {
     visit(I);
   }
@@ -439,12 +457,12 @@ void IRPrinter::visitInstruction(const Instruction &I) {
   os << "\n";
 }
 
-} // namespace hermes
+}                    
 
 namespace {
 
-/// This class prints Functions into dotty graphs. This struct inherits the
-/// IRVisitor and reimplement the visitFunction and visitBasicBlock function.
+                                                                           
+                                                                             
 struct DottyPrinter : public IRVisitor<DottyPrinter, void> {
   llvh::raw_ostream &os;
   llvh::SmallVector<std::pair<std::string, std::string>, 4> Edges;
@@ -454,7 +472,7 @@ struct DottyPrinter : public IRVisitor<DottyPrinter, void> {
       Context &ctx,
       llvh::raw_ostream &ost,
       llvh::StringRef Title)
-      : os(ost), Printer(ctx, ost, /* escape output */ true) {
+      : os(ost), Printer(ctx, ost,                     true) {
     os << " digraph g {\n graph [ rankdir = \"TD\" ];\n";
     os << "labelloc=\"t\"; ";
     os << " node [ fontsize = \"16\" shape = \"record\" ]; edge [ ];\n";
@@ -463,7 +481,7 @@ struct DottyPrinter : public IRVisitor<DottyPrinter, void> {
   ~DottyPrinter() {
     os << "\n";
 
-    // Print the edges between the blocks.
+                                          
     for (auto T : Edges) {
       os << "" << T.first << " ->";
       os << "" << T.second << ";\n";
@@ -471,38 +489,38 @@ struct DottyPrinter : public IRVisitor<DottyPrinter, void> {
     os << "\n}\n";
   }
 
-  /// Convert pointers into unique textual ids.
+                                               
   static std::string toString(BasicBlock *ptr) {
     auto Num = (size_t)ptr;
     return std::to_string(Num);
   }
 
-  /// Reimplement the visitFunction in IRVisitor.
+                                                 
   void visitFunction(const Function &F) {
     os << "label=\"";
     Printer.printFunctionHeader(const_cast<Function *>(&F));
     os << "\";\n";
 
-    // Pre-assign every instruction a number, by doing this we avoid
-    // assigning non-consecutive numbers to consecutive instructions if we
-    // are dumping user list. Its also not a bad practice to initialize the
-    // InstNamer table before we dump all the instructions.
+                                                                    
+                                                                          
+                                                                           
+                                                           
     for (auto &BB : F) {
       for (auto &II : BB) {
         (void)Printer.InstNamer.getNumber(const_cast<Instruction *>(&II));
       }
     }
 
-    // Use IRVisitor dispatch to visit the basic blocks.
+                                                        
     for (auto &BB : F) {
       visit(BB);
     }
   }
 
-  /// Reimplement the visitBasicBlock in the IRVisitor.
-  /// Visit all of the basic blocks in the program and render them into dotty
-  /// records. Save edges between basic blocks and print them when we finish
-  /// visiting all of the blocks in the program.
+                                                       
+                                                                             
+                                                                            
+                                                
   void visitBasicBlock(const BasicBlock &V) {
     auto *BB = const_cast<BasicBlock *>(&V);
     os << "\"" << toString(BB) << "\"";
@@ -513,12 +531,12 @@ struct DottyPrinter : public IRVisitor<DottyPrinter, void> {
 
     int counter = 0;
 
-    // For each instruction in the basic block:
+                                               
     for (auto &I : *BB) {
       counter++;
       os << " | ";
 
-      // Print the instruction.
+                               
       os << "<L" << counter << ">";
       Printer.printInstruction(&I);
     }
@@ -528,24 +546,24 @@ struct DottyPrinter : public IRVisitor<DottyPrinter, void> {
       Edges.push_back({From, toString(*I) + (*I == BB ? ":self" : ":head")});
     }
 
-    // Emit the record:
+                       
     os << "}\" shape = \"record\" ]; \n";
   }
 };
 
-} // anonymous namespace
+}                       
 
 void hermes::viewGraph(Function *F) {
 #ifndef NDEBUG
   auto &Ctx = F->getContext();
   llvh::StringRef Name = Ctx.toString(F->getInternalName());
   int FD;
-  // Windows can't always handle long paths, so limit the length of the name.
+                                                                             
   std::string N = Name.str();
   N = N.substr(0, std::min<std::size_t>(N.size(), 140));
   std::string Filename = llvh::createGraphFilename(N, FD);
   {
-    llvh::raw_fd_ostream O(FD, /*shouldClose=*/true);
+    llvh::raw_fd_ostream O(FD,                 true);
 
     if (FD == -1) {
       llvh::errs() << "error opening file '" << Filename << "' for writing!\n";

@@ -19,19 +19,19 @@ add_hermes_library(hermesInternalBytecode
 
 set(JS_COMPILER_FLAGS "-O" "-Wno-undefined-variable" "-g0")
 
-# Concatenate all JS files into one source file for compilation.
-# This way there is only one RuntimeModule made for them.
+                                                                
+                                                         
 if(NOT CMAKE_HOST_WIN32)
   set(concatenate "cat")
 else()
   set(concatenate "type")
 endif()
 
-# The concatenation order is specified by the numeric prefixes in the JS filenames.
+                                                                                   
 file(GLOB internal_bytecode_sources "*.js")
 list(SORT internal_bytecode_sources)
 
-# Convert path from cmake style (`/`) to native style (`\` on Win and `/` elsewhere) for Win.
+                                                                                             
 set(internal_bytecode_sources_native_path "")
 foreach(cmake_path IN LISTS internal_bytecode_sources)
   file(TO_NATIVE_PATH ${cmake_path} native_path)
@@ -46,7 +46,7 @@ add_custom_command(
   VERBATIM
 )
 
-# Compile the one source file to Hermes bytecode.
+                                                 
 add_custom_command(
   OUTPUT InternalBytecode.hbc
   COMMAND ${hermesc_EXE} ${JS_COMPILER_FLAGS} -emit-binary -out=${CMAKE_CURRENT_BINARY_DIR}/InternalBytecode.hbc ${CMAKE_CURRENT_BINARY_DIR}/InternalBytecode.js
@@ -55,8 +55,8 @@ add_custom_command(
   VERBATIM
 )
 
-# X.inc is the hex dump of the compiled bytecode artifact that can be included
-# in the InternalBytecode.cpp as C/C++ hex literal to initialize a byte array.
+                                                                              
+                                                                              
 add_custom_command(
   OUTPUT InternalBytecode.inc
   COMMAND ${Python_EXECUTABLE} xxd.py ${CMAKE_CURRENT_BINARY_DIR}/InternalBytecode.hbc > ${CMAKE_CURRENT_BINARY_DIR}/InternalBytecode.inc
@@ -70,7 +70,7 @@ set_source_files_properties(InternalBytecode.cpp
   OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/InternalBytecode.inc
 )
 
-# Allow InternalBytecode to find its .inc file
+                                              
 target_include_directories(hermesInternalBytecode
   PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
 )

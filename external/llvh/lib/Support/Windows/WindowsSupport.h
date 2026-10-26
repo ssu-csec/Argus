@@ -14,24 +14,24 @@
 //
 //===----------------------------------------------------------------------===//
 
-//===----------------------------------------------------------------------===//
-//=== WARNING: Implementation here must contain only generic Win32 code that
-//===          is guaranteed to work on *all* Win32 variants.
-//===----------------------------------------------------------------------===//
+                                                                                
+                                                                            
+                                                             
+                                                                                
 
 #ifndef LLVM_SUPPORT_WINDOWSSUPPORT_H
 #define LLVM_SUPPORT_WINDOWSSUPPORT_H
 
-// mingw-w64 tends to define it as 0x0502 in its headers.
+                                                         
 #undef _WIN32_WINNT
 #undef _WIN32_IE
 
-// Require at least Windows 7 API.
+                                  
 #define _WIN32_WINNT 0x0601
-#define _WIN32_IE    0x0800 // MinGW at it again. FIXME: verify if still needed.
+#define _WIN32_IE    0x0800                                                     
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
-#endif // !WIN32_LEAN_AND_MEAN
+#endif                        
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
@@ -40,7 +40,7 @@
 #include "llvh/ADT/StringExtras.h"
 #include "llvh/ADT/StringRef.h"
 #include "llvh/ADT/Twine.h"
-#include "llvh/Config/config.h" // Get build system configuration settings
+#include "llvh/Config/config.h"                                           
 #include "llvh/Support/Chrono.h"
 #include "llvh/Support/Compiler.h"
 #include <cassert>
@@ -48,15 +48,15 @@
 #include <system_error>
 #include <windows.h>
 
-// Must be included after windows.h
+                                   
 #include <wincrypt.h>
 
-/// Determines if the program is running on Windows 8 or newer. This
-/// reimplements one of the helpers in the Windows 8.1 SDK, which are intended
-/// to supercede raw calls to GetVersionEx. Old SDKs, Cygwin, and MinGW don't
-/// yet have VersionHelpers.h, so we have our own helper.
+                                                                    
+                                                                              
+                                                                             
+                                                         
 inline bool RunningWindows8OrGreater() {
-  // Windows 8 is version 6.2, service pack 0.
+                                              
   OSVERSIONINFOEXW osvi = {};
   osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
   osvi.dwMajorVersion = 6;
@@ -97,8 +97,8 @@ class ScopedHandle {
   typedef typename HandleTraits::handle_type handle_type;
   handle_type Handle;
 
-  ScopedHandle(const ScopedHandle &other); // = delete;
-  void operator=(const ScopedHandle &other); // = delete;
+  ScopedHandle(const ScopedHandle &other);             
+  void operator=(const ScopedHandle &other);             
 public:
   ScopedHandle()
     : Handle(HandleTraits::GetInvalid()) {}
@@ -124,7 +124,7 @@ public:
     return *this;
   }
 
-  // True if Handle is valid.
+                             
   explicit operator bool() const {
     return HandleTraits::IsValid(Handle) ? true : false;
   }
@@ -222,7 +222,7 @@ inline std::chrono::nanoseconds toDuration(FILETIME Time) {
   TimeInteger.LowPart = Time.dwLowDateTime;
   TimeInteger.HighPart = Time.dwHighDateTime;
 
-  // FILETIME's are # of 100 nanosecond ticks (1/10th of a microsecond)
+                                                                       
   return std::chrono::nanoseconds(100 * TimeInteger.QuadPart);
 }
 
@@ -231,10 +231,10 @@ inline TimePoint<> toTimePoint(FILETIME Time) {
   TimeInteger.LowPart = Time.dwLowDateTime;
   TimeInteger.HighPart = Time.dwHighDateTime;
 
-  // Adjust for different epoch
+                               
   TimeInteger.QuadPart -= 11644473600ll * 10000000;
 
-  // FILETIME's are # of 100 nanosecond ticks (1/10th of a microsecond)
+                                                                       
   return TimePoint<>(std::chrono::nanoseconds(100 * TimeInteger.QuadPart));
 }
 
@@ -250,13 +250,13 @@ inline FILETIME toFILETIME(TimePoint<> TP) {
 }
 
 namespace windows {
-// Returns command line arguments. Unlike arguments given to main(),
-// this function guarantees that the returned arguments are encoded in
-// UTF-8 regardless of the current code page setting.
+                                                                    
+                                                                      
+                                                     
 std::error_code GetCommandLineArguments(SmallVectorImpl<const char *> &Args,
                                         BumpPtrAllocator &Alloc);
-} // end namespace windows
-} // end namespace sys
-} // end namespace llvh.
+}                         
+}                     
+}                       
 
 #endif

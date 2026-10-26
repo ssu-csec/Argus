@@ -146,8 +146,8 @@ struct FunctionSummaryYaml {
       TypeCheckedLoadConstVCalls;
 };
 
-} // End yaml namespace
-} // End llvm namespace
+}                      
+}                      
 
 namespace llvh {
 namespace yaml {
@@ -166,8 +166,8 @@ template <> struct MappingTraits<FunctionSummary::ConstVCall> {
   }
 };
 
-} // End yaml namespace
-} // End llvm namespace
+}                      
+}                      
 
 LLVM_YAML_IS_SEQUENCE_VECTOR(FunctionSummary::VFuncId)
 LLVM_YAML_IS_SEQUENCE_VECTOR(FunctionSummary::ConstVCall)
@@ -192,15 +192,15 @@ template <> struct MappingTraits<FunctionSummaryYaml> {
   }
 };
 
-} // End yaml namespace
-} // End llvm namespace
+}                      
+}                      
 
 LLVM_YAML_IS_SEQUENCE_VECTOR(FunctionSummaryYaml)
 
 namespace llvh {
 namespace yaml {
 
-// FIXME: Add YAML mappings for the rest of the module summary.
+                                                               
 template <> struct CustomMappingTraits<GlobalValueSummaryMapTy> {
   static void inputOne(IO &io, StringRef Key, GlobalValueSummaryMapTy &V) {
     std::vector<FunctionSummaryYaml> FSums;
@@ -211,14 +211,14 @@ template <> struct CustomMappingTraits<GlobalValueSummaryMapTy> {
       return;
     }
     if (!V.count(KeyInt))
-      V.emplace(KeyInt, /*IsAnalysis=*/false);
+      V.emplace(KeyInt,                false);
     auto &Elem = V.find(KeyInt)->second;
     for (auto &FSum : FSums) {
       std::vector<ValueInfo> Refs;
       for (auto &RefGUID : FSum.Refs) {
         if (!V.count(RefGUID))
-          V.emplace(RefGUID, /*IsAnalysis=*/false);
-        Refs.push_back(ValueInfo(/*IsAnalysis=*/false, &*V.find(RefGUID)));
+          V.emplace(RefGUID,                false);
+        Refs.push_back(ValueInfo(               false, &*V.find(RefGUID)));
       }
       Elem.SummaryList.push_back(llvh::make_unique<FunctionSummary>(
           GlobalValueSummary::GVFlags(
@@ -295,7 +295,7 @@ template <> struct MappingTraits<ModuleSummaryIndex> {
   }
 };
 
-} // End yaml namespace
-} // End llvm namespace
+}                      
+}                      
 
 #endif

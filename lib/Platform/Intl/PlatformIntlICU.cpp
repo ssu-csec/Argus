@@ -18,9 +18,9 @@
 #include <string>
 #include <unordered_map>
 
-// ICU changed the default UChar type on version 59, but we still need to
-// support 52+ However, ICU allows us to manually set a type for UChar using
-// UCHAR_TYPE so UChar isn't platform dependent.
+                                                                         
+                                                                            
+                                                
 #define UCHAR_TYPE char16_t
 
 #include "unicode/dtptngen.h"
@@ -35,11 +35,11 @@ namespace hermes {
 namespace platform_intl {
 namespace {
 
-/// Thread safe management of time zone names map.
+                                                  
 class TimeZoneNames {
  public:
-  /// Initializing the underlying map with all known time zone names in
-  /// ICU::TimeZone
+                                                                       
+                   
   TimeZoneNames() {
     std::unique_ptr<StringEnumeration> icuTimeZones(
         TimeZone::createEnumeration());
@@ -53,15 +53,15 @@ class TimeZoneNames {
     }
   }
 
-  /// Check if \p tz is a valid time zone name.
+                                               
   bool contains(std::u16string_view tz) const {
     std::shared_lock lock(mutex_);
     return timeZoneNamesMap_.find(toASCIIUppercase(tz)) !=
         timeZoneNamesMap_.end();
   }
 
-  /// Get canonical time zone name for \p tz. Note that \p tz must
-  /// be a valid key in the map.
+                                                                  
+                                
   std::u16string getCanonical(std::u16string_view tz) const {
     std::shared_lock lock(mutex_);
     auto ianaTimeZoneIt = timeZoneNamesMap_.find(toASCIIUppercase(tz));
@@ -71,17 +71,17 @@ class TimeZoneNames {
     return ianaTimeZoneIt->second;
   }
 
-  /// Update the time zone name map with \p tz if it does not exist yet.
+                                                                        
   void update(std::u16string_view tz) {
     auto upper = toASCIIUppercase(tz);
-    // Read lock and check if tz is already in the map.
+                                                       
     {
       std::shared_lock lock(mutex_);
       if (timeZoneNamesMap_.find(upper) != timeZoneNamesMap_.end()) {
         return;
       }
     }
-    // If not, write lock and insert it into the map.
+                                                     
     {
       std::unique_lock lock(mutex_);
       timeZoneNamesMap_.emplace(upper, tz);
@@ -89,7 +89,7 @@ class TimeZoneNames {
   }
 
  private:
-  /// Map from upper case time zone name to canonical time zone name.
+                                                                     
   std::unordered_map<std::u16string, std::u16string> timeZoneNamesMap_;
   mutable std::shared_mutex mutex_;
 };
@@ -99,12 +99,12 @@ static TimeZoneNames &validTimeZoneNames() {
   return validTimeZoneNames;
 }
 
-/// https://402.ecma-international.org/8.0/#sec-isvalidtimezonename
+                                                                   
 static bool isValidTimeZoneName(std::u16string_view tz) {
   return validTimeZoneNames().contains(tz);
 }
 
-/// https://402.ecma-international.org/8.0/#sec-defaulttimezone
+                                                               
 std::u16string getDefaultTimeZone(vm::Runtime &runtime) {
   std::unique_ptr<TimeZone> timeZone(TimeZone::createDefault());
   UnicodeString unicodeTz;
@@ -114,29 +114,29 @@ std::u16string getDefaultTimeZone(vm::Runtime &runtime) {
   return tz;
 }
 
-/// https://402.ecma-international.org/8.0/#sec-canonicalizetimezonename
+                                                                        
 std::u16string canonicalizeTimeZoneName(std::u16string_view tz) {
-  // 1. Let ianaTimeZone be the Zone or Link name of the IANA Time Zone Database
-  // such that timeZone, converted to upper case as described in 6.1, is equal
-  // to ianaTimeZone, converted to upper case as described in 6.1.
+                                                                                
+                                                                              
+                                                                  
   auto ianaTimeZone = validTimeZoneNames().getCanonical(tz);
-  // NOTE: We don't use actual IANA database, so we leave (2) unimplemented.
-  // 2. If ianaTimeZone is a Link name, let ianaTimeZone be the corresponding
-  // Zone name as specified in the "backward" file of the IANA Time Zone
-  // Database.
-  // 3. If ianaTimeZone is "Etc/UTC" or "Etc/GMT", return "UTC".
+                                                                            
+                                                                             
+                                                                        
+              
+                                                                
   if (ianaTimeZone == u"Etc/UTC" || ianaTimeZone == u"Etc/GMT")
     ianaTimeZone = u"UTC";
-  // 4. Return ianaTimeZone.
+                            
   return ianaTimeZone;
 }
 
-// T is a type of the intl service implementation classes.
-// BaseT is the base platform_intl class that the intl service
-// implementation class inherits from.
-// Instance creation and initialization across the intl service
-// implementation classes is the same. This function template
-// provides the common code.
+                                                          
+                                                              
+                                      
+                                                               
+                                                             
+                            
 template <typename T, typename BaseT>
 vm::CallResult<std::unique_ptr<BaseT>> createInstance(
     vm::Runtime &runtime,
@@ -151,16 +151,16 @@ vm::CallResult<std::unique_ptr<BaseT>> createInstance(
   return std::move(instance);
 }
 
-} // namespace
+}             
 
-// Not yet implemented.
+                       
 vm::CallResult<std::u16string> toLocaleLowerCase(
     vm::Runtime &runtime,
     const std::vector<std::u16string> &locales,
     const std::u16string &str) {
   return std::u16string(u"lowered");
 }
-// Not yet implemented.
+                       
 vm::CallResult<std::u16string> toLocaleUpperCase(
     vm::Runtime &runtime,
     const std::vector<std::u16string> &locales,
@@ -197,8 +197,8 @@ double Collator::compare(
 }
 
 namespace {
-/// Implementation of
-/// https://402.ecma-international.org/8.0/#datetimeformat-objects
+                     
+                                                                  
 struct DateTimeFormatICU : DateTimeFormat {
  public:
   DateTimeFormatICU() = default;
@@ -218,28 +218,28 @@ struct DateTimeFormatICU : DateTimeFormat {
   UDateFormat *getUDateFormatter(vm::Runtime &runtime);
   std::u16string getDefaultHourCycle();
 
-  /// https://402.ecma-international.org/8.0/#sec-properties-of-intl-datetimeformat-instances
-  /// Intl.DateTimeFormat instances have an [[InitializedDateTimeFormat]]
-  /// internal slot.
-  /// NOTE: InitializedDateTimeFormat is not implemented.
-  /// Intl.DateTimeFormat instances also have several internal
-  /// slots that are computed by the constructor:
-  /// [[Locale]] is a String value with the language tag of the locale whose
-  /// localization is used for formatting.
+                                                                                             
+                                                                         
+                    
+                                                         
+                                                              
+                                                 
+                                                                            
+                                          
   std::u16string locale_;
-  /// [[Calendar]] is a String value with the "type" given in Unicode Technical
-  /// Standard 35 for the calendar used for formatting.
+                                                                               
+                                                       
   std::optional<std::u16string> calendar_;
-  /// [[NumberingSystem]] is a String value with the "type" given in Unicode
-  /// Technical Standard 35 for the numbering system used for formatting.
-  /// [[TimeZone]] is a String value with the IANA time zone name of the time
-  /// zone used for formatting.
+                                                                            
+                                                                         
+                                                                             
+                               
   std::u16string timeZone_;
-  /// [[Weekday]], [[Era]], [[Year]], [[Month]], [[Day]], [[DayPeriod]],
-  /// [[Hour]], [[Minute]], [[Second]], [[TimeZoneName]] are each either
-  /// undefined, indicating that the component is not used for formatting, or
-  /// one of the String values given in Table 4, indicating how the component
-  /// should be presented in the formatted output.
+                                                                        
+                                                                        
+                                                                             
+                                                                             
+                                                  
   std::optional<std::u16string> weekday_;
   std::optional<std::u16string> era_;
   std::optional<std::u16string> year_;
@@ -250,32 +250,32 @@ struct DateTimeFormatICU : DateTimeFormat {
   std::optional<std::u16string> minute_;
   std::optional<std::u16string> second_;
   std::optional<std::u16string> timeZoneName_;
-  /// [[FractionalSecondDigits]] is either undefined or a positive, non-zero
-  /// integer Number value indicating the fraction digits to be used for
-  /// fractional seconds. Numbers will be rounded or padded with trailing zeroes
-  /// if necessary.
+                                                                            
+                                                                        
+                                                                                
+                   
   std::optional<uint8_t> fractionalSecondDigits_;
-  /// [[HourCycle]] is a String value indicating whether the 12-hour format
-  /// ("h11", "h12") or the 24-hour format ("h23", "h24") should be used. "h11"
-  /// and "h23" start with hour 0 and go up to 11 and 23 respectively. "h12" and
-  /// "h24" start with hour 1 and go up to 12 and 24. [[HourCycle]] is only used
-  /// when [[Hour]] is not undefined.
+                                                                           
+                                                                               
+                                                                                
+                                                                                
+                                     
   std::optional<std::u16string> hourCycle_;
-  /// [[DateStyle]], [[TimeStyle]] are each either undefined, or a String value
-  /// with values "full", "long", "medium", or "short".
+                                                                               
+                                                       
   std::optional<std::u16string> dateStyle_;
   std::optional<std::u16string> timeStyle_;
-  /// UTF-8 version of locale_. Used for ICU calls.
+                                                   
   std::string locale8_;
-  /// Internal initialized ICU date formatter.
+                                              
   UDateFormat *dateTimeFormatter_;
 };
-} // namespace
+}             
 
 DateTimeFormat::DateTimeFormat() = default;
 DateTimeFormat::~DateTimeFormat() = default;
 
-/// https://402.ecma-international.org/8.0/#sec-intl.datetimeformat.supportedlocalesof
+                                                                                      
 vm::CallResult<std::vector<std::u16string>> DateTimeFormat::supportedLocalesOf(
     vm::Runtime &runtime,
     const std::vector<std::u16string> &locales,
@@ -287,20 +287,20 @@ vm::ExecutionStatus DateTimeFormatICU::initialize(
     vm::Runtime &runtime,
     const std::vector<std::u16string> &locales,
     const Options &inputOptions) noexcept {
-  // 1. Let requestedLocales be ? CanonicalizeLocaleList(locales).
+                                                                  
   auto requestedLocalesRes =
       impl_icu::LocaleBCP47Object::canonicalizeLocaleList(runtime, locales);
   if (LLVM_UNLIKELY(requestedLocalesRes == vm::ExecutionStatus::EXCEPTION))
     return vm::ExecutionStatus::EXCEPTION;
-  // 2. Let options be ? ToDateTimeOptions(options, "any", "date").
+                                                                   
   auto optionsRes = toDateTimeOptions(runtime, inputOptions, u"any", u"date");
   if (LLVM_UNLIKELY(optionsRes == vm::ExecutionStatus::EXCEPTION))
     return vm::ExecutionStatus::EXCEPTION;
   auto options = *optionsRes;
-  // 3. Let opt be a new Record.
+                                
   Options opt;
-  // 4. Let matcher be ? GetOption(options, "localeMatcher", "string",
-  // «"lookup", "best fit" », "best fit").
+                                                                      
+                                          
   auto matcherRes = impl_icu::getStringOption(
       runtime,
       options,
@@ -309,59 +309,59 @@ vm::ExecutionStatus DateTimeFormatICU::initialize(
       u"best fit");
   if (LLVM_UNLIKELY(matcherRes == vm::ExecutionStatus::EXCEPTION))
     return vm::ExecutionStatus::EXCEPTION;
-  // 5. Set opt.[[localeMatcher]] to matcher.
+                                             
   auto matcherOpt = *matcherRes;
   opt.emplace(u"localeMatcher", *matcherOpt);
-  // 6. Let calendar be ? GetOption(options, "calendar", "string",
-  // undefined, undefined).
+                                                                  
+                           
   auto calendarRes =
       impl_icu::getStringOption(runtime, options, u"calendar", {}, {});
-  // 7. If calendar is not undefined, then
+                                          
   if (LLVM_UNLIKELY(calendarRes == vm::ExecutionStatus::EXCEPTION))
     return vm::ExecutionStatus::EXCEPTION;
-  // 8. Set opt.[[ca]] to calendar.
+                                   
   if (auto calendarOpt = *calendarRes) {
-    // a. If calendar does not match the Unicode Locale Identifier type
-    // nonterminal, throw a RangeError exception.
+                                                                       
+                                                 
     if (!isUnicodeExtensionType(*calendarOpt))
       return runtime.raiseRangeError(
           vm::TwineChar16("Invalid calendar: ") +
           vm::TwineChar16(calendarOpt->c_str()));
     opt.emplace(u"ca", *calendarOpt);
   }
-  // 9. Let numberingSystem be ? GetOption(options, "numberingSystem",
-  // "string", undefined, undefined).
-  // 10. If numberingSystem is not undefined, then
-  // a. If numberingSystem does not match the Unicode Locale Identifier
-  // type nonterminal, throw a RangeError exception.
-  // 11. Set opt.[[nu]] to numberingSystem.
+                                                                      
+                                     
+                                                  
+                                                                       
+                                                    
+                                           
   opt.emplace(u"nu", u"");
-  // 12. Let hour12 be ? GetOption(options, "hour12", "boolean",
-  // undefined, undefined).
+                                                                
+                           
   auto hour12 = impl_icu::getBoolOption(options, u"hour12", {});
-  // 13. Let hourCycle be ? GetOption(options, "hourCycle", "string", «
-  // "h11", "h12", "h23", "h24" », undefined).
+                                                                       
+                                              
   auto hourCycleRes = impl_icu::getStringOption(
       runtime, options, u"hourCycle", {u"h11", u"h12", u"h23", u"h24"}, {});
   if (LLVM_UNLIKELY(hourCycleRes == vm::ExecutionStatus::EXCEPTION))
     return vm::ExecutionStatus::EXCEPTION;
   auto hourCycleOpt = *hourCycleRes;
-  // 14. If hour12 is not undefined, then
+                                         
   if (hour12.has_value())
-    // a. Let hourCycle be null.
-    // NOTE: We would normally just don't add this to the "opt" map, but
-    // resolveLocale actually checks for presence of keys, even if values are
-    // null or undefined.
+                                
+                                                                        
+                                                                             
+                         
     hourCycleOpt = u"";
   if (hourCycleOpt.has_value())
-    // 15. Set opt.[[hc]] to hourCycle.
+                                       
     opt.emplace(u"hc", *hourCycleOpt);
-  // 16. Let localeData be %DateTimeFormat%.[[LocaleData]].
-  // NOTE: We don't actually have access to the underlying locale data, so we
-  // will use ICU's default locale as a substitute
-  // 17. Let r be ResolveLocale(%DateTimeFormat%.[[AvailableLocales]],
-  // requestedLocales, opt, %DateTimeFormat%.[[RelevantExtensionKeys]],
-  // localeData).
+                                                           
+                                                                             
+                                                  
+                                                                      
+                                                                       
+                 
   static constexpr std::u16string_view relevantExtensionKeys[] = {
       u"ca", u"nu", u"hc"};
   auto r = impl_icu::resolveLocale(
@@ -369,61 +369,61 @@ vm::ExecutionStatus DateTimeFormatICU::initialize(
       opt,
       relevantExtensionKeys,
       [](auto key, auto type, auto locale) { return true; });
-  // 18. Set dateTimeFormat.[[Locale]] to r.[[locale]].
+                                                       
   locale_ = r.localeBcp47Object.getCanonicalizedLocaleId();
 
-  // store the UTF8 version of locale since it is used in almost all other
-  // functions
+                                                                          
+              
   locale8_ = impl_icu::toUTF8ASCII(locale_);
 
-  // 19. Let calendar be r.[[ca]].
+                                  
   auto caIt = r.resolvedOpts.find(u"ca");
-  // 20. Set dateTimeFormat.[[Calendar]] to calendar.
+                                                     
   if (caIt != r.resolvedOpts.end())
     calendar_ = caIt->second.getString();
-  // 21. Set dateTimeFormat.[[HourCycle]] to r.[[hc]].
+                                                      
   auto hcIt = r.resolvedOpts.find(u"hc");
   if (hcIt != r.resolvedOpts.end())
     hourCycle_ = hcIt->second.getString();
-  // 22. Set dateTimeFormat.[[NumberingSystem]] to r.[[nu]].
-  // 23. Let dataLocale be r.[[dataLocale]].
-  // 24. Let timeZone be ? Get(options, "timeZone").
+                                                            
+                                            
+                                                    
   auto timeZoneIt = options.find(u"timeZone");
   std::u16string timeZone;
-  //  25. If timeZone is undefined, then
+                                        
   if (timeZoneIt == options.end()) {
-    // a. Let timeZone be DefaultTimeZone().
+                                            
     timeZone = getDefaultTimeZone(runtime);
-    // 26. Else,
+                
   } else {
-    // a. Let timeZone be ? ToString(timeZone).
+                                               
     timeZone = timeZoneIt->second.getString();
-    // b. If the result of IsValidTimeZoneName(timeZone) is false, then
+                                                                       
     if (!isValidTimeZoneName(timeZone)) {
-      // i. Throw a RangeError exception.
+                                         
       return runtime.raiseRangeError("Incorrect timeZone information provided");
     }
-    // c. Let timeZone be CanonicalizeTimeZoneName(timeZone).
+                                                             
     timeZone = canonicalizeTimeZoneName(timeZone);
   }
-  // 27. Set dateTimeFormat.[[TimeZone]] to timeZone.
+                                                     
   timeZone_ = timeZone;
-  // 28. Let opt be a new Record.
-  // 29. For each row of Table 4, except the header row, in table order, do
-  // a. Let prop be the name given in the Property column of the row.
-  // b. If prop is "fractionalSecondDigits", then
-  // i. Let value be ? GetNumberOption(options, "fractionalSecondDigits", 1,
-  // 3, undefined).
-  // d. Set opt.[[<prop>]] to value.
-  // c. Else,
-  // i. Let value be ? GetOption(options, prop, "string", « the strings
-  // given in the Values column of the row », undefined).
-  // d. Set opt.[[<prop>]] to value.
-  // 30. Let dataLocaleData be localeData.[[<dataLocale>]].
-  // 31. Let matcher be ? GetOption(options, "formatMatcher", "string", «
-  // "basic", "best fit" », "best fit").
-  // 32. Let dateStyle be ? GetOption(options, "dateStyle", "string", « "full",
-  // "long", "medium", "short" », undefined).
+                                 
+                                                                           
+                                                                     
+                                                 
+                                                                            
+                   
+                                    
+             
+                                                                       
+                                                         
+                                    
+                                                           
+                                                                         
+                                        
+                                                                               
+                                             
   auto dateStyleRes = impl_icu::getStringOption(
       runtime,
       options,
@@ -432,10 +432,10 @@ vm::ExecutionStatus DateTimeFormatICU::initialize(
       {});
   if (LLVM_UNLIKELY(dateStyleRes == vm::ExecutionStatus::EXCEPTION))
     return vm::ExecutionStatus::EXCEPTION;
-  // 33. Set dateTimeFormat.[[DateStyle]] to dateStyle.
+                                                       
   dateStyle_ = *dateStyleRes;
-  // 34. Let timeStyle be ? GetOption(options, "timeStyle", "string", « "full",
-  // "long", "medium", "short" », undefined).
+                                                                               
+                                             
   auto timeStyleRes = impl_icu::getStringOption(
       runtime,
       options,
@@ -444,10 +444,10 @@ vm::ExecutionStatus DateTimeFormatICU::initialize(
       {});
   if (LLVM_UNLIKELY(timeStyleRes == vm::ExecutionStatus::EXCEPTION))
     return vm::ExecutionStatus::EXCEPTION;
-  // 35. Set dateTimeFormat.[[TimeStyle]] to timeStyle.
+                                                       
   timeStyle_ = *timeStyleRes;
 
-  // Initialize properties using values from the input options.
+                                                               
   auto weekdayRes = impl_icu::getStringOption(
       runtime, options, u"weekday", {u"narrow", u"short", u"long"}, {});
   if (LLVM_UNLIKELY(weekdayRes == vm::ExecutionStatus::EXCEPTION))
@@ -513,11 +513,11 @@ vm::ExecutionStatus DateTimeFormatICU::initialize(
     return vm::ExecutionStatus::EXCEPTION;
   fractionalSecondDigits_ = *fractionalSecondDigitsRes;
 
-  // NOTE: "shortOffset", "longOffset", "shortGeneric", "longGeneric"
-  // are specified here:
-  // https://tc39.es/proposal-intl-extend-timezonename
-  // they are not in ecma402 spec, but there is a test for them:
-  // "test262/test/intl402/DateTimeFormat/constructor-options-timeZoneName-valid.js"
+                                                                     
+                        
+                                                      
+                                                                
+                                                                                    
   auto timeZoneNameRes = impl_icu::getStringOption(
       runtime,
       options,
@@ -532,90 +532,90 @@ vm::ExecutionStatus DateTimeFormatICU::initialize(
   if (LLVM_UNLIKELY(timeZoneNameRes == vm::ExecutionStatus::EXCEPTION))
     return vm::ExecutionStatus::EXCEPTION;
   timeZoneName_ = *timeZoneNameRes;
-  // NOTE: We don't have access to localeData, instead we'll defer to
-  // ICU::Locale
-  // 36. If dateStyle is not undefined or timeStyle is not undefined, then
-  // a. For each row in Table 4, except the header row, do
-  // i. Let prop be the name given in the Property column of the row.
-  // ii. Let p be opt.[[<prop>]].
-  // iii. If p is not undefined, then
-  // 1. Throw a TypeError exception.
-  // b. Let styles be dataLocaleData.[[styles]].[[<calendar>]].
-  // c. Let bestFormat be DateTimeStyleFormat(dateStyle, timeStyle, styles).
-  // 37. Else,
-  // a. Let formats be dataLocaleData.[[formats]].[[<calendar>]].
-  // b. If matcher is "basic", then
-  // i. Let bestFormat be BasicFormatMatcher(opt, formats).
-  // c. Else,
-  // i. Let bestFormat be BestFitFormatMatcher(opt, formats).
-  // 38. For each row in Table 4, except the header row, in table order, do
-  // for (auto const &row : table4) {
-  // a. Let prop be the name given in the Property column of the row.
-  // auto prop = row.first;
-  // b. If bestFormat has a field [[<prop>]], then
-  // i. Let p be bestFormat.[[<prop>]].
-  // ii. Set dateTimeFormat's internal slot whose name is the Internal
-  // Slot column of the row to p.
-  // 39. If dateTimeFormat.[[Hour]] is undefined, then
+                                                                     
+                
+                                                                          
+                                                          
+                                                                     
+                                 
+                                     
+                                    
+                                                               
+                                                                            
+              
+                                                                 
+                                   
+                                                           
+             
+                                                             
+                                                                           
+                                     
+                                                                     
+                           
+                                                  
+                                       
+                                                                      
+                                 
+                                                      
   if (!hour_.has_value()) {
-    // a. Set dateTimeFormat.[[HourCycle]] to undefined.
+                                                        
     hourCycle_ = std::nullopt;
-    // b. Let pattern be bestFormat.[[pattern]].
-    // c. Let rangePatterns be bestFormat.[[rangePatterns]].
-    // 40. Else,
+                                                
+                                                            
+                
   } else {
-    // a. Let hcDefault be dataLocaleData.[[hourCycle]].
+                                                        
     auto hcDefault = getDefaultHourCycle();
-    // b. Let hc be dateTimeFormat.[[HourCycle]].
+                                                 
     auto hc = hourCycle_;
-    // c. If hc is null, then
+                             
     if (!hc.has_value())
-      // i. Set hc to hcDefault.
+                                
       hc = hcDefault;
-    // d. If hour12 is not undefined, then
+                                          
     if (hour12.has_value()) {
-      // i. If hour12 is true, then
+                                   
       if (*hour12 == true) {
-        // 1. If hcDefault is "h11" or "h23", then
+                                                  
         if (hcDefault == u"h11" || hcDefault == u"h23") {
-          // a. Set hc to "h11".
+                                
           hc = u"h11";
-          // 2. Else,
+                     
         } else {
-          // a. Set hc to "h12".
+                                
           hc = u"h12";
         }
-        // ii. Else,
+                    
       } else {
-        // 1. Assert: hour12 is false.
-        // 2. If hcDefault is "h11" or "h23", then
+                                      
+                                                  
         if (hcDefault == u"h11" || hcDefault == u"h23") {
-          // a. Set hc to "h23".
+                                
           hc = u"h23";
-          // 3. Else,
+                     
         } else {
-          // a. Set hc to "h24".
+                                
           hc = u"h24";
         }
       }
     }
-    // e. Set dateTimeFormat.[[HourCycle]] to hc.
+                                                 
     hourCycle_ = hc;
-    // f. If dateTimeformat.[[HourCycle]] is "h11" or "h12", then
-    // i. Let pattern be bestFormat.[[pattern12]].
-    // ii. Let rangePatterns be bestFormat.[[rangePatterns12]].
-    // g. Else,
-    // i. Let pattern be bestFormat.[[pattern]].
-    // ii. Let rangePatterns be bestFormat.[[rangePatterns]].
+                                                                 
+                                                  
+                                                               
+               
+                                                
+                                                             
   }
-  // 41. Set dateTimeFormat.[[Pattern]] to pattern.
-  // 42. Set dateTimeFormat.[[RangePatterns]] to rangePatterns.
-  // 43. Return dateTimeFormat.
+                                                   
+                                                               
+                               
   dateTimeFormatter_ = getUDateFormatter(runtime);
   return vm::ExecutionStatus::RETURNED;
 }
 
-/// Gets the UDateFormat with options set in initialize
+                                                       
 UDateFormat *DateTimeFormatICU::getUDateFormatter(vm::Runtime &runtime) {
   static constexpr std::u16string_view kLong = u"long", kShort = u"short",
                                        kNarrow = u"narrow",
@@ -627,8 +627,8 @@ UDateFormat *DateTimeFormatICU::getUDateFormatter(vm::Runtime &runtime) {
                                        kShortGeneric = u"shortGeneric",
                                        kLongGeneric = u"longGeneric";
 
-  // timeStyle and dateStyle cannot be used in conjunction with the other
-  // options.
+                                                                         
+             
   if (timeStyle_.has_value() || dateStyle_.has_value()) {
     UDateFormatStyle dateStyleRes = UDAT_NONE;
     UDateFormatStyle timeStyleRes = UDAT_NONE;
@@ -657,7 +657,7 @@ UDateFormat *DateTimeFormatICU::getUDateFormatter(vm::Runtime &runtime) {
 
     UErrorCode status = U_ZERO_ERROR;
     UDateFormat *dtf;
-    // if timezone is specified, use that instead, else use default
+                                                                   
     if (!timeZone_.empty()) {
       const UChar *timeZoneRes =
           reinterpret_cast<const UChar *>(timeZone_.c_str());
@@ -686,7 +686,7 @@ UDateFormat *DateTimeFormatICU::getUDateFormatter(vm::Runtime &runtime) {
     return dtf;
   }
 
-  // Else: lets create the skeleton
+                                   
   std::u16string skeleton = u"";
   if (weekday_.has_value()) {
     if (weekday_ == kNarrow)
@@ -814,7 +814,7 @@ UDateFormat *DateTimeFormatICU::getUDateFormatter(vm::Runtime &runtime) {
         &status);
   }
 
-  // if timezone is specified, use that instead, else use default
+                                                                 
   if (!timeZone_.empty()) {
     const UChar *timeZoneRes =
         reinterpret_cast<const UChar *>(timeZone_.c_str());
@@ -844,7 +844,7 @@ UDateFormat *DateTimeFormatICU::getUDateFormatter(vm::Runtime &runtime) {
 std::u16string DateTimeFormatICU::getDefaultHourCycle() {
   UErrorCode status = U_ZERO_ERROR;
   std::u16string myString;
-  // open the default UDateFormat and Pattern of locale
+                                                       
   UDateFormat *defaultDTF = udat_open(
       UDAT_DEFAULT,
       UDAT_DEFAULT,
@@ -859,9 +859,9 @@ std::u16string DateTimeFormatICU::getDefaultHourCycle() {
     status = U_ZERO_ERROR;
     myString.resize(size + 1);
     udat_toPattern(defaultDTF, true, &myString[0], 40, &status);
-    assert(status <= 0); // Check for errors
+    assert(status <= 0);                    
     udat_close(defaultDTF);
-    // find the default hour cycle and return it
+                                                
     for (int32_t i = 0; i < size; i++) {
       char16_t ch = myString[i];
       switch (ch) {
@@ -897,8 +897,8 @@ vm::CallResult<std::unique_ptr<DateTimeFormat>> DateTimeFormat::create(
   return instance;
 }
 
-/// Implementer note: This method corresponds roughly to
-/// https://402.ecma-international.org/8.0/#sec-intl.datetimeformat.prototype.resolvedoptions
+                                                        
+                                                                                             
 Options DateTimeFormatICU::resolvedOptions() noexcept {
   Options options;
   options.emplace(u"locale", Option(locale_));
@@ -959,7 +959,7 @@ std::u16string DateTimeFormatICU::format(double jsTimeValue) noexcept {
         &status);
   }
 
-  assert(status <= 0); // Check for errors
+  assert(status <= 0);                    
   return formattedDate;
 }
 
@@ -971,7 +971,7 @@ std::vector<std::unordered_map<std::u16string, std::u16string>>
 DateTimeFormat::formatToParts(double jsTimeValue) noexcept {
   std::unordered_map<std::u16string, std::u16string> part;
   part[u"type"] = u"integer";
-  // This isn't right, but I didn't want to do more work for a stub.
+                                                                    
   std::string s = std::to_string(jsTimeValue);
   part[u"value"] = {s.begin(), s.end()};
   return std::vector<std::unordered_map<std::u16string, std::u16string>>{part};
@@ -982,7 +982,7 @@ struct NumberFormatDummy : NumberFormat {
   NumberFormatDummy(const char16_t *l) : locale(l) {}
   std::u16string locale;
 };
-} // namespace
+}             
 
 NumberFormat::NumberFormat() = default;
 NumberFormat::~NumberFormat() = default;
@@ -1018,11 +1018,11 @@ std::vector<std::unordered_map<std::u16string, std::u16string>>
 NumberFormat::formatToParts(double number) noexcept {
   std::unordered_map<std::u16string, std::u16string> part;
   part[u"type"] = u"integer";
-  // This isn't right, but I didn't want to do more work for a stub.
+                                                                    
   std::string s = std::to_string(number);
   part[u"value"] = {s.begin(), s.end()};
   return std::vector<std::unordered_map<std::u16string, std::u16string>>{part};
 }
 
-} // namespace platform_intl
-} // namespace hermes
+}                           
+}                    

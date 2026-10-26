@@ -14,10 +14,10 @@
 namespace hermes {
 namespace vm {
 
-/// WeakRoot is used for weak pointers that are stored in roots, and therefore
-/// do not need to take up a WeakRefSlot (since we always know where to update
-/// them). Use protected inheritance to avoid callers casting this to its base
-/// class and accidentally missing the read barrier.
+                                                                              
+                                                                              
+                                                                              
+                                                    
 class WeakRootBase : protected CompressedPointer {
  protected:
   explicit WeakRootBase() : CompressedPointer(nullptr) {}
@@ -34,8 +34,8 @@ class WeakRootBase : protected CompressedPointer {
   using CompressedPointer::operator!=;
   using CompressedPointer::operator==;
 
-  /// These functions should only be used in cases where it is known that no
-  /// read barrier is necessary.
+                                                                            
+                                
   GCCell *getNoBarrierUnsafe(PointerBase &base) const {
     return CompressedPointer::get(base);
   }
@@ -48,20 +48,20 @@ class WeakRootBase : protected CompressedPointer {
   }
 
   WeakRootBase &operator=(CompressedPointer ptr) {
-    // No need for a write barrier on weak roots currently.
+                                                           
     setNoBarrier(ptr);
     return *this;
   }
 
   WeakRootBase &operator=(std::nullptr_t) {
-    // No need for a write barrier on weak roots currently.
+                                                           
     setNoBarrier(CompressedPointer{nullptr});
     return *this;
   }
 };
 
-/// A wrapper around a pointer meant to be used as a weak root. It adds a read
-/// barrier so that the GC is aware when the field is read.
+                                                                              
+                                                           
 template <typename T>
 class WeakRoot final : public WeakRootBase {
  public:
@@ -93,7 +93,7 @@ class WeakRoot final : public WeakRootBase {
   }
 };
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
 #endif

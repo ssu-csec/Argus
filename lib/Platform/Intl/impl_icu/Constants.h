@@ -53,7 +53,7 @@ inline constexpr char16_t nanoseconds[] = u"nanoseconds";
 inline constexpr char16_t timeZoneName[] = u"timeZoneName";
 inline constexpr char16_t style[] = u"style";
 inline constexpr char16_t fractionalDigits[] = u"fractionalDigits";
-} // namespace opt_name
+}                      
 
 namespace opt_value {
 
@@ -64,13 +64,13 @@ namespace locale_matcher {
 inline constexpr char16_t lookup[] = u"lookup";
 inline constexpr char16_t best_fit[] = u"best fit";
 inline constexpr const char16_t *validLocaleMatchers[] = {lookup, best_fit};
-} // namespace locale_matcher
+}                            
 
 namespace case_first {
 inline constexpr char16_t upper[] = u"upper";
 inline constexpr char16_t lower[] = u"lower";
 inline constexpr const char16_t *validCaseFirsts[] = {upper, lower, falseStr};
-} // namespace case_first
+}                        
 
 namespace sensitivity {
 inline constexpr char16_t base[] = u"base";
@@ -82,23 +82,23 @@ inline constexpr const char16_t *validSensitivities[] = {
     accent,
     caseStr,
     variant};
-} // namespace sensitivity
+}                         
 
 namespace usage {
 inline constexpr char16_t sort[] = u"sort";
 inline constexpr char16_t search[] = u"search";
 inline constexpr const char16_t *validUsages[] = {sort, search};
-} // namespace usage
+}                   
 
 namespace numeric {
 inline constexpr const char16_t *validNumerics[] = {trueStr, falseStr};
-} // namespace numeric
+}                     
 
 namespace format_matcher {
 inline constexpr char16_t basic[] = u"basic";
 inline constexpr char16_t best_fit[] = u"best fit";
 inline constexpr const char16_t *validFormatMatchers[] = {basic, best_fit};
-} // namespace format_matcher
+}                            
 
 namespace hour_cycle {
 inline constexpr char16_t h11[] = u"h11";
@@ -106,11 +106,11 @@ inline constexpr char16_t h12[] = u"h12";
 inline constexpr char16_t h23[] = u"h23";
 inline constexpr char16_t h24[] = u"h24";
 inline constexpr const char16_t *validHourCycles[] = {h11, h12, h23, h24};
-} // namespace hour_cycle
+}                        
 
 namespace hour12 {
 inline constexpr const char16_t *validHour12s[] = {trueStr, falseStr};
-} // namespace hour12
+}                    
 
 namespace style {
 inline constexpr char16_t full[] = u"full";
@@ -144,7 +144,7 @@ inline constexpr const char16_t *validDurationFormatStyles[] = {
     shortStr,
     narrow,
     digital};
-} // namespace style
+}                   
 
 namespace display {
 inline constexpr char16_t autoStr[] = u"auto";
@@ -152,12 +152,12 @@ inline constexpr char16_t always[] = u"always";
 inline constexpr const char16_t *validDurationUnitDisplays[] = {
     autoStr,
     always};
-} // namespace display
+}                     
 
-} // namespace opt_value
+}                       
 
-// All available extension keys defined by Unicode are described in
-// https://unicode.org/reports/tr35/#Key_Type_Definitions
+                                                                   
+                                                         
 namespace extension_key {
 inline constexpr char16_t ca[] = u"ca";
 inline constexpr char16_t co[] = u"co";
@@ -165,21 +165,21 @@ inline constexpr char16_t hc[] = u"hc";
 inline constexpr char16_t kf[] = u"kf";
 inline constexpr char16_t kn[] = u"kn";
 inline constexpr char16_t nu[] = u"nu";
-} // namespace extension_key
+}                           
 
 namespace part_key {
 inline constexpr char16_t type[] = u"type";
 inline constexpr char16_t value[] = u"value";
 inline constexpr char16_t unit[] = u"unit";
-} // namespace part_key
+}                      
 
 namespace part_type {
 inline constexpr char16_t literal[] = u"literal";
-} // namespace part_type
+}                       
 
-} // namespace constants
-} // namespace impl_icu
-} // namespace platform_intl
-} // namespace hermes
+}                       
+}                      
+}                           
+}                    
 
-#endif // HERMES_PLATFORMINTL_IMPLICU_CONSTANTS_H
+#endif                                           

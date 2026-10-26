@@ -74,5 +74,5 @@ void AlignedStorage::markUnused(char *from, char *to) {
 #endif
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

@@ -11,17 +11,17 @@
 //
 //===----------------------------------------------------------------------===//
 
-//===----------------------------------------------------------------------===//
-//=== WARNING: Implementation here must contain only generic Win32 code that
-//===          is guaranteed to work on *all* Win32 variants.
-//===----------------------------------------------------------------------===//
+                                                                                
+                                                                            
+                                                             
+                                                                                
 
 #include "WindowsSupport.h"
 #include "llvh/Support/Mutex.h"
 
 namespace llvh {
 
-sys::MutexImpl::MutexImpl(bool /*recursive*/)
+sys::MutexImpl::MutexImpl(bool              )
 {
   data_ = new CRITICAL_SECTION;
   InitializeCriticalSection((LPCRITICAL_SECTION)data_);

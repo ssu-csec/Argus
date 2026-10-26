@@ -50,7 +50,7 @@ CallResult<HermesValue> evalInEnvironment(
       utf8code.size() >= compileFlags.preemptiveFileCompilationThreshold;
   compileFlags.enableES6Classes = runtime.hasES6Class();
 #ifdef HERMES_ENABLE_DEBUGGER
-  // Required to allow stepping and examining local variables in eval'd code
+                                                                            
   compileFlags.debug = true;
 #endif
 
@@ -106,7 +106,7 @@ CallResult<HermesValue> directEval(
     const ScopeChain &scopeChain,
     bool isStrict,
     bool singleFunction) {
-  // Convert the code into UTF8.
+                                
   std::string code;
   auto view = StringPrimitive::createStringView(runtime, str);
   if (view.isASCII()) {
@@ -137,5 +137,5 @@ CallResult<HermesValue> eval(void *, Runtime &runtime, NativeArgs args) {
       runtime, args.dyncastArg<StringPrimitive>(0), {}, false, false);
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

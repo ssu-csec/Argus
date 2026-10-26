@@ -11,8 +11,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-// Specialized loads from packet
-let TargetPrefix = "bpf" in {  // All intrinsics start with "llvm.bpf."
+                                
+let TargetPrefix = "bpf" in {                                          
   def int_bpf_load_byte : GCCBuiltin<"__builtin_bpf_load_byte">,
               Intrinsic<[llvm_i64_ty], [llvm_ptr_ty, llvm_i64_ty], [IntrReadMem]>;
   def int_bpf_load_half : GCCBuiltin<"__builtin_bpf_load_half">,

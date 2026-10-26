@@ -26,49 +26,49 @@ namespace hermes {
 namespace {
 
 class ResolveStaticRequireImpl {
-  /// The Module object we are processing. (NOTE: this is not a CJS module)
+                                                                           
   Module *const M_;
 
-  /// Convenient shortcut to the SourceErrorManager.
+                                                    
   SourceErrorManager &EM_;
 
-  /// Builder used for new instructions.
+                                        
   IRBuilder builder_;
 
-  /// Set to false if there is at least one case that we couldn't resolve
-  /// statically.
+                                                                         
+                 
   bool canResolve_{true};
 
-  /// An instance of using the "require" parameter or a value derived
-  /// from it.
+                                                                     
+              
   struct Usage {
-    /// The value that is being used. It can be one of:
-    /// - Parameter (the "require" parameter)
-    /// - AllocStackInst
-    /// - LoadStackInst
-    /// - Variable
-    /// - LoadFrameVariable
+                                                       
+                                             
+                        
+                       
+                  
+                           
     Value *V;
 
-    /// The instruction using the value.
+                                        
     Instruction *I;
 
     Usage(Value *V, Instruction *I) : V(V), I(I) {}
   };
 
-  /// A resolved require() call.
+                                
   struct ResolvedRequire {
-    /// The call instruction we resolved and will replace.
+                                                          
     CallInst *call;
-    /// The resolved target.
+                            
     Literal *resolvedTarget;
 
     ResolvedRequire(CallInst *call, Literal *resolvedTarget)
         : call(call), resolvedTarget(resolvedTarget) {}
   };
 
-  /// All resolved require calls. If canResolve_ is true, we can replace them
-  /// with HermesInternal.require() calls.
+                                                                             
+                                          
   std::vector<ResolvedRequire> resolvedRequireCalls_{};
 
  public:
@@ -81,14 +81,14 @@ class ResolveStaticRequireImpl {
   void resolveCJSModule(Function *moduleFunction);
   void resolveRequireCall(Function *moduleFunction, CallInst *call);
 
-  /// Attempt to resolve the specified require() target. On failure report a
-  /// warning at the specified location and return nullptr.
-  /// \param moduleFunction the CJS module in which context to perform the
-  ///   resolution.
-  /// \param target the resolve target, which was the first argument of
-  ///   require().
-  /// \param errorLoc report the warning at that location if resolution fails.
-  /// \return a literal representing the resolved module or nullptr on error.
+                                                                            
+                                                           
+                                                                          
+                   
+                                                                       
+                  
+                                                                              
+                                                                             
   Literal *resolveModuleTarget(
       Function *moduleFunction,
       LiteralString *target,
@@ -103,14 +103,14 @@ bool ResolveStaticRequireImpl::run() {
   if (!canResolve_)
     return false;
 
-  // Replace all resolved calls with calls to HermesInternal.requireFast().
+                                                                           
   for (const auto &RR : resolvedRequireCalls_) {
     builder_.setInsertionPointAfter(RR.call);
 
     builder_.setLocation(RR.call->getLocation());
     builder_.setCurrentSourceLevelScope(RR.call->getSourceLevelScope());
 
-    /// (CallBuiltin "requireFast", resolvedTarget)
+                                                   
     auto callHI = builder_.createCallBuiltinInst(
         BuiltinMethod::HermesBuiltin_requireFast, RR.resolvedTarget);
 
@@ -132,38 +132,38 @@ void ResolveStaticRequireImpl::resolveCJSModule(Function *moduleFunction) {
       requireParam->getName().str() == "require" &&
       "CJS module second parameter must be 'require'");
 
-  // Visited instructions.
+                          
   llvh::SmallDenseSet<Instruction *> visited{};
 
-  // Usages to process.
+                       
   llvh::SmallVector<Usage, 8> workList{};
 
-  // Add all unvisited users of a value to the work list.
+                                                         
   auto addUsers = [&visited, &workList](Value *value) {
     for (Instruction *I : value->getUsers())
       if (visited.insert(I).second)
         workList.emplace_back(value, I);
   };
 
-  // Add all usages of the "require" parameter to the worklist, which then may
-  // add more usages and so on.
+                                                                              
+                               
   addUsers(requireParam);
 
   while (!workList.empty()) {
     Usage U = workList.pop_back_val();
 
     if (auto *call = llvh::dyn_cast<CallInst>(U.I)) {
-      // Make sure require() doesn't escape as a parameter.
+                                                           
       bool fail = false;
       for (unsigned numArgs = call->getNumArguments(), arg = 0; arg != numArgs;
            ++arg) {
         if (call->getArgument(arg) == U.V) {
-          // Oops, "require" is passed as parameter.
+                                                    
           EM_.warning(
               Warning::UnresolvedStaticRequire,
               call->getLocation(),
               "'require' used as function call argument");
-          // No need to analyze this usage anymore.
+                                                   
           fail = true;
           canResolve_ = false;
           break;
@@ -187,7 +187,7 @@ void ResolveStaticRequireImpl::resolveCJSModule(Function *moduleFunction) {
 
       resolveRequireCall(moduleFunction, call);
     } else if (auto *SS = llvh::dyn_cast<StoreStackInst>(U.I)) {
-      // Storing "require" into a stack location.
+                                                 
 
       if (!isStoreOnceStackLocation(cast<AllocStackInst>(SS->getPtr()))) {
         EM_.warning(
@@ -200,11 +200,11 @@ void ResolveStaticRequireImpl::resolveCJSModule(Function *moduleFunction) {
 
       addUsers(SS->getPtr());
     } else if (auto *LS = llvh::dyn_cast<LoadStackInst>(U.I)) {
-      // Loading "require" from a stack location.
+                                                 
 
       addUsers(LS);
     } else if (auto *SF = llvh::dyn_cast<StoreFrameInst>(U.I)) {
-      // Storing "require" into a frame variable.
+                                                 
 
       if (!isStoreOnceVariable(SF->getVariable())) {
         EM_.warning(
@@ -217,21 +217,21 @@ void ResolveStaticRequireImpl::resolveCJSModule(Function *moduleFunction) {
 
       addUsers(SF->getVariable());
     } else if (auto *LF = llvh::dyn_cast<LoadFrameInst>(U.I)) {
-      // Loading "require" from a frame variable.
+                                                 
 
       addUsers(LF);
     } else if (auto *LPI = llvh::dyn_cast<LoadPropertyInst>(U.I)) {
       if (LPI->getProperty() == U.V) {
-        // `require` must not be used as a key in a LoadPropertyInst,
-        // because it could be used in a getter and escape.
+                                                                     
+                                                           
         canResolve_ = false;
         EM_.warning(
             Warning::UnresolvedStaticRequire,
             U.I->getLocation(),
             "'require' is used as a property key and cannot be analyzed");
       }
-      // Loading values from require is allowed.
-      // In particular, require.context is used to load new segments.
+                                                
+                                                                     
     } else {
       canResolve_ = false;
       EM_.warning(
@@ -291,22 +291,22 @@ void ResolveStaticRequireImpl::resolveRequireCall(
   ++NumRequireCallsResolved;
 }
 
-/// Canonicalize \p dirname and \p target together, placing the result in
-/// \p dirname.
-/// This assumes that the target is given relative to the current dirname.
+                                                                         
+               
+                                                                          
 static void canonicalizePath(
     llvh::SmallVectorImpl<char> &dirname,
     llvh::StringRef target) {
   if (!target.empty() && target[0] == '/') {
-    // If the target is absolute (starts with a '/'), resolve from the module
-    // root (disregard the dirname).
+                                                                             
+                                    
     dirname.clear();
     llvh::sys::path::append(dirname, target.drop_front(1));
     return;
   }
   llvh::sys::path::append(dirname, llvh::sys::path::Style::posix, target);
 
-  // Remove all dots. This is done to get rid of ../ or anything like ././.
+                                                                           
   llvh::sys::path::remove_dots(dirname, true, llvh::sys::path::Style::posix);
 }
 
@@ -325,7 +325,7 @@ Literal *ResolveStaticRequireImpl::resolveModuleTarget(
       !targetIdentifier.isValid() &&
       "Uninitialized identifier must be invalid");
 
-  // Attempt to resolve the require directly using the resolution table.
+                                                                        
   const auto *resolutionTable =
       moduleFunction->getContext().getResolutionTable();
   if (resolutionTable) {
@@ -341,15 +341,15 @@ Literal *ResolveStaticRequireImpl::resolveModuleTarget(
     }
   }
 
-  // If we failed to resolve using the resolution table, fall back to the
-  // basic canonicalization procedure.
+                                                                         
+                                      
   if (!targetIdentifier.isValid()) {
-    // First, place the directory name into canonicalPath.
+                                                          
     llvh::SmallString<32> canonicalPath = cjsModule->filename.str();
     llvh::sys::path::remove_filename(
         canonicalPath, llvh::sys::path::Style::posix);
 
-    // Canonicalize (canonicalPath + target) together to get the final path.
+                                                                            
     canonicalizePath(canonicalPath, target->getValue().str());
     targetIdentifier = builder.createIdentifier(canonicalPath);
   }
@@ -368,7 +368,7 @@ Literal *ResolveStaticRequireImpl::resolveModuleTarget(
   return builder.getLiteralNumber(*targetModuleID);
 }
 
-} // anonymous namespace
+}                       
 
 bool ResolveStaticRequire::runOnModule(Module *M) {
   if (!M->getContext().getUseCJSModules() ||
@@ -386,6 +386,6 @@ std::unique_ptr<Pass> createResolveStaticRequire() {
   return std::make_unique<ResolveStaticRequire>();
 }
 
-} // namespace hermes
+}                    
 
 #undef DEBUG_TYPE

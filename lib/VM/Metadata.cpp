@@ -93,8 +93,8 @@ bool Metadata::Builder::fieldConflicts(offset_t offset, size_t size) {
 }
 #endif
 
-/// @name Formatters
-/// @{
+                    
+      
 
 llvh::raw_ostream &operator<<(llvh::raw_ostream &os, const Metadata &meta) {
   os << "Metadata: {\n\tfieldsAndNames: [";
@@ -144,7 +144,7 @@ llvh::raw_ostream &operator<<(llvh::raw_ostream &os, ArrayType arraytype) {
   return os << "}";
 }
 
-/// @}
+      
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

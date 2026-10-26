@@ -9,8 +9,8 @@
 #define MATHFUNC_1ARG(name, func)
 #endif
 
-/// List of functions with 1 argument used by Math
-/// Use MATHFUNC_1ARG(name, func) to define new ones.
+                                                  
+                                                     
 MATHFUNC_1ARG(abs, std::abs)
 MATHFUNC_1ARG(acos, std::acos)
 MATHFUNC_1ARG(acosh, ::acosh)
@@ -41,8 +41,8 @@ MATHFUNC_1ARG(tanh, ::tanh)
 #define MATHFUNC_2ARG(name, func)
 #endif
 
-/// List of functions with 2 arguments used by Math
-/// Use MATHFUNC_2ARG(name, func) to define new ones.
+                                                   
+                                                     
 MATHFUNC_2ARG(atan2, std::atan2)
 
 

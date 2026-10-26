@@ -1,0 +1,136 @@
+{
+  "package": "Argus research source distribution with appendix reproduction",
+  "based_on": "integrated 1.0.0rc3",
+  "prepared_at_utc": "2026-10-26T07:31:55.197060+00:00",
+  "target_list": {
+    "path": "crawler/20261005-top-100k-urls.txt",
+    "rows": 100000,
+    "unique_rows": 100000,
+    "sha256": "57e6efdec59795e5dbd03c725857199baf98595eee1e263da20a2b63b137362c",
+    "origin": "User-provided 20261005-top-100k-urls.txt; order and bytes preserved"
+  },
+  "structure": "crawler -> analyzer -> classifier",
+  "excludes": [
+    "test suites",
+    "smoke runners",
+    "development and audit outputs",
+    "collected website scripts",
+    "historical results",
+    "compiled binaries",
+    "installed dependencies",
+    "mobile SDK and unrelated developer tools"
+  ],
+  "comment_policy": "Remove ordinary explanatory comments; retain licensing notices, semantic/tool directives, interpreter/encoding directives and runtime string literals/docstrings.",
+  "verification": {
+    "status": "PASS",
+    "native_build": "Linux/WSL2 Release build of mixed-hermes with the packaged build script",
+    "native_engine_sha256": "26bb9c1f54a56ec36fe2e70463b4a7c5eb8ad16625389e202ffdde3cbaa40ab2",
+    "native_source_comparison_files": 1203,
+    "python_ast_equal_files": 34,
+    "javascript_ast_equal_files": 20,
+    "javascript_parse_units": 14,
+    "target_list_check": true,
+    "crawler_unit_cases": 19,
+    "native_authored_cases": 61,
+    "tdz_authored_cases": 11,
+    "positive_negative_date_cookie": true,
+    "module_hold_preserved": true,
+    "actual_inputs": [
+      {
+        "domain": "adblockplus.org",
+        "native_complete": true,
+        "all_route_fields_equal": true
+      },
+      {
+        "domain": "ampproject.org",
+        "native_complete": true,
+        "all_route_fields_equal": true
+      },
+      {
+        "domain": "bis.org",
+        "native_complete": true,
+        "all_route_fields_equal": true
+      }
+    ],
+    "actual_rule_findings_equal_to_rc3": true,
+    "original_rc3_files_preserved": 9626
+  },
+  "limitations": [
+    "No fresh crawl or full-corpus run performed for this packaging step.",
+    "Actual-input comparison is limited to three saved inputs.",
+    "Tests and detailed validation records are preserved outside this runtime archive.",
+    "Native completion, rule findings, auxiliary conditional observations and semantic certainty are distinct."
+  ],
+  "packaging_revision": 4,
+  "updated_at_utc": "2026-10-26T08:03:22.503571+00:00",
+  "reproduction": {
+    "script": "scripts/recompute_appendix.py",
+    "sha256": "40230c732836d8e899c0ff70d0b73fd2e4e847f1c50350f61d86f8978f1363b5",
+    "purpose": "Reproduce historical appendix aggregates; not a runtime smoke test",
+    "historical_inputs": [
+      {
+        "file": "final_classification.json.gz",
+        "sha256": "22e268b87dec229d7bfcd68db294c7ac5f0f05930c7ebadb350257e12fc73153"
+      },
+      {
+        "file": "all_11124_domain_comparison.csv",
+        "sha256": "710d49a6a30d52a5f79e972f4b8f09b35021426af583ebcc62ce6860c910d0ef"
+      },
+      {
+        "file": "comparison_summary.json",
+        "sha256": "7c7e931c258cffbbcf223d7843525a52a456e17849d80593d69473a6becd0822"
+      }
+    ],
+    "historical_schema_required": true,
+    "comparison_summary_role": "Hash provenance only",
+    "data_included": false,
+    "verification": {
+      "status": "PASS",
+      "all_metrics_equal_to_corrected_reference": true,
+      "domains": 11124,
+      "finding_groups": 93902
+    }
+  },
+  "additional_reproduction_scripts": [
+    {
+      "script": "scripts/export_csv_and_tracker_counts.py",
+      "sha256": "a8930570e229f615263f3eacf16e4e37654a012beb8d3ec2ceac9ce6cc2c65f6",
+      "help_pass": true
+    },
+    {
+      "script": "scripts/count_rule_overlap.py",
+      "sha256": "50d65c22dccbda7c07945ed14efe5d76900d2acbc3ba45c526818f36bb05e2da",
+      "help_pass": true
+    },
+    {
+      "script": "scripts/compare_archived_easyprivacy.py",
+      "sha256": "c4aec1abbbc835623375a90239c4ef33f6388b8d483a4e5b7b7ef32a73357cd2",
+      "help_pass": true
+    }
+  ],
+  "submission_review": {
+    "status": "CODE_CHECKS_PASS_SOURCE_DISTRIBUTION",
+    "runtime_code_unchanged_from_v2": true,
+    "full_csv_and_aggregation_equal": true,
+    "host_list_counts_equal": {
+      "LIST_MATCHED": 9957,
+      "NO_LIST_MATCH_OBSERVED": 1166,
+      "INDETERMINATE_INCOMPLETE_NETWORK": 1
+    },
+    "original_data_preserved": true,
+    "optional_old_study_comparison_repeated": false,
+    "private_key_or_known_token_pattern_matches": [],
+    "personal_absolute_paths": [],
+    "open_items": [],
+    "fresh_vm_browser_install_repeated": false,
+    "numerical_reproduction_scope": "Historical inputs are not distributed in this source package; numerical reproduction requires those inputs. This is not a blocker for source-code publication."
+  },
+  "crawler_license": {
+    "spdx": "MIT",
+    "file": "crawler/LICENSE",
+    "authorization": "Author confirmed original crawler code and requested MIT release",
+    "dependency_licenses_unchanged": true
+  },
+  "documentation_revision": 1,
+  "documentation_update": "README layout follows the historical repository; commands, outputs and source-distribution scope match v4. Runtime code unchanged."
+}

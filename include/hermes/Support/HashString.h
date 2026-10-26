@@ -14,18 +14,18 @@
 
 namespace hermes {
 
-/// Computes a hash of \p str that must be stable between compilation and
-/// execution of the compiled bytecode.
-/// Use the Jenkins hash for now, but that may be changed internally later.
-///
-/// We cannot directly call llvh::hash_value(str) because each element of
-/// str can be either char or char16_t. The default iterator of
-/// llvh::ArrayRef will return different types for each element, leading to
-/// different hash values even when an ASCII string has the same content as
-/// an UTF16 string. hashString() takes advantage of the abstraction of
-/// StringView::const_iterator to always return char16_t in the iterator.
-///
-/// NOTE: If hashString is changed, the bytecode version must be bumped.
+                                                                         
+                                       
+                                                                           
+   
+                                                                         
+                                                               
+                                                                           
+                                                                           
+                                                                       
+                                                                         
+   
+                                                                        
 template <typename T>
 uint32_t hashString(llvh::ArrayRef<T> str) {
   static_assert(
@@ -48,15 +48,15 @@ template <>
 constexpr uint32_t constexprHashStringHelper<0>(const char *str) {
   return 0;
 }
-} // namespace hash_details
+}                          
 
-/// Return the hash of \p str, at compile time.
+                                               
 template <std::size_t Count>
 constexpr uint32_t constexprHashString(const char (&str)[Count]) {
-  // Count-1 accounts for terminating NUL.
+                                          
   return hash_details::constexprHashStringHelper<Count - 1>(str);
 }
 
-} // namespace hermes
+}                    
 
 #endif

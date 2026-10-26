@@ -14,13 +14,13 @@
 namespace hermes {
 namespace vm {
 
-/// In WeakMap marking, if we mark the weak ref slots referenced by a
-/// WeakMap early, this breaks assertions when we attempt to access
-/// the slots while determining which keys are reachable.  This
-/// Acceptor type delegates to another Acceptor, except when marking
-/// WeakRefs -- those are ignored.  The type of the "target" acceptor, to which
-/// the calls are delegated, is a template parameter so that those calls are
-/// non-virtual (since we know the exact type).
+                                                                     
+                                                                   
+                                                               
+                                                                    
+                                                                               
+                                                                            
+                                               
 template <typename TargetAcceptor>
 class SkipWeakRefsAcceptor final : public SlotAcceptor {
  public:
@@ -43,7 +43,7 @@ class SkipWeakRefsAcceptor final : public SlotAcceptor {
   TargetAcceptor *acceptor_;
 };
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMES_VM_SKIPWEAKACCEPTOR_H
+#endif                                

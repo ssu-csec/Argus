@@ -25,19 +25,19 @@ template <typename T> struct DenseMapInfo;
 template <typename PointerT, unsigned IntBits, typename PtrTraits>
 struct PointerIntPairInfo;
 
-/// PointerIntPair - This class implements a pair of a pointer and small
-/// integer.  It is designed to represent this in the space required by one
-/// pointer by bitmangling the integer into the low part of the pointer.  This
-/// can only be done for small integers: typically up to 3 bits, but it depends
-/// on the number of bits available according to PointerLikeTypeTraits for the
-/// type.
-///
-/// Note that PointerIntPair always puts the IntVal part in the highest bits
-/// possible.  For example, PointerIntPair<void*, 1, bool> will put the bit for
-/// the bool into bit #2, not bit #0, which allows the low two bits to be used
-/// for something else.  For example, this allows:
-///   PointerIntPair<PointerIntPair<void*, 1, bool>, 1, bool>
-/// ... and the two bools will land in different bits.
+                                                                        
+                                                                           
+                                                                              
+                                                                               
+                                                                              
+         
+   
+                                                                            
+                                                                               
+                                                                              
+                                                  
+                                                             
+                                                      
 template <typename PointerTy, unsigned IntBits, typename IntType = unsigned,
           typename PtrTraits = PointerLikeTypeTraits<PointerTy>,
           typename Info = PointerIntPairInfo<PointerTy, IntBits, PtrTraits>>
@@ -97,8 +97,8 @@ public:
     return P;
   }
 
-  // Allow PointerIntPairs to be created from const void * if and only if the
-  // pointer type could be created from a const void *.
+                                                                             
+                                                       
   static PointerIntPair getFromOpaqueValue(const void *V) {
     (void)PtrTraits::getFromVoidPointer(V);
     return getFromOpaqueValue(const_cast<void *>(V));
@@ -132,18 +132,18 @@ struct PointerIntPairInfo {
   static_assert(IntBits <= PtrTraits::NumLowBitsAvailable,
                 "PointerIntPair with integer size too large for pointer");
   enum : uintptr_t {
-    /// PointerBitMask - The bits that come from the pointer.
+                                                             
     PointerBitMask =
         ~(uintptr_t)(((intptr_t)1 << PtrTraits::NumLowBitsAvailable) - 1),
 
-    /// IntShift - The number of low bits that we reserve for other uses, and
-    /// keep zero.
+                                                                             
+                  
     IntShift = (uintptr_t)PtrTraits::NumLowBitsAvailable - IntBits,
 
-    /// IntMask - This is the unshifted mask for valid bits of the int type.
+                                                                            
     IntMask = (uintptr_t)(((intptr_t)1 << IntBits) - 1),
 
-    // ShiftedIntMask - This is the bits for the integer shifted in place.
+                                                                          
     ShiftedIntMask = (uintptr_t)(IntMask << IntShift)
   };
 
@@ -161,7 +161,7 @@ struct PointerIntPairInfo {
         reinterpret_cast<intptr_t>(PtrTraits::getAsVoidPointer(Ptr));
     assert((PtrWord & ~PointerBitMask) == 0 &&
            "Pointer is not sufficiently aligned");
-    // Preserve all low bits, just update the pointer.
+                                                      
     return PtrWord | (OrigValue & ~PointerBitMask);
   }
 
@@ -169,7 +169,7 @@ struct PointerIntPairInfo {
     intptr_t IntWord = static_cast<intptr_t>(Int);
     assert((IntWord & ~IntMask) == 0 && "Integer too large for field");
 
-    // Preserve all bits other than the ones we are updating.
+                                                             
     return (OrigValue & ~ShiftedIntMask) | IntWord << IntShift;
   }
 };
@@ -180,7 +180,7 @@ struct isPodLike<PointerIntPair<PointerTy, IntBits, IntType>> {
   static const bool value = true;
 };
 
-// Provide specialization of DenseMapInfo for PointerIntPair.
+                                                             
 template <typename PointerTy, unsigned IntBits, typename IntType>
 struct DenseMapInfo<PointerIntPair<PointerTy, IntBits, IntType>> {
   using Ty = PointerIntPair<PointerTy, IntBits, IntType>;
@@ -205,7 +205,7 @@ struct DenseMapInfo<PointerIntPair<PointerTy, IntBits, IntType>> {
   static bool isEqual(const Ty &LHS, const Ty &RHS) { return LHS == RHS; }
 };
 
-// Teach SmallPtrSet that PointerIntPair is "basically a pointer".
+                                                                  
 template <typename PointerTy, unsigned IntBits, typename IntType,
           typename PtrTraits>
 struct PointerLikeTypeTraits<
@@ -228,6 +228,6 @@ struct PointerLikeTypeTraits<
   enum { NumLowBitsAvailable = PtrTraits::NumLowBitsAvailable - IntBits };
 };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_ADT_POINTERINTPAIR_H
+#endif                             

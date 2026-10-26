@@ -23,5 +23,5 @@ const char *getWasmIntrinsicsName(unsigned intrinsics) {
   return wasmIntrinsicsName[intrinsics];
 }
 
-} // namespace hermes
-#endif // HERMES_RUN_WASM
+}                    
+#endif                   

@@ -157,7 +157,7 @@ struct StrBoolAttr {
   }
 };
 
-// EnumAttr classes
+                   
 struct AlignmentAttr : EnumAttr {
   static enum Attribute::AttrKind getKind() {
     return llvh::Attribute::Alignment;
@@ -454,7 +454,7 @@ struct ZExtAttr : EnumAttr {
   }
 };
 
-// StrBoolAttr classes
+                      
 struct LessPreciseFPMADAttr : StrBoolAttr {
   static StringRef getKind() {
     return "less-precise-fpmad";

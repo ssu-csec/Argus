@@ -23,7 +23,7 @@
 
 using namespace hermes;
 
-// Make sure the ValueKinds.def tree is consistent with the class hierarchy.
+                                                                            
 #define QUOTE(X) #X
 #define DEF_VALUE(CLASS, PARENT)                                           \
   static_assert(                                                           \
@@ -92,15 +92,15 @@ void Value::removeUse(Use U) {
   assert(Users.size() && "Removing a user from an empty list");
   assert(U.first == this && "Invalid user");
 
-  // We don't care about the order of the operands in the use vector. One cheap
-  // way to delete an element is to pop the last element and save it on top of
-  // the element that we want to remove. This is faster than moving the whole
-  // array.
+                                                                               
+                                                                              
+                                                                             
+           
   Users[U.second] = Users.back();
   Users.pop_back();
 
-  // If we've changed the location of a use in the use list then we need to
-  // update the operand in the user.
+                                                                           
+                                    
   if (U.second != Users.size()) {
     Use oldUse = {this, static_cast<unsigned>(Users.size())};
     auto &operands = Users[U.second]->Operands;
@@ -124,16 +124,16 @@ void Value::replaceAllUsesWith(Value *Other) {
     return;
   }
 
-  // Ask the users of this value to unregister themselves. Notice that the users
-  // modify and invalidate the iterators of Users.
+                                                                                
+                                                  
   while (Users.size()) {
     Users[Users.size() - 1]->replaceFirstOperandWith(this, Other);
   }
 }
 
 void Value::removeAllUses() {
-  // Ask the users of this value to delete operands of this value. Notice that
-  // the users modify and invalidate the iterators of Users.
+                                                                              
+                                                            
   while (Users.size()) {
     Users[Users.size() - 1]->eraseOperand(this);
   }
@@ -148,7 +148,7 @@ ScopeDesc::~ScopeDesc() {
     Value::destroy(inner);
   }
 
-  // Free all variables.
+                        
   for (auto *v : variables_) {
     Value::destroy(v);
   }
@@ -191,12 +191,12 @@ Function::Function(
     parent->push_back(this);
   }
 
-  // Derive internalName from originalName.
+                                           
   assert(originalName.isValid() && "Function originalName must be valid");
 }
 
 Function::~Function() {
-  // Free all parameters.
+                         
   for (auto *p : Parameters) {
     Value::destroy(p);
   }
@@ -209,10 +209,14 @@ std::string Function::getDefinitionKindStr(bool isDescriptive) const {
       return "function";
     case Function::DefinitionKind::ES6Constructor:
       return "constructor";
+    case Function::DefinitionKind::ES6DerivedConstructor:
+      return "derived constructor";
     case Function::DefinitionKind::ES6Arrow:
       return isDescriptive ? "arrow function" : "arrow";
     case Function::DefinitionKind::ES6Method:
       return "method";
+    case Function::DefinitionKind::ES6AsyncGenerator:
+      return "async generator";
   }
   assert(false && "Invalid DefinitionKind");
   return "function";
@@ -225,7 +229,7 @@ std::string Function::getDescriptiveDefinitionKindStr() const {
 llvh::Optional<llvh::StringRef> Function::getSourceRepresentationStr() const {
   switch (getSourceVisibility()) {
     case SourceVisibility::ShowSource: {
-      // Return the actual source code string.
+                                              
       auto sourceRange = getSourceRange();
       assert(
           sourceRange.isValid() && "Function does not have source available");
@@ -236,21 +240,21 @@ llvh::Optional<llvh::StringRef> Function::getSourceRepresentationStr() const {
     }
     case SourceVisibility::HideSource:
     case SourceVisibility::Sensitive: {
-      // For implementation-hiding functions, the spec requires the source code
-      // representation of them "must have the syntax of a NativeFunction".
-      //
-      // Naively adding 'function <name>() { [ native code ] }' to string table
-      // for each function would be a huge waste of space in the generated hbc.
-      // Instead, we associate all such functions with an empty string to
-      // effectively "mark" them. (the assumption is that an real function
-      // source can't be empty). This reduced the constant factor of the space
-      // cost to only 8 bytes (one FunctionSourceTable entry) per function.
+                                                                               
+                                                                           
+        
+                                                                               
+                                                                               
+                                                                         
+                                                                          
+                                                                              
+                                                                           
       return llvh::StringRef("");
     }
     case SourceVisibility::Default:
     default: {
-      // No need of special source representation for these cases, their
-      // 'toString' will return `{ [ bytecode ] }` as the default.
+                                                                        
+                                                                  
       return llvh::None;
     }
   }
@@ -268,7 +272,7 @@ void BasicBlock::dump(llvh::raw_ostream &os) const {
 }
 
 void BasicBlock::printAsOperand(llvh::raw_ostream &OS, bool) const {
-  // Use the address of the basic block when LLVM prints the CFG.
+                                                                 
   size_t Num = (size_t)this;
   OS << "BB#" << std::to_string(Num);
 }
@@ -304,18 +308,18 @@ void Instruction::setOperand(Value *Val, unsigned Index) {
 
   Value *CurrentValue = Operands[Index].first;
 
-  // If the operand is already set then there is nothing to do. The instruction
-  // is already registered in the use-list of the value.
+                                                                               
+                                                        
   if (CurrentValue == Val) {
     return;
   }
 
-  // Remove the current instruction from the old value that we are removing.
+                                                                            
   if (CurrentValue) {
     CurrentValue->removeUse(Operands[Index]);
   }
 
-  // Register this instruction as a user of the new value and set the operand.
+                                                                              
   if (Val) {
     Operands[Index] = Val->addUser(this);
   } else {
@@ -332,8 +336,8 @@ unsigned Instruction::getNumOperands() const {
 }
 
 void Instruction::removeOperand(unsigned index) {
-  // We call to setOperand before deleting the operand because setOperand
-  // un-registers the user from the user list.
+                                                                         
+                                              
   setOperand(nullptr, index);
   Operands.erase(Operands.begin() + index);
 }
@@ -349,14 +353,14 @@ void Instruction::replaceFirstOperandWith(Value *OldValue, Value *NewValue) {
 }
 
 void Instruction::eraseOperand(Value *Value) {
-  // Overwrite all of the operands that we are removing with null. This will
-  // unregister them from the use list.
+                                                                            
+                                       
   for (int i = 0, e = getNumOperands(); i < e; ++i) {
     if (getOperand(i) == Value)
       setOperand(nullptr, i);
   }
 
-  // Now remove all null operands from the list.
+                                                
   auto new_end = std::remove_if(
       Operands.begin(), Operands.end(), [](Use U) { return !U.first; });
   Operands.erase(new_end, Operands.end());
@@ -393,7 +397,7 @@ void Instruction::removeFromParent() {
   getParent()->remove(this);
 }
 void Instruction::eraseFromParent() {
-  // Release this instruction from the use-list of other instructions.
+                                                                      
   for (unsigned i = 0; i < getNumOperands(); i++)
     setOperand(nullptr, i);
 
@@ -401,7 +405,7 @@ void Instruction::eraseFromParent() {
 }
 
 void Function::eraseFromParentNoDestroy() {
-  // Erase all of the basic blocks before deleting the function.
+                                                                
   while (begin() != end()) {
     begin()->replaceAllUsesWith(nullptr);
     begin()->eraseFromParent();
@@ -512,18 +516,18 @@ void BasicBlock::removeFromParent() {
 }
 
 void BasicBlock::eraseFromParent() {
-  // Erase all of the instructions in the block before deleting the block.
-  // We are starting to delete from the start of the block. Naturally we will
-  // have forward dependencies between instructions. To allow safe deletion
-  // we replace all uses with the invalid null value. setOperand knows how
-  // to deal with null values.
+                                                                          
+                                                                             
+                                                                           
+                                                                          
+                              
   while (begin() != end()) {
     begin()->replaceAllUsesWith(nullptr);
     begin()->eraseFromParent();
   }
 
   assert(!hasUsers() && "Use list is not empty");
-  // Erase the block itself:
+                            
   getParent()->getBasicBlockList().erase(getIterator());
 }
 
@@ -541,7 +545,7 @@ void Function::addParameter(Parameter *A) {
 Module::~Module() {
   FunctionList.clear();
 
-  // Free global properties.
+                            
   globalPropertyMap_.clear();
   for (auto *prop : globalPropertyList_) {
     Value::destroy(prop);
@@ -549,9 +553,9 @@ Module::~Module() {
 
   llvh::SmallVector<Literal *, 32> toDelete;
 
-  // Collect all literals.
-  // Note that we cannot delete while iterating due to the implementation
-  // of FoldingSet.
+                          
+                                                                         
+                   
   for (auto &L : literalNumbers) {
     toDelete.push_back(&L);
   }
@@ -561,7 +565,7 @@ Module::~Module() {
   for (auto &L : literalStrings) {
     toDelete.push_back(&L);
   }
-  // Free the literals.
+                       
   for (auto *L : toDelete) {
     Value::destroy(L);
   }
@@ -612,7 +616,7 @@ void Module::populateCJSModuleUseGraph() {
 
   for (Function &f : *this) {
     for (Instruction *user : f.getUsers()) {
-      // Add an edge to f, from the function which uses f.
+                                                          
       cjsModuleUseGraph_[user->getParent()->getParent()].insert(&f);
     }
   }
@@ -621,15 +625,15 @@ void Module::populateCJSModuleUseGraph() {
 llvh::DenseSet<Function *> Module::getFunctionsInSegment(uint32_t segment) {
   populateCJSModuleUseGraph();
 
-  // Final set of functions which must be output when generating this segment.
+                                                                              
   llvh::DenseSet<Function *> result{};
 
-  // Current set of functions which we haven't inspected (the frontier).
-  // Use this to perform graph search and find all used functions.
+                                                                        
+                                                                  
   llvh::SetVector<Function *> worklist{};
 
-  // Populate the worklist initially with the wrapper functions for each module
-  // in the given segment.
+                                                                               
+                          
   for (Function *fn : cjsModuleSegmentMap_[segment]) {
     worklist.insert(fn);
   }
@@ -638,12 +642,12 @@ llvh::DenseSet<Function *> Module::getFunctionsInSegment(uint32_t segment) {
     Function *cur = worklist.back();
     worklist.pop_back();
     if (result.count(cur)) {
-      // We've already visited this function and added its children, so don't do
-      // it again.
+                                                                                
+                  
       continue;
     }
     result.insert(cur);
-    // The functions that are used by the function cur.
+                                                       
     const auto targets = cjsModuleUseGraph_[cur];
     worklist.insert(targets.begin(), targets.end());
   }
@@ -652,10 +656,10 @@ llvh::DenseSet<Function *> Module::getFunctionsInSegment(uint32_t segment) {
 }
 
 uint32_t Module::getTemplateObjectID(RawStringList &&rawStrings) {
-  // Try inserting into the map with a dummy value.
+                                                   
   auto res = templateObjectIDMap_.emplace(std::move(rawStrings), 0);
   if (res.second) {
-    // Insertion succeeded. Overwrite the value with the correct id.
+                                                                    
     res.first->second = templateObjectIDMap_.size() - 1;
   }
   return res.first->second;
@@ -671,7 +675,7 @@ Context &Parameter::getContext() const {
   return Parent->getContext();
 }
 
-/// \returns true if this parameter is a 'this' parameter.
+                                                          
 bool Parameter::isThisParameter() const {
   return Parent->getThisParameter() == this;
 }
@@ -695,8 +699,8 @@ void Function::viewGraph() {
   ::viewGraph(this);
 }
 
-/// Strip the " #number" suffice of a generated internal name, or a name that
-/// just happens to be in that format.
+                                                                             
+                                      
 static inline Identifier stripInternalNameSuffix(
     Context &context,
     Identifier originalName) {
@@ -723,18 +727,18 @@ static inline Identifier stripInternalNameSuffix(
 Identifier Module::deriveUniqueInternalName(Identifier originalName) {
   assert(originalName.isValid() && "originalName must be valid");
 
-  // Check whether the original name already is in the form "... number#" and
-  // if so, strip the suffix.
+                                                                             
+                             
   originalName = stripInternalNameSuffix(getContext(), originalName);
 
   auto insertResult = internalNamesMap_.try_emplace(originalName, 0);
 
-  // If inserted for the first time, there is no need for a suffix.
+                                                                   
   if (insertResult.second)
     return originalName;
 
-  // Construct a suffix using the number of internal names derived from this
-  // identifier.
+                                                                            
+                
   ++insertResult.first->second;
   char itoaBuf[16];
   snprintf(itoaBuf, sizeof(itoaBuf), "%u", insertResult.first->second);
@@ -760,12 +764,12 @@ void Module::dump(llvh::raw_ostream &os) const {
 }
 
 LiteralNumber *Module::getLiteralNumber(double value) {
-  // Check to see if we've already seen this tuple before.
+                                                          
   llvh::FoldingSetNodeID ID;
 
   LiteralNumber::Profile(ID, value);
 
-  // If this is not the first time we see this tuple then return the old copy.
+                                                                              
   void *InsertPos = nullptr;
   if (LiteralNumber *LN = literalNumbers.FindNodeOrInsertPos(ID, InsertPos))
     return LN;
@@ -776,12 +780,12 @@ LiteralNumber *Module::getLiteralNumber(double value) {
 }
 
 LiteralBigInt *Module::getLiteralBigInt(UniqueString *value) {
-  // Check to see if we've already seen this tuple before.
+                                                          
   llvh::FoldingSetNodeID ID;
 
   LiteralBigInt::Profile(ID, value);
 
-  // If this is not the first time we see this tuple then return the old copy.
+                                                                              
   void *InsertPos = nullptr;
   if (LiteralBigInt *LN = literalBigInts.FindNodeOrInsertPos(ID, InsertPos))
     return LN;
@@ -792,12 +796,12 @@ LiteralBigInt *Module::getLiteralBigInt(UniqueString *value) {
 }
 
 LiteralString *Module::getLiteralString(Identifier value) {
-  // Check to see if we've already seen this tuple before.
+                                                          
   llvh::FoldingSetNodeID ID;
 
   LiteralString::Profile(ID, value);
 
-  // If this is not the first time we see this tuple then return the old copy.
+                                                                              
   void *InsertPos = nullptr;
   if (LiteralString *LS = literalStrings.FindNodeOrInsertPos(ID, InsertPos))
     return LS;
@@ -816,7 +820,7 @@ LiteralBool *Module::getLiteralBool(bool value) {
 void Type::print(llvh::raw_ostream &OS) const {
   bool first = true;
   for (unsigned i = 0; i < (unsigned)Type::TypeKind::LAST_TYPE; i++) {
-    // Don't print the object type annotations if the type is closure or regex.
+                                                                               
     if (i == (unsigned)Type::TypeKind::Object &&
         (isClosureType() || isRegExpType())) {
       continue;

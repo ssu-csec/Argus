@@ -48,4 +48,4 @@ SimpleDiagHandlerRAII::~SimpleDiagHandlerRAII() {
   sourceErrorManager_.setDiagHandler(oldHandler_, oldContext_);
 }
 
-} // namespace hermes
+}                    

@@ -22,31 +22,31 @@
 
 namespace llvh {
 
-/// PredIteratorCache - This class is an extremely trivial cache for
-/// predecessor iterator queries.  This is useful for code that repeatedly
-/// wants the predecessor list for the same blocks.
+                                                                    
+                                                                          
+                                                   
 class PredIteratorCache {
-  /// BlockToPredsMap - Pointer to null-terminated list.
+                                                        
   mutable DenseMap<BasicBlock *, BasicBlock **> BlockToPredsMap;
   mutable DenseMap<BasicBlock *, unsigned> BlockToPredCountMap;
 
-  /// Memory - This is the space that holds cached preds.
+                                                         
   BumpPtrAllocator Memory;
 
 private:
-  /// GetPreds - Get a cached list for the null-terminated predecessor list of
-  /// the specified block.  This can be used in a loop like this:
-  ///   for (BasicBlock **PI = PredCache->GetPreds(BB); *PI; ++PI)
-  ///      use(*PI);
-  /// instead of:
-  /// for (pred_iterator PI = pred_begin(BB), E = pred_end(BB); PI != E; ++PI)
+                                                                              
+                                                                 
+                                                                  
+                    
+                 
+                                                                              
   BasicBlock **GetPreds(BasicBlock *BB) {
     BasicBlock **&Entry = BlockToPredsMap[BB];
     if (Entry)
       return Entry;
 
     SmallVector<BasicBlock *, 32> PredCache(pred_begin(BB), pred_end(BB));
-    PredCache.push_back(nullptr); // null terminator.
+    PredCache.push_back(nullptr);                    
 
     BlockToPredCountMap[BB] = PredCache.size() - 1;
 
@@ -68,7 +68,7 @@ public:
     return makeArrayRef(GetPreds(BB), GetNumPreds(BB));
   }
 
-  /// clear - Remove all information.
+                                     
   void clear() {
     BlockToPredsMap.clear();
     BlockToPredCountMap.clear();
@@ -76,6 +76,6 @@ public:
   }
 };
 
-} // end namespace llvh
+}                      
 
 #endif

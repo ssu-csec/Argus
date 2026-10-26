@@ -9,9 +9,9 @@
 #define STR(name, string)
 #endif
 
-/// List of predefined strings.
-/// Use STR(name, string) to define new ones.
-/// Access is done via Predefined::name after instantiation.
+                               
+                                             
+                                                            
 
 STR(emptyString, "")
 STR(comma, ",")
@@ -346,7 +346,7 @@ STR(dollarPlus, "$+")
 STR(lastParen, "lastParen")
 
 STR(Math, "Math")
-// Math property names, per ES5.1 15.8.1
+                                        
 STR(E, "E")
 STR(LN10, "LN10")
 STR(LN2, "LN2")
@@ -413,6 +413,17 @@ STR(Generator, "Generator")
 STR(throwStr, "throw")
 
 STR(GeneratorFunction, "GeneratorFunction")
+STR(AsyncGeneratorFunction, "AsyncGeneratorFunction")
+STR(AsyncGenerator, "AsyncGenerator")
+STR(asyncGeneratorWrap, "asyncGeneratorWrap")
+STR(asyncGeneratorStart, "asyncGeneratorStart")
+STR(asyncGeneratorAwait, "asyncGeneratorAwait")
+STR(asyncGeneratorDelegate, "asyncGeneratorDelegate")
+STR(asyncGeneratorNext, "asyncGeneratorNext")
+STR(asyncGeneratorReturn, "asyncGeneratorReturn")
+STR(asyncGeneratorThrow, "asyncGeneratorThrow")
+STR(dynamicModuleGraph, "dynamicModuleGraph")
+
 STR(AsyncFunction, "AsyncFunction")
 
 STR(Proxy, "Proxy")
@@ -445,6 +456,29 @@ STR(getTemplateObject, "getTemplateObject")
 STR(ensureObject, "ensureObject")
 STR(getMethod, "getMethod")
 STR(throwTypeError, "throwTypeError")
+STR(privateNameCreate, "privateNameCreate")
+STR(privateFieldInit, "privateFieldInit")
+STR(privateFieldGet, "privateFieldGet")
+STR(privateFieldSet, "privateFieldSet")
+STR(initBaseClass, "initBaseClass")
+STR(classHeritagePrototype, "classHeritagePrototype")
+STR(initDerivedClass, "initDerivedClass")
+STR(getSuperConstructor, "getSuperConstructor")
+STR(assertDerivedThis, "assertDerivedThis")
+STR(assertDerivedUninitialized, "assertDerivedUninitialized")
+STR(derivedConstructorReturn, "derivedConstructorReturn")
+STR(constructWithNewTarget, "constructWithNewTarget")
+STR(defineInstanceClassMethod, "defineInstanceClassMethod")
+STR(classElementKey, "classElementKey")
+STR(namePublicFieldFunction, "namePublicFieldFunction")
+STR(definePublicClassField, "definePublicClassField")
+STR(definePublicInstanceClassField, "definePublicInstanceClassField")
+STR(defineStaticClassMethod, "defineStaticClassMethod")
+STR(defineInstanceClassGetter, "defineInstanceClassGetter")
+STR(defineInstanceClassSetter, "defineInstanceClassSetter")
+STR(defineStaticClassGetter, "defineStaticClassGetter")
+STR(defineStaticClassSetter, "defineStaticClassSetter")
+STR(superPropertyGet, "superPropertyGet")
 STR(generatorSetDelegated, "generatorSetDelegated")
 STR(copyDataProperties, "copyDataProperties")
 STR(copyRestArgs, "copyRestArgs")
@@ -463,6 +497,9 @@ STR(fileName, "fileName")
 STR(setPromiseRejectionTrackingHook, "setPromiseRejectionTrackingHook")
 STR(enablePromiseRejectionTracker, "enablePromiseRejectionTracker")
 STR(spawnAsync, "spawnAsync") /* NOLINT */
+STR(asyncIterator, "asyncIterator")
+STR(asyncIteratorNext, "asyncIteratorNext")
+STR(asyncIteratorClose, "asyncIteratorClose")
 
 STR(require, "require")
 STR(requireFast, "requireFast")
@@ -493,8 +530,8 @@ STR(encoding, "encoding")
 STR(utf8, "utf-8")
 
 #ifdef HERMES_ENABLE_INTL
-// TODO T65916424: Consider how we can move these out of the
-// predefined strings table.
+                                                            
+                            
 STR(Collator, "Collator")
 STR(IntlCollator, "Intl.Collator")
 STR(DateTimeFormat, "DateTimeFormat")
@@ -510,14 +547,14 @@ STR(resolvedOptions, "resolvedOptions")
 STR(supportedLocalesOf, "supportedLocalesOf")
 #endif
 
-// Define strings like "[object Number]" for all classes.
+                                                         
 #define CELL_JS_NAME(name, jsClassName) \
   STR(squareObject_##name, "[object " jsClassName "]")
 #include "hermes/VM/CellKinds.def"
 
-// These strings are the same ones that RN adds to the Runtime before
-// executing bytecode. They are added here because it may provide
-// a performance benefit.
+                                                                     
+                                                                 
+                         
 STR(__rnReserved00, "nativePerformanceNow")
 STR(__rnReserved01, "nativeLoggingHook")
 STR(__rnReserved02, "nativeQPLMarkerPoint")

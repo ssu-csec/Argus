@@ -1,3 +1,4 @@
+#include "hermes/VM/PropertyAccessor.h"
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
@@ -6,15 +7,18 @@
  */
 
 #include "JSLibInternal.h"
+#include "hermes/VM/ArrayLike.h"
 
 #include "hermes/FrontEndDefs/Builtins.h"
 #include "hermes/FrontEndDefs/NativeErrorTypes.h"
 #include "hermes/Support/Base64vlq.h"
 #include "hermes/VM/Callable.h"
+#include "hermes/VM/CodeBlock.h"
 #include "hermes/VM/JSArray.h"
 #include "hermes/VM/JSArrayBuffer.h"
 #include "hermes/VM/JSLib.h"
 #include "hermes/VM/JSRegExp.h"
+#include "hermes/VM/JSWeakMapImpl.h"
 #include "hermes/VM/Operations.h"
 #include "hermes/VM/PrimitiveBox.h"
 #include "hermes/VM/StackFrame-inline.h"
@@ -25,7 +29,7 @@
 namespace hermes {
 namespace vm {
 
-/// Set the parent of an object failing silently on any error.
+                                                              
 CallResult<HermesValue>
 silentObjectSetPrototypeOf(void *, Runtime &runtime, NativeArgs args) {
   JSObject *O = dyn_vmcast<JSObject>(args.getArg(0));
@@ -43,22 +47,22 @@ silentObjectSetPrototypeOf(void *, Runtime &runtime, NativeArgs args) {
 
   (void)JSObject::setParent(O, runtime, parent);
 
-  // Ignore exceptions.
+                       
   runtime.clearThrownValue();
 
   return HermesValue::encodeUndefinedValue();
 }
 
-/// ES6.0 12.2.9.3 Runtime Semantics: GetTemplateObject ( templateLiteral )
-/// Given a template literal, return a template object that looks like this:
-/// [cookedString0, cookedString1, ..., raw: [rawString0, rawString1]].
-/// This object is frozen, as well as the 'raw' object nested inside.
-/// We only pass the parts from the template literal that are needed to
-/// construct this object. That is, the raw strings and cooked strings.
-/// Arguments: \p templateObjID is the unique id associated with the template
-/// object. \p dup is a boolean, when it is true, cooked strings are the same as
-/// raw strings. Then raw strings are passed. Finally cooked strings are
-/// optionally passed if \p dup is true.
+                                                                           
+                                                                            
+                                                                       
+                                                                     
+                                                                       
+                                                                       
+                                                                             
+                                                                                
+                                                                        
+                                        
 CallResult<HermesValue>
 hermesBuiltinGetTemplateObject(void *, Runtime &runtime, NativeArgs args) {
   if (LLVM_UNLIKELY(args.getArgCount() < 3)) {
@@ -73,7 +77,7 @@ hermesBuiltinGetTemplateObject(void *, Runtime &runtime, NativeArgs args) {
 
   GCScope gcScope{runtime};
 
-  // Try finding the template object in the template object cache.
+                                                                  
   uint32_t templateObjID = args.getArg(0).getNumberAs<uint32_t>();
   auto savedCB = runtime.getStackFrames().begin()->getSavedCodeBlock();
   if (LLVM_UNLIKELY(!savedCB)) {
@@ -93,7 +97,7 @@ hermesBuiltinGetTemplateObject(void *, Runtime &runtime, NativeArgs args) {
   }
   uint32_t count = dup ? args.getArgCount() - 2 : args.getArgCount() / 2 - 1;
 
-  // Create template object and raw object.
+                                           
   auto arrRes = JSArray::create(runtime, count, 0);
   if (LLVM_UNLIKELY(arrRes == ExecutionStatus::EXCEPTION)) {
     return ExecutionStatus::EXCEPTION;
@@ -105,8 +109,8 @@ hermesBuiltinGetTemplateObject(void *, Runtime &runtime, NativeArgs args) {
   }
   auto templateObj = Handle<JSObject>::vmcast(*arrRes2);
 
-  // Set cooked and raw strings as elements in template object and raw object,
-  // respectively.
+                                                                              
+                  
   DefinePropertyFlags dpf = DefinePropertyFlags::getDefaultNewPropertyFlags();
   dpf.writable = 0;
   dpf.configurable = 0;
@@ -134,7 +138,7 @@ hermesBuiltinGetTemplateObject(void *, Runtime &runtime, NativeArgs args) {
 
     gcScope.flushToMarker(marker);
   }
-  // Make 'length' property on the raw object read-only.
+                                                        
   DefinePropertyFlags readOnlyDPF{};
   readOnlyDPF.setWritable = 1;
   readOnlyDPF.setConfigurable = 1;
@@ -156,8 +160,8 @@ hermesBuiltinGetTemplateObject(void *, Runtime &runtime, NativeArgs args) {
   }
   JSObject::preventExtensions(rawObj.get());
 
-  // Set raw object as a read-only non-enumerable property of the template
-  // object.
+                                                                          
+            
   PropertyFlags constantPF{};
   constantPF.writable = 0;
   constantPF.configurable = 0;
@@ -171,7 +175,7 @@ hermesBuiltinGetTemplateObject(void *, Runtime &runtime, NativeArgs args) {
   if (LLVM_UNLIKELY(putNewRes == ExecutionStatus::EXCEPTION)) {
     return ExecutionStatus::EXCEPTION;
   }
-  // Make 'length' property on the template object read-only.
+                                                             
   readOnlyRes = JSObject::defineOwnProperty(
       templateObj,
       runtime,
@@ -188,18 +192,18 @@ hermesBuiltinGetTemplateObject(void *, Runtime &runtime, NativeArgs args) {
   }
   JSObject::preventExtensions(templateObj.get());
 
-  // Cache the template object.
+                               
   runtimeModule->cacheTemplateObject(templateObjID, templateObj);
 
   return templateObj.getHermesValue();
 }
 
-/// If the first argument is not an object, throw a type error with the second
-/// argument as a message.
-///
-/// \code
-///   HermesBuiltin.ensureObject = function(value, errorMessage) {...}
-/// \endcode
+                                                                              
+                          
+   
+         
+                                                                      
+            
 CallResult<HermesValue>
 hermesBuiltinEnsureObject(void *, Runtime &runtime, NativeArgs args) {
   if (LLVM_LIKELY(args.getArg(0).isObject()))
@@ -208,31 +212,31 @@ hermesBuiltinEnsureObject(void *, Runtime &runtime, NativeArgs args) {
   return runtime.raiseTypeError(args.getArgHandle(1));
 }
 
-/// Perform the GetMethod() abstract operation.
-///
-/// \code
-///   HermesBuiltin.getMethod = function(object, property) {...}
-/// \endcode
+                                               
+   
+         
+                                                                
+            
 CallResult<HermesValue>
 hermesBuiltinGetMethod(void *, Runtime &runtime, NativeArgs args) {
   return getMethod(runtime, args.getArgHandle(0), args.getArgHandle(1))
       .toCallResultHermesValue();
 }
 
-/// Throw a type error with the argument as a message.
-///
-/// \code
-///   HermesBuiltin.throwTypeError = function(errorMessage) {...}
-/// \endcode
+                                                      
+   
+         
+                                                                 
+            
 CallResult<HermesValue>
 hermesBuiltinThrowTypeError(void *, Runtime &runtime, NativeArgs args) {
   return runtime.raiseTypeError(args.getArgHandle(0));
 }
 
-/// Set the isDelegated flag on the GeneratorInnerFunction which calls
-/// this function.
-/// \pre the caller must be an interpreted GeneratorInnerFunction
-/// \return `undefined`
+                                                                      
+                  
+                                                                 
+                       
 CallResult<HermesValue>
 hermesBuiltinGeneratorSetDelegated(void *, Runtime &runtime, NativeArgs args) {
   auto *gen = dyn_vmcast<GeneratorInnerFunction>(
@@ -252,7 +256,7 @@ CallResult<HermesValue> copyDataPropertiesSlowPath_RJS(
     Handle<JSObject> target,
     Handle<JSObject> from,
     Handle<JSObject> excludedItems) {
-  // 5. Let keys be ? from.[[OwnPropertyKeys]]().
+                                                 
   auto cr = JSObject::getOwnPropertyKeys(
       from,
       runtime,
@@ -269,7 +273,7 @@ CallResult<HermesValue> copyDataPropertiesSlowPath_RJS(
   MutableHandle<> propValueHandle{runtime};
   MutableHandle<SymbolID> tmpSymbolStorage{runtime};
   GCScopeMarkerRAII marker{runtime};
-  // 6. For each element nextKey of keys in List order, do
+                                                          
   for (uint32_t nextKeyIdx = 0, endIdx = keys->getEndIndex();
        nextKeyIdx < endIdx;
        ++nextKeyIdx) {
@@ -284,9 +288,9 @@ CallResult<HermesValue> copyDataPropertiesSlowPath_RJS(
       nextKeyHandle = strRes->getHermesValue();
     }
 
-    // b. For each element e of excludedItems in List order, do
-    //   i. If SameValue(e, nextKey) is true, then
-    //     1. Set excluded to true.
+                                                               
+                                                  
+                                   
     if (excludedItems) {
       assert(
           !excludedItems->isProxyObject() &&
@@ -305,23 +309,23 @@ CallResult<HermesValue> copyDataPropertiesSlowPath_RJS(
         continue;
     }
 
-    //   i. Let desc be ? from.[[GetOwnProperty]](nextKey).
+                                                           
     ComputedPropertyDescriptor desc;
     CallResult<bool> crb = JSObject::getOwnComputedDescriptor(
         from, runtime, nextKeyHandle, tmpSymbolStorage, desc);
     if (LLVM_UNLIKELY(crb == ExecutionStatus::EXCEPTION))
       return ExecutionStatus::EXCEPTION;
-    //   ii. If desc is not undefined and desc.[[Enumerable]] is true, then
-    // TODO(T141997867), move this special case behavior for host objects to
-    // getOwnComputedDescriptor.
+                                                                           
+                                                                            
+                                
     if ((*crb && desc.flags.enumerable) || from->isHostObject()) {
-      //     1. Let propValue be ? Get(from, nextKey).
+                                                      
       CallResult<PseudoHandle<>> crv =
           JSObject::getComputed_RJS(from, runtime, nextKeyHandle);
       if (LLVM_UNLIKELY(crv == ExecutionStatus::EXCEPTION))
         return ExecutionStatus::EXCEPTION;
       propValueHandle = std::move(*crv);
-      //     2. Perform ! CreateDataProperty(target, nextKey, propValue).
+                                                                         
       crb = JSObject::defineOwnComputed(
           target,
           runtime,
@@ -336,52 +340,52 @@ CallResult<HermesValue> copyDataPropertiesSlowPath_RJS(
   return target.getHermesValue();
 }
 
-} // namespace
+}             
 
-/// \code
-///   HermesBuiltin.copyDataProperties =
-///         function (target, source, excludedItems) {}
-/// \endcode
-///
-/// Copy all enumerable own properties of object \p source, that are not also
-/// properties of \p excludedItems, into \p target, which must be an object, and
-/// return \p target. If \p excludedItems is not specified, it is assumed
-/// to be empty.
+         
+                                        
+                                                       
+            
+   
+                                                                             
+                                                                                
+                                                                         
+                
 CallResult<HermesValue>
 hermesBuiltinCopyDataProperties(void *, Runtime &runtime, NativeArgs args) {
   GCScope gcScope{runtime};
 
-  // 1. Assert: Type(target) is Object.
+                                       
   Handle<JSObject> target = args.dyncastArg<JSObject>(0);
-  // To be safe, ignore non-objects.
+                                    
   if (!target)
     return HermesValue::encodeUndefinedValue();
 
-  // 3. If source is undefined or null, return target.
+                                                      
   Handle<> untypedSource = args.getArgHandle(1);
   if (untypedSource->isNull() || untypedSource->isUndefined())
     return target.getHermesValue();
 
-  // 4. Let from be ! ToObject(source).
+                                       
   Handle<JSObject> source = untypedSource->isObject()
       ? Handle<JSObject>::vmcast(untypedSource)
       : Handle<JSObject>::vmcast(
             runtime.makeHandle(*toObject(runtime, untypedSource)));
 
-  // 2. Assert: excludedItems is a List of property keys.
-  // In Hermes, excludedItems is represented as a JSObject, created by
-  // bytecode emitted by the compiler, whose keys are the excluded
-  // propertyKeys
+                                                         
+                                                                      
+                                                                  
+                 
   Handle<JSObject> excludedItems = args.dyncastArg<JSObject>(2);
   assert(
       (!excludedItems || !excludedItems->isProxyObject()) &&
       "excludedItems internal List is a Proxy");
 
-  // We cannot use the fast path if the object is a proxy, host object, or when
-  // there could potentially be an accessor defined on the object. This is
-  // because in order to use JSObject::forEachOwnPropertyWhile, we must not
-  // modify the underlying property map or hidden class. However, if we have an
-  // accessor, we cannot guarantee that condition, so we use the slow path.
+                                                                               
+                                                                          
+                                                                           
+                                                                               
+                                                                           
   if (source->isProxyObject() || source->isHostObject() ||
       source->getClass(runtime)->getMayHaveAccessor()) {
     return copyDataPropertiesSlowPath_RJS(
@@ -392,11 +396,11 @@ hermesBuiltinCopyDataProperties(void *, Runtime &runtime, NativeArgs args) {
   MutableHandle<> valueHandle{runtime};
   MutableHandle<SymbolID> tmpSymbolStorage{runtime};
 
-  // Process all named properties/symbols.
+                                          
   bool success = JSObject::forEachOwnPropertyWhile(
       source,
       runtime,
-      // indexedCB.
+                   
       [&source,
        &target,
        &excludedItems,
@@ -442,7 +446,7 @@ hermesBuiltinCopyDataProperties(void *, Runtime &runtime, NativeArgs args) {
 
         return true;
       },
-      // namedCB.
+                 
       [&source, &target, &excludedItems, &valueHandle](
           Runtime &runtime, SymbolID sym, NamedPropertyDescriptor desc) {
         if (!desc.flags.enumerable)
@@ -450,7 +454,7 @@ hermesBuiltinCopyDataProperties(void *, Runtime &runtime, NativeArgs args) {
         if (InternalProperty::isInternal(sym))
           return true;
 
-        // Skip excluded items.
+                               
         if (excludedItems) {
           auto cr = JSObject::hasNamedOrIndexed(excludedItems, runtime, sym);
           assert(
@@ -465,8 +469,8 @@ hermesBuiltinCopyDataProperties(void *, Runtime &runtime, NativeArgs args) {
             JSObject::getNamedSlotValueUnsafe(*source, runtime, desc);
         valueHandle = runtime.makeHandle(shv.unboxToHV(runtime));
 
-        // sym can be an index-like property, so we have to bypass the assert in
-        // defineOwnPropertyInternal.
+                                                                                
+                                     
         if (LLVM_UNLIKELY(
                 JSObject::defineOwnPropertyInternal(
                     target,
@@ -486,24 +490,24 @@ hermesBuiltinCopyDataProperties(void *, Runtime &runtime, NativeArgs args) {
   return target.getHermesValue();
 }
 
-/// \code
-///   HermesBuiltin.copyRestArgs = function (from) {}
-/// \endcode
-/// Copy the callers parameters starting from index \c from (where the first
-/// parameter is index 0) into a JSArray.
+         
+                                                     
+            
+                                                                            
+                                         
 CallResult<HermesValue>
 hermesBuiltinCopyRestArgs(void *, Runtime &runtime, NativeArgs args) {
   GCScopeMarkerRAII marker{runtime};
 
-  // Obtain the caller's stack frame.
+                                     
   auto frames = runtime.getStackFrames();
   auto it = frames.begin();
   ++it;
-  // Check for the extremely unlikely case where there is no caller frame.
+                                                                          
   if (LLVM_UNLIKELY(it == frames.end()))
     return HermesValue::encodeUndefinedValue();
 
-  // "from" should be a number.
+                               
   if (!args.getArg(0).isNumber())
     return HermesValue::encodeUndefinedValue();
   uint32_t from = truncateToUInt32(args.getArg(0).getNumber());
@@ -527,18 +531,18 @@ hermesBuiltinCopyRestArgs(void *, Runtime &runtime, NativeArgs args) {
   return array.getHermesValue();
 }
 
-/// \code
-///   HermesBuiltin.arraySpread = function(target, source, nextIndex) {}
-/// /endcode
-/// ES9.0 12.2.5.2
-/// Iterate the iterable source (as if using a for-of) and copy the values from
-/// the spread source into the target array, starting at `nextIndex`.
-/// \return the next empty index in the array to use for additional properties.
+         
+                                                                        
+            
+                  
+                                                                               
+                                                                     
+                                                                               
 CallResult<HermesValue>
 hermesBuiltinArraySpread(void *, Runtime &runtime, NativeArgs args) {
   GCScopeMarkerRAII topMarker{runtime};
   Handle<JSArray> target = args.dyncastArg<JSArray>(0);
-  // To be safe, check for non-arrays.
+                                      
   if (!target) {
     return runtime.raiseTypeError(
         "HermesBuiltin.arraySpread requires an array target");
@@ -548,8 +552,8 @@ hermesBuiltinArraySpread(void *, Runtime &runtime, NativeArgs args) {
 
   Handle<JSArray> arr = args.dyncastArg<JSArray>(1);
   if (arr) {
-    // Copying from an array, first check and make sure that
-    // `arr[Symbol.iterator]` hasn't been changed by the user.
+                                                            
+                                                              
     NamedPropertyDescriptor desc;
     PseudoHandle<JSObject> propObj = createPseudoHandle(
         JSObject::getNamedDescriptorPredefined(
@@ -568,11 +572,11 @@ hermesBuiltinArraySpread(void *, Runtime &runtime, NativeArgs args) {
         for (JSArray::size_type i = 0; i < JSArray::getLength(*arr, runtime);
              ++i) {
           marker.flush();
-          // Fast path: look up the property in indexed storage.
+                                                                
           nextValue = arr->at(runtime, i).unboxToHV(runtime);
           if (LLVM_UNLIKELY(nextValue->isEmpty())) {
-            // Slow path, just run the full getComputed_RJS path.
-            // Runs when there is a hole, accessor, non-regular property, etc.
+                                                                 
+                                                                              
             idxHandle = HermesValue::encodeUntrustedNumberValue(i);
             CallResult<PseudoHandle<>> valueRes =
                 JSObject::getComputed_RJS(arr, runtime, idxHandle);
@@ -581,13 +585,13 @@ hermesBuiltinArraySpread(void *, Runtime &runtime, NativeArgs args) {
             }
             nextValue = std::move(*valueRes);
           }
-          // It is valid to use setElementAt here because we know that
-          // `target` was created immediately prior to running the spread
-          // and no non-standard properties were added to it,
-          // because the only actions that can be performed between array
-          // creation and running this spread are DefineOwnProperty calls with
-          // standard flags (as well as other spread operations, which do the
-          // same thing).
+                                                                      
+                                                                         
+                                                             
+                                                                         
+                                                                              
+                                                                             
+                         
           JSArray::setElementAt(target, runtime, nextIndex, nextValue);
           ++nextIndex;
         }
@@ -603,7 +607,7 @@ hermesBuiltinArraySpread(void *, Runtime &runtime, NativeArgs args) {
     }
   }
 
-  // 3. Let iteratorRecord be ? GetIterator(spreadObj).
+                                                       
   auto iteratorRecordRes = getIterator(runtime, args.getArgHandle(1));
   if (LLVM_UNLIKELY(iteratorRecordRes == ExecutionStatus::EXCEPTION)) {
     return ExecutionStatus::EXCEPTION;
@@ -612,20 +616,20 @@ hermesBuiltinArraySpread(void *, Runtime &runtime, NativeArgs args) {
 
   MutableHandle<> nextIndex{runtime, args.getArg(2)};
 
-  // 4. Repeat,
-  for (GCScopeMarkerRAII marker{runtime}; /* nothing */; marker.flush()) {
-    // a. Let next be ? IteratorStep(iteratorRecord).
+               
+  for (GCScopeMarkerRAII marker{runtime};              ; marker.flush()) {
+                                                     
     auto nextRes = iteratorStep(runtime, iteratorRecord);
     if (LLVM_UNLIKELY(nextRes == ExecutionStatus::EXCEPTION)) {
       return ExecutionStatus::EXCEPTION;
     }
     Handle<JSObject> next = *nextRes;
 
-    // b. If next is false, return nextIndex.
+                                             
     if (!next) {
       return nextIndex.getHermesValue();
     }
-    // c. Let nextValue be ? IteratorValue(next).
+                                                 
     auto nextItemRes = JSObject::getNamed_RJS(
         next, runtime, Predefined::getSymbolID(Predefined::value));
     if (LLVM_UNLIKELY(nextItemRes == ExecutionStatus::EXCEPTION)) {
@@ -633,9 +637,9 @@ hermesBuiltinArraySpread(void *, Runtime &runtime, NativeArgs args) {
     }
     nextValue = std::move(*nextItemRes);
 
-    // d. Let status be CreateDataProperty(array,
-    //    ToString(ToUint32(nextIndex)), nextValue).
-    // e. Assert: status is true.
+                                                 
+                                                    
+                                 
     if (LLVM_UNLIKELY(
             JSArray::defineOwnComputed(
                 target,
@@ -646,7 +650,7 @@ hermesBuiltinArraySpread(void *, Runtime &runtime, NativeArgs args) {
       return ExecutionStatus::EXCEPTION;
     }
 
-    // f. Let nextIndex be nextIndex + 1.
+                                         
     nextIndex =
         HermesValue::encodeUntrustedNumberValue(nextIndex->getNumber() + 1);
   }
@@ -654,15 +658,15 @@ hermesBuiltinArraySpread(void *, Runtime &runtime, NativeArgs args) {
   return nextIndex.getHermesValue();
 }
 
-/// \code
-///   HermesBuiltin.apply = function(fn, argArray, thisVal(opt)) {}
-/// /endcode
-/// Faster version of Function.prototype.apply which does not use its `this`
-/// argument.
-/// `argArray` must be a JSArray with no getters.
-/// Equivalent to fn.apply(thisVal, argArray) if thisVal is provided.
-/// If thisVal is not provided, equivalent to running `new fn` and passing the
-/// arguments in argArray.
+         
+                                                                   
+            
+                                                                            
+             
+                                                 
+                                                                     
+                                                                              
+                          
 CallResult<HermesValue>
 hermesBuiltinApply(void *, Runtime &runtime, NativeArgs args) {
   GCScopeMarkerRAII marker{runtime};
@@ -719,11 +723,11 @@ hermesBuiltinApply(void *, Runtime &runtime, NativeArgs args) {
   return res->getHermesValue();
 }
 
-/// HermesBuiltin.exportAll(exports, source) will copy exported named
-/// properties from `source` to `exports`, defining them on `exports` as
-/// non-configurable.
-/// Note that the default exported property on `source` is ignored,
-/// as are non-enumerable properties on `source`.
+                                                                     
+                                                                        
+                     
+                                                                   
+                                                 
 CallResult<HermesValue>
 hermesBuiltinExportAll(void *, Runtime &runtime, NativeArgs args) {
   Handle<JSObject> exports = args.dyncastArg<JSObject>(0);
@@ -745,7 +749,7 @@ hermesBuiltinExportAll(void *, Runtime &runtime, NativeArgs args) {
 
   CallResult<bool> defineRes{ExecutionStatus::EXCEPTION};
 
-  // Iterate the named properties excluding those which use Symbols.
+                                                                    
   bool result = HiddenClass::forEachPropertyWhile(
       runtime.makeHandle(source->getClass(runtime)),
       runtime,
@@ -783,8 +787,8 @@ hermesBuiltinExponentiate(void *ctx, Runtime &runtime, NativeArgs args) {
   }
   if (LLVM_LIKELY(!res->isBigInt())) {
     double left = res->getNumber();
-    // Using ? toNumber() here causes an exception to be raised if args[1] is a
-    // BigInt.
+                                                                               
+              
     CallResult<HermesValue> res = toNumber_RJS(runtime, args.getArgHandle(1));
     if (LLVM_UNLIKELY(res == ExecutionStatus::EXCEPTION)) {
       return ExecutionStatus::EXCEPTION;
@@ -795,7 +799,7 @@ hermesBuiltinExponentiate(void *ctx, Runtime &runtime, NativeArgs args) {
 
   Handle<BigIntPrimitive> lhs = runtime.makeHandle(res->getBigInt());
 
-  // Can't use toBigInt() here as it converts boolean/strings to bigint.
+                                                                        
   res = toNumeric_RJS(runtime, args.getArgHandle(1));
   if (LLVM_UNLIKELY(res == ExecutionStatus::EXCEPTION)) {
     return ExecutionStatus::EXCEPTION;
@@ -845,6 +849,456 @@ CallResult<HermesValue> hermesBuiltinGetOriginalNativeErrorConstructor(
   }
 }
 
+                                                                         
+                                                                           
+                                                                               
+                                                                              
+CallResult<HermesValue>
+hermesBuiltinPrivateNameCreate(void *, Runtime &runtime, NativeArgs) {
+  GCScope gcScope{runtime};
+  auto result = JSWeakMap::create(runtime, Runtime::makeNullHandle<JSObject>());
+  if (LLVM_UNLIKELY(result == ExecutionStatus::EXCEPTION))
+    return ExecutionStatus::EXCEPTION;
+  return result->getHermesValue();
+}
+
+CallResult<HermesValue>
+hermesBuiltinPrivateFieldInit(void *, Runtime &runtime, NativeArgs args) {
+  GCScope gcScope{runtime};
+  auto receiver = args.dyncastArg<JSObject>(0);
+  auto token = args.dyncastArg<JSWeakMap>(1);
+  if (LLVM_UNLIKELY(!receiver || !token))
+    return runtime.raiseTypeError("Invalid native private field initialization");
+  if (LLVM_UNLIKELY(JSWeakMap::hasValue(token, runtime, receiver)))
+    return runtime.raiseTypeError("Cannot initialize the same private field twice");
+  if (LLVM_UNLIKELY(JSWeakMap::setValue(
+          token, runtime, receiver, args.getArgHandle(2)) ==
+      ExecutionStatus::EXCEPTION))
+    return ExecutionStatus::EXCEPTION;
+  return HermesValue::encodeUndefinedValue();
+}
+
+CallResult<HermesValue>
+hermesBuiltinPrivateFieldGet(void *, Runtime &runtime, NativeArgs args) {
+  GCScope gcScope{runtime};
+  auto receiver = args.dyncastArg<JSObject>(0);
+  auto token = args.dyncastArg<JSWeakMap>(1);
+  if (LLVM_UNLIKELY(!receiver || !token ||
+          !JSWeakMap::hasValue(token, runtime, receiver)))
+    return runtime.raiseTypeError("Private field is not present on this object");
+  return JSWeakMap::getValue(token, runtime, receiver);
+}
+
+CallResult<HermesValue>
+hermesBuiltinPrivateFieldSet(void *, Runtime &runtime, NativeArgs args) {
+  GCScope gcScope{runtime};
+  auto receiver = args.dyncastArg<JSObject>(0);
+  auto token = args.dyncastArg<JSWeakMap>(1);
+  if (LLVM_UNLIKELY(!receiver || !token ||
+          !JSWeakMap::hasValue(token, runtime, receiver)))
+    return runtime.raiseTypeError("Private field is not present on this object");
+  if (LLVM_UNLIKELY(JSWeakMap::setValue(
+          token, runtime, receiver, args.getArgHandle(2)) ==
+      ExecutionStatus::EXCEPTION))
+    return ExecutionStatus::EXCEPTION;
+                                                                            
+  return args.getArg(2);
+}
+
+                                                                           
+                                                                           
+                                                                        
+static CallResult<Handle<JSObject>> nativeBaseClassPrototype(
+    Runtime &runtime,
+    Handle<JSFunction> ctor,
+    bool initializing) {
+  auto *block = ctor->getCodeBlock(runtime);
+  if (LLVM_UNLIKELY(!block->getHeaderFlags().isCallProhibited(false) ||
+                   block->getHeaderFlags().isCallProhibited(true) ||
+                   !block->isStrictMode()))
+    return runtime.raiseTypeError("Invalid native base class constructor");
+  if (ctor->isLazy())
+    JSObject::initializeLazyObject(runtime, ctor);
+  NamedPropertyDescriptor descriptor;
+  if (LLVM_UNLIKELY(!JSObject::getOwnNamedDescriptor(
+          ctor, runtime, Predefined::getSymbolID(Predefined::prototype), descriptor) ||
+      descriptor.flags.accessor || descriptor.flags.enumerable ||
+      descriptor.flags.configurable ||
+      descriptor.flags.writable != initializing))
+    return runtime.raiseTypeError("Invalid native base class prototype descriptor");
+  auto prototypeValue = runtime.makeHandle(
+      JSObject::getNamedSlotValueUnsafe(*ctor, runtime, descriptor).unboxToHV(runtime));
+  auto prototype = Handle<JSObject>::dyn_vmcast(prototypeValue);
+  if (LLVM_UNLIKELY(!prototype || prototype->isProxyObject() ||
+                   prototype->isHostObject()))
+    return runtime.raiseTypeError("Invalid native base class prototype object");
+  if (initializing) {
+                                                                              
+                                                                            
+                                                                          
+    auto objectPrototype = Handle<JSObject>::vmcast(&runtime.objectPrototype);
+    auto functionPrototype = Handle<JSObject>::vmcast(&runtime.functionPrototype);
+    NamedPropertyDescriptor backlink;
+    if (LLVM_UNLIKELY(prototype->getParent(runtime) != *objectPrototype ||
+                     ctor->getParent(runtime) != *functionPrototype ||
+        !JSObject::getOwnNamedDescriptor(prototype, runtime,
+            Predefined::getSymbolID(Predefined::constructor), backlink) ||
+        backlink.flags.accessor || backlink.flags.enumerable ||
+        !backlink.flags.writable || !backlink.flags.configurable))
+      return runtime.raiseTypeError("Invalid fresh native class prototype");
+    auto owner = JSObject::getNamedSlotValueUnsafe(*prototype, runtime, backlink)
+                     .unboxToHV(runtime);
+    if (LLVM_UNLIKELY(!owner.isObject() || owner.getObject(runtime) != *ctor))
+      return runtime.raiseTypeError("Invalid native class constructor identity");
+  }
+  return prototype;
+}
+
+CallResult<HermesValue>
+hermesBuiltinInitBaseClass(void *, Runtime &runtime, NativeArgs args) {
+  GCScope scope{runtime};
+  auto ctor = args.dyncastArg<JSFunction>(0);
+  if (LLVM_UNLIKELY(!ctor))
+    return runtime.raiseTypeError("Native class initialization needs a JS constructor");
+  auto prototype = nativeBaseClassPrototype(runtime, ctor, true);
+  if (LLVM_UNLIKELY(prototype == ExecutionStatus::EXCEPTION))
+    return ExecutionStatus::EXCEPTION;
+  DefinePropertyFlags flags;
+  flags.setWritable = 1;
+  flags.writable = 0;
+  auto result = JSObject::defineOwnProperty(ctor, runtime,
+      Predefined::getSymbolID(Predefined::prototype), flags,
+      runtime.getUndefinedValue(), PropOpFlags().plusThrowOnError());
+  if (LLVM_UNLIKELY(result == ExecutionStatus::EXCEPTION))
+    return ExecutionStatus::EXCEPTION;
+  if (LLVM_UNLIKELY(!*result))
+    return runtime.raiseTypeError("Cannot finalize native class prototype");
+  return HermesValue::encodeUndefinedValue();
+}
+
+
+CallResult<HermesValue>
+hermesBuiltinClassHeritagePrototype(void *, Runtime &runtime, NativeArgs args) {
+  GCScope scope{runtime}; auto parent=args.getArgHandle(0);
+  if(parent->isNull()) return HermesValue::encodeNullValue();
+  auto fn=Handle<Callable>::dyn_vmcast(parent);
+  if(!fn) return runtime.raiseTypeError("Class heritage is not a constructor");
+  auto valid=isConstructor(runtime,*fn);
+  if(valid==ExecutionStatus::EXCEPTION)return ExecutionStatus::EXCEPTION;
+  if(!*valid)return runtime.raiseTypeError("Class heritage is not a constructor");
+  auto proto=JSObject::getNamed_RJS(fn,runtime,Predefined::getSymbolID(Predefined::prototype));
+  if(proto==ExecutionStatus::EXCEPTION)return ExecutionStatus::EXCEPTION;
+  if(!proto->get().isObject() && !proto->get().isNull())
+    return runtime.raiseTypeError("Class heritage prototype must be object or null");
+  return proto->get();
+}
+
+CallResult<HermesValue>
+hermesBuiltinInitDerivedClass(void *, Runtime &runtime, NativeArgs args) {
+  GCScope scope{runtime};auto ctor=args.dyncastArg<JSFunction>(0);
+  if(!ctor || !ctor->getCodeBlock(runtime)->getHeaderFlags().derivedConstructor)
+    return runtime.raiseTypeError("Invalid derived constructor");
+  auto prototype=nativeBaseClassPrototype(runtime,ctor,true);
+  if(prototype==ExecutionStatus::EXCEPTION)return ExecutionStatus::EXCEPTION;
+  auto parent=args.getArgHandle(1), proto=args.getArgHandle(2);
+  if((!parent->isObject() && !parent->isNull()) ||
+      (!proto->isObject() && !proto->isNull()))
+    return runtime.raiseTypeError("Invalid captured class heritage");
+  auto parentObject=parent->isNull()
+      ? Handle<JSObject>::vmcast(&runtime.functionPrototype)
+      : Handle<JSObject>::vmcast(parent);
+  auto protoObject=proto->isNull() ? runtime.makeHandle<JSObject>(nullptr)
+      : Handle<JSObject>::vmcast(proto);
+  auto a=JSObject::setParent(*ctor,runtime,*parentObject,PropOpFlags().plusThrowOnError());
+  if(a==ExecutionStatus::EXCEPTION)return ExecutionStatus::EXCEPTION;
+  auto b=JSObject::setParent(**prototype,runtime,*protoObject,PropOpFlags().plusThrowOnError());
+  if(b==ExecutionStatus::EXCEPTION)return ExecutionStatus::EXCEPTION;
+  DefinePropertyFlags flags;flags.setWritable=1;flags.writable=0;
+  auto result=JSObject::defineOwnProperty(ctor,runtime,
+      Predefined::getSymbolID(Predefined::prototype),flags,
+      runtime.getUndefinedValue(),PropOpFlags().plusThrowOnError());
+  if(result==ExecutionStatus::EXCEPTION)return ExecutionStatus::EXCEPTION;
+  return HermesValue::encodeUndefinedValue();
+}
+
+CallResult<HermesValue>
+hermesBuiltinSuperPropertyGet(void *, Runtime &runtime, NativeArgs args) {
+  auto home=args.dyncastArg<JSObject>(0);
+  if(!home)return runtime.raiseTypeError("Invalid super home object");
+  auto *parent=home->getParent(runtime);
+  if(!parent)return runtime.raiseTypeError("Cannot read super property from null");
+  auto base=runtime.makeHandle(parent);
+                                                                        
+                                                                          
+  if(args.getArgCount()==4){
+    auto status=JSObject::putComputedWithReceiver_RJS(base,runtime,args.getArgHandle(1),args.getArgHandle(3),args.getArgHandle(2));
+    if(status==ExecutionStatus::EXCEPTION)return ExecutionStatus::EXCEPTION;
+    if(!*status)return runtime.raiseTypeError("super property assignment failed");
+    return args.getArg(3);
+  }
+  if(args.getArgCount()!=3)return runtime.raiseTypeError("Invalid super property operation arity");
+  return JSObject::getComputedWithReceiver_RJS(
+      base,runtime,args.getArgHandle(1),args.getArgHandle(2)).toCallResultHermesValue();
+}
+
+CallResult<HermesValue>
+hermesBuiltinGetSuperConstructor(void *, Runtime &runtime, NativeArgs args) {
+  auto ctor=args.dyncastArg<JSFunction>(0);
+  if(!ctor || !ctor->getCodeBlock(runtime)->getHeaderFlags().derivedConstructor)
+    return runtime.raiseTypeError("Invalid active derived constructor");
+  auto *parent=ctor->getParent(runtime);
+  return parent ? HermesValue::encodeObjectValue(parent) : HermesValue::encodeNullValue();
+}
+CallResult<HermesValue>
+hermesBuiltinAssertDerivedThis(void *, Runtime &runtime, NativeArgs args) {
+  if(!args.getArg(0).isObject())return runtime.raiseReferenceError("this is uninitialized before super()");
+  return args.getArg(0);
+}
+CallResult<HermesValue>
+hermesBuiltinAssertDerivedUninitialized(void *, Runtime &runtime, NativeArgs args) {
+  if(!args.getArg(0).isUndefined())return runtime.raiseReferenceError("super() already initialized this");
+  return HermesValue::encodeUndefinedValue();
+}
+CallResult<HermesValue>
+hermesBuiltinDerivedConstructorReturn(void *, Runtime &runtime, NativeArgs args) {
+  auto value=args.getArg(1);
+  if(value.isObject())return value;
+  if(!value.isUndefined())return runtime.raiseTypeError("Derived constructor returned a non-object");
+  if(!args.getArg(0).isObject())return runtime.raiseReferenceError("Derived constructor did not initialize this");
+  return args.getArg(0);
+}
+CallResult<HermesValue>
+hermesBuiltinConstructWithNewTarget(void *, Runtime &runtime, NativeArgs args) {
+  GCScope scope{runtime};auto fn=args.dyncastArg<Callable>(0);
+  auto list=args.dyncastArg<JSObject>(1);auto target=args.dyncastArg<Callable>(2);
+  if(!fn || !target || !list)return runtime.raiseTypeError("Invalid super construction operands");
+  auto count=getArrayLikeLength_RJS(list,runtime);
+  if(count==ExecutionStatus::EXCEPTION)return ExecutionStatus::EXCEPTION;
+  if(*count>UINT32_MAX)return runtime.raiseRangeError("Too many super arguments");
+  uint32_t n=static_cast<uint32_t>(*count);
+  ScopedNativeCallFrame frame{runtime,n,fn.getHermesValue(),target.getHermesValue(),
+      HermesValue::encodeUndefinedValue()};
+  if(frame.overflowed())return runtime.raiseStackOverflow(Runtime::StackOverflowKind::NativeStack);
+  frame.fillArguments(n,HermesValue::encodeUndefinedValue());
+  if(createListFromArrayLike_RJS(list,runtime,n,
+      [&frame](Runtime &,uint64_t i,PseudoHandle<> v){
+        frame->getArgRef(i)=v.getHermesValue();return ExecutionStatus::RETURNED;
+      })==ExecutionStatus::EXCEPTION)return ExecutionStatus::EXCEPTION;
+  auto prepared=Callable::prepareThisForConstruct_RJS(fn,runtime,target);
+  if(prepared==ExecutionStatus::EXCEPTION)return ExecutionStatus::EXCEPTION;
+  auto receiver=runtime.makeHandle(std::move(*prepared));
+  frame->getThisArgRef()=receiver.getHermesValue();
+  auto result=Callable::call(fn,runtime);
+  if(result==ExecutionStatus::EXCEPTION)return ExecutionStatus::EXCEPTION;
+  return result->get().isObject() ? result->get() : receiver.getHermesValue();
+}
+
+                                                                            
+static CallResult<Handle<>> nativeClassFunctionName(Runtime &runtime, Handle<> key) {
+  if(!key->isSymbol()) {
+    auto name=toString_RJS(runtime,key);
+    if(name==ExecutionStatus::EXCEPTION)return ExecutionStatus::EXCEPTION;
+    return runtime.makeHandle(name->getHermesValue());
+  }
+  if(runtime.getIdentifierTable().symbolDescriptionUndefined(key->getSymbol()))
+    return runtime.makeHandle(HermesValue::encodeStringValue(runtime.getPredefinedString(Predefined::emptyString)));
+  auto desc=runtime.makeHandle(runtime.getStringPrimFromSymbolID(key->getSymbol()));
+  auto left=StringPrimitive::createEfficient(runtime,llvh::StringRef("["));
+  if(left==ExecutionStatus::EXCEPTION)return ExecutionStatus::EXCEPTION;
+  auto joined=StringPrimitive::concat(runtime,Handle<StringPrimitive>::vmcast(runtime.makeHandle(*left)),desc);
+  if(joined==ExecutionStatus::EXCEPTION)return ExecutionStatus::EXCEPTION;
+  auto part=Handle<StringPrimitive>::vmcast(runtime.makeHandle(*joined));
+  auto right=StringPrimitive::createEfficient(runtime,llvh::StringRef("]"));
+  if(right==ExecutionStatus::EXCEPTION)return ExecutionStatus::EXCEPTION;
+  auto result=StringPrimitive::concat(runtime,part,Handle<StringPrimitive>::vmcast(runtime.makeHandle(*right)));
+  if(result==ExecutionStatus::EXCEPTION)return ExecutionStatus::EXCEPTION;
+  return runtime.makeHandle(*result);
+}
+
+CallResult<HermesValue>
+hermesBuiltinClassElementKey(void *, Runtime &runtime, NativeArgs args) {
+  GCScope scope{runtime};auto result=toPropertyKey(runtime,args.getArgHandle(0));
+  if(result==ExecutionStatus::EXCEPTION)return ExecutionStatus::EXCEPTION;
+  return **result;
+}
+
+CallResult<HermesValue>
+hermesBuiltinNamePublicFieldFunction(void *, Runtime &runtime, NativeArgs args) {
+  GCScope scope{runtime};auto key=args.getArgHandle(0);auto fn=args.dyncastArg<JSFunction>(1);
+  if(!fn||(!key->isString()&&!key->isSymbol()))return runtime.raiseTypeError("Invalid cached field function name");
+  auto name=nativeClassFunctionName(runtime,key);if(name==ExecutionStatus::EXCEPTION)return ExecutionStatus::EXCEPTION;
+  DefinePropertyFlags flags;flags.setValue=flags.setWritable=flags.setEnumerable=flags.setConfigurable=1;
+  flags.writable=flags.enumerable=0;flags.configurable=1;
+  auto result=JSObject::defineOwnProperty(fn,runtime,Predefined::getSymbolID(Predefined::name),flags,*name,PropOpFlags().plusThrowOnError());
+  if(result==ExecutionStatus::EXCEPTION)return ExecutionStatus::EXCEPTION;
+  if(!*result)return runtime.raiseTypeError("Cannot name public field function");
+  return fn.getHermesValue();
+}
+
+static CallResult<HermesValue> nativeDefineClassMethod(
+    Runtime &runtime, NativeArgs args, bool isStatic, unsigned accessorKind = 0) {
+  GCScope scope{runtime};
+  auto ctor = args.dyncastArg<JSFunction>(0);
+  auto method = args.dyncastArg<JSFunction>(2);
+  auto key = args.getArgHandle(1);
+  if (LLVM_UNLIKELY(!ctor || !method ||
+                   !(key->isString() || key->isNumber() || key->isSymbol())))
+    return runtime.raiseTypeError("Invalid native instance method operands");
+  auto *methodBlock = method->getCodeBlock(runtime);
+  if (LLVM_UNLIKELY(!methodBlock->getHeaderFlags().isCallProhibited(true) ||
+                   methodBlock->getHeaderFlags().isCallProhibited(false) ||
+                   !methodBlock->isStrictMode()))
+    return runtime.raiseTypeError("Invalid native instance method flags");
+  auto prototypeResult = nativeBaseClassPrototype(runtime, ctor, false);
+  if (LLVM_UNLIKELY(prototypeResult == ExecutionStatus::EXCEPTION))
+    return ExecutionStatus::EXCEPTION;
+  auto prototype = *prototypeResult;
+  auto keyResult=toPropertyKey(runtime,key);
+  if(keyResult==ExecutionStatus::EXCEPTION)return ExecutionStatus::EXCEPTION;
+  auto normalizedKey=*keyResult;
+  if (method->isLazy())
+    JSObject::initializeLazyObject(runtime, method);
+  NamedPropertyDescriptor forbiddenPrototype;
+                                                                              
+                                                                   
+                                                                                
+  const bool generatorMethod = accessorKind == 0 &&
+      vmisa<JSGeneratorFunction>(*method);
+  if (LLVM_UNLIKELY(!generatorMethod && JSObject::getOwnNamedDescriptor(method, runtime,
+      Predefined::getSymbolID(Predefined::prototype), forbiddenPrototype)))
+    return runtime.raiseTypeError("Native method must not have a prototype property");
+
+  auto nameResult=nativeClassFunctionName(runtime,normalizedKey);
+  if(nameResult==ExecutionStatus::EXCEPTION)return ExecutionStatus::EXCEPTION;
+  auto functionName = *nameResult;
+  if (accessorKind) {
+    auto prefixResult = StringPrimitive::createEfficient(runtime,
+        llvh::StringRef(accessorKind == 1 ? "get " : "set "));
+    if (LLVM_UNLIKELY(prefixResult == ExecutionStatus::EXCEPTION))
+      return ExecutionStatus::EXCEPTION;
+    auto joined = StringPrimitive::concat(runtime, Handle<StringPrimitive>::vmcast(runtime.makeHandle(*prefixResult)),
+        Handle<StringPrimitive>::vmcast(functionName));
+    if (LLVM_UNLIKELY(joined == ExecutionStatus::EXCEPTION))
+      return ExecutionStatus::EXCEPTION;
+    functionName = runtime.makeHandle(*joined);
+  }
+  DefinePropertyFlags nameFlags;
+  nameFlags.setValue = 1;
+  nameFlags.setWritable = 1;
+  nameFlags.writable = 0;
+  nameFlags.setEnumerable = 1;
+  nameFlags.enumerable = 0;
+  nameFlags.setConfigurable = 1;
+  nameFlags.configurable = 1;
+  auto named = JSObject::defineOwnProperty(method, runtime,
+      Predefined::getSymbolID(Predefined::name), nameFlags, functionName,
+      PropOpFlags().plusThrowOnError());
+  if (LLVM_UNLIKELY(named == ExecutionStatus::EXCEPTION))
+    return ExecutionStatus::EXCEPTION;
+  if (LLVM_UNLIKELY(!*named))
+    return runtime.raiseTypeError("Cannot name native class method");
+                                                                        
+                                                                          
+  auto target = isStatic ? Handle<JSObject>::vmcast(ctor) : prototype;
+  DefinePropertyFlags propertyFlags = DefinePropertyFlags::getNewNonEnumerableFlags();
+  auto propertyValue = Handle<>(method);
+  if (accessorKind) {
+    propertyFlags = DefinePropertyFlags{};
+    propertyFlags.setEnumerable = 1;
+    propertyFlags.enumerable = 0;
+    propertyFlags.setConfigurable = 1;
+    propertyFlags.configurable = 1;
+    propertyFlags.setGetter = accessorKind == 1;
+    propertyFlags.setSetter = accessorKind == 2;
+    auto empty = Runtime::makeNullHandle<Callable>();
+    auto callable = Handle<Callable>::vmcast(method);
+    propertyValue = runtime.makeHandle(PropertyAccessor::create(runtime,
+        accessorKind == 1 ? callable : empty, accessorKind == 2 ? callable : empty));
+  }
+                                                                             
+                                                                                
+  auto defined = JSObject::defineOwnComputedPrimitive(target, runtime,
+      normalizedKey, propertyFlags, propertyValue, PropOpFlags().plusThrowOnError());
+  if (LLVM_UNLIKELY(defined == ExecutionStatus::EXCEPTION))
+    return ExecutionStatus::EXCEPTION;
+  if (LLVM_UNLIKELY(!*defined))
+    return runtime.raiseTypeError("Cannot define native class method");
+  return HermesValue::encodeUndefinedValue();
+}
+
+CallResult<HermesValue>
+hermesBuiltinDefineInstanceClassMethod(void *, Runtime &runtime, NativeArgs args) {
+  return nativeDefineClassMethod(runtime, args, false);
+}
+
+CallResult<HermesValue>
+hermesBuiltinDefineStaticClassMethod(void *, Runtime &runtime, NativeArgs args) {
+  return nativeDefineClassMethod(runtime, args, true);
+}
+
+CallResult<HermesValue>
+hermesBuiltinDefineInstanceClassGetter(void *, Runtime &runtime, NativeArgs args) {
+  return nativeDefineClassMethod(runtime, args, false, 1);
+}
+
+CallResult<HermesValue>
+hermesBuiltinDefineInstanceClassSetter(void *, Runtime &runtime, NativeArgs args) {
+  return nativeDefineClassMethod(runtime, args, false, 2);
+}
+
+CallResult<HermesValue>
+hermesBuiltinDefineStaticClassGetter(void *, Runtime &runtime, NativeArgs args) {
+  return nativeDefineClassMethod(runtime, args, true, 1);
+}
+
+CallResult<HermesValue>
+hermesBuiltinDefineStaticClassSetter(void *, Runtime &runtime, NativeArgs args) {
+  return nativeDefineClassMethod(runtime, args, true, 2);
+}
+
+                                                                         
+                                                                              
+CallResult<HermesValue>
+hermesBuiltinDefinePublicClassField(void *, Runtime &runtime, NativeArgs args) {
+  GCScope gcScope{runtime};
+  auto receiver = args.dyncastArg<JSFunction>(0);
+  const HermesValue key = args.getArg(1);
+  if (LLVM_UNLIKELY(!receiver || (!key.isString() && !key.isNumber() && !key.isSymbol())))
+    return runtime.raiseTypeError("Invalid native public class field definition");
+  auto *block = receiver->getCodeBlock(runtime);
+  if (LLVM_UNLIKELY(!block->getHeaderFlags().isCallProhibited(false) ||
+                   block->getHeaderFlags().isCallProhibited(true) ||
+                   !block->isStrictMode()))
+    return runtime.raiseTypeError("Invalid native public class constructor flags");
+  auto result = JSObject::defineOwnComputedPrimitive(
+      receiver, runtime, args.getArgHandle(1),
+      DefinePropertyFlags::getDefaultNewPropertyFlags(), args.getArgHandle(2),
+      PropOpFlags().plusThrowOnError());
+  if (LLVM_UNLIKELY(result == ExecutionStatus::EXCEPTION))
+    return ExecutionStatus::EXCEPTION;
+  if (LLVM_UNLIKELY(!*result))
+    return runtime.raiseTypeError("Cannot define native public class field");
+  return HermesValue::encodeUndefinedValue();
+}
+
+                                                                          
+                                                                             
+CallResult<HermesValue>
+hermesBuiltinDefinePublicInstanceClassField(void *, Runtime &runtime, NativeArgs args) {
+  GCScope gcScope{runtime};
+  auto receiver=args.dyncastArg<JSObject>(0);
+  const HermesValue key=args.getArg(1);
+  if (LLVM_UNLIKELY(!receiver || (!key.isString() && !key.isNumber() && !key.isSymbol())))
+    return runtime.raiseTypeError("Invalid native public instance field definition");
+  auto result=JSObject::defineOwnComputedPrimitive(receiver,runtime,args.getArgHandle(1),
+      DefinePropertyFlags::getDefaultNewPropertyFlags(),args.getArgHandle(2),
+      PropOpFlags().plusThrowOnError());
+  if (LLVM_UNLIKELY(result==ExecutionStatus::EXCEPTION)) return ExecutionStatus::EXCEPTION;
+  if (LLVM_UNLIKELY(!*result))
+    return runtime.raiseTypeError("Cannot define native public instance field");
+  return HermesValue::encodeUndefinedValue();
+}
+
 void createHermesBuiltins(
     Runtime &runtime,
     llvh::MutableArrayRef<Callable *> builtins) {
@@ -855,7 +1309,7 @@ void createHermesBuiltins(
     auto method = NativeFunction::create(
         runtime,
         Handle<JSObject>::vmcast(&runtime.functionPrototype),
-        nullptr /* context */,
+        nullptr              ,
         func,
         Predefined::getSymbolID(symID),
         count,
@@ -865,7 +1319,7 @@ void createHermesBuiltins(
     builtins[builtinIndex] = *method;
   };
 
-  // HermesBuiltin function properties
+                                      
   namespace P = Predefined;
   namespace B = BuiltinMethod;
   defineInternMethod(
@@ -926,10 +1380,50 @@ void createHermesBuiltins(
       P::getOriginalNativeErrorConstructor,
       hermesBuiltinGetOriginalNativeErrorConstructor);
 
-  // Define the 'requireFast' function, which takes a number argument.
+  defineInternMethod(B::HermesBuiltin_privateNameCreate,
+      P::privateNameCreate, hermesBuiltinPrivateNameCreate, 0);
+  defineInternMethod(B::HermesBuiltin_privateFieldInit,
+      P::privateFieldInit, hermesBuiltinPrivateFieldInit, 3);
+  defineInternMethod(B::HermesBuiltin_privateFieldGet,
+      P::privateFieldGet, hermesBuiltinPrivateFieldGet, 2);
+  defineInternMethod(B::HermesBuiltin_privateFieldSet,
+      P::privateFieldSet, hermesBuiltinPrivateFieldSet, 3);
+  defineInternMethod(B::HermesBuiltin_classHeritagePrototype, P::classHeritagePrototype, hermesBuiltinClassHeritagePrototype, 1);
+  defineInternMethod(B::HermesBuiltin_initDerivedClass, P::initDerivedClass, hermesBuiltinInitDerivedClass, 3);
+  defineInternMethod(B::HermesBuiltin_getSuperConstructor, P::getSuperConstructor, hermesBuiltinGetSuperConstructor, 1);
+  defineInternMethod(B::HermesBuiltin_superPropertyGet, P::superPropertyGet, hermesBuiltinSuperPropertyGet, 3);
+  defineInternMethod(B::HermesBuiltin_assertDerivedThis, P::assertDerivedThis, hermesBuiltinAssertDerivedThis, 1);
+  defineInternMethod(B::HermesBuiltin_assertDerivedUninitialized, P::assertDerivedUninitialized, hermesBuiltinAssertDerivedUninitialized, 1);
+  defineInternMethod(B::HermesBuiltin_derivedConstructorReturn, P::derivedConstructorReturn, hermesBuiltinDerivedConstructorReturn, 2);
+  defineInternMethod(B::HermesBuiltin_constructWithNewTarget, P::constructWithNewTarget, hermesBuiltinConstructWithNewTarget, 3);
+  defineInternMethod(B::HermesBuiltin_initBaseClass,
+      P::initBaseClass, hermesBuiltinInitBaseClass, 1);
+  defineInternMethod(B::HermesBuiltin_defineInstanceClassMethod,
+      P::defineInstanceClassMethod, hermesBuiltinDefineInstanceClassMethod, 3);
+
+  defineInternMethod(B::HermesBuiltin_classElementKey,
+      P::classElementKey, hermesBuiltinClassElementKey, 1);
+  defineInternMethod(B::HermesBuiltin_namePublicFieldFunction,
+      P::namePublicFieldFunction, hermesBuiltinNamePublicFieldFunction, 2);
+  defineInternMethod(B::HermesBuiltin_definePublicClassField,
+      P::definePublicClassField, hermesBuiltinDefinePublicClassField, 3);
+  defineInternMethod(B::HermesBuiltin_definePublicInstanceClassField,
+      P::definePublicInstanceClassField, hermesBuiltinDefinePublicInstanceClassField, 3);
+  defineInternMethod(B::HermesBuiltin_defineStaticClassMethod,
+      P::defineStaticClassMethod, hermesBuiltinDefineStaticClassMethod, 3);
+  defineInternMethod(B::HermesBuiltin_defineInstanceClassGetter,
+      P::defineInstanceClassGetter, hermesBuiltinDefineInstanceClassGetter, 3);
+  defineInternMethod(B::HermesBuiltin_defineInstanceClassSetter,
+      P::defineInstanceClassSetter, hermesBuiltinDefineInstanceClassSetter, 3);
+  defineInternMethod(B::HermesBuiltin_defineStaticClassGetter,
+      P::defineStaticClassGetter, hermesBuiltinDefineStaticClassGetter, 3);
+  defineInternMethod(B::HermesBuiltin_defineStaticClassSetter,
+      P::defineStaticClassSetter, hermesBuiltinDefineStaticClassSetter, 3);
+
+                                                                      
   defineInternMethod(
       B::HermesBuiltin_requireFast, P::requireFast, requireFast, 1);
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

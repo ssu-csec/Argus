@@ -75,11 +75,11 @@ static struct rerr {
 	{ 0,		"",		"*** unknown regexp error code ***" }
 };
 
-/*
- - llvh_regerror - the interface to error numbers
- = extern size_t llvh_regerror(int, const llvm_regex_t *, char *, size_t);
- */
-/* ARGSUSED */
+  
+                                                 
+                                                                          
+   
+              
 size_t
 llvh_regerror(int errcode, const llvm_regex_t *preg, char *errbuf, size_t errbuf_size)
 {
@@ -116,9 +116,9 @@ llvh_regerror(int errcode, const llvm_regex_t *preg, char *errbuf, size_t errbuf
 	return(len);
 }
 
-/*
- - regatoi - internal routine to implement REG_ATOI
- */
+  
+                                                   
+   
 static const char *
 regatoi(const llvm_regex_t *preg, char *localbuf, int localbufsize)
 {

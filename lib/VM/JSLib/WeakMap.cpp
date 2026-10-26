@@ -67,7 +67,7 @@ Handle<JSObject> createWeakMapConstructor(Runtime &runtime) {
       0,
       CellKind::JSWeakMapKind);
 
-  // ES6.0 23.3.3.1
+                   
   defineProperty(
       runtime,
       weakMapPrototype,
@@ -230,5 +230,5 @@ weakMapPrototypeSet(void *, Runtime &runtime, NativeArgs args) {
   return M.getHermesValue();
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

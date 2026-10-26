@@ -25,10 +25,10 @@
 
 namespace llvh {
 
-/// An implementation of BinaryStream which holds its entire data set
-/// in a single contiguous buffer.  BinaryByteStream guarantees that no read
-/// operation will ever incur a copy.  Note that BinaryByteStream does not
-/// own the underlying buffer.
+                                                                     
+                                                                            
+                                                                          
+                              
 class BinaryByteStream : public BinaryStream {
 public:
   BinaryByteStream() = default;
@@ -69,10 +69,10 @@ protected:
   ArrayRef<uint8_t> Data;
 };
 
-/// An implementation of BinaryStream whose data is backed by an llvm
-/// MemoryBuffer object.  MemoryBufferByteStream owns the MemoryBuffer in
-/// question.  As with BinaryByteStream, reading from a MemoryBufferByteStream
-/// will never cause a copy.
+                                                                     
+                                                                         
+                                                                              
+                            
 class MemoryBufferByteStream : public BinaryByteStream {
 public:
   MemoryBufferByteStream(std::unique_ptr<MemoryBuffer> Buffer,
@@ -83,10 +83,10 @@ public:
   std::unique_ptr<MemoryBuffer> MemBuffer;
 };
 
-/// An implementation of BinaryStream which holds its entire data set
-/// in a single contiguous buffer.  As with BinaryByteStream, the mutable
-/// version also guarantees that no read operation will ever incur a copy,
-/// and similarly it does not own the underlying buffer.
+                                                                     
+                                                                         
+                                                                          
+                                                        
 class MutableBinaryByteStream : public WritableBinaryStream {
 public:
   MutableBinaryByteStream() = default;
@@ -131,8 +131,8 @@ private:
   BinaryByteStream ImmutableStream;
 };
 
-/// An implementation of WritableBinaryStream which can write at its end
-/// causing the underlying data to grow.  This class owns the underlying data.
+                                                                        
+                                                                              
 class AppendingBinaryByteStream : public WritableBinaryStream {
   std::vector<uint8_t> Data;
   llvh::support::endianness Endian = llvh::support::little;
@@ -174,12 +174,12 @@ public:
     if (Buffer.empty())
       return Error::success();
 
-    // This is well-defined for any case except where offset is strictly
-    // greater than the current length.  If offset is equal to the current
-    // length, we can still grow.  If offset is beyond the current length, we
-    // would have to decide how to deal with the intermediate uninitialized
-    // bytes.  So we punt on that case for simplicity and just say it's an
-    // error.
+                                                                        
+                                                                          
+                                                                             
+                                                                           
+                                                                          
+             
     if (Offset > getLength())
       return make_error<BinaryStreamError>(stream_error_code::invalid_offset);
 
@@ -193,7 +193,7 @@ public:
 
   Error commit() override { return Error::success(); }
 
-  /// Return the properties of this stream.
+                                           
   virtual BinaryStreamFlags getFlags() const override {
     return BSF_Write | BSF_Append;
   }
@@ -201,8 +201,8 @@ public:
   MutableArrayRef<uint8_t> data() { return Data; }
 };
 
-/// An implementation of WritableBinaryStream backed by an llvm
-/// FileOutputBuffer.
+                                                               
+                     
 class FileBufferByteStream : public WritableBinaryStream {
 private:
   class StreamImpl : public MutableBinaryByteStream {
@@ -222,10 +222,10 @@ private:
       return Error::success();
     }
 
-    /// Returns a pointer to the start of the buffer.
+                                                     
     uint8_t *getBufferStart() const { return FileBuffer->getBufferStart(); }
 
-    /// Returns a pointer to the end of the buffer.
+                                                   
     uint8_t *getBufferEnd() const { return FileBuffer->getBufferEnd(); }
 
   private:
@@ -259,16 +259,16 @@ public:
 
   Error commit() override { return Impl.commit(); }
 
-  /// Returns a pointer to the start of the buffer.
+                                                   
   uint8_t *getBufferStart() const { return Impl.getBufferStart(); }
 
-  /// Returns a pointer to the end of the buffer.
+                                                 
   uint8_t *getBufferEnd() const { return Impl.getBufferEnd(); }
 
 private:
   StreamImpl Impl;
 };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_SUPPORT_BYTESTREAM_H
+#endif                             

@@ -15,15 +15,15 @@
 namespace hermes {
 namespace vm {
 
-// We intentionally leak these static members to avoid a case where they are
-// accessed after they are destroyed during shutdown.
-/* static */ std::unordered_set<CodeCoverageProfiler *> &
+                                                                            
+                                                     
+             std::unordered_set<CodeCoverageProfiler *> &
 CodeCoverageProfiler::allProfilers() {
   static auto *const allProfilers =
       new std::unordered_set<CodeCoverageProfiler *>();
   return *allProfilers;
 }
-/* static */ std::mutex &CodeCoverageProfiler::globalMutex() {
+             std::mutex &CodeCoverageProfiler::globalMutex() {
   static auto *const globalMutex = new std::mutex();
   return *globalMutex;
 }
@@ -46,7 +46,7 @@ void CodeCoverageProfiler::markExecutedSlowPath(CodeBlock *codeBlock) {
   moduleFuncMap[funcId] = true;
 }
 
-/* static */ std::
+             std::
     unordered_map<std::string, std::vector<CodeCoverageProfiler::FuncInfo>>
     CodeCoverageProfiler::getExecutedFunctions() {
   std::lock_guard<std::mutex> lk(globalMutex());
@@ -68,10 +68,10 @@ CodeCoverageProfiler::getExecutedFunctionsLocal() {
   for (auto &entry : executedFuncBitsArrayMap_) {
     auto *bcProvider = entry.first->getBytecode();
     const uint32_t segmentID = bcProvider->getSegmentID();
-    // For Classic bundles, bcProvider->getSegmentID() is always 0.
-    // For that situation we also provide the sourceURL, which
-    // metro-symbolicate can use to parse the segmentID from the
-    // sourceURL.
+                                                                   
+                                                              
+                                                                
+                 
     llvh::StringRef sourceURL = entry.first->getSourceURL();
     const auto *debugInfo = bcProvider->getDebugInfo();
     const std::vector<bool> &moduleFuncBitsArray = entry.second;
@@ -81,12 +81,12 @@ CodeCoverageProfiler::getExecutedFunctionsLocal() {
         if (debugInfo && offsets &&
             offsets->sourceLocations != hbc::DebugOffsets::NO_OFFSET) {
           if (auto pos = debugInfo->getLocationForAddress(
-                  offsets->sourceLocations, 0 /* opcodeOffset */)) {
+                  offsets->sourceLocations, 0                   )) {
             const std::string file =
                 debugInfo->getFilenameByID(pos->filenameId);
-            const uint32_t line = pos->line - 1; // Normalising to zero-based
+            const uint32_t line = pos->line - 1;                             
             const uint32_t column =
-                pos->column - 1; // Normalising to zero-based
+                pos->column - 1;                             
             funcInfos.emplace_back(line, column, file);
           }
         } else {
@@ -107,7 +107,7 @@ std::vector<bool> &CodeCoverageProfiler::getModuleFuncMapRef(
     return funcMapIter->second;
   }
 
-  // For new module register its domain for marking.
+                                                    
   domains_.insert(module->getDomainUnsafe(runtime_));
 
   const uint32_t funcCount = module->getBytecode()->getFunctionCount();
@@ -124,5 +124,5 @@ bool operator==(
       left.debugInfo == right.debugInfo;
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

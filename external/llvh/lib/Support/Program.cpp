@@ -18,10 +18,10 @@
 using namespace llvh;
 using namespace sys;
 
-//===----------------------------------------------------------------------===//
-//=== WARNING: Implementation here must contain only TRULY operating system
-//===          independent code.
-//===----------------------------------------------------------------------===//
+                                                                                
+                                                                           
+                                
+                                                                                
 
 static bool Execute(ProcessInfo &PI, StringRef Program,
                     ArrayRef<StringRef> Args, Optional<ArrayRef<StringRef>> Env,
@@ -39,7 +39,7 @@ int sys::ExecuteAndWait(StringRef Program, ArrayRef<StringRef> Args,
     if (ExecutionFailed)
       *ExecutionFailed = false;
     ProcessInfo Result = Wait(
-        PI, SecondsToWait, /*WaitUntilTerminates=*/SecondsToWait == 0, ErrMsg);
+        PI, SecondsToWait,                         SecondsToWait == 0, ErrMsg);
     return Result.ReturnCode;
   }
 
@@ -74,7 +74,7 @@ bool sys::commandLineFitsWithinSystemLimits(StringRef Program,
   return commandLineFitsWithinSystemLimits(Program, StringRefArgs);
 }
 
-// Include the platform-specific parts of this class.
+                                                     
 #ifdef LLVM_ON_UNIX
 #include "Unix/Program.inc"
 #endif

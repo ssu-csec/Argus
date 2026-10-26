@@ -190,5 +190,5 @@ bool isAsync(FunctionLikeNode *node) {
   }
 }
 
-} // namespace ESTree
-} // namespace hermes
+}                    
+}                    

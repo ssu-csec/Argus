@@ -68,13 +68,13 @@ enum class ReadResult {
 };
 }
 
-/// Print the prompt \p prompt and read a line from stdin with editing, storing
-/// it in \p line.
-/// When the user sends SIGINT instead of providing input to the REPL,
-/// we return ReadResult::INTERRUPT directly from readInputLine.
-/// This works because readline allows longjmps out of it without breaking
-/// (it has a signal handler that cleans up and rethrows the signal).
-/// \return SUCCESS if it worked, INTERRUPT on SIGINT, FAILURE on EOF.
+                                                                               
+                  
+                                                                      
+                                                                
+                                                                          
+                                                                     
+                                                                      
 static ReadResult readInputLine(const char *prompt, std::string &line);
 
 #ifdef _WINDOWS
@@ -95,11 +95,11 @@ static ReadResult readInputLine(const char *prompt, std::string &line) {
 
 static std::jmp_buf readlineJmpBuf;
 
-/// Store the last sigaction so we can restore it.
+                                                  
 static struct sigaction oldAction;
 
-/// Handler for SIGINT in readline.
-/// Clears the signal handler and longjmps to early return from readInputLine.
+                                   
+                                                                              
 static void handleSignal(int sig) {
   if (sig == SIGINT) {
     struct sigaction action;
@@ -139,7 +139,7 @@ static ReadResult readInputLine(const char *prompt, std::string &line) {
   }
 #endif
 #else
-  // Avoid unused function warnings.
+                                    
   (void)handleSignal;
 #endif
   llvh::outs() << prompt;
@@ -157,11 +157,11 @@ static ReadResult readInputLine(const char *prompt, std::string &line) {
 }
 #endif
 
-/// Checks if the provided input needs another line to become valid.
-/// Currently, this only checks if there's open delimiter tokens
-/// that haven't been closed, and that the preceding closing delimiter tokens
-/// are actually valid.
-/// Otherwise, simply returns false, and the line is fed as-is to eval().
+                                                                    
+                                                                
+                                                                             
+                       
+                                                                         
 static bool needsAnotherLine(llvh::StringRef input) {
   SourceErrorManager sm;
   SourceErrorManager::SaveAndSuppressMessages suppress(&sm);
@@ -178,7 +178,7 @@ static bool needsAnotherLine(llvh::StringRef input) {
     return true;
   }
 
-  // Given a right delimiter token kind, get the corresponding left one.
+                                                                        
   auto getLeft = [](const parser::TokenKind kind) {
     switch (kind) {
       case parser::TokenKind::r_brace:
@@ -192,9 +192,9 @@ static bool needsAnotherLine(llvh::StringRef input) {
     }
   };
 
-  // Look at the previous token to see if the next token could possibly be the
-  // beginning of a regular expression.
-  // https://github.com/mikesamuel/es5-lexer/blob/master/src/guess_is_regexp.js
+                                                                              
+                                       
+                                                                               
   auto isRegexPossible = [](OptValue<parser::TokenKind> previousTokenKind) {
     if (!previousTokenKind) {
       return true;
@@ -244,8 +244,8 @@ static bool needsAnotherLine(llvh::StringRef input) {
 
   OptValue<parser::TokenKind> previousTokenKind;
 
-  // Use AllowRegExp when a regular expression is possible and use AllowDiv
-  // otherwise so that division is correctly parsed.
+                                                                           
+                                                    
   while (const parser::Token *token = lexer.advance(
              isRegexPossible(previousTokenKind)
                  ? parser::JSLexer::GrammarContext::AllowRegExp
@@ -257,42 +257,42 @@ static bool needsAnotherLine(llvh::StringRef input) {
       case parser::TokenKind::l_brace:
       case parser::TokenKind::l_paren:
       case parser::TokenKind::l_square:
-        // Push any left side delimiters.
+                                         
         stack.push(token->getKind());
         break;
       case parser::TokenKind::r_brace:
       case parser::TokenKind::r_paren:
       case parser::TokenKind::r_square: {
-        // Try to match the right delimiter, and if it can't be matched,
-        // the failure is unrecoverable.
+                                                                        
+                                        
         auto left = getLeft(token->getKind());
         if (!stack.empty() && stack.top() == left) {
-          // Matched the delimiter, pop it off and continue.
+                                                            
           stack.pop();
         } else {
-          // Failed to match, so we can't be recoverable.
+                                                         
           return false;
         }
         break;
       }
       default:
-        // Do nothing for the other tokens.
+                                           
         break;
     }
     previousTokenKind = token->getKind();
   }
 
-  // If the stack is empty, then we can't recover from the error,
-  // because there was some other problem besides mismatched delimiters.
-  // TODO: Handle other classes of recoverable errors.
+                                                                 
+                                                                        
+                                                      
   return !stack.empty();
 }
 
 #if HAVE_LIBREADLINE
-// Load history file or create it
+                                 
 static std::error_code loadHistoryFile(llvh::SmallString<128> &historyFile) {
   if (!llvh::sys::path::home_directory(historyFile)) {
-    // Use ENOENT here since it could not found a home directory
+                                                                
     return std::error_code(ENOENT, std::system_category());
   }
 
@@ -300,7 +300,7 @@ static std::error_code loadHistoryFile(llvh::SmallString<128> &historyFile) {
 
   auto err = ::read_history(historyFile.c_str());
   if (err != 0) {
-    // Return a error_code object from a errno enum
+                                                   
     return std::error_code(err, std::system_category());
   }
 
@@ -308,8 +308,8 @@ static std::error_code loadHistoryFile(llvh::SmallString<128> &historyFile) {
 }
 #endif
 
-/// Print \p message to stderr. \p hasColors indicates whether colors should
-/// be used (and reset after use).
+                                                                            
+                                  
 static void printError(const char *message, bool hasColors) {
   llvh::raw_ostream &errs = hasColors
       ? llvh::errs().changeColor(llvh::raw_ostream::Colors::RED)
@@ -318,7 +318,7 @@ static void printError(const char *message, bool hasColors) {
   llvh::errs().resetColor();
 }
 
-// This is the vm driver.
+                         
 int repl(const vm::RuntimeConfig &config) {
   std::shared_ptr<vm::Runtime> runtime = vm::Runtime::create(config);
 
@@ -374,17 +374,17 @@ int repl(const vm::RuntimeConfig &config) {
 #endif
 
   vm::MutableHandle<> resHandle{*runtime};
-  // SetUnbuffered because there is no explicit flush after prompt (>>).
-  // There is also no explicitly flush at end of line. (An automatic flush
-  // mechanism is not guaranteed to be present, from my experiment on Windows)
+                                                                        
+                                                                          
+                                                                              
   llvh::outs().SetUnbuffered();
   while (true) {
-    // Main loop
+                
     auto readResult = readInputLine(
         code.empty() ? PromptString.c_str() : Prompt2String.c_str(), code);
     if (readResult == ReadResult::FAILURE ||
         (readResult == ReadResult::INTERRUPT && code.empty())) {
-      // EOF or user exit on non-continuation line.
+                                                   
       llvh::outs() << '\n';
 #if HAVE_LIBREADLINE
       if (history_length > 0) {
@@ -396,7 +396,7 @@ int repl(const vm::RuntimeConfig &config) {
     }
 
     if (readResult == ReadResult::INTERRUPT) {
-      // Interrupt the continuation line.
+                                         
       code.clear();
       llvh::outs() << '\n';
       continue;
@@ -417,7 +417,7 @@ int repl(const vm::RuntimeConfig &config) {
     llvh::ArrayRef<char16_t> utf16Code = llvh::makeArrayRef(
         reinterpret_cast<const char16_t *>(utf16Buf.data()), utf16Buf.size());
 
-    // Ensure we don't keep accumulating handles.
+                                                 
     vm::GCScopeMarkerRAII gcMarker{*runtime};
 
     bool threwException = false;
@@ -441,11 +441,11 @@ int repl(const vm::RuntimeConfig &config) {
       resHandle = std::move(*callRes);
     }
 
-    // Perform a microtask checkpoint after running script.
+                                                           
     microtask::performCheckpoint(*runtime);
 
     if (!ctx.tasksEmpty()) {
-      // Run the tasks until there are no more.
+                                               
       vm::MutableHandle<vm::Callable> task{*runtime};
       while (auto optTask = ctx.dequeueTask()) {
         task = std::move(*optTask);
@@ -462,7 +462,7 @@ int repl(const vm::RuntimeConfig &config) {
           code.clear();
         }
 
-        // Perform a microtask checkpoint at the end of every task tick.
+                                                                        
         microtask::performCheckpoint(*runtime);
       }
     }
@@ -476,7 +476,7 @@ int repl(const vm::RuntimeConfig &config) {
       continue;
     }
 
-    // Operator resolution in the vm namespace.
+                                               
     vm::SmallU16String<32> tmp;
     vm::operator<<(
         llvh::outs(),

@@ -45,7 +45,7 @@ void dateFormat(
     bool formatDate,
     bool formatTime,
     llvh::SmallVectorImpl<char16_t> &buf) {
-  // FIXME: implement this.
+                           
   llvh::ArrayRef<char> str{"dateFormat not implemented"};
   buf.assign(str.begin(), str.end());
 }
@@ -54,14 +54,14 @@ void convertToCase(
     llvh::SmallVectorImpl<char16_t> &str,
     CaseConversion targetCase,
     bool useCurrentLocale) {
-  // FIXME: implement this.
+                           
 }
 
 void normalize(llvh::SmallVectorImpl<char16_t> &buf, NormalizationForm form) {
-  // FIXME: implement this.
+                           
 }
 
-} // namespace platform_unicode
-} // namespace hermes
+}                              
+}                    
 
-#endif // HERMES_PLATFORM_UNICODE_JAVA
+#endif                                

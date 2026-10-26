@@ -5,26 +5,26 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-/// This file defines the ESTree nodes, which are documented in:
-/// https://github.com/estree/estree/blob/master/spec.md
-///
-/// Each parameter is described by three tokens: Type, Name and Optional.
+                                                                
+                                                        
+   
+                                                                         
 
 #include "hermes/AST/Config.h"
 
 // clang-format off
 
-// Defines the start of range of nodes with the same base
+                                                         
 #ifndef ESTREE_FIRST
 #define ESTREE_FIRST(NAME, BASE)
 #endif
 
-// Defines the end of range of nodes with the same base
+                                                       
 #ifndef ESTREE_LAST
 #define ESTREE_LAST(NAME)
 #endif
 
-// Ignores the given field if it is "empty" (e.g. nullptr, empty list).
+                                                                       
 #ifndef ESTREE_IGNORE_IF_EMPTY
 #define ESTREE_IGNORE_IF_EMPTY(NODE, FIELD)
 #endif
@@ -107,8 +107,8 @@ ESTREE_FIRST(Statement, Base)
 
 ESTREE_NODE_2_ARGS(
     MatchStatement, Statement,
-    NodePtr, argument, false, // Expression
-    NodeList, cases, false // [ MatchStatementCase ]
+    NodePtr, argument, false,              
+    NodeList, cases, false                          
 )
 
 #endif
@@ -415,6 +415,30 @@ ESTREE_NODE_1_ARGS(
     PrivateName, Base,
     NodePtr, id, false)
 
+                                                                                
+ESTREE_NODE_2_ARGS(
+    NativePublicFieldOperation, Base,
+    NodeLabel, operation, false,
+    NodeList, arguments, false)
+
+                                                                            
+ESTREE_NODE_2_ARGS(
+    NativeDerivedSuperOperation, Base,
+    NodeLabel, operation, false,
+    NodeList, arguments, false)
+
+                                                                             
+ESTREE_NODE_2_ARGS(
+    NativeClassDefinitionOperation, Base,
+    NodeLabel, operation, false,
+    NodeList, arguments, false)
+
+                                                                             
+ESTREE_NODE_2_ARGS(
+    NativePrivateOperation, Base,
+    NodeLabel, operation, false,
+    NodeList, arguments, false)
+
 ESTREE_NODE_2_ARGS(
     MetaProperty,
     Base,
@@ -473,11 +497,11 @@ ESTREE_NODE_2_ARGS(TaggedTemplateExpression, Base,
                    NodePtr, tag, false,
                    NodePtr, quasi, false)
 
-// In ESTree, it is defined as {tail : boolean,
-//                              value : {cooked : string, raw : string}},
-// we flatten the value field.
-// If the template literal is tagged and the text has an invalid escape,
-// cooked will be null.
+                                               
+                                                                         
+                              
+                                                                        
+                       
 ESTREE_NODE_3_ARGS(TemplateElement, Base,
                    NodeBoolean, tail, false,
                    NodeString, cooked, true,
@@ -563,7 +587,7 @@ ESTREE_NODE_5_ARGS(
     NodeBoolean, computed, false,
     NodeBoolean, static, false)
 
-// Imports ========================================
+                                                   
 
 ESTREE_NODE_4_ARGS(
     ImportDeclaration, Base,
@@ -589,9 +613,9 @@ ESTREE_NODE_2_ARGS(
     NodePtr, value, false)
 
 
-// ================================================
+                                                   
 
-// Exports ========================================
+                                                   
 
 ESTREE_NODE_4_ARGS(
     ExportNamedDeclaration, Base,
@@ -615,9 +639,9 @@ ESTREE_NODE_2_ARGS(
     NodePtr, source, false,
     NodeLabel, exportKind, false)
 
-// ================================================
+                                                   
 
-// Patterns =======================================
+                                                   
 ESTREE_FIRST(Pattern, Base)
 
 ESTREE_NODE_2_ARGS(
@@ -638,39 +662,39 @@ ESTREE_NODE_1_ARGS(
 
 ESTREE_NODE_2_ARGS(
     AssignmentPattern, Pattern,
-    NodePtr, left, false,          // Pattern
-    NodePtr, right, false)         // Expression
+    NodePtr, left, false,                    
+    NodePtr, right, false)                      
 
 ESTREE_LAST(Pattern)
 
-// ================================================
+                                                   
 
-// Flow match =====================================
+                                                   
 
 #if HERMES_PARSE_FLOW
 
-// Match statement
+                  
 ESTREE_NODE_3_ARGS(
     MatchStatementCase, Base,
-    NodePtr, pattern, false, // MatchPattern
-    NodePtr, body, false, // BlockStatement
-    NodePtr, guard, true // Expression | null
+    NodePtr, pattern, false,                
+    NodePtr, body, false,                  
+    NodePtr, guard, true                     
 )
 
-// Match expression
+                   
 ESTREE_NODE_2_ARGS(
     MatchExpression, Base,
-    NodePtr, argument, false, // Expression
-    NodeList, cases, false // [ MatchExpressionCase ]
+    NodePtr, argument, false,              
+    NodeList, cases, false                           
 )
 ESTREE_NODE_3_ARGS(
     MatchExpressionCase, Base,
-    NodePtr, pattern, false, // MatchPattern
-    NodePtr, body, false, // Expression
-    NodePtr, guard, true // Expression | null
+    NodePtr, pattern, false,                
+    NodePtr, body, false,              
+    NodePtr, guard, true                     
 )
 
-// Match patterns
+                 
 ESTREE_FIRST(MatchPattern, Base)
 
 ESTREE_NODE_0_ARGS(
@@ -678,66 +702,66 @@ ESTREE_NODE_0_ARGS(
 )
 ESTREE_NODE_1_ARGS(
   MatchLiteralPattern, MatchPattern,
-  NodePtr, literal, false // Literal
+  NodePtr, literal, false           
 )
 ESTREE_NODE_2_ARGS(
   MatchUnaryPattern, MatchPattern,
-  NodePtr, argument, false, // Literal
-  NodeLabel, operator, false // "-" | "+"
+  NodePtr, argument, false,           
+  NodeLabel, operator, false             
 )
 ESTREE_NODE_1_ARGS(
   MatchIdentifierPattern, MatchPattern,
-  NodePtr, id, false // Identifier
+  NodePtr, id, false              
 )
 ESTREE_NODE_2_ARGS(
   MatchBindingPattern, MatchPattern,
-  NodePtr, id, false, // Identifier
-  NodeLabel, kind, false // "let" | "const"
+  NodePtr, id, false,              
+  NodeLabel, kind, false                   
 )
 ESTREE_NODE_2_ARGS(
   MatchObjectPattern, MatchPattern,
-  NodeList, properties, false, // [ MatchObjectPatternProperty ]
-  NodePtr, rest, true // MatchRestPattern | null
+  NodeList, properties, false,                                  
+  NodePtr, rest, true                           
 )
 ESTREE_NODE_2_ARGS(
   MatchArrayPattern, MatchPattern,
-  NodeList, elements, false, // [ MatchPattern ]
-  NodePtr, rest, true // MatchRestPattern | null
+  NodeList, elements, false,                    
+  NodePtr, rest, true                           
 )
 ESTREE_NODE_1_ARGS(
   MatchOrPattern, MatchPattern,
-  NodeList, patterns, false // [ MatchPattern ]
+  NodeList, patterns, false                    
 )
 ESTREE_NODE_2_ARGS(
   MatchAsPattern, MatchPattern,
-  NodePtr, pattern, false, // MatchPattern
-  NodePtr, target, false // Identifier | MatchBindingPattern
+  NodePtr, pattern, false,                
+  NodePtr, target, false                                    
 )
 ESTREE_NODE_2_ARGS(
   MatchMemberPattern, MatchPattern,
-  NodePtr, base, false, // MatchIdentifierPattern | MatchMemberPattern
-  NodePtr, property, false // Identifier | Literal
+  NodePtr, base, false,                                               
+  NodePtr, property, false                        
 )
 
 ESTREE_LAST(MatchPattern)
 
-// Match pattern auxiliary nodes
+                                
 ESTREE_NODE_3_ARGS(
   MatchObjectPatternProperty, Base,
-  NodePtr, key, false, // Identifier | Literal
-  NodePtr, pattern, false, // MatchPattern
-  NodeBoolean, shorthand, false // boolean
+  NodePtr, key, false,                        
+  NodePtr, pattern, false,                
+  NodeBoolean, shorthand, false           
 )
 ESTREE_NODE_1_ARGS(
   MatchRestPattern, Base,
-  NodePtr, argument, true // MatchBindingPattern | null
+  NodePtr, argument, true                              
 )
 
 #endif
 
-// ================================================
+                                                   
 
-// JSX ============================================
+                                                   
 
 #if HERMES_PARSE_JSX
 
@@ -812,9 +836,9 @@ ESTREE_LAST(JSX)
 
 #endif
 
-// ================================================
+                                                   
 
-// Types ==========================================
+                                                   
 
 #if HERMES_PARSE_FLOW
 
@@ -1380,43 +1404,43 @@ ESTREE_LAST(TS)
 
 #endif
 
-// ================================================
+                                                   
 
 #ifndef ESTREE_DEFINE_COVER_NODES
 
 ESTREE_FIRST(Cover, Base)
 
-// CoverParenthesizedExpressionAndArrowParameterList: "(" ")"
+                                                             
 ESTREE_NODE_0_ARGS(CoverEmptyArgs, Cover)
 
-// CoverParenthesizedExpressionAndArrowParameterList:
-//      "(" Expression "," ")"
-// This is the dummy "empty expression" for the last comma inside a
-// SequenceExpression.
+                                                     
+                              
+                                                                   
+                      
 ESTREE_NODE_0_ARGS(CoverTrailingComma, Cover)
 
-// CoverInitializer
-// This is used for destructuring object assignment with initializers. It
-// will be the value node of a Property.
+                   
+                                                                         
+                                        
 ESTREE_NODE_1_ARGS(
     CoverInitializer, Cover,
     NodePtr, init, false)
 
-// CoverRestElement
-// This is used for parsing "...elem" in "()" and in SequenceExpression, so it
-// can later be reparsed as an arrow function rest parameter. "rest" will point
-// to the actual RestElement.
+                   
+                                                                              
+                                                                               
+                             
 ESTREE_NODE_1_ARGS(
     CoverRestElement, Cover,
     NodePtr, rest, false)
 
-// CoverTypedIdentifier
-// This is used for parsing "ident: type" as either a type cast expression
-// or a typed parameter in the parameters list of an arrow function.
-// 'left' is the identifier which is typed.
-// 'right' is the type which is either the cast target or the type annotation,
-//   which may be null if the identifier was simply given a '?' and no ':'
-//   with a type annotation.
+                       
+                                                                          
+                                                                    
+                                           
+                                                                              
+                                                                          
+                            
 ESTREE_NODE_3_ARGS(
     CoverTypedIdentifier, Cover,
     NodePtr, left, false,

@@ -12,8 +12,8 @@
 
 namespace hermes {
 
-/// Infers the types of instructions and enables other optimization passes to
-/// optimize based on the deduced types.
+                                                                             
+                                        
 class TypeInference : public ModulePass {
  public:
   explicit TypeInference() : ModulePass("TypeInference") {}
@@ -22,6 +22,6 @@ class TypeInference : public ModulePass {
   bool runOnModule(Module *M) override;
 };
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_OPTIMIZER_SCALAR_TYPEINFERENCE_H
+#endif                                           

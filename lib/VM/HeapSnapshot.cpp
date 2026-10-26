@@ -27,7 +27,7 @@ namespace vm {
 
 namespace {
 
-/// Lower an instance \p e of enumeration \p Enum to its underlying type.
+                                                                         
 template <typename Enum>
 constexpr typename std::underlying_type<Enum>::type index(Enum e) {
   return static_cast<typename std::underlying_type<Enum>::type>(e);
@@ -38,7 +38,7 @@ const char *kSectionLabels[] = {
 #include "hermes/VM/HeapSnapshot.def"
 };
 
-} // namespace
+}             
 
 HeapSnapshot::HeapSnapshot(
     JSONEmitter &json,
@@ -58,7 +58,7 @@ HeapSnapshot::HeapSnapshot(
 HeapSnapshot::~HeapSnapshot() {
   assert(edgeCount_ == expectedEdges_ && "Unexpected edges count");
   emitStrings();
-  json_.closeDict(); // top level
+  json_.closeDict();             
 }
 
 void HeapSnapshot::beginSection(Section section) {
@@ -95,7 +95,7 @@ void HeapSnapshot::endSection(Section section) {
 }
 
 void HeapSnapshot::beginNode() {
-  // Reset the edge counter.
+                            
   currEdgeCount_ = 0;
   assert(
       nextSection_ == Section::Edges ||
@@ -109,7 +109,7 @@ void HeapSnapshot::endNode(
     HeapSizeType selfSize,
     HeapSizeType traceNodeID) {
   if (nextSection_ == Section::Edges) {
-    // If the edges are being emitted, ignore node output.
+                                                          
     return;
   }
   auto &nodeStats = traceNodeStats_[traceNodeID];
@@ -125,7 +125,7 @@ void HeapSnapshot::endNode(
   json_.emitValue(selfSize);
   json_.emitValue(currEdgeCount_);
   json_.emitValue(traceNodeID);
-  // detachedness is always zero for hermes, since there's no DOM to attach to.
+                                                                               
   json_.emitValue(0);
 #ifndef NDEBUG
   expectedEdges_ += currEdgeCount_;
@@ -136,8 +136,8 @@ void HeapSnapshot::addNamedEdge(
     EdgeType type,
     llvh::StringRef name,
     NodeID toNode) {
-  // If we're emitting nodes, only count the number of edges being processed,
-  // but don't actually emit them.
+                                                                             
+                                  
   currEdgeCount_++;
   if (nextSection_ == Section::Nodes) {
     return;
@@ -151,7 +151,7 @@ void HeapSnapshot::addNamedEdge(
 
   auto nodeIt = nodeToIndex_.find(toNode);
   assert(nodeIt != nodeToIndex_.end());
-  // Point to the beginning of the target node in the `nodes` flat array.
+                                                                         
   json_.emitValue(nodeIt->second * V8_SNAPSHOT_NODE_FIELD_COUNT);
 }
 
@@ -159,8 +159,8 @@ void HeapSnapshot::addIndexedEdge(
     EdgeType type,
     EdgeIndex edgeIndex,
     NodeID toNode) {
-  // If we're emitting nodes, only count the number of edges being processed,
-  // but don't actually emit them.
+                                                                             
+                                  
   currEdgeCount_++;
   if (nextSection_ == Section::Nodes) {
     return;
@@ -174,7 +174,7 @@ void HeapSnapshot::addIndexedEdge(
 
   auto nodeIt = nodeToIndex_.find(toNode);
   assert(nodeIt != nodeToIndex_.end());
-  // Point to the beginning of the target node in the `nodes` flat array.
+                                                                         
   json_.emitValue(nodeIt->second * V8_SNAPSHOT_NODE_FIELD_COUNT);
 }
 
@@ -192,8 +192,8 @@ void HeapSnapshot::addLocation(
       "Couldn't add a location for an object that doesn't exist");
   json_.emitValue(nodeIt->second * V8_SNAPSHOT_NODE_FIELD_COUNT);
   json_.emitValue(script);
-  // The serialized format uses 0-based indexing for line and column, but the
-  // parameters are 1-based.
+                                                                             
+                            
   assert(line != 0 && "Line should be 1-based");
   assert(column != 0 && "Column should be 1-based");
   json_.emitValue(line - 1);
@@ -253,7 +253,7 @@ void HeapSnapshot::emitMeta(
 #define V8_NODE_FIELD(label, type) #label,
 #include "hermes/VM/HeapSnapshot.def"
   });
-  json_.closeArray(); // node_fields
+  json_.closeArray();               
 
   json_.emitKey("node_types");
   json_.openArray();
@@ -267,7 +267,7 @@ void HeapSnapshot::emitMeta(
 #define V8_NODE_FIELD(label, type) #type,
 #include "hermes/VM/HeapSnapshot.def"
   });
-  json_.closeArray(); // node_types
+  json_.closeArray();              
 
   json_.emitKey("edge_fields");
   json_.openArray();
@@ -276,7 +276,7 @@ void HeapSnapshot::emitMeta(
 #define V8_EDGE_FIELD(label, type) #label,
 #include "hermes/VM/HeapSnapshot.def"
   });
-  json_.closeArray(); // edge_fields
+  json_.closeArray();               
 
   json_.emitKey("edge_types");
   json_.openArray();
@@ -290,7 +290,7 @@ void HeapSnapshot::emitMeta(
 #define V8_EDGE_FIELD(label, type) #type,
 #include "hermes/VM/HeapSnapshot.def"
   });
-  json_.closeArray(); // edge_types
+  json_.closeArray();              
 
   json_.emitKey("trace_function_info_fields");
   json_.openArray();
@@ -298,7 +298,7 @@ void HeapSnapshot::emitMeta(
 #define V8_TRACE_FUNCTION_INFO_FIELD(name) #name,
 #include "hermes/VM/HeapSnapshot.def"
   });
-  json_.closeArray(); // trace_function_info_fields
+  json_.closeArray();                              
 
   json_.emitKey("trace_node_fields");
   json_.openArray();
@@ -306,7 +306,7 @@ void HeapSnapshot::emitMeta(
 #define V8_TRACE_NODE_FIELD(name) #name,
 #include "hermes/VM/HeapSnapshot.def"
   });
-  json_.closeArray(); // trace_node_fields
+  json_.closeArray();                     
 
   json_.emitKey("sample_fields");
   json_.openArray();
@@ -314,7 +314,7 @@ void HeapSnapshot::emitMeta(
 #define V8_SAMPLE_FIELD(name) #name,
 #include "hermes/VM/HeapSnapshot.def"
   });
-  json_.closeArray(); // sample_fields
+  json_.closeArray();                 
 
   json_.emitKey("location_fields");
   json_.openArray();
@@ -322,21 +322,21 @@ void HeapSnapshot::emitMeta(
 #define V8_LOCATION_FIELD(label) #label,
 #include "hermes/VM/HeapSnapshot.def"
   });
-  json_.closeArray(); // location_fields
+  json_.closeArray();                   
 
-  json_.closeDict(); // "meta"
+  json_.closeDict();          
 
   json_.emitKey("node_count");
-  // This can be zero because it's only used as an optimization hint to
-  // the viewer.
+                                                                       
+                
   json_.emitValue(nodeCount);
   json_.emitKey("edge_count");
-  // This can be zero because it's only used as an optimization hint to
-  // the viewer.
+                                                                       
+                
   json_.emitValue(edgeCount);
   json_.emitKey("trace_function_count");
   json_.emitValue(traceFunctionCount);
-  json_.closeDict(); // "snapshot"
+  json_.closeDict();              
 }
 
 void HeapSnapshot::emitAllocationTraceInfo() {
@@ -365,15 +365,15 @@ void HeapSnapshot::emitAllocationTraceInfo() {
     if (entry == sourceLocToFuncIdxMap.end()) {
       const auto functionIdx = nextFunctionIdx++;
       sourceLocToFuncIdxMap.try_emplace(curNode->sourceLoc, functionIdx);
-      // function_id needs to match the zero-based index of this function in the
-      // list.
-      json_.emitValue(functionIdx); // "function_id"
-      json_.emitValue(curNode->name); // "name"
-      json_.emitValue(curNode->sourceLoc.scriptName); // "script_name"
-      json_.emitValue(curNode->sourceLoc.scriptID); // "script_id"
-      // These should be emitted as 1-based, not 0-based like locations.
-      json_.emitValue(curNode->sourceLoc.lineNo); // "line"
-      json_.emitValue(curNode->sourceLoc.columnNo); // "column"
+                                                                                
+              
+      json_.emitValue(functionIdx);                 
+      json_.emitValue(curNode->name);          
+      json_.emitValue(curNode->sourceLoc.scriptName);                 
+      json_.emitValue(curNode->sourceLoc.scriptID);               
+                                                                        
+      json_.emitValue(curNode->sourceLoc.lineNo);          
+      json_.emitValue(curNode->sourceLoc.columnNo);            
     }
     for (auto child : curNode->getChildren()) {
       nodeStack.push(child);
@@ -381,8 +381,8 @@ void HeapSnapshot::emitAllocationTraceInfo() {
   }
   endSection(Section::TraceFunctionInfos);
 
-  // Save the trace function count (which is essentially the number of nodes
-  // on the tree with unique SourceLocs.
+                                                                            
+                                        
   traceFunctionCount_ = sourceLocToFuncIdxMap.size();
 
   beginSection(Section::TraceTree);
@@ -399,11 +399,11 @@ void HeapSnapshot::emitAllocationTraceInfo() {
     assert(
         sourceLocIdxIt != sourceLocToFuncIdxMap.end() &&
         "Could not find trace function info ID for sourceLoc");
-    // This index must correspond to the "function_id" emitted in the
-    // "trace_function_infos" section.
-    json_.emitValue(sourceLocIdxIt->second); // "function_info_index"
-    json_.emitValue(traceNodeStats_[curNode->id].count); // "count"
-    json_.emitValue(traceNodeStats_[curNode->id].size); // "size"
+                                                                     
+                                      
+    json_.emitValue(sourceLocIdxIt->second);                         
+    json_.emitValue(traceNodeStats_[curNode->id].count);           
+    json_.emitValue(traceNodeStats_[curNode->id].size);          
     json_.openArray();
     nodeStack.push(nullptr);
     for (auto child : curNode->getChildren()) {
@@ -454,15 +454,15 @@ void ChromeSamplingMemoryProfile::emitNode(
   json_.emitKeyValue("functionName", strings[node->name]);
   json_.emitKeyValue("scriptId", std::to_string(node->sourceLoc.scriptID));
   json_.emitKeyValue("url", strings[node->sourceLoc.scriptName]);
-  // For the sampling memory profiler, lines should be 0-based. The source
-  // location is 1-based, so subtract 1 here.
+                                                                          
+                                             
   json_.emitKeyValue("lineNumber", node->sourceLoc.lineNo - 1);
   json_.emitKeyValue("columnNumber", node->sourceLoc.columnNo - 1);
   json_.closeDict();
 
   size_t selfSize = 0;
   for (const auto &sizeAndCount : sizesToCounts.lookup(node)) {
-    // Size is the key, count is the value.
+                                           
     selfSize += sizeAndCount.first * sizeAndCount.second;
   }
   json_.emitKeyValue("selfSize", selfSize);
@@ -521,5 +521,5 @@ std::string converter(const UTF16Ref ref) {
   return out;
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

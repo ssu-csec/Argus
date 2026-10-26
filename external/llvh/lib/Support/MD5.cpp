@@ -47,24 +47,24 @@
 #include <cstdint>
 #include <cstring>
 
-// The basic MD5 functions.
+                           
 
-// F and G are optimized compared to their RFC 1321 definitions for
-// architectures that lack an AND-NOT instruction, just like in Colin Plumb's
-// implementation.
+                                                                   
+                                                                             
+                  
 #define F(x, y, z) ((z) ^ ((x) & ((y) ^ (z))))
 #define G(x, y, z) ((y) ^ ((z) & ((x) ^ (y))))
 #define H(x, y, z) ((x) ^ (y) ^ (z))
 #define I(x, y, z) ((y) ^ ((x) | ~(z)))
 
-// The MD5 transformation for all four rounds.
+                                              
 #define STEP(f, a, b, c, d, x, t, s)                                           \
   (a) += f((b), (c), (d)) + (x) + (t);                                         \
   (a) = (((a) << (s)) | (((a) & 0xffffffff) >> (32 - (s))));                   \
   (a) += (b);
 
-// SET reads 4 input bytes in little-endian byte order and stores them
-// in a properly aligned word in host byte order.
+                                                                      
+                                                 
 #define SET(n)                                                                 \
   (block[(n)] =                                                                \
        (MD5_u32plus) ptr[(n) * 4] | ((MD5_u32plus) ptr[(n) * 4 + 1] << 8) |    \
@@ -74,8 +74,8 @@
 
 using namespace llvh;
 
-/// This processes one or more 64-byte data blocks, but does NOT update
-///the bit counters.  There are no alignment requirements.
+                                                                       
+                                                          
 const uint8_t *MD5::body(ArrayRef<uint8_t> Data) {
   const uint8_t *ptr;
   MD5_u32plus a, b, c, d;
@@ -95,7 +95,7 @@ const uint8_t *MD5::body(ArrayRef<uint8_t> Data) {
     saved_c = c;
     saved_d = d;
 
-    // Round 1
+              
     STEP(F, a, b, c, d, SET(0), 0xd76aa478, 7)
     STEP(F, d, a, b, c, SET(1), 0xe8c7b756, 12)
     STEP(F, c, d, a, b, SET(2), 0x242070db, 17)
@@ -113,7 +113,7 @@ const uint8_t *MD5::body(ArrayRef<uint8_t> Data) {
     STEP(F, c, d, a, b, SET(14), 0xa679438e, 17)
     STEP(F, b, c, d, a, SET(15), 0x49b40821, 22)
 
-    // Round 2
+              
     STEP(G, a, b, c, d, GET(1), 0xf61e2562, 5)
     STEP(G, d, a, b, c, GET(6), 0xc040b340, 9)
     STEP(G, c, d, a, b, GET(11), 0x265e5a51, 14)
@@ -131,7 +131,7 @@ const uint8_t *MD5::body(ArrayRef<uint8_t> Data) {
     STEP(G, c, d, a, b, GET(7), 0x676f02d9, 14)
     STEP(G, b, c, d, a, GET(12), 0x8d2a4c8a, 20)
 
-    // Round 3
+              
     STEP(H, a, b, c, d, GET(5), 0xfffa3942, 4)
     STEP(H, d, a, b, c, GET(8), 0x8771f681, 11)
     STEP(H, c, d, a, b, GET(11), 0x6d9d6122, 16)
@@ -149,7 +149,7 @@ const uint8_t *MD5::body(ArrayRef<uint8_t> Data) {
     STEP(H, c, d, a, b, GET(15), 0x1fa27cf8, 16)
     STEP(H, b, c, d, a, GET(2), 0xc4ac5665, 23)
 
-    // Round 4
+              
     STEP(I, a, b, c, d, GET(0), 0xf4292244, 6)
     STEP(I, d, a, b, c, GET(7), 0x432aff97, 10)
     STEP(I, c, d, a, b, GET(14), 0xab9423a7, 15)
@@ -185,7 +185,7 @@ const uint8_t *MD5::body(ArrayRef<uint8_t> Data) {
 
 MD5::MD5() = default;
 
-/// Incrementally add the bytes in \p Data to the hash.
+                                                       
 void MD5::update(ArrayRef<uint8_t> Data) {
   MD5_u32plus saved_lo;
   unsigned long used, free;
@@ -221,16 +221,16 @@ void MD5::update(ArrayRef<uint8_t> Data) {
   memcpy(buffer, Ptr, Size);
 }
 
-/// Add the bytes in the StringRef \p Str to the hash.
-// Note that this isn't a string and so this won't include any trailing NULL
-// bytes.
+                                                      
+                                                                            
+         
 void MD5::update(StringRef Str) {
   ArrayRef<uint8_t> SVal((const uint8_t *)Str.data(), Str.size());
   update(SVal);
 }
 
-/// Finish the hash and place the resulting hash into \p result.
-/// \param Result is assumed to be a minimum of 16-bytes in size.
+                                                                
+                                                                 
 void MD5::final(MD5Result &Result) {
   unsigned long used, free;
 

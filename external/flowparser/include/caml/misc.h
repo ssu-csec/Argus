@@ -1,19 +1,19 @@
-/**************************************************************************/
-/*                                                                        */
-/*                                 OCaml                                  */
-/*                                                                        */
-/*          Xavier Leroy and Damien Doligez, INRIA Rocquencourt           */
-/*                                                                        */
+                                                                            
+                                                                            
+                                                                            
+                                                                            
+                                                                            
+                                                                            
 /*   Copyright 1996 Institut National de Recherche en Informatique et     */
-/*     en Automatique.                                                    */
-/*                                                                        */
+                                                                            
+                                                                            
 /*   All rights reserved.  This file is distributed under the terms of    */
 /*   the GNU Lesser General Public License version 2.1, with the          */
 /*   special exception on linking described in the file LICENSE.          */
-/*                                                                        */
-/**************************************************************************/
+                                                                            
+                                                                            
 
-/* Miscellaneous macros and variables. */
+                                         
 
 #ifndef CAML_MISC_H
 #define CAML_MISC_H
@@ -23,12 +23,12 @@
 #endif
 #include "config.h"
 
-/* Standard definitions */
+                          
 
 #include <stddef.h>
 #include <stdlib.h>
 
-/* Basic types and constants */
+                               
 
 typedef size_t asize_t;
 
@@ -38,20 +38,20 @@ typedef size_t asize_t;
 
 #ifdef CAML_INTERNALS
 typedef char * addr;
-#endif /* CAML_INTERNALS */
+#endif                     
 
-/* Noreturn is preserved for compatibility reasons.
-   Instead of the legacy GCC/Clang-only
-     foo Noreturn;
-   you should prefer
-     CAMLnoreturn_start foo CAMLnoreturn_end;
-   which supports both GCC/Clang and MSVC.
+                                                   
+                                       
+                  
+                    
+                                             
+                                          
 
-   Note: CAMLnoreturn is a different macro defined in memory.h,
-   to be used in function bodies rather than  aprototype attribute.
-*/
+                                                               
+                                                                   
+  
 #ifdef __GNUC__
-  /* Works only in GCC 2.5 and later */
+                                       
   #define CAMLnoreturn_start
   #define CAMLnoreturn_end __attribute__ ((noreturn))
   #define Noreturn __attribute__ ((noreturn))
@@ -67,14 +67,14 @@ typedef char * addr;
 
 
 
-/* Export control (to mark primitives and to handle Windows DLL) */
+                                                                   
 
 #define CAMLexport
 #define CAMLprim
 #define CAMLextern extern
 
-/* Weak function definitions that can be overriden by external libs */
-/* Conservatively restricted to ELF and MacOSX platforms */
+                                                                      
+                                                           
 #if defined(__GNUC__) && (defined (__ELF__) || defined(__APPLE__))
 #define CAMLweakdef __attribute__((weak))
 #else
@@ -85,16 +85,16 @@ typedef char * addr;
 extern "C" {
 #endif
 
-/* GC timing hooks. These can be assigned by the user.
-   [caml_minor_gc_begin_hook] must not allocate nor change any heap value.
-   The others can allocate and even call back to OCaml code.
-*/
+                                                      
+                                                                          
+                                                            
+  
 typedef void (*caml_timing_hook) (void);
 extern caml_timing_hook caml_major_slice_begin_hook, caml_major_slice_end_hook;
 extern caml_timing_hook caml_minor_gc_begin_hook, caml_minor_gc_end_hook;
 extern caml_timing_hook caml_finalise_begin_hook, caml_finalise_end_hook;
 
-/* Assertions */
+                
 
 #ifdef DEBUG
 #define CAMLassert(x) \
@@ -119,14 +119,14 @@ CAMLextern void caml_fatal_error_arg2 (char *fmt1, char *arg1,
                                        char *fmt2, char *arg2)
 CAMLnoreturn_end;
 
-/* Safe string operations */
+                            
 
 CAMLextern char * caml_strdup(const char * s);
-CAMLextern char * caml_strconcat(int n, ...); /* n args of const char * type */
+CAMLextern char * caml_strconcat(int n, ...);                                  
 
-/* Use macros for some system calls being called from OCaml itself.
-  These calls can be either traced for security reasons, or changed to
-  virtualize the program. */
+                                                                   
+                                                                      
+                            
 
 
 #ifndef CAML_WITH_CPLUGINS
@@ -206,24 +206,24 @@ struct cplugin_context {
   int prims_bitmap;
   char *exe_name;
   char** argv;
-  char *plugin; /* absolute filename of plugin, do a copy if you need it ! */
+  char *plugin;                                                              
   char *ocaml_version;
-/* end of CAML_CPLUGIN_CONTEXT_API version 0 */
+                                               
 };
 
 extern void caml_cplugins_init(char * exe_name, char **argv);
 
-/* A plugin MUST define a symbol "caml_cplugin_init" with the prototype:
+                                                                        
 
-void caml_cplugin_init(struct cplugin_context *ctx)
-*/
+                                                   
+  
 
-/* to write plugins for CAML_SYS_READ_DIRECTORY, we will need the
-   definition of struct ext_table to be public. */
+                                                                 
+                                                  
 
-#endif /* CAML_WITH_CPLUGINS */
+#endif                         
 
-/* Data structures */
+                     
 
 struct ext_table {
   int size;
@@ -242,16 +242,16 @@ CAMLextern int caml_read_directory(char * dirname, struct ext_table * contents);
 
 #ifdef CAML_INTERNALS
 
-/* GC flags and messages */
+                           
 
 extern uintnat caml_verb_gc;
 void caml_gc_message (int, char *, uintnat);
 
-/* Runtime warnings */
+                      
 extern uintnat caml_runtime_warnings;
 int caml_runtime_warnings_active(void);
 
-/* Memory routines */
+                     
 
 char *caml_aligned_malloc (asize_t bsize, int, void **);
 
@@ -262,21 +262,21 @@ char *caml_aligned_malloc (asize_t bsize, int, void **);
                       | ((uintnat) (x) << 48))
 #else
 #define Debug_tag(x) (0xD700D6D7ul | ((uintnat) (x) << 16))
-#endif /* ARCH_SIXTYFOUR */
+#endif                     
 
-/*
-  00 -> free words in minor heap
-  01 -> fields of free list blocks in major heap
-  03 -> heap chunks deallocated by heap shrinking
-  04 -> fields deallocated by [caml_obj_truncate]
-  10 -> uninitialised fields of minor objects
-  11 -> uninitialised fields of major objects
-  15 -> uninitialised words of [caml_aligned_malloc] blocks
-  85 -> filler bytes of [caml_aligned_malloc]
+  
+                                
+                                                
+                                                 
+                                                 
+                                             
+                                             
+                                                           
+                                             
 
-  special case (byte by byte):
-  D7 -> uninitialised words of [caml_stat_alloc] blocks
-*/
+                              
+                                                       
+  
 #define Debug_free_minor     Debug_tag (0x00)
 #define Debug_free_major     Debug_tag (0x01)
 #define Debug_free_shrink    Debug_tag (0x03)
@@ -288,18 +288,18 @@ char *caml_aligned_malloc (asize_t bsize, int, void **);
 
 #define Debug_uninit_stat    0xD7
 
-/* Note: the first argument is in fact a [value] but we don't have this
-   type available yet because we can't include [mlvalues.h] in this file.
-*/
+                                                                       
+                                                                         
+  
 extern void caml_set_fields (intnat v, unsigned long, unsigned long);
-#endif /* DEBUG */
+#endif            
 
 
 #ifndef CAML_AVOID_CONFLICTS
 #define Assert CAMLassert
 #endif
 
-/* snprintf emulation for Win32 */
+                                  
 
 #if defined(_WIN32) && !defined(_UCRT)
 extern int caml_snprintf(char * buf, size_t size, const char * format, ...);
@@ -307,7 +307,7 @@ extern int caml_snprintf(char * buf, size_t size, const char * format, ...);
 #endif
 
 #ifdef CAML_INSTR
-/* Timers and counters for GC latency profiling (Linux-only) */
+                                                               
 
 #include <time.h>
 #include <stdio.h>
@@ -324,12 +324,12 @@ struct CAML_INSTR_BLOCK {
 
 extern struct CAML_INSTR_BLOCK *CAML_INSTR_LOG;
 
-/* Declare a timer/counter name. [t] must be a new variable name. */
+                                                                    
 #define CAML_INSTR_DECLARE(t)                                       \
   struct CAML_INSTR_BLOCK *t = NULL
 
-/* Allocate the data block for a given name.
-   [t] must have been declared with [CAML_INSTR_DECLARE]. */
+                                            
+                                                            
 #define CAML_INSTR_ALLOC(t) do{                                     \
     if (caml_stat_minor_collections >= CAML_INSTR_STARTTIME         \
         && caml_stat_minor_collections < CAML_INSTR_STOPTIME){      \
@@ -341,9 +341,9 @@ extern struct CAML_INSTR_BLOCK *CAML_INSTR_LOG;
     }                                                               \
   }while(0)
 
-/* Allocate the data block and start the timer.
-   [t] must have been declared with [CAML_INSTR_DECLARE]
-   and allocated with [CAML_INSTR_ALLOC]. */
+                                               
+                                                        
+                                            
 #define CAML_INSTR_START(t, msg) do{                                \
     if (t != NULL){                                                 \
       t->tag[0] = msg;                                              \
@@ -351,15 +351,15 @@ extern struct CAML_INSTR_BLOCK *CAML_INSTR_LOG;
     }                                                               \
   }while(0)
 
-/* Declare a timer, allocate its data, and start it.
-   [t] must be a new variable name. */
+                                                    
+                                      
 #define CAML_INSTR_SETUP(t, msg)                                    \
   CAML_INSTR_DECLARE (t);                                           \
   CAML_INSTR_ALLOC (t);                                             \
   CAML_INSTR_START (t, msg)
 
-/* Record an intermediate time within a given timer.
-   [t] must have been declared, allocated, and started. */
+                                                    
+                                                          
 #define CAML_INSTR_TIME(t, msg) do{                                 \
     if (t != NULL){                                                 \
       ++ t->index;                                                  \
@@ -368,10 +368,10 @@ extern struct CAML_INSTR_BLOCK *CAML_INSTR_LOG;
     }                                                               \
   }while(0)
 
-/* Record an integer data point.
-   If [msg] ends with # it will be interpreted as an integer-valued event.
-   If it ends with @ it will be interpreted as an event counter.
-*/
+                                
+                                                                          
+                                                                
+  
 #define CAML_INSTR_INT(msg, data) do{                               \
     CAML_INSTR_SETUP (__caml_tmp, "");                              \
     if (__caml_tmp != NULL){                                        \
@@ -382,32 +382,32 @@ extern struct CAML_INSTR_BLOCK *CAML_INSTR_LOG;
     }                                                               \
   }while(0)
 
-/* This function is called at the start of the program to set up
-   the data for the above macros.
-*/
+                                                                
+                                 
+  
 extern void CAML_INSTR_INIT (void);
 
-/* This function is automatically called by the runtime to output
-   the collected data to the dump file. */
+                                                                 
+                                          
 extern void CAML_INSTR_ATEXIT (void);
 
-#else /* CAML_INSTR */
+#else                 
 
-#define CAML_INSTR_DECLARE(t) /**/
-#define CAML_INSTR_ALLOC(t) /**/
-#define CAML_INSTR_START(t, name) /**/
-#define CAML_INSTR_SETUP(t, name) /**/
-#define CAML_INSTR_TIME(t, msg) /**/
-#define CAML_INSTR_INT(msg, c) /**/
-#define CAML_INSTR_INIT() /**/
-#define CAML_INSTR_ATEXIT() /**/
+#define CAML_INSTR_DECLARE(t)     
+#define CAML_INSTR_ALLOC(t)     
+#define CAML_INSTR_START(t, name)     
+#define CAML_INSTR_SETUP(t, name)     
+#define CAML_INSTR_TIME(t, msg)     
+#define CAML_INSTR_INT(msg, c)     
+#define CAML_INSTR_INIT()     
+#define CAML_INSTR_ATEXIT()     
 
-#endif /* CAML_INSTR */
+#endif                 
 
-#endif /* CAML_INTERNALS */
+#endif                     
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* CAML_MISC_H */
+#endif                  

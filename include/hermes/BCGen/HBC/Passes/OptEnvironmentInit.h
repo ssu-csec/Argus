@@ -13,8 +13,8 @@
 namespace hermes {
 namespace hbc {
 
-/// Eliminate (HBCStoreToEnvironment _ undefined _) instructions right after
-/// enviroment creation, since all slots are already initialized to undefined.
+                                                                            
+                                                                              
 class OptEnvironmentInit : public FunctionPass {
  public:
   explicit OptEnvironmentInit() : FunctionPass("OptEnvironmentInit") {}
@@ -22,7 +22,7 @@ class OptEnvironmentInit : public FunctionPass {
   bool runOnFunction(Function *F) override;
 };
 
-} // namespace hbc
-} // namespace hermes
+}                 
+}                    
 
-#endif // HERMES_BCGEN_HBC_PASSES_OPTENVIRONMENTINIT_H
+#endif                                                

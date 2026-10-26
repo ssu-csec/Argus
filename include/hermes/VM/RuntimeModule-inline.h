@@ -25,16 +25,16 @@ inline Domain *RuntimeModule::getDomainUnsafe(Runtime &runtime) {
 }
 
 inline Domain *RuntimeModule::getDomainForSamplingProfiler(PointerBase &base) {
-  // Do not use a read barrier here, as this is called from the SamplingProfiler
-  // signal handler. The signal handler may have interrupted another read/write
-  // barrier, which the GC isn't prepared to handle. Don't use this anywhere
-  // else.
+                                                                                
+                                                                               
+                                                                            
+          
   Domain *domain = domain_.getNoBarrierUnsafe(runtime_);
   assert(domain && "RuntimeModule has an invalid Domain");
   return domain;
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
 #endif

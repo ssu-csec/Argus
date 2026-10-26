@@ -38,21 +38,21 @@
 
 namespace llvh {
 
-  /// A wrapper class for inspecting calls to intrinsic functions.
-  /// This allows the standard isa/dyncast/cast functionality to work with calls
-  /// to intrinsic functions.
+                                                                  
+                                                                                
+                             
   class IntrinsicInst : public CallInst {
   public:
     IntrinsicInst() = delete;
     IntrinsicInst(const IntrinsicInst &) = delete;
     IntrinsicInst &operator=(const IntrinsicInst &) = delete;
 
-    /// Return the intrinsic ID of this intrinsic.
+                                                  
     Intrinsic::ID getIntrinsicID() const {
       return getCalledFunction()->getIntrinsicID();
     }
 
-    // Methods for support type inquiry through isa, cast, and dyn_cast:
+                                                                        
     static bool classof(const CallInst *I) {
       if (const Function *CF = I->getCalledFunction())
         return CF->isIntrinsic();
@@ -63,11 +63,11 @@ namespace llvh {
     }
   };
 
-  /// This is the common base class for debug info intrinsics.
+                                                              
   class DbgInfoIntrinsic : public IntrinsicInst {
   public:
-    /// \name Casting methods
-    /// @{
+                             
+          
     static bool classof(const IntrinsicInst *I) {
       switch (I->getIntrinsicID()) {
       case Intrinsic::dbg_declare:
@@ -81,19 +81,19 @@ namespace llvh {
     static bool classof(const Value *V) {
       return isa<IntrinsicInst>(V) && classof(cast<IntrinsicInst>(V));
     }
-    /// @}
+          
   };
 
-  /// This is the common base class for debug info intrinsics for variables.
+                                                                            
   class DbgVariableIntrinsic : public DbgInfoIntrinsic {
   public:
-    /// Get the location corresponding to the variable referenced by the debug
-    /// info intrinsic.  Depending on the intrinsic, this could be the
-    /// variable's value or its address.
+                                                                              
+                                                                      
+                                        
     Value *getVariableLocation(bool AllowNullOp = true) const;
 
-    /// Does this describe the address of a local variable. True for dbg.addr
-    /// and dbg.declare, but not dbg.value, which describes its value.
+                                                                             
+                                                                      
     bool isAddressOfVariable() const {
       return getIntrinsicID() != Intrinsic::dbg_value;
     }
@@ -114,12 +114,12 @@ namespace llvh {
       return cast<MetadataAsValue>(getArgOperand(2))->getMetadata();
     }
 
-    /// Get the size (in bits) of the variable, or fragment of the variable that
-    /// is described.
+                                                                                
+                     
     Optional<uint64_t> getFragmentSizeInBits() const;
 
-    /// \name Casting methods
-    /// @{
+                             
+          
     static bool classof(const IntrinsicInst *I) {
       switch (I->getIntrinsicID()) {
       case Intrinsic::dbg_declare:
@@ -132,32 +132,32 @@ namespace llvh {
     static bool classof(const Value *V) {
       return isa<IntrinsicInst>(V) && classof(cast<IntrinsicInst>(V));
     }
-    /// @}
+          
   };
 
-  /// This represents the llvm.dbg.declare instruction.
+                                                       
   class DbgDeclareInst : public DbgVariableIntrinsic {
   public:
     Value *getAddress() const { return getVariableLocation(); }
 
-    /// \name Casting methods
-    /// @{
+                             
+          
     static bool classof(const IntrinsicInst *I) {
       return I->getIntrinsicID() == Intrinsic::dbg_declare;
     }
     static bool classof(const Value *V) {
       return isa<IntrinsicInst>(V) && classof(cast<IntrinsicInst>(V));
     }
-    /// @}
+          
   };
 
-  /// This represents the llvm.dbg.addr instruction.
+                                                    
   class DbgAddrIntrinsic : public DbgVariableIntrinsic {
   public:
     Value *getAddress() const { return getVariableLocation(); }
 
-    /// \name Casting methods
-    /// @{
+                             
+          
     static bool classof(const IntrinsicInst *I) {
       return I->getIntrinsicID() == Intrinsic::dbg_addr;
     }
@@ -166,25 +166,25 @@ namespace llvh {
     }
   };
 
-  /// This represents the llvm.dbg.value instruction.
+                                                     
   class DbgValueInst : public DbgVariableIntrinsic {
   public:
     Value *getValue() const {
-      return getVariableLocation(/* AllowNullOp = */ false);
+      return getVariableLocation(                    false);
     }
 
-    /// \name Casting methods
-    /// @{
+                             
+          
     static bool classof(const IntrinsicInst *I) {
       return I->getIntrinsicID() == Intrinsic::dbg_value;
     }
     static bool classof(const Value *V) {
       return isa<IntrinsicInst>(V) && classof(cast<IntrinsicInst>(V));
     }
-    /// @}
+          
   };
 
-  /// This represents the llvm.dbg.label instruction.
+                                                     
   class DbgLabelInst : public DbgInfoIntrinsic {
   public:
     DILabel *getLabel() const {
@@ -195,18 +195,18 @@ namespace llvh {
       return cast<MetadataAsValue>(getArgOperand(0))->getMetadata();
     }
 
-    /// Methods for support type inquiry through isa, cast, and dyn_cast:
-    /// @{
+                                                                         
+          
     static bool classof(const IntrinsicInst *I) {
       return I->getIntrinsicID() == Intrinsic::dbg_label;
     }
     static bool classof(const Value *V) {
       return isa<IntrinsicInst>(V) && classof(cast<IntrinsicInst>(V));
     }
-    /// @}
+          
   };
 
-  /// This is the common base class for constrained floating point intrinsics.
+                                                                              
   class ConstrainedFPIntrinsic : public IntrinsicInst {
   public:
     enum RoundingMode {
@@ -230,7 +230,7 @@ namespace llvh {
     RoundingMode getRoundingMode() const;
     ExceptionBehavior getExceptionBehavior() const;
 
-    // Methods for support type inquiry through isa, cast, and dyn_cast:
+                                                                        
     static bool classof(const IntrinsicInst *I) {
       switch (I->getIntrinsicID()) {
       case Intrinsic::experimental_constrained_fadd:
@@ -260,10 +260,10 @@ namespace llvh {
     }
   };
 
-  /// Common base class for all memory intrinsics. Simply provides
-  /// common methods.
-  /// Written as CRTP to avoid a common base class amongst the
-  /// three atomicity hierarchies.
+                                                                  
+                     
+                                                              
+                                  
   template <typename Derived> class MemIntrinsicBase : public IntrinsicInst {
   private:
     enum { ARG_DEST = 0, ARG_LENGTH = 2 };
@@ -281,9 +281,9 @@ namespace llvh {
     const Use &getLengthUse() const { return getArgOperandUse(ARG_LENGTH); }
     Use &getLengthUse() { return getArgOperandUse(ARG_LENGTH); }
 
-    /// This is just like getRawDest, but it strips off any cast
-    /// instructions (including addrspacecast) that feed it, giving the
-    /// original input.  The returned value is guaranteed to be a pointer.
+                                                                
+                                                                       
+                                                                          
     Value *getDest() const { return getRawDest()->stripPointerCasts(); }
 
     unsigned getDestAddressSpace() const {
@@ -292,7 +292,7 @@ namespace llvh {
 
     unsigned getDestAlignment() const { return getParamAlignment(ARG_DEST); }
 
-    /// Set the specified arguments of the instruction.
+                                                       
     void setDest(Value *Ptr) {
       assert(getRawDest()->getType() == Ptr->getType() &&
              "setDest called with pointer of wrong type!");
@@ -313,14 +313,14 @@ namespace llvh {
     }
   };
 
-  /// Common base class for all memory transfer intrinsics. Simply provides
-  /// common methods.
+                                                                           
+                     
   template <class BaseCL> class MemTransferBase : public BaseCL {
   private:
     enum { ARG_SOURCE = 1 };
 
   public:
-    /// Return the arguments to the instruction.
+                                                
     Value *getRawSource() const {
       return const_cast<Value *>(BaseCL::getArgOperand(ARG_SOURCE));
     }
@@ -329,9 +329,9 @@ namespace llvh {
     }
     Use &getRawSourceUse() { return BaseCL::getArgOperandUse(ARG_SOURCE); }
 
-    /// This is just like getRawSource, but it strips off any cast
-    /// instructions that feed it, giving the original input.  The returned
-    /// value is guaranteed to be a pointer.
+                                                                  
+                                                                           
+                                            
     Value *getSource() const { return getRawSource()->stripPointerCasts(); }
 
     unsigned getSourceAddressSpace() const {
@@ -356,8 +356,8 @@ namespace llvh {
     }
   };
 
-  /// Common base class for all memset intrinsics. Simply provides
-  /// common methods.
+                                                                  
+                     
   template <class BaseCL> class MemSetBase : public BaseCL {
   private:
     enum { ARG_VALUE = 1 };
@@ -378,8 +378,8 @@ namespace llvh {
     }
   };
 
-  // The common base class for the atomic memset/memmove/memcpy intrinsics
-  // i.e. llvm.element.unordered.atomic.memset/memcpy/memmove
+                                                                          
+                                                             
   class AtomicMemIntrinsic : public MemIntrinsicBase<AtomicMemIntrinsic> {
   private:
     enum { ARG_ELEMENTSIZE = 3 };
@@ -418,8 +418,8 @@ namespace llvh {
     }
   };
 
-  /// This class represents atomic memset intrinsic
-  // i.e. llvm.element.unordered.atomic.memset
+                                                   
+                                              
   class AtomicMemSetInst : public MemSetBase<AtomicMemIntrinsic> {
   public:
     static bool classof(const IntrinsicInst *I) {
@@ -430,8 +430,8 @@ namespace llvh {
     }
   };
 
-  // This class wraps the atomic memcpy/memmove intrinsics
-  // i.e. llvm.element.unordered.atomic.memcpy/memmove
+                                                          
+                                                      
   class AtomicMemTransferInst : public MemTransferBase<AtomicMemIntrinsic> {
   public:
     static bool classof(const IntrinsicInst *I) {
@@ -448,8 +448,8 @@ namespace llvh {
     }
   };
 
-  /// This class represents the atomic memcpy intrinsic
-  /// i.e. llvm.element.unordered.atomic.memcpy
+                                                       
+                                               
   class AtomicMemCpyInst : public AtomicMemTransferInst {
   public:
     static bool classof(const IntrinsicInst *I) {
@@ -460,8 +460,8 @@ namespace llvh {
     }
   };
 
-  /// This class represents the atomic memmove intrinsic
-  /// i.e. llvm.element.unordered.atomic.memmove
+                                                        
+                                                
   class AtomicMemMoveInst : public AtomicMemTransferInst {
   public:
     static bool classof(const IntrinsicInst *I) {
@@ -472,7 +472,7 @@ namespace llvh {
     }
   };
 
-  /// This is the common base class for memset/memcpy/memmove.
+                                                              
   class MemIntrinsic : public MemIntrinsicBase<MemIntrinsic> {
   private:
     enum { ARG_VOLATILE = 3 };
@@ -489,7 +489,7 @@ namespace llvh {
 
     void setVolatile(Constant *V) { setArgOperand(ARG_VOLATILE, V); }
 
-    // Methods for support type inquiry through isa, cast, and dyn_cast:
+                                                                        
     static bool classof(const IntrinsicInst *I) {
       switch (I->getIntrinsicID()) {
       case Intrinsic::memcpy:
@@ -504,10 +504,10 @@ namespace llvh {
     }
   };
 
-  /// This class wraps the llvm.memset intrinsic.
+                                                 
   class MemSetInst : public MemSetBase<MemIntrinsic> {
   public:
-    // Methods for support type inquiry through isa, cast, and dyn_cast:
+                                                                        
     static bool classof(const IntrinsicInst *I) {
       return I->getIntrinsicID() == Intrinsic::memset;
     }
@@ -516,10 +516,10 @@ namespace llvh {
     }
   };
 
-  /// This class wraps the llvm.memcpy/memmove intrinsics.
+                                                          
   class MemTransferInst : public MemTransferBase<MemIntrinsic> {
   public:
-    // Methods for support type inquiry through isa, cast, and dyn_cast:
+                                                                        
     static bool classof(const IntrinsicInst *I) {
       return I->getIntrinsicID() == Intrinsic::memcpy ||
              I->getIntrinsicID() == Intrinsic::memmove;
@@ -529,10 +529,10 @@ namespace llvh {
     }
   };
 
-  /// This class wraps the llvm.memcpy intrinsic.
+                                                 
   class MemCpyInst : public MemTransferInst {
   public:
-    // Methods for support type inquiry through isa, cast, and dyn_cast:
+                                                                        
     static bool classof(const IntrinsicInst *I) {
       return I->getIntrinsicID() == Intrinsic::memcpy;
     }
@@ -541,10 +541,10 @@ namespace llvh {
     }
   };
 
-  /// This class wraps the llvm.memmove intrinsic.
+                                                  
   class MemMoveInst : public MemTransferInst {
   public:
-    // Methods for support type inquiry through isa, cast, and dyn_cast:
+                                                                        
     static bool classof(const IntrinsicInst *I) {
       return I->getIntrinsicID() == Intrinsic::memmove;
     }
@@ -553,14 +553,14 @@ namespace llvh {
     }
   };
 
-  // The common base class for any memset/memmove/memcpy intrinsics;
-  // whether they be atomic or non-atomic.
-  // i.e. llvm.element.unordered.atomic.memset/memcpy/memmove
-  //  and llvm.memset/memcpy/memmove
+                                                                    
+                                          
+                                                             
+                                    
   class AnyMemIntrinsic : public MemIntrinsicBase<AnyMemIntrinsic> {
   public:
     bool isVolatile() const {
-      // Only the non-atomic intrinsics can be volatile
+                                                       
       if (auto *MI = dyn_cast<MemIntrinsic>(this))
         return MI->isVolatile();
       return false;
@@ -584,9 +584,9 @@ namespace llvh {
     }
   };
 
-  /// This class represents any memset intrinsic
-  // i.e. llvm.element.unordered.atomic.memset
-  // and  llvm.memset
+                                                
+                                              
+                     
   class AnyMemSetInst : public MemSetBase<AnyMemIntrinsic> {
   public:
     static bool classof(const IntrinsicInst *I) {
@@ -603,9 +603,9 @@ namespace llvh {
     }
   };
 
-  // This class wraps any memcpy/memmove intrinsics
-  // i.e. llvm.element.unordered.atomic.memcpy/memmove
-  // and  llvm.memcpy/memmove
+                                                   
+                                                      
+                             
   class AnyMemTransferInst : public MemTransferBase<AnyMemIntrinsic> {
   public:
     static bool classof(const IntrinsicInst *I) {
@@ -624,9 +624,9 @@ namespace llvh {
     }
   };
 
-  /// This class represents any memcpy intrinsic
-  /// i.e. llvm.element.unordered.atomic.memcpy
-  ///  and llvm.memcpy
+                                                
+                                               
+                      
   class AnyMemCpyInst : public AnyMemTransferInst {
   public:
     static bool classof(const IntrinsicInst *I) {
@@ -643,9 +643,9 @@ namespace llvh {
     }
   };
 
-  /// This class represents any memmove intrinsic
-  /// i.e. llvm.element.unordered.atomic.memmove
-  ///  and llvm.memmove
+                                                 
+                                                
+                       
   class AnyMemMoveInst : public AnyMemTransferInst {
   public:
     static bool classof(const IntrinsicInst *I) {
@@ -662,7 +662,7 @@ namespace llvh {
     }
   };
 
-  /// This represents the llvm.va_start intrinsic.
+                                                  
   class VAStartInst : public IntrinsicInst {
   public:
     static bool classof(const IntrinsicInst *I) {
@@ -675,7 +675,7 @@ namespace llvh {
     Value *getArgList() const { return const_cast<Value*>(getArgOperand(0)); }
   };
 
-  /// This represents the llvm.va_end intrinsic.
+                                                
   class VAEndInst : public IntrinsicInst {
   public:
     static bool classof(const IntrinsicInst *I) {
@@ -688,7 +688,7 @@ namespace llvh {
     Value *getArgList() const { return const_cast<Value*>(getArgOperand(0)); }
   };
 
-  /// This represents the llvm.va_copy intrinsic.
+                                                 
   class VACopyInst : public IntrinsicInst {
   public:
     static bool classof(const IntrinsicInst *I) {
@@ -702,7 +702,7 @@ namespace llvh {
     Value *getSrc() const { return const_cast<Value*>(getArgOperand(1)); }
   };
 
-  /// This represents the llvm.instrprof_increment intrinsic.
+                                                             
   class InstrProfIncrementInst : public IntrinsicInst {
   public:
     static bool classof(const IntrinsicInst *I) {
@@ -742,7 +742,7 @@ namespace llvh {
     }
   };
 
-  /// This represents the llvm.instrprof_value_profile intrinsic.
+                                                                 
   class InstrProfValueProfileInst : public IntrinsicInst {
   public:
     static bool classof(const IntrinsicInst *I) {
@@ -769,12 +769,12 @@ namespace llvh {
       return cast<ConstantInt>(const_cast<Value *>(getArgOperand(3)));
     }
 
-    // Returns the value site index.
+                                    
     ConstantInt *getIndex() const {
       return cast<ConstantInt>(const_cast<Value *>(getArgOperand(4)));
     }
   };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_IR_INTRINSICINST_H
+#endif                           

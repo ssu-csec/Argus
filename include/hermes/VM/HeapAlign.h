@@ -22,19 +22,19 @@ namespace vm {
 static const uint32_t LogHeapAlign = 3;
 static const uint32_t HeapAlign = 1 << LogHeapAlign;
 
-/// Align requested size according to the alignment requirement of the GC.
+                                                                          
 constexpr inline uint32_t heapAlignSize(gcheapsize_t size) {
   return llvh::alignTo<HeapAlign>(size);
 }
 
-/// Return true if the requested size is properly aligned according to the
-/// alignment requirement of the GC.
+                                                                          
+                                    
 constexpr inline bool isSizeHeapAligned(gcheapsize_t size) {
   return (size & (HeapAlign - 1)) == 0;
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 #pragma GCC diagnostic pop
 
-#endif // HERMES_VM_HEAP_ALIGN_H
+#endif                          

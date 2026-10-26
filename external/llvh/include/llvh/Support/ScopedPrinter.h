@@ -23,13 +23,13 @@ namespace llvh {
 
 template <typename T> struct EnumEntry {
   StringRef Name;
-  // While Name suffices in most of the cases, in certain cases
-  // GNU style and LLVM style of ELFDumper do not
-  // display same string for same enum. The AltName if initialized appropriately
-  // will hold the string that GNU style emits.
-  // Example:
-  // "EM_X86_64" string on LLVM style for Elf_Ehdr->e_machine corresponds to
-  // "Advanced Micro Devices X86-64" on GNU style
+                                                               
+                                                 
+                                                                                
+                                               
+             
+                                                                            
+                                                 
   StringRef AltName;
   T Value;
   EnumEntry(StringRef N, StringRef A, T V) : Name(N), AltName(A), Value(V) {}
@@ -37,10 +37,10 @@ template <typename T> struct EnumEntry {
 };
 
 struct HexNumber {
-  // To avoid sign-extension we have to explicitly cast to the appropriate
-  // unsigned type. The overloads are here so that every type that is implicitly
-  // convertible to an integer (including enums and endian helpers) can be used
-  // without requiring type traits or call-site changes.
+                                                                          
+                                                                                
+                                                                               
+                                                        
   HexNumber(char Value) : Value(static_cast<unsigned char>(Value)) {}
   HexNumber(signed char Value) : Value(static_cast<unsigned char>(Value)) {}
   HexNumber(signed short Value) : Value(static_cast<unsigned short>(Value)) {}
@@ -384,6 +384,6 @@ struct DelimitedScope {
 using DictScope = DelimitedScope<'{', '}'>;
 using ListScope = DelimitedScope<'[', ']'>;
 
-} // namespace llvh
+}                  
 
 #endif

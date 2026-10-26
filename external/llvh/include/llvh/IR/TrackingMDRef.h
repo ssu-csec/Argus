@@ -20,9 +20,9 @@
 
 namespace llvh {
 
-/// Tracking metadata reference.
-///
-/// This class behaves like \a TrackingVH, but for metadata.
+                                
+   
+                                                            
 class TrackingMDRef {
   Metadata *MD = nullptr;
 
@@ -70,9 +70,9 @@ public:
     track();
   }
 
-  /// Check whether this has a trivial destructor.
-  ///
-  /// If \c MD isn't replaceable, the destructor will be a no-op.
+                                                  
+     
+                                                                 
   bool hasTrivialDestructor() const {
     return !MD || !MetadataTracking::isReplaceable(*MD);
   }
@@ -100,10 +100,10 @@ private:
   }
 };
 
-/// Typed tracking ref.
-///
-/// Track refererences of a particular type.  It's useful to use this for \a
-/// MDNode and \a ValueAsMetadata.
+                       
+   
+                                                                            
+                                  
 template <class T> class TypedTrackingMDRef {
   TrackingMDRef Ref;
 
@@ -135,14 +135,14 @@ public:
   void reset() { Ref.reset(); }
   void reset(T *MD) { Ref.reset(static_cast<Metadata *>(MD)); }
 
-  /// Check whether this has a trivial destructor.
+                                                  
   bool hasTrivialDestructor() const { return Ref.hasTrivialDestructor(); }
 };
 
 using TrackingMDNodeRef = TypedTrackingMDRef<MDNode>;
 using TrackingValueAsMetadataRef = TypedTrackingMDRef<ValueAsMetadata>;
 
-// Expose the underlying metadata to casting.
+                                             
 template <> struct simplify_type<TrackingMDRef> {
   using SimpleType = Metadata *;
 
@@ -173,6 +173,6 @@ template <class T> struct simplify_type<const TypedTrackingMDRef<T>> {
   }
 };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_IR_TRACKINGMDREF_H
+#endif                           

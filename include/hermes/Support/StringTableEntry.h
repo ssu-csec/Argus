@@ -14,15 +14,15 @@
 
 namespace hermes {
 
-/// An entry in the string table inside the ConsecutiveStringStorage.
+                                                                     
 class StringTableEntry {
   static constexpr uint32_t UTF16_MASK = static_cast<uint32_t>(1) << 31;
 
-  /// The offset of this string in the string storage.
+                                                      
   uint32_t offset_;
 
-  /// The length of this string. We use the most significant bit to represent
-  /// whether it's a UTF16 string.
+                                                                             
+                                  
   uint32_t length_;
 
  public:
@@ -36,25 +36,25 @@ class StringTableEntry {
       length_ |= UTF16_MASK;
     }
   }
-  /// Default constructor needed for string table resizing.
+                                                           
   StringTableEntry() = default;
 
-  /// \return the offset of this entry's string in its storage.
+                                                               
   uint32_t getOffset() const {
     return offset_;
   }
 
-  /// \return the length of this entry's string.
+                                                
   uint32_t getLength() const {
     return length_ & (~UTF16_MASK);
   }
 
-  /// \return whether this entry is UTF16.
+                                          
   bool isUTF16() const {
     return length_ & UTF16_MASK;
   }
 };
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_SUPPORT_STRINGTABLEENTRY_H
+#endif                                     

@@ -124,6 +124,6 @@ Value *IRInstrument::postAssignment(
        undefinedIfNull(left),
        right});
 }
-#endif // HERMES_ENABLE_IR_INSTRUMENTATION
+#endif                                    
 
-} // namespace hermes
+}                    

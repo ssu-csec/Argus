@@ -9,15 +9,15 @@
 #include "hermes/Public/GCTripwireContext.h"
 #include "hermes/Public/JSOutOfMemoryError.h"
 
-/// This file provides "key functions" for types in the API that have virtual
-/// methods. This ensures that the type information for these types is only
-/// generated and exported from one place, to avoid bugs arising from duplicate
-/// type information across shared library boundaries.
+                                                                             
+                                                                           
+                                                                               
+                                                      
 
 namespace hermes {
 Buffer::~Buffer() {}
 namespace vm {
 GCTripwireContext::~GCTripwireContext() {}
 JSOutOfMemoryError::~JSOutOfMemoryError() {}
-} // namespace vm
-} // namespace hermes
+}                
+}                    

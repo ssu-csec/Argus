@@ -21,7 +21,7 @@ void circular_raw_ostream::write_impl(const char *Ptr, size_t Size) {
     return;
   }
 
-  // Write into the buffer, wrapping if necessary.
+                                                  
   while (Size != 0) {
     unsigned Bytes =
       std::min(unsigned(Size), unsigned(BufferSize - (Cur - BufferArray)));
@@ -29,7 +29,7 @@ void circular_raw_ostream::write_impl(const char *Ptr, size_t Size) {
     Size -= Bytes;
     Cur += Bytes;
     if (Cur == BufferArray + BufferSize) {
-      // Reset the output pointer to the start of the buffer.
+                                                             
       Cur = BufferArray;
       Filled = true;
     }
@@ -38,7 +38,7 @@ void circular_raw_ostream::write_impl(const char *Ptr, size_t Size) {
 
 void circular_raw_ostream::flushBufferWithBanner() {
   if (BufferSize != 0) {
-    // Write out the buffer
+                           
     TheStream->write(Banner, std::strlen(Banner));
     flushBuffer();
   }

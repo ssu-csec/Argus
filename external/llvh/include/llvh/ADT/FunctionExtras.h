@@ -46,22 +46,22 @@ template <typename ReturnT, typename... ParamTs>
 class unique_function<ReturnT(ParamTs...)> {
   static constexpr size_t InlineStorageSize = sizeof(void *) * 3;
 
-  // MSVC has a bug and ICEs if we give it a particular dependent value
-  // expression as part of the `std::conditional` below. To work around this,
-  // we build that into a template struct's constexpr bool.
+                                                                       
+                                                                             
+                                                           
   template <typename T> struct IsSizeLessThanThresholdT {
     static constexpr bool value = sizeof(T) <= (2 * sizeof(void *));
   };
 
-  // Provide a type function to map parameters that won't observe extra copies
-  // or moves and which are small enough to likely pass in register to values
-  // and all other types to l-value reference types. We use this to compute the
-  // types used in our erased call utility to minimize copies and moves unless
-  // doing so would force things unnecessarily into memory.
-  //
-  // The heuristic used is related to common ABI register passing conventions.
-  // It doesn't have to be exact though, and in one way it is more strict
-  // because we want to still be able to observe either moves *or* copies.
+                                                                              
+                                                                             
+                                                                               
+                                                                              
+                                                           
+    
+                                                                              
+                                                                         
+                                                                          
   template <typename T>
   using AdjustedParamT = typename std::conditional<
       !std::is_reference<T>::value &&
@@ -70,38 +70,38 @@ class unique_function<ReturnT(ParamTs...)> {
           IsSizeLessThanThresholdT<T>::value,
       T, T &>::type;
 
-  // The type of the erased function pointer we use as a callback to dispatch to
-  // the stored callable when it is trivial to move and destroy.
+                                                                                
+                                                                
   using CallPtrT = ReturnT (*)(void *CallableAddr,
                                AdjustedParamT<ParamTs>... Params);
   using MovePtrT = void (*)(void *LHSCallableAddr, void *RHSCallableAddr);
   using DestroyPtrT = void (*)(void *CallableAddr);
 
-  /// A struct to hold a single trivial callback with sufficient alignment for
-  /// our bitpacking.
+                                                                              
+                     
   struct alignas(8) TrivialCallback {
     CallPtrT CallPtr;
   };
 
-  /// A struct we use to aggregate three callbacks when we need full set of
-  /// operations.
+                                                                           
+                 
   struct alignas(8) NonTrivialCallbacks {
     CallPtrT CallPtr;
     MovePtrT MovePtr;
     DestroyPtrT DestroyPtr;
   };
 
-  // Create a pointer union between either a pointer to a static trivial call
-  // pointer in a struct or a pointer to a static struct of the call, move, and
-  // destroy pointers.
+                                                                             
+                                                                               
+                      
   using CallbackPointerUnionT =
       PointerUnion<TrivialCallback *, NonTrivialCallbacks *>;
 
-  // The main storage buffer. This will either have a pointer to out-of-line
-  // storage or an inline buffer storing the callable.
+                                                                            
+                                                      
   union StorageUnionT {
-    // For out-of-line storage we keep a pointer to the underlying storage and
-    // the size. This is enough to deallocate the memory.
+                                                                              
+                                                         
     struct OutOfLineStorageT {
       void *StoragePtr;
       size_t Size;
@@ -111,15 +111,15 @@ class unique_function<ReturnT(ParamTs...)> {
         sizeof(OutOfLineStorageT) <= InlineStorageSize,
         "Should always use all of the out-of-line storage for inline storage!");
 
-    // For in-line storage, we just provide an aligned character buffer. We
-    // provide three pointers worth of storage here.
+                                                                           
+                                                    
     typename std::aligned_storage<InlineStorageSize, alignof(void *)>::type
         InlineStorage;
   } StorageUnion;
 
-  // A compressed pointer to either our dispatching callback or our table of
-  // dispatching callbacks and the flag for whether the callable itself is
-  // stored inline or not.
+                                                                            
+                                                                          
+                          
   PointerIntPair<CallbackPointerUnionT, 1, bool> CallbackAndInlineFlag;
 
   bool isInlineStorage() const { return CallbackAndInlineFlag.getInt(); }
@@ -172,13 +172,13 @@ class unique_function<ReturnT(ParamTs...)> {
 
 public:
   unique_function() = default;
-  unique_function(std::nullptr_t /*null_callable*/) {}
+  unique_function(std::nullptr_t                  ) {}
 
   ~unique_function() {
     if (!CallbackAndInlineFlag.getPointer())
       return;
 
-    // Cache this value so we don't re-check it after type-erased operations.
+                                                                             
     bool IsInlineStorage = isInlineStorage();
 
     if (!isTrivialCallback())
@@ -191,30 +191,30 @@ public:
   }
 
   unique_function(unique_function &&RHS) noexcept {
-    // Copy the callback and inline flag.
+                                         
     CallbackAndInlineFlag = RHS.CallbackAndInlineFlag;
 
-    // If the RHS is empty, just copying the above is sufficient.
+                                                                 
     if (!RHS)
       return;
 
     if (!isInlineStorage()) {
-      // The out-of-line case is easiest to move.
+                                                 
       StorageUnion.OutOfLineStorage = RHS.StorageUnion.OutOfLineStorage;
     } else if (isTrivialCallback()) {
-      // Move is trivial, just memcpy the bytes across.
+                                                       
       memcpy(getInlineStorage(), RHS.getInlineStorage(), InlineStorageSize);
     } else {
-      // Non-trivial move, so dispatch to a type-erased implementation.
+                                                                       
       getNonTrivialCallbacks()->MovePtr(getInlineStorage(),
                                         RHS.getInlineStorage());
     }
 
-    // Clear the old callback and inline flag to get back to as-if-null.
+                                                                        
     RHS.CallbackAndInlineFlag = {};
 
 #ifndef NDEBUG
-    // In debug builds, we also scribble across the rest of the storage.
+                                                                        
     memset(RHS.getInlineStorage(), 0xAD, InlineStorageSize);
 #endif
   }
@@ -223,9 +223,9 @@ public:
     if (this == &RHS)
       return *this;
 
-    // Because we don't try to provide any exception safety guarantees we can
-    // implement move assignment very simply by first destroying the current
-    // object and then move-constructing over top of it.
+                                                                             
+                                                                            
+                                                        
     this->~unique_function();
     new (this) unique_function(std::move(RHS));
     return *this;
@@ -237,37 +237,37 @@ public:
     if (sizeof(CallableT) > InlineStorageSize ||
         alignof(CallableT) > alignof(decltype(StorageUnion.InlineStorage))) {
       IsInlineStorage = false;
-      // Allocate out-of-line storage. FIXME: Use an explicit alignment
-      // parameter in C++17 mode.
+                                                                       
+                                 
       auto Size = sizeof(CallableT);
       auto Alignment = alignof(CallableT);
       CallableAddr = allocate_buffer(Size, Alignment);
       setOutOfLineStorage(CallableAddr, Size, Alignment);
     }
 
-    // Now move into the storage.
+                                 
     new (CallableAddr) CallableT(std::move(Callable));
 
-    // See if we can create a trivial callback. We need the callable to be
-    // trivially moved and trivially destroyed so that we don't have to store
-    // type erased callbacks for those operations.
-    //
-    // FIXME: We should use constexpr if here and below to avoid instantiating
-    // the non-trivial static objects when unnecessary. While the linker should
-    // remove them, it is still wasteful.
+                                                                          
+                                                                             
+                                                  
+      
+                                                                              
+                                                                               
+                                         
     if (llvh::is_trivially_move_constructible<CallableT>::value &&
         std::is_trivially_destructible<CallableT>::value) {
-      // We need to create a nicely aligned object. We use a static variable
-      // for this because it is a trivial struct.
+                                                                            
+                                                 
       static TrivialCallback Callback = { &CallImpl<CallableT> };
 
       CallbackAndInlineFlag = {&Callback, IsInlineStorage};
       return;
     }
 
-    // Otherwise, we need to point at an object that contains all the different
-    // type erased behaviors needed. Create a static instance of the struct type
-    // here and then use a pointer to that.
+                                                                               
+                                                                                
+                                           
     static NonTrivialCallbacks Callbacks = {
         &CallImpl<CallableT>, &MoveImpl<CallableT>, &DestroyImpl<CallableT>};
 
@@ -288,6 +288,6 @@ public:
   }
 };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_ADT_FUNCTION_H
+#endif                       

@@ -17,19 +17,19 @@
 #include "llvh/Support/Process.h"
 #include "llvh/Support/WindowsError.h"
 
-// The Windows.h header must be the last one included.
+                                                      
 #include "WindowsSupport.h"
 
 namespace {
 
 DWORD getWindowsProtectionFlags(unsigned Flags) {
   switch (Flags) {
-  // Contrary to what you might expect, the Windows page protection flags
-  // are not a bitwise combination of RWX values
+                                                                         
+                                                
   case llvh::sys::Memory::MF_READ:
     return PAGE_READONLY;
   case llvh::sys::Memory::MF_WRITE:
-    // Note: PAGE_WRITE is not supported by VirtualProtect
+                                                          
     return PAGE_READWRITE;
   case llvh::sys::Memory::MF_READ|llvh::sys::Memory::MF_WRITE:
     return PAGE_READWRITE;
@@ -44,7 +44,7 @@ DWORD getWindowsProtectionFlags(unsigned Flags) {
   default:
     llvm_unreachable("Illegal memory protection flag specified!");
   }
-  // Provide a default return value as required by some compilers.
+                                                                  
   return PAGE_NOACCESS;
 }
 
@@ -57,15 +57,15 @@ size_t getAllocationGranularity() {
     return Info.dwAllocationGranularity;
 }
 
-} // namespace
+}             
 
 namespace llvh {
 namespace sys {
 
-//===----------------------------------------------------------------------===//
-//=== WARNING: Implementation here must contain only Win32 specific code
-//===          and must not be UNIX code
-//===----------------------------------------------------------------------===//
+                                                                                
+                                                                        
+                                        
+                                                                                
 
 MemoryBlock Memory::allocateMappedMemory(size_t NumBytes,
                                          const MemoryBlock *const NearBlock,
@@ -75,11 +75,11 @@ MemoryBlock Memory::allocateMappedMemory(size_t NumBytes,
   if (NumBytes == 0)
     return MemoryBlock();
 
-  // While we'd be happy to allocate single pages, the Windows allocation
-  // granularity may be larger than a single page (in practice, it is 64K)
-  // so mapping less than that will create an unreachable fragment of memory.
-  // Avoid using one-time initialization of static locals here, since they
-  // aren't thread safe with MSVC.
+                                                                         
+                                                                          
+                                                                             
+                                                                          
+                                  
   static volatile size_t GranularityCached;
   size_t Granularity = GranularityCached;
   if (Granularity == 0) {
@@ -93,8 +93,8 @@ MemoryBlock Memory::allocateMappedMemory(size_t NumBytes,
                                 NearBlock->size()
                            : 0;
 
-  // If the requested address is not aligned to the allocation granularity,
-  // round up to get beyond NearBlock. VirtualAlloc would have rounded down.
+                                                                           
+                                                                            
   if (Start && Start % Granularity != 0)
     Start += Granularity - Start % Granularity;
 
@@ -105,7 +105,7 @@ MemoryBlock Memory::allocateMappedMemory(size_t NumBytes,
                             MEM_RESERVE | MEM_COMMIT, Protect);
   if (PA == NULL) {
     if (NearBlock) {
-      // Try again without the NearBlock hint
+                                             
       return allocateMappedMemory(NumBytes, NULL, Flags, EC);
     }
     EC = mapWindowsError(::GetLastError());
@@ -152,13 +152,13 @@ MemoryBlock Memory::allocateMappedMemory(size_t NumBytes,
   return std::error_code();
 }
 
-/// InvalidateInstructionCache - Before the JIT can run a block of code
-/// that has been emitted it must invalidate the instruction cache on some
-/// platforms.
+                                                                       
+                                                                          
+              
 void Memory::InvalidateInstructionCache(
     const void *Addr, size_t Len) {
   FlushInstructionCache(GetCurrentProcess(), Addr, Len);
 }
 
-} // namespace sys
-} // namespace llvh
+}                 
+}                  

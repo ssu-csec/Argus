@@ -18,10 +18,10 @@
  ***************************************************************/
 #include "dtoa.h"
 
-/* g_fmt(buf,x) stores the closest decimal approximation to x in buf;
- * it suffices to declare buf
- *	char buf[32];
- */
+                                                                     
+                             
+                
+   
 
  char *
 g_fmt(register char *b, double x)
@@ -44,7 +44,7 @@ g_fmt(register char *b, double x)
 	s = s0 = g_dtoa(dalloc, x, 0, 0, &decpt, &sign, &se);
 	if (sign)
 		*b++ = '-';
-	if (decpt == 9999) /* Infinity or Nan */ {
+	if (decpt == 9999)                       {
 		while(*b++ = *s++);
 		goto done0;
 		}
@@ -56,7 +56,7 @@ g_fmt(register char *b, double x)
 				b++;
 			}
 		*b++ = 'e';
-		/* sprintf(b, "%+.2d", decpt - 1); */
+		                                     
 		if (--decpt < 0) {
 			*b++ = '-';
 			decpt = -decpt;

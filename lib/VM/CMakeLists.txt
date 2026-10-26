@@ -153,12 +153,12 @@ list(APPEND source_files
   JSLib/DebuggerInternal.cpp
 )
 
-# HostModel.cpp defines an abstract base class HostObjectProxy.
-# This can be (and is) implemented by code which uses rtti, and
-# therefore expects the base class to have typeinfo, so
-# HostModel.cpp must be compiled -frtti, unlike most of the VM.
-# DecoratedObject::Decoration requires it as well, as it is the
-# base class for HostObjectProxy.
+                                                               
+                                                               
+                                                       
+                                                               
+                                                               
+                                 
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" OR
     "${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
   set_source_files_properties(DecoratedObject.cpp HostModel.cpp PROPERTIES COMPILE_FLAGS -frtti)

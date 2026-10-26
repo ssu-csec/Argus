@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//===----------------------------------------------------------------------===//
-/// \file
-/// Initialize the internal CallSite prototype.
-//===----------------------------------------------------------------------===//
+                                                                                
+         
+                                               
+                                                                                
 
 #include "JSLibInternal.h"
 #include "hermes/VM/JSCallSite.h"
@@ -20,7 +20,7 @@ namespace vm {
 void populateCallSitePrototype(Runtime &runtime) {
   auto callSitePrototype = Handle<JSObject>::vmcast(&runtime.callSitePrototype);
 
-  // CallSite.prototype.xxx methods.
+                                    
   defineMethod(
       runtime,
       callSitePrototype,
@@ -164,7 +164,7 @@ static CallResult<HermesValue> ensureJSCallSiteAndCall(
   return runtime.raiseTypeError(
       "CallSite method called on an incompatible receiver");
 }
-} // namespace
+}             
 
 CallResult<HermesValue>
 callSitePrototypeGetFunctionName(void *, Runtime &runtime, NativeArgs args) {
@@ -268,5 +268,5 @@ callSitePrototypeGetPromiseIndex(void *, Runtime &runtime, NativeArgs args) {
       args.getThisHandle(), runtime);
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

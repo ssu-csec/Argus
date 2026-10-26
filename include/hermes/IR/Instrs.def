@@ -145,7 +145,7 @@ DEF_VALUE(GetBuiltinClosureInst, Instruction)
 DEF_VALUE(StartGeneratorInst, Instruction)
 DEF_VALUE(ResumeGeneratorInst, Instruction)
 
-// These are target dependent instructions:
+                                           
 
 #ifdef INCLUDE_HBC_BACKEND
 DEF_VALUE(HBCGetGlobalObjectInst, Instruction)
@@ -159,8 +159,8 @@ DEF_VALUE(HBCProfilePointInst, Instruction)
 
 #undef INCLUDE_HBC_BACKEND
 
-// Don't undef these if this file is being included in ValueKinds.def, since
-// these macros are still used after the #include.
+                                                                            
+                                                  
 #ifndef INCLUDED_FROM_VALUEKINDS
 #undef DEF_VALUE
 #undef MARK_FIRST

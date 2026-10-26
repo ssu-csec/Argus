@@ -22,7 +22,7 @@
 #include <pthread.h>
 
 #if defined(__FreeBSD__) || defined(__OpenBSD__)
-#include <pthread_np.h> // For pthread_getthreadid_np() / pthread_set_name_np()
+#include <pthread_np.h>                                                        
 #endif
 
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
@@ -33,12 +33,12 @@
 #endif
 
 #if defined(__NetBSD__)
-#include <lwp.h> // For _lwp_self()
+#include <lwp.h>                   
 #endif
 
 #if defined(__linux__)
-#include <sys/syscall.h> // For syscall codes
-#include <unistd.h>      // For syscall()
+#include <sys/syscall.h>                     
+#include <unistd.h>                      
 #endif
 
 namespace {
@@ -60,21 +60,21 @@ void llvh::llvm_execute_on_thread(void(*Fn)(void*), void *UserData,
   pthread_attr_t Attr;
   pthread_t Thread;
 
-  // Construct the attributes object.
+                                     
   if (::pthread_attr_init(&Attr) != 0)
     return;
 
-  // Set the requested stack size, if given.
+                                            
   if (RequestedStackSize != 0) {
     if (::pthread_attr_setstacksize(&Attr, RequestedStackSize) != 0)
       goto error;
   }
 
-  // Construct and execute the thread.
+                                      
   if (::pthread_create(&Thread, &Attr, ExecuteOnThread_Dispatch, &Info) != 0)
     goto error;
 
-  // Wait for the thread and clean up.
+                                      
   ::pthread_join(Thread, nullptr);
 
 error:
@@ -84,9 +84,9 @@ error:
 
 uint64_t llvh::get_threadid() {
 #if defined(__APPLE__)
-  // Calling "mach_thread_self()" bumps the reference count on the thread
-  // port, so we need to deallocate it. mach_task_self() doesn't bump the ref
-  // count.
+                                                                         
+                                                                             
+           
   thread_port_t Self = mach_thread_self();
   mach_port_deallocate(mach_task_self(), Self);
   return Self;
@@ -129,16 +129,16 @@ uint32_t llvh::get_max_thread_name_length() {
 }
 
 void llvh::set_thread_name(const Twine &Name) {
-  // Make sure the input is null terminated.
+                                            
   SmallString<64> Storage;
   StringRef NameStr = Name.toNullTerminatedStringRef(Storage);
 
-  // Truncate from the beginning, not the end, if the specified name is too
-  // long.  For one, this ensures that the resulting string is still null
-  // terminated, but additionally the end of a long thread name will usually
-  // be more unique than the beginning, since a common pattern is for similar
-  // threads to share a common prefix.
-  // Note that the name length includes the null terminator.
+                                                                           
+                                                                         
+                                                                            
+                                                                             
+                                      
+                                                            
   if (get_max_thread_name_length() > 0)
     NameStr = NameStr.take_back(get_max_thread_name_length() - 1);
   (void)NameStr;
@@ -174,7 +174,7 @@ void llvh::get_thread_name(SmallVectorImpl<char> &Name) {
   while (1) {
     error = sysctl(ctl, 4, kp, &len, nullptr, 0);
     if (kp == nullptr || (error != 0 && errno == ENOMEM)) {
-      // Add extra space in case threads are added before next call.
+                                                                    
       len += sizeof(*kp) + len / 10;
       nkp = (struct kinfo_proc *)::realloc(kp, len);
       if (nkp == nullptr) {
@@ -206,7 +206,7 @@ void llvh::get_thread_name(SmallVectorImpl<char> &Name) {
 #elif defined(__linux__)
 #if HAVE_PTHREAD_GETNAME_NP
   constexpr uint32_t len = get_max_thread_name_length_impl();
-  char Buffer[len] = {'\0'};  // FIXME: working around MSan false positive.
+  char Buffer[len] = {'\0'};                                               
   if (0 == ::pthread_getname_np(::pthread_self(), Buffer, len))
     Name.append(Buffer, Buffer + strlen(Buffer));
 #endif

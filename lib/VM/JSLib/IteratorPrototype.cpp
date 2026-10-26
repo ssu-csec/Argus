@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//===----------------------------------------------------------------------===//
-/// \file
-/// ES6.0 25.1.2 The %IteratorPrototype% Object
-//===----------------------------------------------------------------------===//
+                                                                                
+         
+                                               
+                                                                                
 #include "JSLibInternal.h"
 
 #include "hermes/VM/Runtime.h"
@@ -40,5 +40,5 @@ iteratorPrototypeIterator(void *, Runtime &runtime, NativeArgs args) {
   return args.getThisArg();
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

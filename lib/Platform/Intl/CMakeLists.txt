@@ -18,7 +18,7 @@ if(HERMES_ENABLE_INTL)
         hermesBCP47Parser
         hermesPublic
     )
-    # Work around a bug in unity builds where it tries to build Obj-C as C++.
+                                                                             
     set_target_properties(hermesPlatformIntl PROPERTIES UNITY_BUILD false)
     target_compile_options(hermesPlatformIntl PRIVATE -fobjc-arc)
   else()

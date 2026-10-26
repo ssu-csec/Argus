@@ -13,8 +13,8 @@
 namespace hermes {
 namespace vm {
 
-//===----------------------------------------------------------------------===//
-// class JSArrayBuffer
+                                                                                
+                      
 
 const ObjectVTable JSArrayBuffer::vt{
     VTable(
@@ -72,7 +72,7 @@ CallResult<Handle<JSArrayBuffer>> JSArrayBuffer::clone(
       JSArrayBuffer::create(
           runtime, Handle<JSObject>::vmcast(&runtime.arrayBufferPrototype)));
 
-  // Don't need to zero out the data since we'll be copying into it immediately.
+                                                                                
   if (createDataBlock(runtime, arr, srcSize, false) ==
       ExecutionStatus::EXCEPTION) {
     return ExecutionStatus::EXCEPTION;
@@ -93,7 +93,7 @@ void JSArrayBuffer::copyDataBlockBytes(
     size_type count) {
   assert(dst && src && "Must be copied between existing objects");
   if (count == 0) {
-    // Don't do anything if there was no copy requested.
+                                                        
     return;
   }
   assert(
@@ -105,7 +105,7 @@ void JSArrayBuffer::copyDataBlockBytes(
   assert(
       dstIndex + count <= dst->size() &&
       "Cannot copy more data into a block than it has space for");
-  // Copy from the other buffer.
+                                
   memcpy(
       dst->getDataBlock(runtime) + dstIndex,
       src->getDataBlock(runtime) + srcIndex,
@@ -140,11 +140,11 @@ void JSArrayBuffer::_snapshotAddEdgesImpl(
     return;
   }
   if (uint8_t *data = self->data_.get(gc)) {
-    // While this is an internal edge, it is to a native node which is not
-    // automatically added by the metadata.
+                                                                          
+                                           
     snap.addNamedEdge(
         HeapSnapshot::EdgeType::Internal, "backingStore", gc.getNativeID(data));
-    // The backing store just has numbers, so there's no edges to add here.
+                                                                           
   }
 }
 
@@ -157,7 +157,7 @@ void JSArrayBuffer::_snapshotAddNodesImpl(
     return;
   }
   if (uint8_t *data = self->data_.get(gc)) {
-    // Add the native node before the JSArrayBuffer node.
+                                                         
     snap.beginNode();
     snap.endNode(
         HeapSnapshot::NodeType::Native,
@@ -175,7 +175,7 @@ void JSArrayBuffer::freeInternalBuffer(GC &gc) {
   assert((data || size_ == 0) && "Null buffers must have zero size");
   assert(!external_ && "External buffer cannot be freed");
 
-  // Need to untrack the native memory that may have been tracked by snapshots.
+                                                                               
   gc.debitExternalMemory(this, size_);
   gc.getIDTracker().untrackNative(data);
   free(data);
@@ -194,8 +194,8 @@ ExecutionStatus JSArrayBuffer::detach(
     if (LLVM_UNLIKELY(res == ExecutionStatus::EXCEPTION))
       return ExecutionStatus::EXCEPTION;
   }
-  // Note that whether a buffer is attached is independent of whether
-  // it has allocated data.
+                                                                     
+                           
   self->attached_ = false;
   return ExecutionStatus::RETURNED;
 }
@@ -209,15 +209,15 @@ ExecutionStatus JSArrayBuffer::createDataBlock(
     return ExecutionStatus::EXCEPTION;
   uint8_t *data = nullptr;
   if (size > 0) {
-    // If an external allocation of this size would exceed the GC heap size,
-    // raise RangeError.
+                                                                            
+                        
     if (LLVM_UNLIKELY(!runtime.getHeap().canAllocExternalMemory(size))) {
       return runtime.raiseRangeError(
           "Cannot allocate a data block for the ArrayBuffer");
     }
 
-    // Note that the result of calloc or malloc is immediately checked below, so
-    // we don't use the checked versions.
+                                                                                
+                                         
     data = zero ? static_cast<uint8_t *>(calloc(sizeof(uint8_t), size))
                 : static_cast<uint8_t *>(malloc(sizeof(uint8_t) * size));
     if (!data) {
@@ -262,8 +262,8 @@ ExecutionStatus JSArrayBuffer::setExternalDataBlock(
   if (LLVM_UNLIKELY(detach(runtime, self) == ExecutionStatus::EXCEPTION))
     return ExecutionStatus::EXCEPTION;
 
-  // Set the external finalizer first, so that if it throws, the buffer is not
-  // left in an attached state.
+                                                                              
+                               
   auto *ns = NativeState::create(runtime, context, finalizePtr);
   auto res = setExternalFinalizer(runtime, self, runtime.makeHandle(ns));
   if (LLVM_UNLIKELY(res == ExecutionStatus::EXCEPTION))
@@ -275,5 +275,5 @@ ExecutionStatus JSArrayBuffer::setExternalDataBlock(
   return ExecutionStatus::RETURNED;
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

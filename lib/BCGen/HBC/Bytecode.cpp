@@ -27,8 +27,8 @@ BytecodeFunction &BytecodeModule::getFunction(unsigned index) {
 }
 
 void BytecodeModule::populateSourceMap(SourceMapGenerator *sourceMap) const {
-  /// Construct a list of virtual function offsets, and pass it to DebugInfo to
-  /// help it populate the source map.
+                                                                               
+                                      
   std::vector<uint32_t> functionOffsets;
   functionOffsets.reserve(functions_.size());
   uint32_t offset = 0;
@@ -41,8 +41,8 @@ void BytecodeModule::populateSourceMap(SourceMapGenerator *sourceMap) const {
 }
 
 ArrayRef<uint32_t> BytecodeFunction::getJumpTablesOnly() const {
-  // The jump tables (if there are any) start at the nearest 4-byte boundary
-  // from the end of the opcodes.
+                                                                            
+                                 
   uint32_t jumpTableStartIdx =
       llvh::alignTo<sizeof(uint32_t)>(header_.bytecodeSizeInBytes);
 

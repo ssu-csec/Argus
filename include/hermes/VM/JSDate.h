@@ -13,7 +13,7 @@
 namespace hermes {
 namespace vm {
 
-/// Date object.
+                
 class JSDate final : public JSObject {
   using Super = JSObject;
   friend void JSDateBuildMeta(const GCCell *, Metadata::Builder &);
@@ -37,12 +37,12 @@ class JSDate final : public JSObject {
     return create(runtime, std::numeric_limits<double>::quiet_NaN(), prototype);
   }
 
-  /// \return the [[PrimitiveValue]] internal property.
+                                                       
   double getPrimitiveValue() {
     return primitiveValue_;
   }
 
-  /// Set the [[PrimitiveValue]] internal property.
+                                                   
   void setPrimitiveValue(double value) {
     primitiveValue_ = value;
   }
@@ -58,7 +58,7 @@ class JSDate final : public JSObject {
   double primitiveValue_;
 };
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
 #endif

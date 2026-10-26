@@ -33,13 +33,13 @@ namespace llvh {
 
 template<typename T>
 struct DenseMapInfo {
-  //static inline T getEmptyKey();
-  //static inline T getTombstoneKey();
-  //static unsigned getHashValue(const T &Val);
-  //static bool isEqual(const T &LHS, const T &RHS);
+                                  
+                                      
+                                               
+                                                    
 };
 
-// Provide DenseMapInfo for all pointers.
+                                         
 template<typename T>
 struct DenseMapInfo<T*> {
   static inline T* getEmptyKey() {
@@ -62,7 +62,7 @@ struct DenseMapInfo<T*> {
   static bool isEqual(const T *LHS, const T *RHS) { return LHS == RHS; }
 };
 
-// Provide DenseMapInfo for chars.
+                                  
 template<> struct DenseMapInfo<char> {
   static inline char getEmptyKey() { return ~0; }
   static inline char getTombstoneKey() { return ~0 - 1; }
@@ -73,7 +73,7 @@ template<> struct DenseMapInfo<char> {
   }
 };
 
-// Provide DenseMapInfo for unsigned shorts.
+                                            
 template <> struct DenseMapInfo<unsigned short> {
   static inline unsigned short getEmptyKey() { return 0xFFFF; }
   static inline unsigned short getTombstoneKey() { return 0xFFFF - 1; }
@@ -84,7 +84,7 @@ template <> struct DenseMapInfo<unsigned short> {
   }
 };
 
-// Provide DenseMapInfo for unsigned ints.
+                                          
 template<> struct DenseMapInfo<unsigned> {
   static inline unsigned getEmptyKey() { return ~0U; }
   static inline unsigned getTombstoneKey() { return ~0U - 1; }
@@ -95,7 +95,7 @@ template<> struct DenseMapInfo<unsigned> {
   }
 };
 
-// Provide DenseMapInfo for unsigned longs.
+                                           
 template<> struct DenseMapInfo<unsigned long> {
   static inline unsigned long getEmptyKey() { return ~0UL; }
   static inline unsigned long getTombstoneKey() { return ~0UL - 1L; }
@@ -109,7 +109,7 @@ template<> struct DenseMapInfo<unsigned long> {
   }
 };
 
-// Provide DenseMapInfo for unsigned long longs.
+                                                
 template<> struct DenseMapInfo<unsigned long long> {
   static inline unsigned long long getEmptyKey() { return ~0ULL; }
   static inline unsigned long long getTombstoneKey() { return ~0ULL - 1ULL; }
@@ -124,7 +124,7 @@ template<> struct DenseMapInfo<unsigned long long> {
   }
 };
 
-// Provide DenseMapInfo for shorts.
+                                   
 template <> struct DenseMapInfo<short> {
   static inline short getEmptyKey() { return 0x7FFF; }
   static inline short getTombstoneKey() { return -0x7FFF - 1; }
@@ -132,7 +132,7 @@ template <> struct DenseMapInfo<short> {
   static bool isEqual(const short &LHS, const short &RHS) { return LHS == RHS; }
 };
 
-// Provide DenseMapInfo for ints.
+                                 
 template<> struct DenseMapInfo<int> {
   static inline int getEmptyKey() { return 0x7fffffff; }
   static inline int getTombstoneKey() { return -0x7fffffff - 1; }
@@ -143,7 +143,7 @@ template<> struct DenseMapInfo<int> {
   }
 };
 
-// Provide DenseMapInfo for longs.
+                                  
 template<> struct DenseMapInfo<long> {
   static inline long getEmptyKey() {
     return (1UL << (sizeof(long) * 8 - 1)) - 1UL;
@@ -160,7 +160,7 @@ template<> struct DenseMapInfo<long> {
   }
 };
 
-// Provide DenseMapInfo for long longs.
+                                       
 template<> struct DenseMapInfo<long long> {
   static inline long long getEmptyKey() { return 0x7fffffffffffffffLL; }
   static inline long long getTombstoneKey() { return -0x7fffffffffffffffLL-1; }
@@ -175,7 +175,7 @@ template<> struct DenseMapInfo<long long> {
   }
 };
 
-// Provide DenseMapInfo for all pairs whose members have info.
+                                                              
 template<typename T, typename U>
 struct DenseMapInfo<std::pair<T, U>> {
   using Pair = std::pair<T, U>;
@@ -212,7 +212,7 @@ struct DenseMapInfo<std::pair<T, U>> {
   }
 };
 
-// Provide DenseMapInfo for StringRefs.
+                                       
 template <> struct DenseMapInfo<StringRef> {
   static inline StringRef getEmptyKey() {
     return StringRef(reinterpret_cast<const char *>(~static_cast<uintptr_t>(0)),
@@ -240,7 +240,7 @@ template <> struct DenseMapInfo<StringRef> {
   }
 };
 
-// Provide DenseMapInfo for ArrayRefs.
+                                      
 template <typename T> struct DenseMapInfo<ArrayRef<T>> {
   static inline ArrayRef<T> getEmptyKey() {
     return ArrayRef<T>(reinterpret_cast<const T *>(~static_cast<uintptr_t>(0)),
@@ -275,8 +275,8 @@ template <> struct DenseMapInfo<hash_code> {
   static bool isEqual(hash_code LHS, hash_code RHS) { return LHS == RHS; }
 };
 
-} // end namespace llvh
+}                      
 
 #pragma GCC diagnostic pop
 
-#endif // LLVM_ADT_DENSEMAPINFO_H
+#endif                           

@@ -17,9 +17,9 @@
 
 #include <string>
 
-/// This file defines flags that are specific to the Hermes runtime,
-/// independent of the Hermes compiler.  Such flags must be defined in the
-/// hermes and hvm binaries, so this file is included in all of those.
+                                                                    
+                                                                          
+                                                                      
 
 namespace cl {
 
@@ -164,6 +164,6 @@ static opt<bool> HeapTimeline(
     llvh::cl::init(false),
     cat(RuntimeCategory));
 
-} // namespace cl
+}                
 
-#endif // HERMES_VM_RUNTIMEFLAGS_H
+#endif                            

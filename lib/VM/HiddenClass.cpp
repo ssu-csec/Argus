@@ -33,10 +33,10 @@ void TransitionMap::snapshotAddNodes(GC &gc, HeapSnapshot &snap) {
   if (!isLarge()) {
     return;
   }
-  // Make one node that is the sum of the sizes of the WeakValueMap and the
-  // llvh::DenseMap to which it points.
-  // This is based on the assumption that the WeakValueMap uniquely owns that
-  // DenseMap.
+                                                                           
+                                       
+                                                                             
+              
   snap.beginNode();
   snap.endNode(
       HeapSnapshot::NodeType::Native,
@@ -50,7 +50,7 @@ void TransitionMap::snapshotAddEdges(GC &gc, HeapSnapshot &snap) {
   uint32_t edge_index = 0;
   forEachEntry([&snap, &gc, &edge_index](
                    const Transition &, const WeakRef<HiddenClass> &value) {
-    // Filter out empty refs from adding edges.
+                                               
     if (value.isValid()) {
       snap.addNamedEdge(
           HeapSnapshot::EdgeType::Weak,
@@ -69,7 +69,7 @@ void TransitionMap::snapshotAddEdges(GC &gc, HeapSnapshot &snap) {
 }
 
 void TransitionMap::snapshotUntrackMemory(GC &gc) {
-  // Untrack the memory ID in case one was created.
+                                                   
   if (isLarge()) {
     gc.getIDTracker().untrackNative(large());
   }
@@ -77,7 +77,7 @@ void TransitionMap::snapshotUntrackMemory(GC &gc) {
 #endif
 
 size_t TransitionMap::getMemorySize() const {
-  // Inline slot is not counted here (it counts as part of the HiddenClass).
+                                                                            
   return isLarge() ? sizeof(*large()) + large()->getMemorySize() : 0;
 }
 
@@ -85,7 +85,7 @@ void TransitionMap::uncleanMakeLarge(Runtime &runtime) {
   assert(!isClean() && "must not still be clean");
   assert(!isLarge() && "must not yet be large");
   auto large = new WeakValueMap<Transition, HiddenClass>();
-  // Move any valid entry into the allocated map.
+                                                 
   if (auto value = smallValue().get(runtime))
     large->insertNew(runtime, smallKey_, runtime.makeHandle(value));
   smallValue().releaseSlot();
@@ -94,7 +94,7 @@ void TransitionMap::uncleanMakeLarge(Runtime &runtime) {
   assert(isLarge());
 }
 
-} // namespace detail
+}                    
 
 const VTable HiddenClass::vt{
     CellKind::HiddenClassKind,
@@ -197,12 +197,12 @@ Handle<HiddenClass> HiddenClass::copyToNewDictionary(
 
   auto newFlags = selfHandle->flags_;
   newFlags.dictionaryMode = true;
-  // If the requested, transition to no-cache mode.
+                                                   
   if (noCache) {
     newFlags.dictionaryNoCacheMode = true;
   }
 
-  /// Allocate a new class without a parent.
+                                            
   auto newClassHandle =
       runtime.makeHandle<HiddenClass>(runtime.ignoreAllocationFailure(
           HiddenClass::create(
@@ -213,7 +213,7 @@ Handle<HiddenClass> HiddenClass::copyToNewDictionary(
               PropertyFlags{},
               selfHandle->numProperties_)));
 
-  // Optionally allocate the property map and move it to the new class.
+                                                                       
   if (LLVM_UNLIKELY(!selfHandle->propertyMap_))
     initializeMissingPropertyMap(selfHandle, runtime);
 
@@ -236,8 +236,8 @@ void HiddenClass::forEachPropertyNoAlloc(
   std::vector<std::pair<SymbolID, NamedPropertyDescriptor>> properties;
   HiddenClass *curr = self;
   while (curr && !curr->propertyMap_) {
-    // Skip invalid symbols stored in the hidden class chain, as well as
-    // flag-only transitions.
+                                                                        
+                             
     if (curr->symbolID_.isValid() && !curr->propertyFlags_.flagsTransition) {
       properties.emplace_back(
           curr->symbolID_,
@@ -247,20 +247,20 @@ void HiddenClass::forEachPropertyNoAlloc(
     curr = curr->parent_.get(base);
   }
 
-  // Either we reached the root hidden class and never found a property
-  // map, or we found a property map somewhere in the HiddenClass chain.
+                                                                       
+                                                                        
   if (curr) {
     assert(
         curr->propertyMap_ &&
         "If it's not the root class, it must have a property map");
-    // The DPM exists, and it can be iterated over to find some properties.
+                                                                           
     DictPropertyMap::forEachPropertyNoAlloc(
         curr->propertyMap_.getNonNull(base), callback);
   }
-  // Add any iterated properties at the end.
-  // Since we moved backwards through HiddenClasses, the properties are in
-  // reverse order. Iterate backwards through properties to get the original
-  // order.
+                                            
+                                                                          
+                                                                            
+           
   for (auto it = properties.rbegin(); it != properties.rend(); ++it) {
     callback(it->first, it->second);
   }
@@ -272,12 +272,12 @@ OptValue<HiddenClass::PropertyPos> HiddenClass::findProperty(
     SymbolID name,
     PropertyFlags expectedFlags,
     NamedPropertyDescriptor &desc) {
-  // Lazily create the property map.
+                                    
   if (LLVM_UNLIKELY(!self->propertyMap_)) {
-    // If expectedFlags is valid, we can check if there is an outgoing
-    // transition with name and the flags. The presence of such a transition
-    // indicates that this is a new property and we don't have to build the map
-    // in order to look for it (since we wouldn't find it anyway).
+                                                                      
+                                                                            
+                                                                               
+                                                                  
     if (expectedFlags.isValid()) {
       Transition t{name, expectedFlags};
       if (self->transitionMap_.containsKey(t, runtime.getHeap())) {
@@ -299,14 +299,14 @@ OptValue<HiddenClass::PropertyPos> HiddenClass::findProperty(
 
   auto *propMap = self->propertyMap_.getNonNull(runtime);
   {
-    // propMap is a raw pointer.  We assume that find does no allocation.
+                                                                         
     NoAllocScope noAlloc(runtime);
     auto found = DictPropertyMap::find(propMap, name);
     if (!found)
       return llvh::None;
-    // Technically, the last use of propMap occurs before the call here, so
-    // it would be legal for the call to allocate.  If that were ever the case,
-    // we would move "found" out of scope, and terminate the NoAllocScope here.
+                                                                           
+                                                                               
+                                                                               
     desc = DictPropertyMap::getDescriptorPair(propMap, *found)->second;
     return *found;
   }
@@ -318,7 +318,7 @@ llvh::Optional<NamedPropertyDescriptor> HiddenClass::findPropertyNoAlloc(
     SymbolID name) {
   for (HiddenClass *curr = self; curr; curr = curr->parent_.get(base)) {
     if (curr->propertyMap_) {
-      // If a property map exists, just search this hidden class
+                                                                
       auto found =
           DictPropertyMap::find(curr->propertyMap_.getNonNull(base), name);
       if (found) {
@@ -327,15 +327,15 @@ llvh::Optional<NamedPropertyDescriptor> HiddenClass::findPropertyNoAlloc(
             ->second;
       }
     }
-    // Else, no property map exists. Check the current hidden class before
-    // moving up.
+                                                                          
+                 
     if (curr->symbolID_ == name) {
       return NamedPropertyDescriptor{
           curr->propertyFlags_, curr->numProperties_ - 1};
     }
   }
-  // Reached the root hidden class without finding a property map or the
-  // matching symbol, this property doesn't exist.
+                                                                        
+                                                  
   return llvh::None;
 }
 
@@ -344,11 +344,11 @@ bool HiddenClass::debugIsPropertyDefined(
     PointerBase &base,
     SymbolID name) {
   do {
-    // If we happen to have a property map, use it.
+                                                   
     if (self->propertyMap_)
       return DictPropertyMap::find(self->propertyMap_.getNonNull(base), name)
           .hasValue();
-    // Is the property defined in this class?
+                                             
     if (self->symbolID_ == name)
       return true;
     self = self->parent_.get(base);
@@ -360,9 +360,9 @@ Handle<HiddenClass> HiddenClass::deleteProperty(
     Handle<HiddenClass> selfHandle,
     Runtime &runtime,
     PropertyPos pos) {
-  // We convert to dictionary if we're not yet a dictionary
-  // (transition to a cacheable dictionary), or if we are, but not yet
-  // in no-cache mode (transition to no-cache mode).
+                                                           
+                                                                      
+                                                    
   auto newHandle = LLVM_UNLIKELY(!selfHandle->isDictionaryNoCache())
       ? copyToNewDictionary(selfHandle, runtime, selfHandle->isDictionary())
       : selfHandle;
@@ -393,12 +393,12 @@ CallResult<std::pair<Handle<HiddenClass>, SlotIndex>> HiddenClass::addProperty(
     selfHandle->flags_ =
         computeFlags(selfHandle->flags_, propertyFlags, isIndexLike);
 
-    // Allocate a new slot.
-    // TODO: this changes the property map, so if we want to support OOM
-    // handling in the future, and the following operation fails, we would have
-    // to somehow be able to undo it, or use an approach where we peek the slot
-    // but not consume until we are sure (which is less efficient, but more
-    // robust). T31555339.
+                           
+                                                                        
+                                                                               
+                                                                               
+                                                                           
+                          
     SlotIndex newSlot = DictPropertyMap::allocatePropertySlot(
         selfHandle->propertyMap_.get(runtime), runtime);
 
@@ -416,13 +416,13 @@ CallResult<std::pair<Handle<HiddenClass>, SlotIndex>> HiddenClass::addProperty(
     return std::make_pair(selfHandle, newSlot);
   }
 
-  // Do we already have a transition for that property+flags pair?
+                                                                  
   auto existingChild =
       selfHandle->transitionMap_.lookup(runtime, {name, propertyFlags});
   if (LLVM_LIKELY(existingChild)) {
     auto childHandle = runtime.makeHandle(existingChild);
-    // If the child doesn't have a property map, but we do, update our map and
-    // move it to the child.
+                                                                              
+                            
     if (!childHandle->propertyMap_ && selfHandle->propertyMap_) {
       LLVM_DEBUG(
           dbgs() << "Adding property " << runtime.formatSymbolID(name)
@@ -450,15 +450,15 @@ CallResult<std::pair<Handle<HiddenClass>, SlotIndex>> HiddenClass::addProperty(
                  << childHandle->getDebugAllocationId() << "\n");
     }
 
-    // In any case, clear our own map.
+                                      
     selfHandle->propertyMap_.setNull(runtime.getHeap());
 
     return std::make_pair(childHandle, selfHandle->numProperties_);
   }
 
-  // Do we need to convert to dictionary?
+                                         
   if (LLVM_UNLIKELY(selfHandle->numProperties_ == kDictionaryThreshold)) {
-    // Do it.
+             
     auto childHandle = copyToNewDictionary(selfHandle, runtime);
 
     auto isIndexLike =
@@ -467,7 +467,7 @@ CallResult<std::pair<Handle<HiddenClass>, SlotIndex>> HiddenClass::addProperty(
     childHandle->flags_ =
         computeFlags(childHandle->flags_, propertyFlags, isIndexLike);
 
-    // Add the property to the child.
+                                     
     if (LLVM_UNLIKELY(
             addToPropertyMap(
                 childHandle,
@@ -486,7 +486,7 @@ CallResult<std::pair<Handle<HiddenClass>, SlotIndex>> HiddenClass::addProperty(
           .hasValue();
   auto newFlags = computeFlags(selfHandle->flags_, propertyFlags, isIndexLike);
 
-  // Allocate the child.
+                        
   auto childHandle =
       runtime.makeHandle<HiddenClass>(runtime.ignoreAllocationFailure(
           HiddenClass::create(
@@ -497,7 +497,7 @@ CallResult<std::pair<Handle<HiddenClass>, SlotIndex>> HiddenClass::addProperty(
               propertyFlags,
               selfHandle->numProperties_ + 1)));
 
-  // Add it to the transition table.
+                                    
   auto inserted = selfHandle->transitionMap_.insertNew(
       runtime, Transition(name, propertyFlags), childHandle);
   (void)inserted;
@@ -516,7 +516,7 @@ CallResult<std::pair<Handle<HiddenClass>, SlotIndex>> HiddenClass::addProperty(
                << " transitions Map to new Class:"
                << childHandle->getDebugAllocationId() << "\n");
 
-    // Move the map to the child class.
+                                       
     childHandle->propertyMap_.set(
         runtime, selfHandle->propertyMap_, runtime.getHeap());
     selfHandle->propertyMap_.setNull(runtime.getHeap());
@@ -549,7 +549,7 @@ Handle<HiddenClass> HiddenClass::updateProperty(
     PropertyFlags newFlags) {
   assert(newFlags.isValid() && "newFlags must be valid");
 
-  // In dictionary mode we simply update our map (which must exist).
+                                                                    
   if (LLVM_UNLIKELY(selfHandle->isDictionary())) {
     assert(
         selfHandle->propertyMap_ &&
@@ -558,9 +558,9 @@ Handle<HiddenClass> HiddenClass::updateProperty(
     DictPropertyMap::getDescriptorPair(
         selfHandle->propertyMap_.getNonNull(runtime), pos)
         ->second.flags = newFlags;
-    // If it's still cacheable, make it non-cacheable.
+                                                      
     if (!selfHandle->isDictionaryNoCache()) {
-      selfHandle = copyToNewDictionary(selfHandle, runtime, /*noCache*/ true);
+      selfHandle = copyToNewDictionary(selfHandle, runtime,             true);
     }
     return selfHandle;
   }
@@ -570,22 +570,22 @@ Handle<HiddenClass> HiddenClass::updateProperty(
 
   auto *descPair = DictPropertyMap::getDescriptorPair(
       selfHandle->propertyMap_.get(runtime), pos);
-  // If the property flags didn't change, do nothing.
+                                                     
   if (descPair->second.flags == newFlags)
     return selfHandle;
 
   auto name = descPair->first;
 
-  // The transition flags must indicate that it is a "flags transition".
+                                                                        
   PropertyFlags transitionFlags = newFlags;
   transitionFlags.flagsTransition = 1;
 
-  // Do we already have a transition for that property+flags pair?
+                                                                  
   auto existingChild =
       selfHandle->transitionMap_.lookup(runtime, {name, transitionFlags});
   if (LLVM_LIKELY(existingChild)) {
-    // If the child doesn't have a property map, but we do, update our map and
-    // move it to the child.
+                                                                              
+                            
     if (!existingChild->propertyMap_) {
       LLVM_DEBUG(
           dbgs() << "Updating property " << runtime.formatSymbolID(name)
@@ -604,17 +604,17 @@ Handle<HiddenClass> HiddenClass::updateProperty(
                  << existingChild->getDebugAllocationId() << "\n");
     }
 
-    // In any case, clear our own map.
+                                      
     selfHandle->propertyMap_.setNull(runtime.getHeap());
 
     return runtime.makeHandle(existingChild);
   }
 
-  // We are updating the existing property and adding a transition to a new
-  // hidden class.
+                                                                           
+                  
   descPair->second.flags = newFlags;
 
-  // Allocate the child.
+                        
   auto childHandle =
       runtime.makeHandle<HiddenClass>(runtime.ignoreAllocationFailure(
           HiddenClass::create(
@@ -625,7 +625,7 @@ Handle<HiddenClass> HiddenClass::updateProperty(
               transitionFlags,
               selfHandle->numProperties_)));
 
-  // Add it to the transition table.
+                                    
   auto inserted = selfHandle->transitionMap_.insertNew(
       runtime, Transition(name, transitionFlags), childHandle);
   (void)inserted;
@@ -639,7 +639,7 @@ Handle<HiddenClass> HiddenClass::updateProperty(
              << " transitions Map to new Class:"
              << childHandle->getDebugAllocationId() << "\n");
 
-  // Move the updated map to the child class.
+                                             
   childHandle->propertyMap_.set(
       runtime, selfHandle->propertyMap_, runtime.getHeap());
   selfHandle->propertyMap_.setNull(runtime.getHeap());
@@ -657,14 +657,14 @@ Handle<HiddenClass> HiddenClass::makeAllNonConfigurable(
       dbgs() << "Class:" << selfHandle->getDebugAllocationId()
              << " making all non-configurable\n");
 
-  // Keep a handle to our initial map. The order of properties in it will
-  // remain the same as long as we are only doing property updates.
+                                                                         
+                                                                   
   auto mapHandle = runtime.makeHandle(selfHandle->propertyMap_);
 
   MutableHandle<HiddenClass> curHandle{runtime, *selfHandle};
 
-  // TODO: this can be made much more efficient at the expense of moving some
-  // logic from updateOwnProperty() here.
+                                                                             
+                                         
   DictPropertyMap::forEachProperty(
       mapHandle,
       runtime,
@@ -696,14 +696,14 @@ Handle<HiddenClass> HiddenClass::makeAllReadOnly(
       dbgs() << "Class:" << selfHandle->getDebugAllocationId()
              << " making all read-only\n");
 
-  // Keep a handle to our initial map. The order of properties in it will
-  // remain the same as long as we are only doing property updates.
+                                                                         
+                                                                   
   auto mapHandle = runtime.makeHandle(selfHandle->propertyMap_);
 
   MutableHandle<HiddenClass> curHandle{runtime, *selfHandle};
 
-  // TODO: this can be made much more efficient at the expense of moving some
-  // logic from updateOwnProperty() here.
+                                                                             
+                                         
   DictPropertyMap::forEachProperty(
       mapHandle,
       runtime,
@@ -737,7 +737,7 @@ Handle<HiddenClass> HiddenClass::updatePropertyFlagsWithoutTransitions(
     PropertyFlags flagsToClear,
     PropertyFlags flagsToSet,
     OptValue<llvh::ArrayRef<SymbolID>> props) {
-  // Result must be in dictionary mode, since it's a non-empty orphan.
+                                                                      
   MutableHandle<HiddenClass> classHandle{runtime};
   if (selfHandle->isDictionary()) {
     classHandle = *selfHandle;
@@ -753,10 +753,10 @@ Handle<HiddenClass> HiddenClass::updatePropertyFlagsWithoutTransitions(
     desc.flags.changeFlags(flagsToClear, flagsToSet);
   };
 
-  // If we have the subset of properties to update, only update them; otherwise,
-  // update all properties.
+                                                                                
+                           
   if (props) {
-    // Iterate over the properties that exist on the property map.
+                                                                  
     for (auto id : *props) {
       auto pos = DictPropertyMap::find(*mapHandle, id);
       if (!pos) {
@@ -823,7 +823,7 @@ ExecutionStatus HiddenClass::addToPropertyMap(
     NamedPropertyDescriptor desc) {
   assert(selfHandle->propertyMap_ && "the property map must be initialized");
 
-  // Add the new field to the property map.
+                                           
   MutableHandle<DictPropertyMap> updatedMap{
       runtime, selfHandle->propertyMap_.get(runtime)};
 
@@ -842,8 +842,8 @@ void HiddenClass::initializeMissingPropertyMap(
     Runtime &runtime) {
   assert(!selfHandle->propertyMap_ && "property map is already initialized");
 
-  // Check whether we can steal our parent's map. If we can, we only need
-  // to add or update a single property.
+                                                                         
+                                        
   if (selfHandle->parent_ &&
       selfHandle->parent_.getNonNull(runtime)->propertyMap_)
     return stealPropertyMapFromParent(selfHandle, runtime);
@@ -852,12 +852,12 @@ void HiddenClass::initializeMissingPropertyMap(
       dbgs() << "Class:" << selfHandle->getDebugAllocationId()
              << " allocating new map\n");
 
-  // First collect all entries in reverse order. This avoids recursion.
+                                                                       
   using MapEntry = std::pair<SymbolID, PropertyFlags>;
   llvh::SmallVector<MapEntry, 4> entries;
   entries.reserve(selfHandle->numProperties_);
   {
-    // Walk chain of parents using raw pointers.
+                                                
     NoAllocScope _(runtime);
     for (auto *cur = *selfHandle; cur->numProperties_ > 0;
          cur = cur->parent_.getNonNull(runtime)) {
@@ -870,7 +870,7 @@ void HiddenClass::initializeMissingPropertyMap(
   assert(
       entries.size() <= DictPropertyMap::getMaxCapacity() &&
       "There shouldn't ever be this many properties");
-  // Allocate the map with the correct size.
+                                            
   auto res = DictPropertyMap::create(
       runtime,
       std::max(
@@ -881,8 +881,8 @@ void HiddenClass::initializeMissingPropertyMap(
       "Since the entries would fit, there shouldn't be an exception");
   MutableHandle<DictPropertyMap> mapHandle{runtime, res->get()};
 
-  // Add the collected entries in reverse order. Note that there could be
-  // duplicates.
+                                                                         
+                
   SlotIndex slotIndex = 0;
   for (auto it = entries.rbegin(), e = entries.rend(); it != e; ++it) {
     auto inserted = DictPropertyMap::findOrAdd(mapHandle, runtime, it->first);
@@ -891,7 +891,7 @@ void HiddenClass::initializeMissingPropertyMap(
         "Space was already reserved, this couldn't have grown");
 
     inserted->first->flags = it->second;
-    // If it is a new property, allocate the next slot.
+                                                       
     if (LLVM_LIKELY(inserted->second))
       inserted->first->slot = slotIndex++;
   }
@@ -902,7 +902,7 @@ void HiddenClass::initializeMissingPropertyMap(
 void HiddenClass::stealPropertyMapFromParent(
     Handle<HiddenClass> selfHandle,
     Runtime &runtime) {
-  // Most of this method uses raw pointers.
+                                           
   NoAllocScope noAlloc(runtime);
   auto *self = *selfHandle;
   assert(
@@ -916,32 +916,32 @@ void HiddenClass::stealPropertyMapFromParent(
              << self->parent_.getNonNull(runtime)->getDebugAllocationId()
              << "\n");
 
-  // Success! Just steal our parent's map and add our own property.
+                                                                   
   self->propertyMap_.set(
       runtime,
       self->parent_.getNonNull(runtime)->propertyMap_,
       runtime.getHeap());
   self->parent_.getNonNull(runtime)->propertyMap_.setNull(runtime.getHeap());
 
-  // Does our class add a new property?
+                                       
   if (LLVM_LIKELY(!self->propertyFlags_.flagsTransition)) {
-    // This is a new property that we must now add.
+                                                   
     assert(
         self->numProperties_ - 1 ==
             self->propertyMap_.getNonNull(runtime)->size() &&
         "propertyMap->size() must match HiddenClass::numProperties-1 in "
         "new prop transition");
 
-    // Create a descriptor for our property.
+                                            
     NamedPropertyDescriptor desc{
         self->propertyFlags_, self->numProperties_ - 1};
-    // Return to handle mode to add the property.
+                                                 
     noAlloc.release();
     addToPropertyMap(selfHandle, runtime, selfHandle->symbolID_, desc);
     return;
   }
-  // Our class is updating the flags of an existing property. So we need
-  // to find it and update it.
+                                                                        
+                              
 
   assert(
       self->numProperties_ == self->propertyMap_.getNonNull(runtime)->size() &&
@@ -957,7 +957,7 @@ void HiddenClass::stealPropertyMapFromParent(
       ->second.flags = tmpFlags;
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
 #undef DEBUG_TYPE

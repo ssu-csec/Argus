@@ -21,11 +21,11 @@ void SymbolRegistry::init(Runtime &runtime) {
   stringMap_ = OrderedHashMap::create(runtime)->getHermesValue();
 }
 
-/// Mark the Strings and Symbols in the registry as roots.
+                                                          
 void SymbolRegistry::markRoots(RootAcceptor &acceptor) {
   acceptor.accept(stringMap_);
-  // registeredSymbols_ doesn't need to be marked, because its contents are a
-  // copy of the symbols present in the stringMap_.
+                                                                             
+                                                   
 }
 
 CallResult<SymbolID> SymbolRegistry::getSymbolForKey(
@@ -57,5 +57,5 @@ CallResult<SymbolID> SymbolRegistry::getSymbolForKey(
   return symbol.get();
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

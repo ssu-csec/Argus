@@ -13,8 +13,8 @@
 #define NAMED_PROP(name)
 #endif
 
-/// Anonymous internal properties. These are only used to reserve unused slots
-/// in hidden classes, and should never be accessed.
+                                                                              
+                                                    
 PROP(0)
 PROP(1)
 PROP(2)
@@ -23,8 +23,8 @@ PROP(4)
 PROP(5)
 PROP(6)
 
-/// Named internal properties. These are used to store Hermes internal state on
-/// arbitrary objects.
+                                                                               
+                      
 NAMED_PROP(NamedPropForUnitTestOnly)
 NAMED_PROP(CapturedError)
 NAMED_PROP(IntlNativeType)

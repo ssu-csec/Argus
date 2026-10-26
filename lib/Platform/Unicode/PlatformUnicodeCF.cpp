@@ -18,11 +18,11 @@ namespace platform_unicode {
 namespace {
 constexpr double MS_PER_SECOND = 1000;
 
-/// Create the locale used for date formatting and collation. \return the
-/// locale, transferring ownership to the caller (the "create" rule).
+                                                                         
+                                                                     
 CFLocaleRef createLocale() {
   CFLocaleRef localeRef = nullptr;
-  // Look for our special environment variable. This is used for testing only.
+                                                                              
   const char *hermesLocale = std::getenv("_HERMES_TEST_LOCALE");
   if (hermesLocale) {
     CFStringRef localeName =
@@ -40,17 +40,17 @@ CFLocaleRef copyLocale() {
   return CFLocaleCreateCopy(nullptr, hermesLocale);
 }
 
-/// return the offset from GMT to local time, measured in milliseconds.
+                                                                       
 double localOffsetFromGMT() {
   ::tzset();
 
-  // Get the current time in seconds (with any applicable DST adjustment).
+                                                                          
   time_t currentWithDST = std::time(nullptr);
   if (currentWithDST == static_cast<time_t>(-1)) {
     return 0;
   }
 
-  // Deconstruct the time into localTime.
+                                         
   std::tm tm;
   std::tm *local = ::localtime_r(&currentWithDST, &tm);
   if (!local) {
@@ -60,7 +60,7 @@ double localOffsetFromGMT() {
   return local->tm_gmtoff * MS_PER_SECOND;
 }
 
-} // namespace
+}             
 
 int localeCompare(
     llvh::ArrayRef<char16_t> left,
@@ -71,12 +71,12 @@ int localeCompare(
       nullptr, reinterpret_cast<const UniChar *>(right.data()), right.size());
   CFLocaleRef locale = copyLocale();
 
-  // Call this function with the localized and nonliteral flags.
-  // Localized: Use the provided locale.
-  // Nonliteral: account for things like ö being represented as the precomposed
-  // \u00F6, or decomposed 'o' followed by diaeresis \u0308. This ensures that
-  // canonically equivalent strings compare the same by applying NFD
-  // decomposition.
+                                                                
+                                        
+                                                                               
+                                                                              
+                                                                    
+                   
   auto result = CFStringCompareWithOptionsAndLocale(
       s1,
       s2,
@@ -136,7 +136,7 @@ void convertToCase(
     llvh::SmallVectorImpl<char16_t> &buf,
     CaseConversion targetCase,
     bool useCurrentLocale) {
-  // UniChar is 16 bits, so a cast works.
+                                         
   static_assert(sizeof(UniChar) == sizeof(char16_t), "Unexpected UniChar size");
 
   CFMutableStringRef cfstr = CFStringCreateMutable(nullptr, 0);
@@ -152,7 +152,7 @@ void convertToCase(
     converter(cfstr, nullptr);
   }
 
-  // Reuse buf for the output string.
+                                     
   uint32_t resultLen = CFStringGetLength(cfstr);
   buf.resize(resultLen);
   CFStringGetCharacters(
@@ -161,7 +161,7 @@ void convertToCase(
 }
 
 void normalize(llvh::SmallVectorImpl<char16_t> &buf, NormalizationForm form) {
-  // UniChar is 16 bits, so a cast works.
+                                         
   static_assert(sizeof(UniChar) == sizeof(char16_t), "Unexpected UniChar size");
 
   CFMutableStringRef cfStr = CFStringCreateMutable(nullptr, 0);
@@ -185,7 +185,7 @@ void normalize(llvh::SmallVectorImpl<char16_t> &buf, NormalizationForm form) {
 
   CFStringNormalize(cfStr, cfForm);
 
-  // Reuse buf for the output string.
+                                     
   uint32_t resultLen = CFStringGetLength(cfStr);
   buf.resize(resultLen);
   CFStringGetCharacters(
@@ -193,7 +193,7 @@ void normalize(llvh::SmallVectorImpl<char16_t> &buf, NormalizationForm form) {
   CFRelease(cfStr);
 }
 
-} // namespace platform_unicode
-} // namespace hermes
+}                              
+}                    
 
-#endif // HERMES_PLATFORM_UNICODE_CF
+#endif                              

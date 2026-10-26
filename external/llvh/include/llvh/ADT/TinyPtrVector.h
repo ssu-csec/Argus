@@ -21,12 +21,12 @@
 
 namespace llvh {
 
-/// TinyPtrVector - This class is specialized for cases where there are
-/// normally 0 or 1 element in a vector, but is general enough to go beyond that
-/// when required.
-///
-/// NOTE: This container doesn't allow you to store a null pointer into it.
-///
+                                                                       
+                                                                                
+                  
+   
+                                                                           
+   
 template <typename EltTy>
 class TinyPtrVector {
 public:
@@ -58,8 +58,8 @@ public:
       return *this;
     }
 
-    // Try to squeeze into the single slot. If it won't fit, allocate a copied
-    // vector.
+                                                                              
+              
     if (Val.template is<EltTy>()) {
       if (RHS.size() == 1)
         Val = RHS.front();
@@ -68,7 +68,7 @@ public:
       return *this;
     }
 
-    // If we have a full vector allocated, try to re-use it.
+                                                            
     if (RHS.Val.template is<EltTy>()) {
       Val.template get<VecTy*>()->clear();
       Val.template get<VecTy*>()->push_back(RHS.front());
@@ -90,9 +90,9 @@ public:
       return *this;
     }
 
-    // If this vector has been allocated on the heap, re-use it if cheap. If it
-    // would require more copying, just delete it and we'll steal the other
-    // side.
+                                                                               
+                                                                           
+            
     if (VecTy *V = Val.template dyn_cast<VecTy*>()) {
       if (RHS.Val.template is<EltTy>()) {
         V->clear();
@@ -114,10 +114,10 @@ public:
                 : IL.size() == 1 ? PtrUnion(*IL.begin())
                                  : PtrUnion(new VecTy(IL.begin(), IL.end()))) {}
 
-  /// Constructor from an ArrayRef.
-  ///
-  /// This also is a constructor for individual array elements due to the single
-  /// element constructor for ArrayRef.
+                                   
+     
+                                                                                
+                                       
   explicit TinyPtrVector(ArrayRef<EltTy> Elts)
       : Val(Elts.empty()
                 ? PtrUnion()
@@ -130,7 +130,7 @@ public:
                        : Count == 1 ? PtrUnion(Value)
                                     : PtrUnion(new VecTy(Count, Value))) {}
 
-  // implicit conversion operator to ArrayRef.
+                                              
   operator ArrayRef<EltTy>() const {
     if (Val.isNull())
       return None;
@@ -139,7 +139,7 @@ public:
     return *Val.template get<VecTy*>();
   }
 
-  // implicit conversion operator to MutableArrayRef.
+                                                     
   operator MutableArrayRef<EltTy>() {
     if (Val.isNull())
       return None;
@@ -148,7 +148,7 @@ public:
     return *Val.template get<VecTy*>();
   }
 
-  // Implicit conversion to ArrayRef<U> if EltTy* implicitly converts to U*.
+                                                                            
   template<typename U,
            typename std::enable_if<
                std::is_convertible<ArrayRef<EltTy>, ArrayRef<U>>::value,
@@ -158,8 +158,8 @@ public:
   }
 
   bool empty() const {
-    // This vector can be empty if it contains no element, or if it
-    // contains a pointer to an empty vector.
+                                                                   
+                                             
     if (Val.isNull()) return true;
     if (VecTy *Vec = Val.template dyn_cast<VecTy*>())
       return Vec->empty();
@@ -241,24 +241,24 @@ public:
   void push_back(EltTy NewVal) {
     assert(NewVal && "Can't add a null value");
 
-    // If we have nothing, add something.
+                                         
     if (Val.isNull()) {
       Val = NewVal;
       return;
     }
 
-    // If we have a single value, convert to a vector.
+                                                      
     if (EltTy V = Val.template dyn_cast<EltTy>()) {
       Val = new VecTy();
       Val.template get<VecTy*>()->push_back(V);
     }
 
-    // Add the new value, we know we have a vector.
+                                                   
     Val.template get<VecTy*>()->push_back(NewVal);
   }
 
   void pop_back() {
-    // If we have a single value, convert to empty.
+                                                   
     if (Val.template is<EltTy>())
       Val = (EltTy)nullptr;
     else if (VecTy *Vec = Val.template get<VecTy*>())
@@ -266,27 +266,27 @@ public:
   }
 
   void clear() {
-    // If we have a single value, convert to empty.
+                                                   
     if (Val.template is<EltTy>()) {
       Val = (EltTy)nullptr;
     } else if (VecTy *Vec = Val.template dyn_cast<VecTy*>()) {
-      // If we have a vector form, just clear it.
+                                                 
       Vec->clear();
     }
-    // Otherwise, we're already empty.
+                                      
   }
 
   iterator erase(iterator I) {
     assert(I >= begin() && "Iterator to erase is out of bounds.");
     assert(I < end() && "Erasing at past-the-end iterator.");
 
-    // If we have a single value, convert to empty.
+                                                   
     if (Val.template is<EltTy>()) {
       if (I == begin())
         Val = (EltTy)nullptr;
     } else if (VecTy *Vec = Val.template dyn_cast<VecTy*>()) {
-      // multiple items in a vector; just do the erase, there is no
-      // benefit to collapsing back to a pointer
+                                                                   
+                                                
       return Vec->erase(I);
     }
     return end();
@@ -331,7 +331,7 @@ public:
     if (From == To)
       return I;
 
-    // If we have a single value, convert to a vector.
+                                                      
     ptrdiff_t Offset = I - begin();
     if (Val.isNull()) {
       if (std::next(From) == To) {
@@ -348,6 +348,6 @@ public:
   }
 };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_ADT_TINYPTRVECTOR_H
+#endif                            

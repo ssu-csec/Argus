@@ -27,8 +27,8 @@
 namespace hermes {
 namespace vm {
 
-/// Open the current thread and \return a handle to it. The handle must later
-/// be closed with a call to the Win32 CloseHandle API.
+                                                                             
+                                                       
 static HANDLE openCurrentThread() {
   return OpenThread(
       THREAD_GET_CONTEXT | THREAD_SUSPEND_RESUME | THREAD_QUERY_INFORMATION,
@@ -48,12 +48,12 @@ struct SamplingProfilerWindows : SamplingProfiler {
     fbloom_profilo_api()->fbloom_register_disable_for_loom_callback(
         FBLoomTracerType::JAVASCRIPT, disable);
     loomDataPushEnabled_ = true;
-#endif // defined(HERMESVM_ENABLE_LOOM)
+#endif                                 
   }
 
   ~SamplingProfilerWindows() override {
-    // TODO(T125910634): re-introduce the requirement for destroying the
-    // sampling profiler on the same thread in which it was created.
+                                                                        
+                                                                    
     Sampler::get()->unregisterRuntime(this);
 
     CloseHandle(currentThread_);
@@ -63,8 +63,8 @@ struct SamplingProfilerWindows : SamplingProfiler {
   bool shouldPushDataToLoom() const {
     auto now = std::chrono::system_clock::now();
     constexpr auto kLoomDelay = std::chrono::milliseconds(50);
-    // The default sample stack interval in timerLoop() is between 5-15ms
-    // which is too often for loom.
+                                                                         
+                                   
     return loomDataPushEnabled_ && (now - previousPushTs > kLoomDelay);
   }
 
@@ -105,8 +105,8 @@ struct SamplingProfilerWindows : SamplingProfiler {
     constexpr uint16_t maxDepth = 512;
     int64_t frames[maxDepth];
     uint16_t depth = 0;
-    // Each element in sampledStacks_ is one call stack, access the last one
-    // to get the latest stack trace.
+                                                                            
+                                     
     auto sample = sampledStacks_.back();
     for (auto iter = sample.stack.rbegin(); iter != sample.stack.rend();
          ++iter) {
@@ -123,29 +123,29 @@ struct SamplingProfilerWindows : SamplingProfiler {
     clear();
   }
 
-  /// Previous timestamp when a push to loom occurred. The Loom API does not
-  /// rate limit its callers, and thus care must be taken to not overload it.
+                                                                            
+                                                                             
   std::chrono::time_point<std::chrono::system_clock> previousPushTs;
 
   bool loomDataPushEnabled_{false};
-#endif // defined(HERMESVM_ENABLE_LOOM)
+#endif                                 
 
-  /// Thread that this profiler instance represents. This can be updated
-  /// by later calls to SetRuntimeThread.
+                                                                        
+                                         
   HANDLE currentThread_;
 };
-} // namespace
+}             
 
 namespace {
 struct SamplerWindows : Sampler {
   SamplerWindows();
   ~SamplerWindows() override;
 };
-} // namespace
+}             
 
 Sampler *Sampler::get() {
-  // We intentionally leak this memory to avoid a case where instance is
-  // accessed after it is destroyed during shutdown.
+                                                                        
+                                                    
   static SamplerWindows *instance = new SamplerWindows{};
   return instance;
 }
@@ -172,29 +172,29 @@ void Sampler::platformPostSampleStack(SamplingProfiler *localProfiler) {
   if (windowsProfiler->shouldPushDataToLoom()) {
     windowsProfiler->pushLastSampledStackToLoom();
   }
-#endif // defined(HERMESVM_ENABLE_LOOM)
+#endif                                 
 }
 
 bool Sampler::platformSuspendVMAndWalkStack(SamplingProfiler *profiler) {
   auto *winProfiler = static_cast<SamplingProfilerWindows *>(profiler);
 
-  // Suspend the JS thread. The runtimeDataLock is held by the caller, ensuring
-  // the runtime won't start to be used on another thread before sampling
-  // begins.
+                                                                               
+                                                                         
+            
   DWORD prevSuspendCount = SuspendThread(winProfiler->currentThread_);
   if (prevSuspendCount == static_cast<DWORD>(-1)) {
     return true;
   }
 
-  // Get the JS thread context. This ensures that the thread suspension is
-  // completed.
+                                                                          
+               
   CONTEXT context;
   GetThreadContext(winProfiler->currentThread_, &context);
 
-  // Walk the stack.
+                    
   walkRuntimeStack(profiler);
 
-  // Resume the thread.
+                       
   prevSuspendCount = ResumeThread(winProfiler->currentThread_);
   assert(
       prevSuspendCount != static_cast<DWORD>(-1) &&
@@ -203,7 +203,7 @@ bool Sampler::platformSuspendVMAndWalkStack(SamplingProfiler *profiler) {
 
   return true;
 }
-} // namespace sampling_profiler
+}                               
 
 std::unique_ptr<SamplingProfiler> SamplingProfiler::create(Runtime &rt) {
   return std::make_unique<sampling_profiler::SamplingProfilerWindows>(rt);
@@ -226,6 +226,6 @@ void SamplingProfiler::setRuntimeThread() {
   threadNames_[threadID_] = oscompat::thread_name();
 }
 
-} // namespace vm
-} // namespace hermes
-#endif // !defined(HERMESVM_SAMPLING_PROFILER_WINDOWS)
+}                
+}                    
+#endif                                                

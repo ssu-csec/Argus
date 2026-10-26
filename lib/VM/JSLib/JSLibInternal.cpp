@@ -54,7 +54,7 @@ Handle<NativeConstructor> defineSystemConstructor(
   assert(
       st != ExecutionStatus::EXCEPTION && "defineLengthAndPrototype() failed");
 
-  // Define the global.
+                       
   DefinePropertyFlags dpf = DefinePropertyFlags::getNewNonEnumerableFlags();
 
   auto res = JSObject::defineOwnProperty(
@@ -152,7 +152,7 @@ void defineAccessor(
 
   MutableHandle<NativeFunction> getter{runtime};
   if (getterFunc) {
-    // Set the name by prepending "get ".
+                                         
     llvh::SmallString<32> getterName{"get "};
     llvh::raw_svector_ostream os{getterName};
     os << nameView;
@@ -180,7 +180,7 @@ void defineAccessor(
 
   MutableHandle<NativeFunction> setter{runtime};
   if (setterFunc) {
-    // Set the name by prepending "set ".
+                                         
     llvh::SmallString<32> setterName{"set "};
     llvh::raw_svector_ostream os{setterName};
     os << nameView;
@@ -254,8 +254,8 @@ ExecutionStatus iteratorCloseAndRethrow(
     Handle<JSObject> iterator) {
   auto completion = runtime.makeHandle(runtime.getThrownValue());
   if (isUncatchableError(completion.getHermesValue())) {
-    // If an uncatchable exception was raised, do not swallow it, but instead
-    // propagate it.
+                                                                             
+                    
     return ExecutionStatus::EXCEPTION;
   }
   runtime.clearThrownValue();
@@ -272,14 +272,14 @@ static std::vector<uint8_t> getReturnThisRegexBytecode() {
 }
 
 static bool isReturnThis(Handle<StringPrimitive> str, Runtime &runtime) {
-  // Fast check for minimal version.
+                                    
   {
     auto minimal = runtime.getPredefinedString(Predefined::returnThis);
     if (str->equals(minimal)) {
       return true;
     }
   }
-  // Regex match for variants.
+                              
   auto input = StringPrimitive::createStringView(runtime, str);
   static auto bytecode = getReturnThisRegexBytecode();
   auto result = regex::MatchRuntimeResult::NoMatch;
@@ -313,33 +313,33 @@ CallResult<HermesValue> createDynamicFunction(
     DynamicFunctionKind kind) {
   GCScope gcScope(runtime);
 
-  // Number of arguments supplied to Function().
+                                                
   uint32_t argCount = args.getArgCount();
 
-  // Number of parameters in the resultant function.
+                                                    
   uint32_t paramCount = argCount > 0 ? argCount - 1 : 0;
 
-  // List of the parameter strings for the resultant function..
+                                                               
   auto arrRes = JSArray::create(runtime, paramCount, paramCount);
   if (LLVM_UNLIKELY(arrRes == ExecutionStatus::EXCEPTION)) {
     return ExecutionStatus::EXCEPTION;
   }
   auto params = *arrRes;
 
-  // Body of the resultant function.
+                                    
   MutableHandle<StringPrimitive> body{runtime};
 
-  // String length of the function in its entirety.
-  // Account for commas in the argument list initially.
-  // If at least two arguments to the function (3 in total), there's a comma.
+                                                   
+                                                       
+                                                                             
   SafeUInt32 size{paramCount > 0 ? paramCount - 1 : 0};
 
-  // es2020 19.2.1.1.1 Runtime Semantics: CreateDynamicFunction: If
-  // NewTarget is given, such as with Reflect.construct, use
-  // NewParent.prototype as the parent.  The prototype on NewParent
-  // has already been looked up to use as the parent of 'this', so
-  // instead of looking it up again, just use this's parent.  If
-  // NewTarget isn't given, fall back to a default.
+                                                                   
+                                                            
+                                                                   
+                                                                  
+                                                                
+                                                   
   MutableHandle<JSObject> fallbackProto{runtime};
   switch (kind) {
     case DynamicFunctionKind::Normal:
@@ -348,6 +348,9 @@ CallResult<HermesValue> createDynamicFunction(
     case DynamicFunctionKind::Generator:
       fallbackProto =
           Handle<JSObject>::vmcast(&runtime.generatorFunctionPrototype);
+      break;
+    case DynamicFunctionKind::AsyncGenerator:
+      fallbackProto = Handle<JSObject>::vmcast(&runtime.asyncGeneratorFunctionPrototype);
       break;
     case DynamicFunctionKind::Async:
       fallbackProto = Handle<JSObject>::vmcast(&runtime.asyncFunctionPrototype);
@@ -362,10 +365,10 @@ CallResult<HermesValue> createDynamicFunction(
       : fallbackProto;
 
   if (argCount == 0) {
-    // No arguments, just set body to be the empty string.
+                                                          
     body = runtime.getPredefinedString(Predefined::emptyString);
   } else {
-    // If there's arguments, store the parameters and the provided body.
+                                                                        
     auto marker = gcScope.createMarker();
     for (uint32_t i = 0; i < paramCount; ++i) {
       gcScope.flushToMarker(marker);
@@ -378,7 +381,7 @@ CallResult<HermesValue> createDynamicFunction(
       size.add(param->getStringLength());
     }
 
-    // Last parameter is the body.
+                                  
     auto strRes = toString_RJS(runtime, args.getArgHandle(paramCount));
     if (strRes == ExecutionStatus::EXCEPTION) {
       return ExecutionStatus::EXCEPTION;
@@ -388,7 +391,7 @@ CallResult<HermesValue> createDynamicFunction(
 
     if (kind == DynamicFunctionKind::Normal && argCount == 1 &&
         isReturnThis(body, runtime)) {
-      // If this raises an exception, we still return immediately.
+                                                                  
       return JSFunction::create(
                  runtime,
                  runtime.makeHandle(Domain::create(runtime)),
@@ -399,7 +402,7 @@ CallResult<HermesValue> createDynamicFunction(
     }
   }
 
-  // Constant parts of the function.
+                                    
   ASCIIRef functionHeader;
   switch (kind) {
     case DynamicFunctionKind::Normal:
@@ -407,6 +410,9 @@ CallResult<HermesValue> createDynamicFunction(
       break;
     case DynamicFunctionKind::Generator:
       functionHeader = createASCIIRef("(function*(");
+      break;
+    case DynamicFunctionKind::AsyncGenerator:
+      functionHeader = createASCIIRef("(async function*(");
       break;
     case DynamicFunctionKind::Async:
       functionHeader = createASCIIRef("(async function (");
@@ -419,8 +425,8 @@ CallResult<HermesValue> createDynamicFunction(
   auto bodyHeader = createASCIIRef("){");
   size.add(bodyHeader.size());
 
-  // Note: add a \n before the closing '}' in case the
-  // function body ends with a line comment.
+                                                      
+                                            
   auto functionFooter = createASCIIRef("\n})");
   size.add(functionFooter.size());
 
@@ -433,13 +439,13 @@ CallResult<HermesValue> createDynamicFunction(
   builder->appendASCIIRef(functionHeader);
   MutableHandle<StringPrimitive> element{runtime};
   for (uint32_t i = 0; i < paramCount; ++i) {
-    // Copy params into str.
+                            
     element = params->at(runtime, i).getString(runtime);
     builder->appendStringPrim(element);
     if (i < paramCount - 1) {
-      // If there's more params left to put, need to add a comma.
-      // We wouldn't have entered the loop if paramCount == 0,
-      // so there's no overflow here.
+                                                                 
+                                                              
+                                     
       builder->appendASCIIRef(separator);
     }
   }
@@ -460,7 +466,7 @@ CallResult<HermesValue> createDynamicFunction(
   dpf.enumerable = 0;
   dpf.writable = 0;
 
-  // Define the `name` correctly.
+                                 
   if (JSObject::defineOwnProperty(
           function,
           runtime,
@@ -472,10 +478,10 @@ CallResult<HermesValue> createDynamicFunction(
     return ExecutionStatus::EXCEPTION;
   }
 
-  // Set the parent.  This could be done by threading the argument
-  // through to Runtime::runBytecode where the object is actually
-  // created, but this is the only place we need to do this so it
-  // keeps the code simpler.
+                                                                  
+                                                                 
+                                                                 
+                            
   CallResult<bool> parentRes = JSObject::setParent(*function, runtime, *parent);
   if (LLVM_UNLIKELY(parentRes == ExecutionStatus::EXCEPTION)) {
     return ExecutionStatus::EXCEPTION;
@@ -486,5 +492,5 @@ CallResult<HermesValue> createDynamicFunction(
   return function.getHermesValue();
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

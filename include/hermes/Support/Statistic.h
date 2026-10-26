@@ -23,10 +23,10 @@ struct DummyCounter {
     return *this;
   }
 };
-} // namespace hermes
+}                    
 
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_STATS)
-// Debug - forward to llvm.
+                           
 #include "llvh/ADT/Statistic.h"
 
 namespace hermes {
@@ -36,21 +36,21 @@ inline bool AreStatisticsEnabled() {
 inline void EnableStatistics() {
   llvh::EnableStatistics();
 }
-} // namespace hermes
+}                    
 
 #else
-// Release - stub out.
+                      
 #define STATISTIC(Name, Desc) static hermes::DummyCounter Name;
 namespace hermes {
 inline bool AreStatisticsEnabled() {
   return false;
 }
 inline void EnableStatistics() {}
-} // namespace hermes
+}                    
 #endif
 
-// HERMES_SLOW_STATISTIC are Statistics which are only enabled if
-// HERMES_SLOW_DEBUG is defined.
+                                                                 
+                                
 #ifdef HERMES_SLOW_DEBUG
 #define HERMES_SLOW_STATISTIC(Name, Desc) STATISTIC(Name, Desc)
 #else

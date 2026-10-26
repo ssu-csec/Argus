@@ -190,11 +190,11 @@ multiclass SystemZQuaternaryIntCCBHF {
   def fs : SystemZQuaternaryIntCC<llvm_v4i32_ty>;
 }
 
-//===----------------------------------------------------------------------===//
-//
-// Transactional-execution intrinsics
-//
-//===----------------------------------------------------------------------===//
+                                                                                
+  
+                                     
+  
+                                                                                
 
 let TargetPrefix = "s390" in {
   def int_s390_tbegin : Intrinsic<[llvm_i32_ty], [llvm_ptr_ty, llvm_i32_ty],
@@ -223,11 +223,11 @@ let TargetPrefix = "s390" in {
                               Intrinsic<[], [llvm_i32_ty]>;
 }
 
-//===----------------------------------------------------------------------===//
-//
-// Vector intrinsics
-//
-//===----------------------------------------------------------------------===//
+                                                                                
+  
+                    
+  
+                                                                                
 
 let TargetPrefix = "s390" in {
   def int_s390_lcbb : GCCBuiltin<"__builtin_s390_lcbb">,
@@ -372,7 +372,7 @@ let TargetPrefix = "s390" in {
                                  [llvm_v2f64_ty, llvm_i32_ty, llvm_i32_ty],
                                  [IntrNoMem]>;
 
-  // Instructions from the Vector Enhancements Facility 1
+                                                         
   def int_s390_vbperm : SystemZBinaryConv<"vbperm", llvm_v2i64_ty,
                                           llvm_v16i8_ty>;
 
@@ -404,7 +404,7 @@ let TargetPrefix = "s390" in {
                                  [llvm_v4f32_ty, llvm_i32_ty, llvm_i32_ty],
                                  [IntrNoMem]>;
 
-  // Instructions from the Vector Packed Decimal Facility
+                                                         
   def int_s390_vlrl : GCCBuiltin<"__builtin_s390_vlrl">,
                       Intrinsic<[llvm_v16i8_ty], [llvm_i32_ty, llvm_ptr_ty],
                                 [IntrReadMem, IntrArgMemOnly]>;
@@ -414,11 +414,11 @@ let TargetPrefix = "s390" in {
                                  [IntrArgMemOnly, IntrWriteMem]>;
 }
 
-//===----------------------------------------------------------------------===//
-//
-// Misc intrinsics
-//
-//===----------------------------------------------------------------------===//
+                                                                                
+  
+                  
+  
+                                                                                
 
 let TargetPrefix = "s390" in {
   def int_s390_sfpc : GCCBuiltin<"__builtin_s390_sfpc">,

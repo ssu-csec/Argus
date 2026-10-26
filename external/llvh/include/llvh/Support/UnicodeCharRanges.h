@@ -23,7 +23,7 @@
 namespace llvh {
 namespace sys {
 
-/// Represents a closed range of Unicode code points [Lower, Upper].
+                                                                    
 struct UnicodeCharRange {
   uint32_t Lower;
   uint32_t Upper;
@@ -36,26 +36,26 @@ inline bool operator<(UnicodeCharRange Range, uint32_t Value) {
   return Range.Upper < Value;
 }
 
-/// Holds a reference to an ordered array of UnicodeCharRange and allows
-/// to quickly check if a code point is contained in the set represented by this
-/// array.
+                                                                        
+                                                                                
+          
 class UnicodeCharSet {
 public:
   typedef ArrayRef<UnicodeCharRange> CharRanges;
 
-  /// Constructs a UnicodeCharSet instance from an array of
-  /// UnicodeCharRanges.
-  ///
-  /// Array pointed by \p Ranges should have the lifetime at least as long as
-  /// the UnicodeCharSet instance, and should not change. Array is validated by
-  /// the constructor, so it makes sense to create as few UnicodeCharSet
-  /// instances per each array of ranges, as possible.
+                                                           
+                        
+     
+                                                                             
+                                                                               
+                                                                        
+                                                      
 #ifdef NDEBUG
 
-  // FIXME: This could use constexpr + static_assert. This way we
-  // may get rid of NDEBUG in this header. Unfortunately there are some
-  // problems to get this working with MSVC 2013. Change this when
-  // the support for MSVC 2013 is dropped.
+                                                                 
+                                                                       
+                                                                  
+                                          
   constexpr UnicodeCharSet(CharRanges Ranges) : Ranges(Ranges) {}
 #else
   UnicodeCharSet(CharRanges Ranges) : Ranges(Ranges) {
@@ -63,15 +63,15 @@ public:
   }
 #endif
 
-  /// Returns true if the character set contains the Unicode code point
-  /// \p C.
+                                                                       
+           
   bool contains(uint32_t C) const {
     return std::binary_search(Ranges.begin(), Ranges.end(), C);
   }
 
 private:
-  /// Returns true if each of the ranges is a proper closed range
-  /// [min, max], and if the ranges themselves are ordered and non-overlapping.
+                                                                 
+                                                                               
   bool rangesAreValid() const {
     uint32_t Prev = 0;
     for (CharRanges::const_iterator I = Ranges.begin(), E = Ranges.end();
@@ -99,9 +99,9 @@ private:
   const CharRanges Ranges;
 };
 
-} // namespace sys
-} // namespace llvh
+}                 
+}                  
 
-#undef DEBUG_TYPE // "unicode"
+#undef DEBUG_TYPE             
 
-#endif // LLVM_SUPPORT_UNICODECHARRANGES_H
+#endif                                    

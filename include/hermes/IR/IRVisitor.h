@@ -15,8 +15,8 @@
 
 namespace hermes {
 
-/// IRVisitorBase - This is a simple visitor class for Hermes IR nodes, allowing
-/// clients to walk over entire IR functions, blocks, or instructions.
+                                                                                
+                                                                      
 template <typename ImplClass, typename ValueRetTy = void>
 class IRVisitorBase {
  public:
@@ -24,13 +24,13 @@ class IRVisitorBase {
     return static_cast<ImplClass &>(*this);
   }
 
-  /// Top level visitor.
+                        
   ValueRetTy visitValue(const Value &V) {
     return ValueRetTy();
   }
 
-/// Define default IR implementations, chaining to parent nodes.
-/// Use ValueKinds.def to automatically generate them.
+                                                                
+                                                      
 #define DEF_VALUE(CLASS, PARENT)            \
   ValueRetTy visit##CLASS(const CLASS &I) { \
     return asImpl().visit##PARENT(I);       \
@@ -38,8 +38,8 @@ class IRVisitorBase {
 #include "hermes/IR/ValueKinds.def"
 };
 
-/// IRVisitor - This is a simple visitor class for Hermes IR nodes.
-/// allowing clients to walk over hermes IRNodes of different types.
+                                                                   
+                                                                    
 template <typename ImplClass, typename ValueRetTy = void>
 class IRVisitor : public IRVisitorBase<ImplClass, ValueRetTy> {
  public:
@@ -47,7 +47,7 @@ class IRVisitor : public IRVisitorBase<ImplClass, ValueRetTy> {
     return static_cast<ImplClass &>(*this);
   }
 
-  /// Visit IR nodes.
+                     
   ValueRetTy visit(const Value &V) {
     switch (V.getKind()) {
       default:
@@ -61,8 +61,8 @@ class IRVisitor : public IRVisitorBase<ImplClass, ValueRetTy> {
   }
 };
 
-/// InstrVisitor - This is a simple visitor class for Hermes IR instructions,
-/// allowing clients to walk over hermes Instructions of different types.
+                                                                             
+                                                                         
 template <typename ImplClass, typename ValueRetTy = void>
 class InstructionVisitor : public IRVisitorBase<ImplClass, ValueRetTy> {
  public:
@@ -70,12 +70,12 @@ class InstructionVisitor : public IRVisitorBase<ImplClass, ValueRetTy> {
     return static_cast<ImplClass &>(*this);
   }
 
-  // Perform any required pre-processing before visiting.
-  // Sub-classes can reimplement it to provide their custom
-  // pre-processing steps.
+                                                         
+                                                           
+                          
   void beforeVisitInstruction(const Instruction &V) {}
 
-  /// Visit Instruction.
+                        
   ValueRetTy visit(const Instruction &Inst) {
     asImpl().beforeVisitInstruction(Inst);
 
@@ -91,7 +91,7 @@ class InstructionVisitor : public IRVisitorBase<ImplClass, ValueRetTy> {
   }
 };
 
-} // end namespace hermes
+}                        
 
 #undef INCLUDE_ALL_INSTRS
 #endif

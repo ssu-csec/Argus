@@ -28,7 +28,7 @@ T *GCBase::makeAFixed(Args &&...args) {
       "Cell size outside legal range.");
   assert(
       VTable::getVTable(T::getCellKind())->size && "Cell is not fixed size.");
-  return makeA<T, true /* fixedSize */, hasFinalizer, longLived>(
+  return makeA<T, true                , hasFinalizer, longLived>(
       cellSize<T>(), std::forward<Args>(args)...);
 }
 
@@ -38,13 +38,13 @@ template <
     LongLived longLived,
     class... Args>
 T *GCBase::makeAVariable(uint32_t size, Args &&...args) {
-  // If size is greater than the max, we should OOM.
+                                                    
   assert(
       size >= GC::minAllocationSize() && "Cell size is smaller than minimum");
   assert(
       !VTable::getVTable(T::getCellKind())->size &&
       "Cell is not variable size.");
-  return makeA<T, false /* fixedSize */, hasFinalizer, longLived>(
+  return makeA<T, false                , hasFinalizer, longLived>(
       heapAlignSize(size), std::forward<Args>(args)...);
 }
 
@@ -82,7 +82,7 @@ T *GCBase::makeA(uint32_t size, Args &&...args) {
 
 #ifdef HERMESVM_GC_RUNTIME
 constexpr uint32_t GCBase::maxAllocationSizeImpl() {
-  // Return the lesser of the two GC options' max allowed sizes.
+                                                                
   return std::min({
 #define GC_KIND(kind) kind::maxAllocationSizeImpl(),
       RUNTIME_GC_KINDS
@@ -91,7 +91,7 @@ constexpr uint32_t GCBase::maxAllocationSizeImpl() {
 }
 
 constexpr uint32_t GCBase::minAllocationSizeImpl() {
-  // Return the greater of the two GC options' min allowed sizes.
+                                                                 
   return std::max({
 #define GC_KIND(kind) kind::minAllocationSizeImpl(),
       RUNTIME_GC_KINDS
@@ -151,7 +151,7 @@ inline void GCBase::markCellWithNames(
       Metadata::metadataTable[static_cast<size_t>(kind)].names);
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMES_VM_GCBASE_INLINE_H
+#endif                             

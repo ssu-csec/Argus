@@ -84,7 +84,7 @@ void Domain::_snapshotAddEdgesImpl(GCCell *cell, GC &gc, HeapSnapshot &snap) {
 void Domain::_snapshotAddNodesImpl(GCCell *cell, GC &gc, HeapSnapshot &snap) {
   auto *const self = vmcast<Domain>(cell);
   for (RuntimeModule *rm : self->runtimeModules_) {
-    // Create a native node for each RuntimeModule owned by this domain.
+                                                                        
     rm->snapshotAddNodes(gc, snap);
     snap.beginNode();
     rm->snapshotAddEdges(gc, snap);
@@ -104,7 +104,7 @@ ExecutionStatus Domain::importCJSModuleTable(
     RuntimeModule *runtimeModule) {
   if (runtimeModule->getBytecode()->getCJSModuleTable().empty() &&
       runtimeModule->getBytecode()->getCJSModuleTableStatic().empty()) {
-    // Nothing to do, avoid allocating and simply return.
+                                                         
     return ExecutionStatus::RETURNED;
   }
 
@@ -114,9 +114,9 @@ ExecutionStatus Domain::importCJSModuleTable(
   MutableHandle<ArrayStorage> cjsModules{runtime};
 
   if (!self->cjsModules_) {
-    // Create the module table on first import.
-    // If module IDs are contiguous and start from 0, we won't need to resize
-    // for this RuntimeModule.
+                                               
+                                                                             
+                              
 
     const uint64_t firstSegmentModules =
         runtimeModule->getBytecode()->getCJSModuleTable().size() +
@@ -126,7 +126,7 @@ ExecutionStatus Domain::importCJSModuleTable(
         firstSegmentModules <= std::numeric_limits<uint32_t>::max() &&
         "number of modules is 32 bits due to the bytecode format");
 
-    // Use uint64_t to allow us to check for overflow.
+                                                      
     const uint64_t requiredSize = firstSegmentModules * CJSModuleSize;
     if (requiredSize > std::numeric_limits<uint32_t>::max()) {
       return runtime.raiseRangeError("Loaded module count exceeded limit");
@@ -157,7 +157,7 @@ ExecutionStatus Domain::importCJSModuleTable(
         self,
         runtime.getPredefinedStringHandle(Predefined::emptyString));
 
-    // Set the require.context property.
+                                        
     PropertyFlags pf = PropertyFlags::defaultNewNamedPropertyFlags();
     pf.writable = 0;
     pf.configurable = 0;
@@ -178,13 +178,13 @@ ExecutionStatus Domain::importCJSModuleTable(
 
   assert(cjsModules && "cjsModules not set");
 
-  // Find the maximum module ID so we can resize cjsModules at most once per
-  // RuntimeModule.
+                                                                            
+                   
   uint64_t maxModuleID = cjsModules->size() / CJSModuleSize;
 
-  // The non-static module table does not store module IDs. They are assigned
-  // during registration by counting insertions to cjsModuleTable_. Count the
-  // insertions up front.
+                                                                             
+                                                                             
+                         
   for (const auto &pair : runtimeModule->getBytecode()->getCJSModuleTable()) {
     SymbolID symbolId =
         runtimeModule->getSymbolIDFromStringIDMayAllocate(pair.first);
@@ -193,8 +193,8 @@ ExecutionStatus Domain::importCJSModuleTable(
     }
   }
 
-  // The static module table stores module IDs in an arbitrary order. Scan for
-  // the maximum ID.
+                                                                              
+                    
   for (const auto &pair :
        runtimeModule->getBytecode()->getCJSModuleTableStatic()) {
     const auto &moduleID = pair.first;
@@ -207,13 +207,13 @@ ExecutionStatus Domain::importCJSModuleTable(
       maxModuleID <= std::numeric_limits<uint32_t>::max() &&
       "number of modules is 32 bits due to the bytecode format");
 
-  // Use uint64_t to allow us to check for overflow.
+                                                    
   const uint64_t requiredSize = (maxModuleID + 1) * CJSModuleSize;
   if (requiredSize > std::numeric_limits<uint32_t>::max()) {
     return runtime.raiseRangeError("Loaded module count exceeded limit");
   }
 
-  // Resize the array to allow for the new modules, if necessary.
+                                                                 
   if (requiredSize > cjsModules->size()) {
     if (LLVM_UNLIKELY(
             ArrayStorage::resize(cjsModules, runtime, requiredSize) ==
@@ -226,9 +226,9 @@ ExecutionStatus Domain::importCJSModuleTable(
     }
   }
 
-  /// \return Whether the module with ID \param moduleID has been registered in
-  /// cjsModules. \pre Space has been allocated for this module's record in
-  /// cjsModules.
+                                                                               
+                                                                           
+                 
   const auto isModuleRegistered = [&cjsModules,
                                    maxModuleID](uint32_t moduleID) -> bool {
     assert(
@@ -244,12 +244,12 @@ ExecutionStatus Domain::importCJSModuleTable(
     return !cjsModules->at(index + FunctionIndexOffset).isEmpty();
   };
 
-  /// Register CJS module \param moduleID in the runtime module table.
-  /// \return The index into cjsModules where this module's record begins.
-  /// \pre Space has been allocated for this module's record in cjsModules.
-  /// \pre Space has been allocated for this module's RuntimeModule* in
-  /// cjsRuntimeModules_.
-  /// \pre There is no module already registered under moduleID.
+                                                                      
+                                                                          
+                                                                           
+                                                                       
+                         
+                                                                
   auto &cjsEntryModuleID = self->cjsEntryModuleID_;
   auto &cjsRuntimeModules = self->cjsRuntimeModules_;
   const auto registerModule =
@@ -282,27 +282,27 @@ ExecutionStatus Domain::importCJSModuleTable(
     return index;
   };
 
-  // Import full table that allows dynamic requires.
+                                                    
   for (const auto &pair : runtimeModule->getBytecode()->getCJSModuleTable()) {
     SymbolID symbolId =
         runtimeModule->getSymbolIDFromStringIDMayAllocate(pair.first);
     auto emplaceRes = self->cjsModuleTable_.try_emplace(symbolId, 0xffffffff);
     if (emplaceRes.second) {
-      // This module has not been registered before.
-      // Assign it an arbitrary unused module ID, because nothing will be
-      // referencing that ID from outside Domain.
-      // Counting insertions to cjsModuleTable_ is a valid source of unique IDs
-      // since a given Domain uses either dynamic requires or statically
-      // resolved requires.
+                                                    
+                                                                         
+                                                 
+                                                                               
+                                                                        
+                           
       uint32_t moduleID = self->cjsModuleTable_.size() - 1;
       const auto functionID = pair.second;
       auto index = registerModule(moduleID, functionID);
-      // Update the mapping from symbolId to an index into cjsModules.
+                                                                      
       emplaceRes.first->second = index;
     }
   }
 
-  // Import table to be used for requireFast.
+                                             
   for (const auto &pair :
        runtimeModule->getBytecode()->getCJSModuleTableStatic()) {
     const auto &moduleID = pair.first;
@@ -352,5 +352,5 @@ Handle<RequireContext> RequireContext::create(
   return self;
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

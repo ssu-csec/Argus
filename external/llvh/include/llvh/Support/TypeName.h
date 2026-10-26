@@ -14,16 +14,16 @@
 
 namespace llvh {
 
-/// We provide a function which tries to compute the (demangled) name of a type
-/// statically.
-///
-/// This routine may fail on some platforms or for particularly unusual types.
-/// Do not use it for anything other than logging and debugging aids. It isn't
-/// portable or dependendable in any real sense.
-///
-/// The returned StringRef will point into a static storage duration string.
-/// However, it may not be null terminated and may be some strangely aligned
-/// inner substring of a larger string.
+                                                                               
+               
+   
+                                                                              
+                                                                              
+                                                
+   
+                                                                            
+                                                                            
+                                       
 template <typename DesiredTypeName>
 inline StringRef getTypeName() {
 #if defined(__clang__) || defined(__GNUC__)
@@ -54,8 +54,8 @@ inline StringRef getTypeName() {
   assert(AnglePos != StringRef::npos && "Unable to find the closing '>'!");
   return Name.substr(0, AnglePos);
 #else
-  // No known technique for statically extracting a type name on this compiler.
-  // We return a string that is unlikely to look like any type in LLVM.
+                                                                               
+                                                                       
   return "UNKNOWN_TYPE";
 #endif
 }

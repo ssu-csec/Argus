@@ -22,7 +22,7 @@ bool generateIRFromESTree(
     Module *M,
     const DeclarationFileListTy &declFileList,
     const ScopeChain &scopeChain) {
-  // Generate IR into the module M.
+                                   
   ESTreeIRGen Generator(node, declFileList, M, scopeChain);
   Generator.doIt();
 
@@ -38,7 +38,7 @@ void generateIRForCJSModule(
     Module *M,
     Function *topLevelFunction,
     const DeclarationFileListTy &declFileList) {
-  // Generate IR into the module M.
+                                   
   ESTreeIRGen generator(node, declFileList, M, {});
   return generator.doCJSModule(
       topLevelFunction, node->getSemInfo(), segmentID, id, filename);
@@ -55,9 +55,9 @@ std::pair<Function *, Function *> generateLazyFunctionIR(
   hermes::parser::JSParser parser(
       context, lazyData->bufferId, parser::LazyParse);
 
-  // Note: we don't know the parent's strictness, which we need to pass, but
-  // we can just use the child's strictness, which is always stricter or equal
-  // to the parent's.
+                                                                            
+                                                                              
+                     
   parser.setStrictMode(lazyData->strictMode);
 
   auto parsed = parser.parseLazyFunction(
@@ -66,7 +66,7 @@ std::pair<Function *, Function *> generateLazyFunctionIR(
       lazyData->paramAwait,
       lazyData->span.Start);
 
-  // In case of error, generate a function that just throws a SyntaxError.
+                                                                          
   if (!parsed ||
       !sem::validateFunctionAST(
           context, semCtx, *parsed, lazyData->strictMode)) {
@@ -88,4 +88,4 @@ std::pair<Function *, Function *> generateLazyFunctionIR(
   return generator.doLazyFunction(lazyData);
 }
 
-} // namespace hermes
+}                    

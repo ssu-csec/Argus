@@ -29,9 +29,9 @@
 namespace hermes {
 namespace vm {
 
-// A helper function to get the length of a string literal while ensuring it
-// fits in a uint8.
-// \return the length of the string including the terminating nul.
+                                                                            
+                   
+                                                                  
 template <size_t N>
 constexpr uint8_t u8sizeof(const char (&str)[N]) {
   static_assert(N <= std::numeric_limits<uint8_t>::max(), "overflowed uint8_t");
@@ -58,8 +58,8 @@ static llvh::DenseMap<const void *, const char *> funcNames() {
   static const void *const functionPointers[] = {
 #define NATIVE_FUNCTION(func) (void *)func,
 
-  // Creator functions are overloaded, we have to cast them to CreatorFunction *
-  // first.
+                                                                                
+           
 #define NATIVE_CONSTRUCTOR(func) \
   (void *)(NativeConstructor::CreatorFunction *)func,
 #include "hermes/VM/NativeFunctions.def"
@@ -76,8 +76,8 @@ static llvh::DenseMap<const void *, const char *> funcNames() {
   }
 
 #ifndef _MSC_VER
-  // TODO(T57439543): Currently, under Windows, this will cause a crash due to
-  // how multiple functions will be collapsed into this one.
+                                                                              
+                                                            
   assert(map.size() == numFuncs && "A function should only be mapped once");
 #endif
 
@@ -88,8 +88,8 @@ static const char *getFunctionNameImpl(void *func) {
   static auto map = funcNames();
   auto it = map.find(func);
   if (it == map.end()) {
-    // This function's name isn't in the map, which is possible for some
-    // functions defined only in ConsoleHost.
+                                                                        
+                                             
     return "";
   }
   return it->second;
@@ -103,5 +103,5 @@ const char *getFunctionName(NativeConstructor::CreatorFunction *func) {
   return getFunctionNameImpl((void *)func);
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

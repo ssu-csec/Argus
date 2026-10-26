@@ -15,12 +15,12 @@ namespace hermes {
 namespace vm {
 
 GCCell *WeakRefSlot::get(PointerBase &base, GC &gc) const {
-  // Cannot check state() here because it can race with marking code.
+                                                                     
   assert(hasValue() && "tried to access collected referent");
   return value_.root.getNonNull(base, gc);
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
 #endif

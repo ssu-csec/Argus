@@ -23,15 +23,15 @@ class ESTreeJSONDumper {
   SourceErrorManager *sm_;
   ESTreeDumpMode mode_;
   LocationDumpMode locMode_;
-  /// Whether to include or exclude the "raw" property where available.
+                                                                       
   ESTreeRawProp const rawProp_;
 
-  /// A collection of fields to ignore if they are empty (null or []).
-  /// Mapping from node name to a set of ignored field names for that node.
+                                                                      
+                                                                           
   llvh::StringMap<llvh::StringSet<>> ignoredEmptyFields_{};
 
-  /// If null, this is ignored.
-  /// If non-null, only print the source locations for kinds in this set.
+                               
+                                                                         
   const NodeKindSet *includeSourceLocs_;
 
  public:
@@ -77,7 +77,7 @@ class ESTreeJSONDumper {
   }
 
  private:
-  /// Print the source location for the \p node.
+                                                
   void printSourceLocation(Node *node) {
     if (locMode_ == LocationDumpMode::None)
       return;
@@ -184,7 +184,7 @@ class ESTreeJSONDumper {
     json_.emitValue(num);
   }
 
-  /// Selects the correct visit function based on node type.
+                                                            
   void dumpNode(NodePtr node) {
     if (!node) {
       json_.emitNullValue();
@@ -216,7 +216,7 @@ class ESTreeJSONDumper {
     }
   }
 
-  /// Selects the correct function to dump the children nodes of an AST node.
+                                                                             
   void dumpChildren(NodePtr node) {
     if (!node)
       return;
@@ -265,7 +265,7 @@ class ESTreeJSONDumper {
     dumpNode(NODE);                                  \
   } while (0);
 
-/// Declare helper functions to recursively visit the children of a node.
+                                                                         
 #define ESTREE_NODE_0_ARGS(NAME, BASE) \
   void visitChildren(NAME##Node *) {}
 
@@ -494,9 +494,9 @@ class ESTreeJSONDumper {
 #include "hermes/AST/ESTree.def"
 
 #undef DUMP_KEY_VALUE_PAIR
-}; // namespace
+};             
 
-} // namespace
+}             
 
 void dumpSMRangeJSON(
     JSONEmitter &json,
@@ -547,4 +547,4 @@ void dumpESTreeJSON(
       .doIt(rootNode);
 }
 
-} // namespace hermes
+}                    

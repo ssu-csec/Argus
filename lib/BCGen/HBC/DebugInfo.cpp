@@ -16,12 +16,12 @@ using namespace hbc;
 
 namespace {
 
-/// A type used to iteratively deserialize function debug info.
+                                                               
 struct FunctionDebugInfoDeserializer {
-  /// Construct a deserializer that begins deserializing at \p offset in \p
-  /// data. It will deserialize until the function's debug info is finished
-  /// (address delta = -1) at which point next() will return None. The offset of
-  /// the next section can be obtained via getOffset().
+                                                                           
+                                                                           
+                                                                                
+                                                       
   FunctionDebugInfoDeserializer(llvh::ArrayRef<uint8_t> data, uint32_t offset)
       : data_(data), offset_(offset) {
     functionIndex_ = decode1Int();
@@ -29,13 +29,13 @@ struct FunctionDebugInfoDeserializer {
     current_.column = decode1Int();
   }
 
-  /// \return the next debug location, or None if we reach the end.
-  /// Sample usage: while (auto loc = fdid.next()) {...}
+                                                                   
+                                                        
   OptValue<DebugSourceLocation> next() {
     auto addressDelta = decode1Int();
     if (addressDelta == -1)
       return llvh::None;
-    // Presence of the statement delta is LSB of line delta.
+                                                            
     int64_t lineDelta = decode1Int();
     int64_t columnDelta = decode1Int();
     int64_t scopeAddress = decode1Int();
@@ -54,23 +54,23 @@ struct FunctionDebugInfoDeserializer {
     return current_;
   }
 
-  /// \return the offset of this deserializer in the data.
+                                                          
   uint32_t getOffset() const {
     return offset_;
   }
 
-  /// \return the index of the function being deserialized.
+                                                           
   uint32_t getFunctionIndex() const {
     return functionIndex_;
   }
 
-  /// \return the current source location.
+                                          
   const DebugSourceLocation &getCurrent() const {
     return current_;
   }
 
  private:
-  /// LEB-decode the next int.
+                              
   int64_t decode1Int() {
     int64_t result;
     offset_ += readSignedLEB128(data_, offset_, &result);
@@ -83,7 +83,7 @@ struct FunctionDebugInfoDeserializer {
   uint32_t functionIndex_;
   DebugSourceLocation current_;
 };
-} // namespace
+}             
 
 DebugScopeDescriptor::Flags::Flags(uint32_t bits) {
   uint32_t mask = 1;
@@ -117,21 +117,21 @@ uint32_t DebugScopeDescriptor::Flags::toUint32() const {
   return bits;
 }
 
-/// Decodes a string at offset \p offset in \p data, updating offset in-place.
-/// \return the decoded string.
+                                                                              
+                               
 static llvh::StringRef getString(
     uint32_t *inoutOffset,
     llvh::ArrayRef<uint8_t> data) {
-  // The string is represented as its LEB-encoded length, followed by
-  // the bytes. This format matches DebugInfoGenerator::appendString().
+                                                                     
+                                                                       
   uint32_t offset = *inoutOffset;
   int64_t strSize;
   offset += readSignedLEB128(data, offset, &strSize);
   assert(
-      strSize >= 0 && // can't be negative
-      strSize <= UINT_MAX && // can't overflow uint32
-      uint32_t(strSize) + offset >= offset && // sum can't overflow
-      uint32_t(strSize) + offset <= data.size() && // validate range
+      strSize >= 0 &&                     
+      strSize <= UINT_MAX &&                         
+      uint32_t(strSize) + offset >= offset &&                      
+      uint32_t(strSize) + offset <= data.size() &&                  
       "Invalid string size");
   const unsigned char *ptr = data.data() + offset;
   offset += strSize;
@@ -147,12 +147,12 @@ void DebugInfoGenerator::appendString(
 
   if (res.second) {
 #ifndef NDEBUG
-    // Check that the given string is a valid UTF8 string.
+                                                          
     const char *it = str.str().begin();
     while (it < str.str().end()) {
       constexpr bool allowSurrogates = false;
-      // keep the current position alive so it can be inspected in the debugger
-      // if the assert fails.
+                                                                               
+                             
       const char *pos = it;
       (void)pos;
       decodeUTF8<allowSurrogates>(it, [](const llvh::Twine &) {
@@ -161,7 +161,7 @@ void DebugInfoGenerator::appendString(
     }
     assert(
         it == str.str().end() && "Invalid utf8 string -- read past end of str");
-#endif // NDEBUG
+#endif          
     appendSignedLEB128(stringTable_, int64_t(str.str().size()));
     stringTable_.insert(stringTable_.end(), str.str().begin(), str.str().end());
   }
@@ -181,9 +181,9 @@ llvh::StringRef DebugInfo::decodeString(
 OptValue<uint32_t> DebugInfo::getFilenameForAddress(
     uint32_t debugOffset) const {
   OptValue<uint32_t> value = llvh::None;
-  // This is sorted list of (address, filename) pairs so we could use
-  // binary search. However, we expect the number of entries to be
-  // between zero and one.
+                                                                     
+                                                                  
+                          
   for (int i = 0, e = files_.size(); i < e; i++) {
     if (files_[i].fromAddress <= debugOffset) {
       value = files_[i].filenameId;
@@ -220,16 +220,16 @@ OptValue<DebugSearchResult> DebugInfo::getAddressForLocation(
     uint32_t filenameId,
     uint32_t targetLine,
     OptValue<uint32_t> targetColumn) const {
-  // First, get the start/end debug offsets for the given file.
+                                                               
   uint32_t start = 0;
   uint32_t end = 0;
   bool foundFile{false};
   for (const auto &cur : files_) {
     if (foundFile) {
-      // We must have found the file on the last iteration,
-      // so set the beginning of this file to be the end index,
-      // and break out of the loop, ensuring we know where the target
-      // file starts and ends.
+                                                           
+                                                               
+                                                                     
+                              
       end = cur.fromAddress;
       break;
     }
@@ -245,11 +245,11 @@ OptValue<DebugSearchResult> DebugInfo::getAddressForLocation(
 
   unsigned offset = start;
 
-  // We consider the best match for a location to be the first of:
-  // 1. Exact match
-  // 2. Exact line, largest column before the target
-  // 3. Exact line, any column
-  // If multiple, the lowest bytecode address wins in each category.
+                                                                  
+                   
+                                                    
+                              
+                                                                    
   DebugSearchResult best(0, DebugOffsets::NO_OFFSET, 0, 0);
 
   while (offset < end) {
@@ -259,7 +259,7 @@ OptValue<DebugSearchResult> DebugInfo::getAddressForLocation(
       uint32_t column = loc->column;
       if (line == targetLine) {
         if (!targetColumn.hasValue() || column == *targetColumn) {
-          // Short-circuit on a precise match.
+                                              
           return DebugSearchResult(
               fdid.getFunctionIndex(), loc->address, line, column);
         }
@@ -304,7 +304,7 @@ OptValue<llvh::StringRef> DebugInfo::getTextifiedCalleeUTF8(
 }
 
 DebugScopeDescriptor DebugInfo::getScopeDescriptor(uint32_t offset) const {
-  // Incoming offset is given relative to our lexical region.
+                                                             
   llvh::ArrayRef<uint8_t> data = scopeDescData();
   int64_t parentId;
   int64_t flags;
@@ -468,12 +468,12 @@ void DebugInfo::populateSourceMap(
     SourceMapGenerator *sourceMap,
     std::vector<uint32_t> &&functionOffsets,
     uint32_t segmentID) const {
-  // Since our bytecode is not JavaScript, we interpret the source map in a
-  // creative way: each bytecode module is represented as a line, and bytecode
-  // addresses in the file are represented as column offsets.
-  // Our debug information has a function start and then offsets within the
-  // function, but the source map will do its own delta encoding, so we provide
-  // absolute addresses to the source map.
+                                                                           
+                                                                              
+                                                             
+                                                                           
+                                                                               
+                                          
   auto segmentFor = [&](const DebugSourceLocation &loc,
                         uint32_t offsetInFile,
                         uint32_t debugOffset) {
@@ -511,8 +511,8 @@ uint32_t DebugInfoGenerator::appendSourceLocations(
     llvh::ArrayRef<DebugSourceLocation> offsets) {
   assert(validData && "DebugInfoGenerator not valid");
 
-  // The start of the function isn't part of a statement,
-  // so require that statement = 0 for the start debug value.
+                                                         
+                                                             
   assert(start.statement == 0 && "function must start at statement 0");
 
   if (offsets.empty()) {
@@ -541,7 +541,7 @@ uint32_t DebugInfoGenerator::appendSourceLocations(
     }
 
     int32_t adelta = delta(next.address, previous->address);
-    // ldelta needs 64 bits because we will use it to encode an extra bit.
+                                                                          
     int64_t ldelta = delta(next.line, previous->line);
     int32_t cdelta = delta(next.column, previous->column);
     int32_t sdelta = delta(next.statement, previous->statement);
@@ -576,13 +576,13 @@ DebugInfoGenerator::DebugInfoGenerator(UniquingFilenameTable &&filenameTable)
       scopeDescData_.size() == kMostCommonEntryOffset &&
       "Scope desc data should initially be kMostCommonEntryOffset");
 
-  // Initialize the empty data entry in debug lexical table.
-  // Initialize the empty data entry in debug lexical table.
-  appendSignedLEB128(scopeDescData_, -1); // parent function
-  appendSignedLEB128(scopeDescData_, 0); // flags
-  appendSignedLEB128(scopeDescData_, 0); // name count
+                                                            
+                                                            
+  appendSignedLEB128(scopeDescData_, -1);                   
+  appendSignedLEB128(scopeDescData_, 0);         
+  appendSignedLEB128(scopeDescData_, 0);              
 
-  // Textified callee table.
+                            
   appendSignedLEB128(textifiedCallees_, 0);
 }
 
@@ -637,7 +637,7 @@ DebugInfo DebugInfoGenerator::serializeWithMove() {
   combinedData.insert(
       combinedData.end(), textifiedCallees_.begin(), textifiedCallees_.end());
 
-  // Append the string table data.
+                                  
   uint32_t stringTableStart = combinedData.size();
   combinedData.insert(
       combinedData.end(), stringTable_.begin(), stringTable_.end());

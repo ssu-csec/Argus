@@ -45,6 +45,6 @@ class PageAccessTracker {
   }
 };
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_VM_INSTRUMENTATION_PAGEACCESSTRACKERWINDOWS_H
+#endif                                                        

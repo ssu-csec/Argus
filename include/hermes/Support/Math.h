@@ -12,12 +12,12 @@
 
 namespace hermes {
 
-/// ES9.0 12.6.4
-/// Perform the exponentiation operation on doubles required by the JS spec.
+                
+                                                                            
 inline double expOp(double x, double y) {
   constexpr double nan = std::numeric_limits<double>::quiet_NaN();
 
-  // Handle special cases that std::pow handles differently.
+                                                            
   if (std::isnan(y)) {
     return nan;
   } else if (y == 0) {
@@ -26,10 +26,10 @@ inline double expOp(double x, double y) {
     return nan;
   }
 
-  // std::pow handles the other edge cases as the ES9.0 spec requires.
+                                                                      
   return std::pow(x, y);
 }
 
-} // namespace hermes
+}                    
 
 #endif

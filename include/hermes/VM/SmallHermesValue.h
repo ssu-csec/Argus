@@ -28,15 +28,15 @@ class StringPrimitive;
 class GCCell;
 class Runtime;
 
-/// If compressed pointers are allowed, then we should also compress
-/// HermesValues. This means that when compressed pointers are allowed,
-/// SmallHermesValue will almost always be 32 bits, except with MallocGC, which
-/// does not support compressed pointers. Depending on the compressed pointers
-/// flag, SmallHermesValue will alias SmallHermesValueAdaptor or HermesValue32.
+                                                                    
+                                                                       
+                                                                               
+                                                                              
+                                                                               
 
 #ifndef HERMESVM_ALLOW_COMPRESSED_POINTERS
-/// An adaptor class that provides the API of a SmallHermesValue is internally
-/// just a HermesValue.
+                                                                              
+                       
 class SmallHermesValueAdaptor : protected HermesValue {
   constexpr explicit SmallHermesValueAdaptor(HermesValue hv)
       : HermesValue(hv) {}
@@ -46,7 +46,7 @@ class SmallHermesValueAdaptor : protected HermesValue {
   SmallHermesValueAdaptor(const SmallHermesValueAdaptor &) = default;
 
 #ifdef _MSC_VER
-  // This is a workaround to ensure is_trivial is true in MSVC.
+                                                               
   SmallHermesValueAdaptor(SmallHermesValueAdaptor &&) = default;
   SmallHermesValueAdaptor &operator=(const SmallHermesValueAdaptor &hv) =
       default;
@@ -173,29 +173,29 @@ class SmallHermesValueAdaptor : protected HermesValue {
 };
 using SmallHermesValue = SmallHermesValueAdaptor;
 
-#else // #ifndef HERMESVM_ALLOW_COMPRESSED_POINTERS
+#else                                              
 
-/// A compressed HermesValue that is always equal to the size of a
-/// CompressedPointer. It uses the least significant bits (guaranteed to be zero
-/// by the heap alignment) as a tag to determine what the type of the remaining
-/// bits is. Some types may use an additional tag bit to form an "extended tag".
-/// Doubles have to be boxed on the heap so that they can then be held as
-/// pointers. Native values are not supported.
+                                                                  
+                                                                                
+                                                                               
+                                                                                
+                                                                         
+                                              
 class HermesValue32 {
   using RawType = CompressedPointer::RawType;
   using SmiType = std::make_signed<RawType>::type;
 
   static constexpr size_t kNumTagBits = LogHeapAlign;
   static constexpr size_t kNumValueBits = 8 * sizeof(RawType) - kNumTagBits;
-  /// To match the behaviour of a double, SMI precision cannot exceed 53 bits +
-  /// a sign bit. This is only relevant when compressed pointers are allowed but
-  /// turned off on a 64-bit platform (e.g. with MallocGC) since we would end up
-  /// using HermesValue32, but RawType would be 64 bits.
+                                                                               
+                                                                                
+                                                                                
+                                                        
   static constexpr size_t kNumSmiBits =
       std::min(kNumValueBits, static_cast<size_t>(54));
 
-  /// A 3 bit tag describing the stored value. Tags that represent multiple
-  /// types are distinguished using an additional bit found in the "ETag".
+                                                                           
+                                                                          
   enum class Tag : uint8_t {
     Object,
     BigInt,
@@ -220,9 +220,9 @@ class HermesValue32 {
   static constexpr size_t kNumETagBits = kNumTagBits + 1;
   static constexpr size_t kNumETagValueBits = kNumValueBits - 1;
 
-  /// Define an "extended tag", occupying one extra bit. For types that use all
-  /// kNumValueBits bits, duplicate the enum value for both possible values of
-  /// the extra bit.
+                                                                               
+                                                                              
+                    
   static constexpr uint8_t kETagOffset = 1 << kNumTagBits;
   enum class ETag : uint8_t {
     Object1 = static_cast<uint8_t>(Tag::Object),
@@ -248,9 +248,9 @@ class HermesValue32 {
   static constexpr HermesValue32 fromRaw(RawType raw) {
     return HermesValue32(raw);
   }
-  /// Helper function to encode a non-pointer value with a given tag.
+                                                                     
   static constexpr HermesValue32 fromTagAndValue(Tag tag, RawType value) {
-    // Only a small integer can have its top bits set (if it's negative).
+                                                                         
     assert(
         (llvh::isUInt<kNumValueBits>(value) || tag == Tag::SmallInt) &&
         "Value out of range.");
@@ -292,7 +292,7 @@ class HermesValue32 {
         raw_ & llvh::maskTrailingOnes<RawType>(kNumETagBits));
   }
 
-  /// Assert that the pointer can be encoded.
+                                             
   static void validatePointer(RawType rawPtr) {
     assert(llvh::countTrailingZeros(rawPtr) >= 3 && "Pointer low bits are set");
   }
@@ -315,10 +315,10 @@ class HermesValue32 {
     return d;
   }
 
-  /// Truncate \p d to an integer that fits in kNumSmiBits.
+                                                           
   static SmiType doubleToSmi(double d) {
-    // Use a generic lambda here so the inactive case of the if constexpr does
-    // not need to compile.
+                                                                              
+                           
     return [](auto d) {
       if constexpr (kNumSmiBits <= 32)
         return llvh::SignExtend32<kNumSmiBits>(truncateDouble(d));
@@ -332,7 +332,7 @@ class HermesValue32 {
   HermesValue32(const HermesValue32 &) = default;
 
 #ifdef _MSC_VER
-  // This is a workaround to ensure is_trivial is true in MSVC.
+                                                               
   HermesValue32(HermesValue32 &&) = default;
   HermesValue32 &operator=(const HermesValue32 &hv) = default;
 #else
@@ -371,24 +371,24 @@ class HermesValue32 {
     return getETag() == ETag::Bool;
   }
 
-  /// Convert this to a full HermesValue, but do not unbox a BoxedDouble.
-  /// This is only intended for diagnostics or for code reuse in the GC.
+                                                                         
+                                                                        
   inline HermesValue toHV(PointerBase &pb) const;
 
-  /// Convert this to a full HermesValue, and unbox it if it is currently boxed.
-  /// This is more commonly useful, and is essentially the reverse process of
-  /// encodeHermesValue.
+                                                                                
+                                                                             
+                        
   inline HermesValue unboxToHV(PointerBase &pb) const;
 
-  /// Methods to access pointer values.
+                                       
   GCCell *getPointer(PointerBase &pb) const {
     assert(isPointer());
     return getPointer().getNonNull(pb);
   }
   GCCell *getObject(PointerBase &pb) const {
     assert(isObject());
-    // Since object pointers are the most common type, we have them as the
-    // zero-tag and can decode them without needing to remove the tag.
+                                                                          
+                                                                      
     static_assert(
         static_cast<uint8_t>(Tag::Object) == 0,
         "Object tag must be zero for fast path.");
@@ -427,17 +427,17 @@ class HermesValue32 {
     return encodePointerImpl(ptr, getTag());
   }
 
-  /// Convert a normal HermesValue to a HermesValue32. If \p hv is a pointer,
-  /// this function is guaranteed to not allocate. This is important since an
-  /// allocation may invalidate the pointer. For non-pointer values, always
-  /// treat this function as though it may allocate.
+                                                                             
+                                                                             
+                                                                           
+                                                    
   inline static HermesValue32 encodeHermesValue(
       HermesValue hv,
       Runtime &runtime);
 
-  /// Encode a double as a HermesValue32. Small integer values will be stored
-  /// inline and doubles will be allocated on the heap. Always treat this
-  /// function as though it may allocate.
+                                                                             
+                                                                         
+                                         
   inline static HermesValue32 encodeNumberValue(double d, Runtime &runtime);
 
   inline static HermesValue32 encodeObjectValue(GCCell *ptr, PointerBase &pb);
@@ -474,17 +474,17 @@ class HermesValue32 {
   }
 
  protected:
-  /// Performs an assignment without a barrier, in cases where the RHS
-  /// value may contain an object pointer.  WARNING: this is very
-  /// dangerous, and should be avoided whenever possible.  Exposed here
-  /// for use by subtypes.
+                                                                      
+                                                                 
+                                                                       
+                          
   inline void setNoBarrier(HermesValue32 other) {
     raw_ = other.raw_;
   }
 };
 using SmallHermesValue = HermesValue32;
 
-#endif // #ifndef HERMESVM_ALLOW_COMPRESSED_POINTERS
+#endif                                              
 
 static_assert(
     std::is_trivial<SmallHermesValue>::value,
@@ -492,7 +492,7 @@ static_assert(
 
 using GCSmallHermesValue = GCHermesValueBase<SmallHermesValue>;
 
-} // end namespace vm
-} // end namespace hermes
+}                    
+}                        
 
-#endif // HERMES_VM_HERMESVALUE_H
+#endif                           

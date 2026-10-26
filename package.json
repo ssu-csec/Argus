@@ -1,0 +1,12 @@
+{
+  "name": "argus-analysis-support",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@babel/helper-string-parser": "7.27.1",
+    "@babel/helper-validator-identifier": "7.28.5",
+    "@babel/types": "7.28.5",
+    "@babel/parser": "7.28.5",
+    "@babel/traverse": "7.28.5"
+  }
+}

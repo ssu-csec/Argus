@@ -13,14 +13,14 @@ namespace hbc {
 
 enum class DisassemblyOptions : uint32_t {
   None = 0,
-  // Output in pretty mode. See PrettyDisassembleVisitor for what
-  // pretty mode does.
+                                                                 
+                      
   Pretty = 1,
-  IncludeSource = 2, // Include source lines in disassembly output.
-  IncludeVirtualOffsets = 4, // Include virtual offsets in disassembly output.
+  IncludeSource = 2,                                               
+  IncludeVirtualOffsets = 4,                                                  
   IncludeFunctionIds = 8,
-  Objdump = 16, // Output in objdump mode.
-  IncludeOpCodeList = 32, // In objdump mode, also list all opcodes.
+  Objdump = 16,                           
+  IncludeOpCodeList = 32,                                           
 };
 
 inline constexpr DisassemblyOptions operator|(
@@ -37,7 +37,7 @@ inline constexpr DisassemblyOptions operator&(
       static_cast<uint32_t>(x) & static_cast<uint32_t>(y));
 }
 
-} // namespace hbc
-} // namespace hermes
+}                 
+}                    
 
-#endif // DISASSEMBLYOPTIONS
+#endif                      

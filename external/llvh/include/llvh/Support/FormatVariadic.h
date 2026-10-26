@@ -64,13 +64,13 @@ struct ReplacementItem {
 
 class formatv_object_base {
 protected:
-  // The parameters are stored in a std::tuple, which does not provide runtime
-  // indexing capabilities.  In order to enable runtime indexing, we use this
-  // structure to put the parameters into a std::vector.  Since the parameters
-  // are not all the same type, we use some type-erasure by wrapping the
-  // parameters in a template class that derives from a non-template superclass.
-  // Essentially, we are converting a std::tuple<Derived<Ts...>> to a
-  // std::vector<Base*>.
+                                                                              
+                                                                             
+                                                                              
+                                                                        
+                                                                                
+                                                                     
+                        
   struct create_adapters {
     template <typename... Ts>
     std::vector<detail::format_adapter *> operator()(Ts &... Items) {
@@ -98,7 +98,7 @@ public:
 
   formatv_object_base(formatv_object_base &&rhs)
       : Fmt(std::move(rhs.Fmt)),
-        Adapters(), // Adapters are initialized by formatv_object
+        Adapters(),                                              
         Replacements(std::move(rhs.Replacements)) {
     Adapters.reserve(rhs.Adapters.size());
   };
@@ -147,9 +147,9 @@ public:
 };
 
 template <typename Tuple> class formatv_object : public formatv_object_base {
-  // Storage for the parameter adapters.  Since the base class erases the type
-  // of the parameters, we have to own the storage for the parameters here, and
-  // have the base class store type-erased pointers into this tuple.
+                                                                              
+                                                                               
+                                                                    
   Tuple Parameters;
 
 public:
@@ -168,88 +168,88 @@ public:
   }
 };
 
-// Format text given a format string and replacement parameters.
-//
-// ===General Description===
-//
-// Formats textual output.  `Fmt` is a string consisting of one or more
-// replacement sequences with the following grammar:
-//
-// rep_field ::= "{" [index] ["," layout] [":" format] "}"
-// index     ::= <non-negative integer>
-// layout    ::= [[[char]loc]width]
-// format    ::= <any string not containing "{" or "}">
-// char      ::= <any character except "{" or "}">
-// loc       ::= "-" | "=" | "+"
-// width     ::= <positive integer>
-//
-// index   - A non-negative integer specifying the index of the item in the
-//           parameter pack to print.  Any other value is invalid.
-// layout  - A string controlling how the field is laid out within the available
-//           space.
-// format  - A type-dependent string used to provide additional options to
-//           the formatting operation.  Refer to the documentation of the
-//           various individual format providers for per-type options.
-// char    - The padding character.  Defaults to ' ' (space).  Only valid if
-//           `loc` is also specified.
-// loc     - Where to print the formatted text within the field.  Only valid if
-//           `width` is also specified.
-//           '-' : The field is left aligned within the available space.
-//           '=' : The field is centered within the available space.
-//           '+' : The field is right aligned within the available space (this
-//                 is the default).
-// width   - The width of the field within which to print the formatted text.
-//           If this is less than the required length then the `char` and `loc`
-//           fields are ignored, and the field is printed with no leading or
-//           trailing padding.  If this is greater than the required length,
-//           then the text is output according to the value of `loc`, and padded
-//           as appropriate on the left and/or right by `char`.
-//
-// ===Special Characters===
-//
-// The characters '{' and '}' are reserved and cannot appear anywhere within a
-// replacement sequence.  Outside of a replacement sequence, in order to print
-// a literal '{' or '}' it must be doubled -- "{{" to print a literal '{' and
-// "}}" to print a literal '}'.
-//
-// ===Parameter Indexing===
-// `index` specifies the index of the parameter in the parameter pack to format
-// into the output.  Note that it is possible to refer to the same parameter
-// index multiple times in a given format string.  This makes it possible to
-// output the same value multiple times without passing it multiple times to the
-// function. For example:
-//
-//   formatv("{0} {1} {0}", "a", "bb")
-//
-// would yield the string "abba".  This can be convenient when it is expensive
-// to compute the value of the parameter, and you would otherwise have had to
-// save it to a temporary.
-//
-// ===Formatter Search===
-//
-// For a given parameter of type T, the following steps are executed in order
-// until a match is found:
-//
-//   1. If the parameter is of class type, and inherits from format_adapter,
-//      Then format() is invoked on it to produce the formatted output.  The
-//      implementation should write the formatted text into `Stream`.
-//   2. If there is a suitable template specialization of format_provider<>
-//      for type T containing a method whose signature is:
-//      void format(const T &Obj, raw_ostream &Stream, StringRef Options)
-//      Then this method is invoked as described in Step 1.
-//   3. If an appropriate operator<< for raw_ostream exists, it will be used.
-//      For this to work, (raw_ostream& << const T&) must return raw_ostream&.
-//
-// If a match cannot be found through either of the above methods, a compiler
-// error is generated.
-//
-// ===Invalid Format String Handling===
-//
-// In the case of a format string which does not match the grammar described
-// above, the output is undefined.  With asserts enabled, LLVM will trigger an
-// assertion.  Otherwise, it will try to do something reasonable, but in general
-// the details of what that is are undefined.
-//
+                                                                
+  
+                            
+  
+                                                                       
+                                                    
+  
+                                                          
+                                       
+                                   
+                                                       
+                                                  
+                                
+                                   
+  
+                                                                           
+                                                                  
+                                                                                
+                   
+                                                                          
+                                                                         
+                                                                      
+                                                                            
+                                     
+                                                                               
+                                       
+                                                                        
+                                                                    
+                                                                              
+                                   
+                                                                             
+                                                                               
+                                                                            
+                                                                            
+                                                                                
+                                                               
+  
+                           
+  
+                                                                              
+                                                                              
+                                                                             
+                               
+  
+                           
+                                                                               
+                                                                            
+                                                                            
+                                                                                
+                         
+  
+                                      
+  
+                                                                              
+                                                                             
+                          
+  
+                         
+  
+                                                                             
+                          
+  
+                                                                            
+                                                                            
+                                                                     
+                                                                           
+                                                          
+                                                                         
+                                                           
+                                                                             
+                                                                              
+  
+                                                                             
+                      
+  
+                                       
+  
+                                                                            
+                                                                              
+                                                                                
+                                             
+  
 template <typename... Ts>
 inline auto formatv(const char *Fmt, Ts &&... Vals) -> formatv_object<decltype(
     std::make_tuple(detail::build_format_adapter(std::forward<Ts>(Vals))...))> {
@@ -260,6 +260,6 @@ inline auto formatv(const char *Fmt, Ts &&... Vals) -> formatv_object<decltype(
       std::make_tuple(detail::build_format_adapter(std::forward<Ts>(Vals))...));
 }
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_SUPPORT_FORMATVARIADIC_H
+#endif                                 

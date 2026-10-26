@@ -23,7 +23,7 @@
 
 namespace llvh {
 
-  /// StringSet - A wrapper for StringMap that provides set-like functionality.
+                                                                               
   template <class AllocatorTy = MallocAllocator>
   class StringSet : public StringMap<char, AllocatorTy> {
     using base = StringMap<char, AllocatorTy>;
@@ -47,6 +47,6 @@ namespace llvh {
     }
   };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_ADT_STRINGSET_H
+#endif                        

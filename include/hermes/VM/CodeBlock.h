@@ -34,46 +34,46 @@ namespace vm {
 class RuntimeModule;
 class CodeBlock;
 
-/// A sequence of instructions representing the body of a function.
+                                                                   
 class CodeBlock final
     : private llvh::TrailingObjects<CodeBlock, PropertyCacheEntry> {
   friend TrailingObjects;
-  /// Points to the runtime module with the information required for this code
-  /// block.
+                                                                              
+            
   RuntimeModule *const runtimeModule_;
 
-  /// Pointer to the function header.
+                                     
   hbc::RuntimeFunctionHeader functionHeader_;
 
-  /// Pointer to the bytecode opcodes.
+                                      
   const uint8_t *bytecode_;
 
-  /// ID of this function in the module's function list.
+                                                        
   uint32_t functionID_;
 
 #ifdef HERMES_ENABLE_DEBUGGER
-  /// The number of breakpoints currently installed in this function.
+                                                                     
   uint32_t numInstalledBreakpoints_ = 0;
 #endif
 
-  /// Total size of the property cache.
+                                       
   const uint32_t propertyCacheSize_;
 
-  /// Offset of the write property cache, which occurs after the read property
-  /// cache.
+                                                                              
+            
   const uint32_t writePropCacheOffset_;
 
 #ifndef HERMESVM_LEAN
-  /// Compiles a lazy CodeBlock. Intended to be called from lazyCompile.
+                                                                        
   ExecutionStatus lazyCompileImpl(Runtime &runtime);
 #endif
 
-  /// Helper function for getting start and end locations.
-  /// Given an SMLoc, returns the source coordinates of it in the lazy function.
-  /// \param start if true, return the start coordinates, else end coordinates.
+                                                          
+                                                                                
+                                                                               
   SourceErrorManager::SourceCoords getLazyFunctionLoc(bool start) const;
 
-  /// \return the base pointer of the property cache.
+                                                     
   PropertyCacheEntry *propertyCache() {
     return getTrailingObjects<PropertyCacheEntry>();
   }
@@ -100,15 +100,15 @@ class CodeBlock final
 
  public:
 #if defined(HERMESVM_PROFILER_JSFUNCTION)
-  /// ID written/read by JS function profiler on first/later function events.
+                                                                             
   ProfilerID profilerID{NO_PROFILER_ID};
 #endif
 
-  /// Create a CodeBlock for a given runtime module \p runtimeModule. The result
-  /// must be deallocated via delete, which is overridden.
-  /// TODO: it would be nice to have this return a unique_ptr with a custom
-  /// deleter; however lazy compilation requires that multiple RuntimeModules
-  /// reference the same CodeBlock, so it is not yet possible.
+                                                                                
+                                                          
+                                                                           
+                                                                             
+                                                              
   static CodeBlock *create(
       RuntimeModule *runtimeModule,
       hbc::RuntimeFunctionHeader header,
@@ -127,8 +127,8 @@ class CodeBlock final
         writePropCacheOffset);
   }
 
-  /// Override of delete that balances the memory allocated in our create()
-  /// function. Note the destructor has run already.
+                                                                           
+                                                    
   static void operator delete(void *cb) {
     free(cb);
   }
@@ -148,14 +148,14 @@ class CodeBlock final
     return functionID_;
   }
 
-  /// Given the offset of the instruction where exception happened,
-  /// \returns the offset of the exception handler to jump to.
-  /// \returns -1 if a handler is not found.
+                                                                   
+                                                              
+                                            
   int32_t findCatchTargetOffset(uint32_t exceptionOffset);
 
-  /// \return the offset of the function in a virtual bytecode stream, in which
-  /// each function emits its bytecode in order. This is used for error
-  /// backtraces when debug info is not present.
+                                                                               
+                                                                       
+                                                
   uint32_t getVirtualOffset() const;
 
   SerializedLiteralParser getArrayBufferIter(
@@ -184,8 +184,8 @@ class CodeBlock final
 
   SymbolID getNameMayAllocate() const;
 
-  /// \return The name of this code block, as a UTF-8 encoded string.
-  /// Does no JS heap allocation.
+                                                                     
+                                 
   std::string getNameString(GCBase::GCCallbacks &runtime) const;
 
   const_iterator begin() const {
@@ -198,7 +198,7 @@ class CodeBlock final
     return {bytecode_, functionHeader_.bytecodeSizeInBytes()};
   }
 
-  /// \return true when \p inst is in this code block, false otherwise.
+                                                                       
   bool contains(const inst::Inst *inst) const {
     return begin() <= reinterpret_cast<const uint8_t *>(inst) &&
         reinterpret_cast<const uint8_t *>(inst) < end();
@@ -206,13 +206,13 @@ class CodeBlock final
 
   OptValue<uint32_t> getDebugSourceLocationsOffset() const;
 
-  /// \return the source location of the given instruction offset \p offset in
-  /// the code block \p codeBlock.
+                                                                              
+                                  
   OptValue<hbc::DebugSourceLocation> getSourceLocation(
       uint32_t offset = 0) const;
 
-  /// Look up the function source table and \return the String ID associated
-  /// with the current function if an entry is found, or llvh::None if not.
+                                                                            
+                                                                           
   OptValue<uint32_t> getFunctionSourceID() const;
 
   OptValue<uint32_t> getScopeDescDataOffset() const;
@@ -234,13 +234,13 @@ class CodeBlock final
   }
 
 #ifndef HERMESVM_LEAN
-  /// Checks whether this function is lazily compiled.
+                                                      
   bool isLazy() const {
-    // null bytecode_ indicates that this is a lazy code block.
+                                                               
     return !bytecode_;
   }
 
-  /// Compiles this CodeBlock, if it's lazy and not already compiled.
+                                                                     
   ExecutionStatus lazyCompile(Runtime &runtime) {
     if (LLVM_UNLIKELY(isLazy())) {
       return lazyCompileImpl(runtime);
@@ -248,7 +248,7 @@ class CodeBlock final
     return ExecutionStatus::RETURNED;
   }
 #else
-  /// Checks whether this function is lazily compiled.
+                                                      
   bool isLazy() const {
     return false;
   }
@@ -257,12 +257,12 @@ class CodeBlock final
   }
 #endif
 
-  /// Get the start location of this function, if it's lazy.
+                                                            
   SourceErrorManager::SourceCoords getLazyFunctionStartLoc() const {
     return getLazyFunctionLoc(true);
   }
 
-  /// Get the end location of this function, if it's lazy.
+                                                          
   SourceErrorManager::SourceCoords getLazyFunctionEndLoc() const {
     return getLazyFunctionLoc(false);
   }
@@ -279,7 +279,7 @@ class CodeBlock final
     return &propertyCache()[writePropCacheOffset_ + idx];
   }
 
-  // Mark all hidden classes in the property cache as roots.
+                                                            
   void markCachedHiddenClasses(Runtime &runtime, WeakRootAcceptor &acceptor);
 
   static CodeBlock *createCodeBlock(
@@ -288,35 +288,35 @@ class CodeBlock final
       const uint8_t *bytecode,
       uint32_t functionID);
 
-  /// \return an estimate of the size of additional memory used by this
-  /// CodeBlock.
+                                                                       
+                
   size_t additionalMemorySize() const {
     return propertyCacheSize_ * sizeof(PropertyCacheEntry);
   }
 
 #ifdef HERMES_ENABLE_DEBUGGER
-  /// Installs in the debugger instruction into the opcode stream
-  /// at location \p offset.
-  /// Requires that there's a breakpoint registered at \p offset.
-  /// Increments the user count of the associated runtime module.
+                                                                 
+                            
+                                                                 
+                                                                 
   void installBreakpointAtOffset(uint32_t offset);
 
-  /// Uninstalls the debugger instruction from the opcode stream
-  /// at location \p offset, replacing it with \p opCode.
-  /// Requires the opcodes at \p offset is DebuggerInst.
-  /// Requires that a breakpoint has been set at \p offset.
-  /// Decrements the user count of the associated runtime module.
+                                                                
+                                                         
+                                                        
+                                                           
+                                                                 
   void uninstallBreakpointAtOffset(uint32_t offset, uint8_t opCode);
 
-  /// \return the number of breakpoints installed in this code block.
+                                                                     
   uint32_t getNumInstalledBreakpoints() const {
     return numInstalledBreakpoints_;
   }
 #endif
 };
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 #pragma GCC diagnostic pop
 
-#endif // HERMES_VM_CODEBLOCK_H
+#endif                         

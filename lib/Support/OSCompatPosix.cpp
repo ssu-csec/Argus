@@ -23,7 +23,7 @@
 #if !defined(RUSAGE_THREAD)
 #define RUSAGE_THREAD 1
 #endif
-#endif // __linux__
+#endif             
 
 #include <pthread.h>
 #include <sys/types.h>
@@ -32,7 +32,7 @@
 #ifdef __MACH__
 #include <mach/mach.h>
 
-#endif // __MACH__
+#endif            
 
 #ifdef __linux__
 
@@ -47,7 +47,7 @@
 #include <sys/syscall.h>
 #include <time.h>
 
-#endif // __linux__
+#endif             
 
 #if defined(__linux__) || defined(__ANDROID__)
 #include <sys/prctl.h>
@@ -61,7 +61,7 @@
 #ifndef PR_SET_VMA_ANON_NAME
 #define PR_SET_VMA_ANON_NAME 0
 #endif
-#endif // __ANDROID__
+#endif               
 
 #ifdef __APPLE__
 #include <TargetConditionals.h>
@@ -109,7 +109,7 @@ void set_test_vm_allocate_limit(size_t totSz) {
 void unset_test_vm_allocate_limit() {
   totalVMAllocLimit = unsetVMAllocLimit;
 }
-#endif // !NDEBUG
+#endif           
 
 static llvh::ErrorOr<void *>
 vm_mmap(void *addr, size_t sz, int prot, int flags, bool checkDebugLimit) {
@@ -122,11 +122,11 @@ vm_mmap(void *addr, size_t sz, int prot, int flags, bool checkDebugLimit) {
       totalVMAllocLimit -= sz;
     }
   }
-#endif // !NDEBUG
+#endif           
   void *result = mmap(addr, sz, prot, flags, -1, 0);
   if (result == MAP_FAILED) {
-    // Since mmap is a POSIX API, even on MacOS, errno should use the POSIX
-    // generic_category.
+                                                                           
+                        
     return std::error_code(errno, std::generic_category());
   }
   return result;
@@ -154,9 +154,9 @@ vm_mmap_aligned(void *addr, size_t sz, size_t alignment, int prot, int flags) {
   assert(sz > 0 && sz % page_size() == 0);
   assert(alignment > 0 && alignment % page_size() == 0);
 
-  // Allocate a larger section to ensure that it contains  a subsection that
-  // satisfies the request. Use *real* page size here since that's what vm_mmap
-  // guarantees.
+                                                                            
+                                                                               
+                
   const size_t excessSize = sz + alignment - page_size_real();
   auto result = vm_mmap(addr, excessSize, prot, flags, true);
   if (!result)
@@ -184,7 +184,7 @@ llvh::ErrorOr<void *> vm_allocate(size_t sz, void *hint) {
   if (testPgSz != 0 && testPgSz > static_cast<size_t>(page_size_real())) {
     return vm_allocate_aligned(sz, testPgSz);
   }
-#endif // !NDEBUG
+#endif           
   return vm_mmap(hint, sz, kVMAllocateProt, kVMAllocateFlags, true);
 }
 
@@ -192,14 +192,14 @@ llvh::ErrorOr<void *>
 vm_allocate_aligned(size_t sz, size_t alignment, void *hint) {
   assert(sz > 0 && sz % page_size() == 0);
   assert(alignment > 0 && alignment % page_size() == 0);
-  // While not specifically required for the posix implementation, check the
-  // alignment requirement here to avoid creating bugs on other platforms.
+                                                                            
+                                                                          
   assert(llvh::isPowerOf2_64(alignment));
 
-  // Opportunistically allocate without alignment constraint,
-  // and see if the memory happens to be aligned.
-  // While this may be unlikely on the first allocation request,
-  // subsequent allocation requests have a good chance.
+                                                             
+                                                 
+                                                                
+                                                       
   auto result = vm_mmap(hint, sz, kVMAllocateProt, kVMAllocateFlags, true);
   if (!result) {
     return result;
@@ -209,7 +209,7 @@ vm_allocate_aligned(size_t sz, size_t alignment, void *hint) {
     return mem;
   }
 
-  // Free the opportunistic allocation.
+                                       
   vm_munmap(mem, sz);
 
   return vm_mmap_aligned(
@@ -253,7 +253,7 @@ void vm_hugepage(void *p, size_t sz) {
       "Precondition: pointer is page-aligned.");
 
 #if defined(__linux__) || defined(__ANDROID__)
-  // Since the alloc is aligned, it may benefit from huge pages.
+                                                                
   madvise(p, sz, MADV_HUGEPAGE);
 #endif
 }
@@ -266,23 +266,23 @@ void vm_unused(void *p, size_t sz) {
       "Precondition: pointer is page-aligned.");
 #endif
 
-/// Change the flag we pass to \p madvise based on the platform, so that we are
-/// always acting to reduce memory pressure, as perceived by that platform.
+                                                                               
+                                                                           
 #if defined(__MACH__)
 
-/// On the mach kernel, \p MADV_FREE causes the OS to deduct this memory from
-/// the process's physical footprint.
+                                                                             
+                                     
 #define MADV_UNUSED MADV_FREE
 
 #elif defined(__linux__)
 
-/// On linux, telling the OS that we \p MADV_DONTNEED some pages will cause it
-/// to immediately deduct their size from the process's resident set.
+                                                                              
+                                                                     
 #define MADV_UNUSED MADV_DONTNEED
 
 #else
 #error "Don't know how to return memory to the OS on this platform."
-#endif // __MACH__, __linux__
+#endif                       
 
   madvise(p, sz, MADV_UNUSED);
 
@@ -303,7 +303,7 @@ void vm_name(void *p, size_t sz, const char *name) {
   (void)p;
   (void)sz;
   (void)name;
-#endif // __ANDROID__
+#endif               
 }
 
 bool vm_protect(void *p, size_t sz, ProtectMode mode) {
@@ -350,9 +350,9 @@ llvh::ErrorOr<size_t> vm_footprint(char *start, char *end) {
       &vAddr,
       &vSz,
       VM_REGION_EXTENDED_INFO,
-      // The expected contents, and requisite size of this struct depend on the
-      // previous and next parameters to this function respectively. We cast it
-      // to a "generic" info type to indicate this.
+                                                                               
+                                                                               
+                                                   
       reinterpret_cast<vm_region_info_t>(&info),
       &fields,
       &unused);
@@ -373,28 +373,28 @@ llvh::ErrorOr<size_t> vm_footprint(char *start, char *end) {
     std::string firstToken;
     smaps >> firstToken;
 
-    // Ignore the rest of the line.
+                                   
     smaps.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
     if (firstToken.find_last_of(':') != std::string::npos) {
-      // We are inside an entry, rather than at the start of one, so we should
-      // ignore this line.
+                                                                              
+                          
       continue;
     }
 
-    // The first token should be the mapping's virtual address range if this is
-    // the first line of a mapping's entry, so we extract it.
+                                                                               
+                                                             
     std::stringstream ris(firstToken);
     uintptr_t mStart, mEnd;
     ris >> std::hex >> mStart;
-    // Ignore '-'
+                 
     ris.ignore();
     ris >> mEnd;
 
-    // The working assumption is that the kernel will not split a single memory
-    // region allocated by \p mmap across multiple entries in the smaps output.
+                                                                               
+                                                                               
     if (mStart <= rStart && rEnd <= mEnd) {
-      // Found the start of the section pertaining to our memory map
+                                                                    
       break;
     }
   }
@@ -408,7 +408,7 @@ llvh::ErrorOr<size_t> vm_footprint(char *start, char *end) {
     }
 
     std::stringstream lis(line);
-    lis.ignore(line.length(), ' '); // Pop the label
+    lis.ignore(line.length(), ' ');                 
 
     size_t rss;
     std::string unit;
@@ -425,13 +425,13 @@ llvh::ErrorOr<size_t> vm_footprint(char *start, char *end) {
 int pages_in_ram(const void *p, size_t sz, llvh::SmallVectorImpl<int> *runs) {
   const auto PS = page_size();
   {
-    // Align region start down to page boundary.
+                                                
     const uintptr_t addr = reinterpret_cast<uintptr_t>(p);
     const size_t adjust = addr % PS;
     p = reinterpret_cast<const void *>(addr - adjust);
     sz += adjust;
   }
-  // Total number of pages that the region overlaps.
+                                                    
   const size_t mapSize = (sz + PS - 1) / PS;
 #ifdef __linux__
   using MapElm = unsigned char;
@@ -442,13 +442,13 @@ int pages_in_ram(const void *p, size_t sz, llvh::SmallVectorImpl<int> *runs) {
   if (mincore(const_cast<void *>(p), sz, bitMap.data())) {
     return -1;
   }
-  // Total pages in RAM.
+                        
   int totalIn = 0;
   bool currentRunStatus = true;
   if (runs)
     runs->push_back(0);
   for (auto elm : bitMap) {
-    // Lowest bit tells whether in RAM.
+                                       
     bool thisStatus = (elm & 1);
     totalIn += thisStatus;
     if (runs) {
@@ -464,12 +464,12 @@ int pages_in_ram(const void *p, size_t sz, llvh::SmallVectorImpl<int> *runs) {
 uint64_t peak_rss() {
   rusage ru;
   if (getrusage(RUSAGE_SELF, &ru)) {
-    // failed
+             
     return 0;
   }
   uint64_t rss = ru.ru_maxrss;
 #if !defined(__APPLE__) || !defined(__MACH__)
-  // Linux maxrss is in kilobytes, expand into bytes.
+                                                     
   rss *= 1024;
 #endif
   return rss;
@@ -492,14 +492,14 @@ uint64_t current_rss() {
     return 0;
   }
   long rss = 0;
-  // The first field is total program size, second field is resident set size.
+                                                                              
   if (fscanf(fp, "%*d %ld", &rss) != 1) {
     fclose(fp);
     return 0;
   }
   fclose(fp);
-  // The RSS number from from statm is in number of pages. Multiply by the real
-  // page size to get the number in bytes.
+                                                                               
+                                          
   return rss * page_size_real();
 #endif
 }
@@ -510,7 +510,7 @@ uint64_t current_private_dirty() {
   FILE *fp = fopen("/proc/self/smaps", "r");
   static const char kPrefix[] = "Private_Dirty:";
   constexpr size_t kPrefixLen = sizeof(kPrefix) - 1;
-  char buf[128]; // Just needs to fit the lines we care about.
+  char buf[128];                                              
   while (fgets(buf, sizeof(buf), fp))
     if (strncmp(buf, kPrefix, kPrefixLen) == 0)
       sum += atoll(buf + kPrefixLen);
@@ -523,13 +523,13 @@ uint64_t current_private_dirty() {
 
 #if defined(__linux__)
 static bool overlap(uintptr_t a, size_t asize, uintptr_t b, size_t bsize) {
-  // An empty interval has no overlap.
+                                      
   if (asize == 0 || bsize == 0)
     return false;
-  // Order by start address.
+                            
   if (a > b)
     return overlap(b, bsize, a, asize);
-  // Overlap iff the first interval extends beyond the start of the second.
+                                                                           
   return a + asize > b;
 }
 #endif
@@ -553,7 +553,7 @@ std::vector<std::string> get_vm_protect_modes(const void *p, size_t sz) {
             static_cast<size_t>(end - begin))) {
       modes.push_back(mode);
     }
-    // Discard remainder of the line.
+                                     
     int result;
     do {
       result = fgetc(fp);
@@ -566,14 +566,14 @@ std::vector<std::string> get_vm_protect_modes(const void *p, size_t sz) {
 bool num_context_switches(long &voluntary, long &involuntary) {
   voluntary = involuntary = -1;
   rusage ru;
-  // Only Linux is known to have RUSAGE_THREAD.
+                                               
 #if defined(__linux__)
   const int who = RUSAGE_THREAD;
 #else
   const int who = RUSAGE_SELF;
 #endif
   if (getrusage(who, &ru)) {
-    // failed
+             
     return false;
   }
   voluntary = ru.ru_nvcsw;
@@ -585,7 +585,7 @@ uint64_t process_id() {
   return getpid();
 }
 
-// Platform-specific implementations of global_thread_id
+                                                        
 #if defined(__APPLE__) && defined(__MACH__)
 
 uint64_t global_thread_id() {
@@ -621,10 +621,10 @@ std::pair<const void *, size_t> thread_stack_bounds_impl() {
   void *origin = pthread_get_stackaddr_np(tid);
   rlim_t size = 0;
   if (pthread_main_np()) {
-    // According to
-    // https://opensource.apple.com/source/WTFEmbedded/WTFEmbedded-95.23/wtf/StackBounds.cpp.auto.html
-    // pthread_get_size lies to us when we're the main thread, use get_rlimit
-    // instead
+                   
+                                                                                                      
+                                                                             
+              
     struct rlimit limit;
     getrlimit(RLIMIT_STACK, &limit);
     size = limit.rlim_cur;
@@ -648,44 +648,44 @@ std::pair<const void *, size_t> thread_stack_bounds_impl() {
     hermes_fatal("Unable to obtain native stack bounds");
 
 #ifdef __BIONIC__
-  // It appears that on Android/Bionic, the range returned by
-  // pthread_attr_getstack() includes the stack guard pages. We must remove them
-  // from the bounds.
+                                                             
+                                                                                
+                     
   size_t guardSize;
   if (pthread_attr_getguardsize(&attr, &guardSize)) {
-    // Don't give up in case of error.
+                                      
     guardSize = 0;
   }
   if (guardSize > size)
     guardSize = size;
-  // Exclude the guard pages from the available stack.
+                                                      
   origin = (char *)origin + guardSize;
   size -= guardSize;
 #endif
 
   pthread_attr_destroy(&attr);
 
-  // origin is now the lowest addressable byte.
+                                               
   return {(char *)origin + size, size};
 }
 
 #endif
 
-} // namespace detail
+}                    
 
 void set_thread_name(const char *name) {
-  // Set the thread name for TSAN. It doesn't share the same name mapping as the
-  // OS does. This macro expands to nothing if TSAN isn't on.
+                                                                                
+                                                             
   TsanThreadName(name);
 #if defined(__linux__) || defined(__ANDROID__)
   prctl(PR_SET_NAME, name);
 #elif defined(__APPLE__)
   ::pthread_setname_np(name);
 #endif
-  // Do nothing if the platform doesn't support it.
+                                                   
 }
 
-// Platform-specific implementations of thread_cpu_time
+                                                       
 #if defined(__APPLE__) && defined(__MACH__)
 
 std::chrono::microseconds thread_cpu_time() {
@@ -710,7 +710,7 @@ std::chrono::microseconds thread_cpu_time() {
   return microseconds(total);
 }
 
-#elif defined(__linux__) // !(__APPLE__ && __MACH__)
+#elif defined(__linux__)                            
 
 std::chrono::microseconds thread_cpu_time() {
   using namespace std::chrono;
@@ -727,11 +727,11 @@ std::chrono::microseconds thread_cpu_time() {
   return microseconds(total);
 }
 
-#else // !(__APPLE__ && __MACH__), !__linux__
+#else                                        
 #error "Thread CPU Time not supported on this platform"
-#endif // thread_cpu_time: (__APPLE__ && __MACH__), __linux__
+#endif                                                       
 
-// Platform-specific implementations of thread_page_fault_count
+                                                               
 
 #if defined(__APPLE__) && defined(__MACH__)
 
@@ -747,7 +747,7 @@ bool thread_page_fault_count(int64_t *outMinorFaults, int64_t *outMajorFaults) {
   return kr == KERN_SUCCESS;
 }
 
-#elif defined(__linux__) // !(__APPLE__ && __MACH__)
+#elif defined(__linux__)                            
 
 bool thread_page_fault_count(int64_t *outMinorFaults, int64_t *outMajorFaults) {
   struct rusage stats = {};
@@ -759,9 +759,9 @@ bool thread_page_fault_count(int64_t *outMinorFaults, int64_t *outMajorFaults) {
   return ret == 0;
 }
 
-#else // !(__APPLE__ && __MACH__), !__linux__
+#else                                        
 #error "Thread page fault count not supported on this platform"
-#endif // thread_page_fault_count: (__APPLE__ && __MACH__), __linux__
+#endif                                                               
 
 std::string thread_name() {
   constexpr int kMaxThreadNameSize = 100;
@@ -773,7 +773,7 @@ std::string thread_name() {
   ret = pthread_getname_np(pthread_self(), threadName, sizeof(threadName));
 #endif
   if (ret != 0) {
-    // thread name error should be non-fatal, simply return empty thread name.
+                                                                              
     perror("thread_name failed");
     return "";
   }
@@ -795,7 +795,7 @@ std::vector<bool> sched_getaffinity() {
     if (v.back())
       lastSet = cpu;
   }
-  // Trim trailing zeroes.
+                          
   v.resize(lastSet + 1);
   return v;
 }
@@ -805,19 +805,19 @@ int sched_getcpu() {
 }
 #else
 std::vector<bool> sched_getaffinity() {
-  // Not yet supported.
+                       
   return std::vector<bool>();
 }
 
 int sched_getcpu() {
-  // Not yet supported.
+                       
   return -1;
 }
 #endif
 
 uint64_t cpu_cycle_counter() {
 #if defined(__aarch64__)
-  // Clang's builtin causes SIGILL on some 64-bit ARM environments.
+                                                                   
   uint64_t cnt;
   __asm __volatile("mrs %0, cntvct_el0" : "=&r"(cnt));
   return cnt;
@@ -831,7 +831,7 @@ uint64_t cpu_cycle_counter() {
 }
 
 bool set_env(const char *name, const char *value) {
-  // Enforce the contract of this function that value must not be empty
+                                                                       
   assert(*value != '\0' && "value cannot be empty string");
   return setenv(name, value, 1) == 0;
 }
@@ -840,7 +840,7 @@ bool unset_env(const char *name) {
   return unsetenv(name) == 0;
 }
 
-/*static*/
+          
 void *SigAltStackLeakSuppressor::stackRoot_{nullptr};
 
 SigAltStackLeakSuppressor::~SigAltStackLeakSuppressor() {
@@ -852,7 +852,7 @@ SigAltStackLeakSuppressor::~SigAltStackLeakSuppressor() {
 #endif
 }
 
-} // namespace oscompat
-} // namespace hermes
+}                      
+}                    
 
-#endif // not _WINDOWS
+#endif                

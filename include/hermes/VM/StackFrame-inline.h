@@ -38,7 +38,7 @@ StackFramePtrT<isConst>::getCalleeCodeBlock(Runtime &runtime) const {
   }
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMES_VM_STACKFRAME_INLINE_H
+#endif                                 

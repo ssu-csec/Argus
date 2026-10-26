@@ -11,8 +11,8 @@
 #include "llvh/ADT/DenseMap.h"
 #include "llvh/Support/Allocator.h"
 
-// hermes::ScopedHashTable is a drop-in replacement for llvh::ScopedHashTable,
-// but will allow us to export the current values in scope.
+                                                                              
+                                                           
 
 namespace hermes {
 template <typename K, typename V>
@@ -35,11 +35,11 @@ template <typename K, typename V>
 class ScopedHashTableScope {
  private:
   uint32_t depth_;
-  /// Start of the linked list of nodes in this scope. Owned by ScopedHashTable.
+                                                                                
   ScopedHashTableNode<K, V> *head_{nullptr};
-  /// The scope we're shadowing. Owned by the user.
+                                                   
   ScopedHashTableScope<K, V> *previous_;
-  /// The table we're creating a scope for.
+                                           
   ScopedHashTable<K, V> &base_;
 
  public:
@@ -57,13 +57,13 @@ class ScopedHashTableScope {
 template <typename K, typename V>
 class ScopedHashTable {
  private:
-  /// Maps from keys to most current definition. All Nodes are owned by this.
-  /// They are allocated by insertIntoScope and deleted by clearCurrentScope
+                                                                             
+                                                                            
   llvh::DenseMap<K, ScopedHashTableNode<K, V> *> map_;
-  // The current scope. Owned by the user.
+                                          
   ScopedHashTableScope<K, V> *scope_{nullptr};
 
-  /// Unlinks the innermost Node for a key and returns it.
+                                                          
   ScopedHashTableNode<K, V> *pop(const K &key) {
     ScopedHashTableNode<K, V> *&entry = map_[key];
     assert(entry && "Asked to pop an empty scope value");
@@ -79,7 +79,7 @@ class ScopedHashTable {
     return ret;
   }
 
-  /// Unlinks and deallocates all keys in the current scope.
+                                                            
   void clearCurrentScope() {
     assert(scope_ && "No current scope to clear");
 
@@ -89,19 +89,19 @@ class ScopedHashTable {
       auto *popped = pop(current->key_);
       assert(current == popped && "Unexpected innermost value for key");
       current = current->nextInScope_;
-      // All nodes deallocated here.
+                                    
       delete popped;
     }
     scope_->head_ = nullptr;
   }
 
-  /// Create a new node and insert it into the current scope.
+                                                             
   void insertNewNode(
       ScopedHashTableScope<K, V> *const scope,
       const K &key,
       const V &value,
       ScopedHashTableNode<K, V> *&entry) {
-    // All Nodes allocated here.
+                                
     auto *update = new ScopedHashTableNode<K, V>(scope->depth_, key, value);
     assert(
         (!entry || entry->depth_ <= scope->depth_) &&
@@ -119,8 +119,8 @@ class ScopedHashTable {
     assert(!map_.size() && "Elements remaining in map without scope!");
   }
 
-  /// Inserts a new key into the given scope. A key may not be inserted
-  /// such that it would be shadowed by another scope currently in effect.
+                                                                       
+                                                                          
   void insertIntoScope(
       ScopedHashTableScope<K, V> *const scope,
       const K &key,
@@ -129,31 +129,31 @@ class ScopedHashTable {
     insertNewNode(scope, key, value, map_[key]);
   }
 
-  /// Inserts a value into the current scope.
+                                             
   void insert(const K &key, const V &value) {
     insertIntoScope(scope_, key, value);
   }
 
-  /// If the key exists in the current scope, update its value to the specified
-  /// one. Otherwise, create a new entry in current scope.
+                                                                               
+                                                          
   void setInCurrentScope(const K &key, const V &value) {
     assert(scope_ && "No currently defined scope");
     ScopedHashTableNode<K, V> *&entry = map_[key];
     if (entry && entry->depth_ == scope_->depth_) {
-      // If the key exists in the current scope, update the value.
+                                                                  
       entry->value_ = value;
     } else {
-      // Otherwise, create a new node in the current scope.
+                                                           
       insertNewNode(scope_, key, value, entry);
     }
   }
 
-  /// Returns 1 if the value is defined, 0 if it's not.
+                                                       
   uint32_t count(const K &key) const {
     return map_.count(key);
   }
 
-  /// Gets the innermost value for a key, or default value if none.
+                                                                   
   V lookup(const K &key) const {
     auto result = map_.find(key);
     if (result == map_.end())
@@ -162,7 +162,7 @@ class ScopedHashTable {
     return result->second->value_;
   }
 
-  // Gets all values currently in scope.
+                                        
   std::unique_ptr<llvh::DenseMap<K, V>> flatten() const {
     std::unique_ptr<llvh::DenseMap<K, V>> result{
         new llvh::DenseMap<K, V>(map_.size())};
@@ -173,8 +173,8 @@ class ScopedHashTable {
     return result;
   }
 
-  // Gets keys in each scope. This may correspond to a \p ScopeChain.
-  // Shadowed keys are ignored. 0 is innermost.
+                                                                     
+                                               
   std::unique_ptr<std::vector<std::vector<K>>> getKeysByScope() const {
     assert(scope_ && "Missing scope");
 
@@ -210,6 +210,6 @@ ScopedHashTableScope<K, V>::~ScopedHashTableScope() {
   base_.scope_ = previous_;
 }
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_ADT_SCOPEDHASHTABLE_H
+#endif                                

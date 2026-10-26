@@ -32,7 +32,7 @@ inline PseudoHandle<T> PseudoHandle<T>::dyn_vmcast(PseudoHandle<U> &&other) {
   return result;
 }
 
-/// Allocate a new handle in the current GCScope
+                                                
 inline HandleBase::HandleBase(HandleRootOwner &runtime, HermesValue value)
     : handle_(runtime.newPinnedHermesValue(value)) {
 #ifndef NDEBUG
@@ -76,7 +76,7 @@ inline Handle<T> Handle<T>::dyn_vmcast(const HandleBase &other) {
       : HandleRootOwner::makeNullHandle<T>();
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
 #endif

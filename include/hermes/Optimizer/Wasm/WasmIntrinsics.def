@@ -9,7 +9,7 @@
 #define WASM_INTRINSICS(name, numArgs)
 #endif
 
-// Arithmetic
+             
 WASM_INTRINSICS(add32, 2)
 WASM_INTRINSICS(sub32, 2)
 WASM_INTRINSICS(mul32, 2)
@@ -21,13 +21,13 @@ WASM_INTRINSICS(shl32, 2)
 WASM_INTRINSICS(shri32, 2)
 WASM_INTRINSICS(shru32, 2)
 
-// Comparison
+             
 WASM_INTRINSICS(eq32, 2)
 WASM_INTRINSICS(ne32, 2)
 WASM_INTRINSICS(lti32, 2)
 WASM_INTRINSICS(ltu32, 2)
 
-// Memory
+         
 WASM_INTRINSICS(loadi8, 2)
 WASM_INTRINSICS(loadu8, 2)
 WASM_INTRINSICS(loadi16, 2)

@@ -14,9 +14,9 @@ namespace {
 
 using namespace hermes;
 
-/// \return true if and only if a literal string operand at index \p idx of
-/// instruction \p I is to be treated as an Identifier during Hermes Bytecode
-/// generation.
+                                                                           
+                                                                             
+               
 bool isIdOperand(Instruction *I, unsigned idx) {
 #define CASE_WITH_PROP_IDX(INSN) \
   case ValueKind::INSN##Kind:    \
@@ -32,8 +32,8 @@ bool isIdOperand(Instruction *I, unsigned idx) {
     CASE_WITH_PROP_IDX(ThrowIfHasRestrictedGlobalPropertyInst);
 
     case ValueKind::HBCAllocObjectFromBufferInstKind:
-      // AllocObjectFromBuffer stores the keys and values as alternating
-      // operands starting from FirstKeyIdx.
+                                                                        
+                                            
       return (idx - HBCAllocObjectFromBufferInst::FirstKeyIdx) % 2 == 0;
 
     default:
@@ -42,7 +42,7 @@ bool isIdOperand(Instruction *I, unsigned idx) {
 #undef CASE
 }
 
-} // namespace
+}             
 
 namespace hermes {
 namespace hbc {
@@ -60,11 +60,11 @@ void traverseFunctions(
     if (!stripFunctionNames) {
       traversal(F.getOriginalOrInferredName().str());
     }
-    // The source visibility of the global function indicate the presence of
-    // top-level source visibility directives, but we should not preserve the
-    // source code of the global function.
+                                                                            
+                                                                             
+                                          
     if (!F.isGlobalScope()) {
-      // Only add non-default source representation to the string table.
+                                                                        
       if (auto source = F.getSourceRepresentationStr()) {
         functionSourceTraversal(*source);
       }
@@ -91,21 +91,21 @@ void traverseLiteralStrings(
     Module *M,
     std::function<bool(Function *)> shouldVisitFunction,
     std::function<void(llvh::StringRef, bool)> traversal) {
-  // Walk declared global properties.
+                                     
   for (auto *prop : M->getGlobalProperties()) {
     if (prop->isDeclared()) {
-      traversal(prop->getName()->getValue().str(), /* isIdentifier */ true);
+      traversal(prop->getName()->getValue().str(),                    true);
     }
   }
 
-  // Walk functions.
+                    
   for (auto &F : *M) {
     if (!shouldVisitFunction(&F)) {
       continue;
     }
 
     for (auto &BB : F) {
-      // Walk instruction operands.
+                                   
       for (auto &I : BB) {
         for (int i = 0, e = I.getNumOperands(); i < e; i++) {
           auto *op = I.getOperand(i);
@@ -118,5 +118,5 @@ void traverseLiteralStrings(
   }
 }
 
-} // namespace hbc
-} // namespace hermes
+}                 
+}                    

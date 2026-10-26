@@ -22,5 +22,5 @@ void JSJSONBuildMeta(const GCCell *cell, Metadata::Builder &mb) {
   mb.setVTable(&JSJSON::vt);
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

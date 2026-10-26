@@ -24,10 +24,10 @@ static bool InitNotUnderValgrind() {
   return !RUNNING_ON_VALGRIND;
 }
 
-// This bool is negated from what we'd expect because code may run before it
-// gets initialized.  If that happens, it will appear to be 0 (false), and we
-// want that to cause the rest of the code in this file to run the
-// Valgrind-provided macros.
+                                                                            
+                                                                             
+                                                                  
+                            
 static const bool NotUnderValgrind = InitNotUnderValgrind();
 
 bool llvh::sys::RunningOnValgrind() {
@@ -43,7 +43,7 @@ void llvh::sys::ValgrindDiscardTranslations(const void *Addr, size_t Len) {
   VALGRIND_DISCARD_TRANSLATIONS(Addr, Len);
 }
 
-#else  // !HAVE_VALGRIND_VALGRIND_H
+#else                              
 
 bool llvh::sys::RunningOnValgrind() {
   return false;
@@ -52,4 +52,4 @@ bool llvh::sys::RunningOnValgrind() {
 void llvh::sys::ValgrindDiscardTranslations(const void *Addr, size_t Len) {
 }
 
-#endif  // !HAVE_VALGRIND_VALGRIND_H
+#endif                              

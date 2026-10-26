@@ -19,49 +19,49 @@
 
 namespace llvh {
 
-/// CRTP base class which implements the entire standard iterator facade
-/// in terms of a minimal subset of the interface.
-///
-/// Use this when it is reasonable to implement most of the iterator
-/// functionality in terms of a core subset. If you need special behavior or
-/// there are performance implications for this, you may want to override the
-/// relevant members instead.
-///
-/// Note, one abstraction that this does *not* provide is implementing
-/// subtraction in terms of addition by negating the difference. Negation isn't
-/// always information preserving, and I can see very reasonable iterator
-/// designs where this doesn't work well. It doesn't really force much added
-/// boilerplate anyways.
-///
-/// Another abstraction that this doesn't provide is implementing increment in
-/// terms of addition of one. These aren't equivalent for all iterator
-/// categories, and respecting that adds a lot of complexity for little gain.
-///
-/// Classes wishing to use `iterator_facade_base` should implement the following
-/// methods:
-///
-/// Forward Iterators:
-///   (All of the following methods)
-///   - DerivedT &operator=(const DerivedT &R);
-///   - bool operator==(const DerivedT &R) const;
-///   - const T &operator*() const;
-///   - T &operator*();
-///   - DerivedT &operator++();
-///
-/// Bidirectional Iterators:
-///   (All methods of forward iterators, plus the following)
-///   - DerivedT &operator--();
-///
-/// Random-access Iterators:
-///   (All methods of bidirectional iterators excluding the following)
-///   - DerivedT &operator++();
-///   - DerivedT &operator--();
-///   (and plus the following)
-///   - bool operator<(const DerivedT &RHS) const;
-///   - DifferenceTypeT operator-(const DerivedT &R) const;
-///   - DerivedT &operator+=(DifferenceTypeT N);
-///   - DerivedT &operator-=(DifferenceTypeT N);
-///
+                                                                        
+                                                  
+   
+                                                                    
+                                                                            
+                                                                             
+                             
+   
+                                                                      
+                                                                               
+                                                                         
+                                                                            
+                        
+   
+                                                                              
+                                                                      
+                                                                             
+   
+                                                                                
+            
+   
+                      
+                                    
+                                               
+                                                 
+                                   
+                       
+                               
+   
+                            
+                                                            
+                               
+   
+                            
+                                                                      
+                               
+                               
+                              
+                                                  
+                                                           
+                                                
+                                                
+   
 template <typename DerivedT, typename IteratorCategoryT, typename T,
           typename DifferenceTypeT = std::ptrdiff_t, typename PointerT = T *,
           typename ReferenceT = T &>
@@ -81,11 +81,11 @@ protected:
                                       IteratorCategoryT>::value,
   };
 
-  /// A proxy object for computing a reference via indirecting a copy of an
-  /// iterator. This is used in APIs which need to produce a reference via
-  /// indirection but for which the iterator object might be a temporary. The
-  /// proxy preserves the iterator internally and exposes the indirected
-  /// reference via a conversion operator.
+                                                                           
+                                                                          
+                                                                             
+                                                                        
+                                          
   class ReferenceProxy {
     friend iterator_facade_base;
 
@@ -188,11 +188,11 @@ public:
   }
 };
 
-/// CRTP base class for adapting an iterator to a different type.
-///
-/// This class can be used through CRTP to adapt one iterator into another.
-/// Typically this is done through providing in the derived class a custom \c
-/// operator* implementation. Other methods can be overridden as well.
+                                                                 
+   
+                                                                           
+                                                                             
+                                                                      
 template <
     typename DerivedT, typename WrappedIteratorT,
     typename IteratorCategoryT =
@@ -208,7 +208,7 @@ template <
         std::is_same<T, typename std::iterator_traits<
                             WrappedIteratorT>::value_type>::value,
         typename std::iterator_traits<WrappedIteratorT>::reference, T &>::type,
-    // Don't provide these, they are mostly to act as aliases below.
+                                                                    
     typename WrappedTraitsT = std::iterator_traits<WrappedIteratorT>>
 class iterator_adaptor_base
     : public iterator_facade_base<DerivedT, IteratorCategoryT, T,
@@ -252,8 +252,8 @@ public:
     return I - RHS.I;
   }
 
-  // We have to explicitly provide ++ and -- rather than letting the facade
-  // forward to += because WrappedIteratorT might not support +=.
+                                                                           
+                                                                 
   using BaseT::operator++;
   DerivedT &operator++() {
     ++I;
@@ -279,15 +279,15 @@ public:
   ReferenceT operator*() const { return *I; }
 };
 
-/// An iterator type that allows iterating over the pointees via some
-/// other iterator.
-///
-/// The typical usage of this is to expose a type that iterates over Ts, but
-/// which is implemented with some iterator over T*s:
-///
-/// \code
-///   using iterator = pointee_iterator<SmallVectorImpl<T *>::iterator>;
-/// \endcode
+                                                                     
+                   
+   
+                                                                            
+                                                     
+   
+         
+                                                                        
+            
 template <typename WrappedIteratorT,
           typename T = typename std::remove_reference<
               decltype(**std::declval<WrappedIteratorT>())>::type>
@@ -339,8 +339,8 @@ make_pointer_range(RangeT &&Range) {
                     PointerIteratorT(std::end(std::forward<RangeT>(Range))));
 }
 
-// Wrapper iterator over iterator ItType, adding DataRef to the type of ItType,
-// to create NodeRef = std::pair<InnerTypeOfItType, DataRef>.
+                                                                               
+                                                             
 template <typename ItType, typename NodeRef, typename DataRef>
 class WrappedPairNodeDataIterator
     : public iterator_adaptor_base<
@@ -367,6 +367,6 @@ public:
   }
 };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_ADT_ITERATOR_H
+#endif                       

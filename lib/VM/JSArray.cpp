@@ -16,15 +16,15 @@
 namespace hermes {
 namespace vm {
 
-//===----------------------------------------------------------------------===//
-// class ArrayImpl
+                                                                                
+                  
 
 void ArrayImplBuildMeta(const GCCell *cell, Metadata::Builder &mb) {
   mb.addJSObjectOverlapSlots(JSObject::numOverlapSlots<ArrayImpl>());
   JSObjectBuildMeta(cell, mb);
   const auto *self = static_cast<const ArrayImpl *>(cell);
-  // This edge has to be called "elements" in order for Chrome to attribute
-  // the size of the indexed storage as part of total usage of "JS Arrays".
+                                                                           
+                                                                           
   mb.addField("elements", &self->indexedStorage_);
 }
 
@@ -34,14 +34,14 @@ void ArrayImpl::_snapshotAddEdgesImpl(
     GC &gc,
     HeapSnapshot &snap) {
   auto *const self = vmcast<ArrayImpl>(cell);
-  // Add the super type's edges too.
+                                    
   JSObject::_snapshotAddEdgesImpl(self, gc, snap);
   if (!self->getIndexedStorage(gc.getPointerBase())) {
     return;
   }
 
-  // This edge has to be called "elements" in order for Chrome to attribute
-  // the size of the indexed storage as part of total usage of "JS Arrays".
+                                                                           
+                                                                           
   snap.addNamedEdge(
       HeapSnapshot::EdgeType::Internal,
       "elements",
@@ -67,7 +67,7 @@ bool ArrayImpl::_haveOwnIndexedImpl(
     uint32_t index) {
   auto *self = vmcast<ArrayImpl>(selfObj);
 
-  // Check whether the index is within the storage.
+                                                   
   if (index >= self->beginIndex_ && index < self->endIndex_)
     return !self->getIndexedStorage(runtime)
                 ->at(runtime, index - self->beginIndex_)
@@ -82,7 +82,7 @@ OptValue<PropertyFlags> ArrayImpl::_getOwnIndexedPropertyFlagsImpl(
     uint32_t index) {
   auto *self = vmcast<ArrayImpl>(selfObj);
 
-  // Check whether the index is within the storage.
+                                                   
   if (index >= self->beginIndex_ && index < self->endIndex_ &&
       !self->getIndexedStorage(runtime)
            ->at(runtime, index - self->beginIndex_)
@@ -134,7 +134,7 @@ ExecutionStatus ArrayImpl::setStorageEndIndex(
     return runtime.raiseRangeError("Out of memory for array elements");
   }
 
-  // If indexedStorage hasn't even been allocated.
+                                                  
   if (LLVM_UNLIKELY(!self->getIndexedStorage(runtime))) {
     if (newLength == 0) {
       return ExecutionStatus::RETURNED;
@@ -157,9 +157,9 @@ ExecutionStatus ArrayImpl::setStorageEndIndex(
     auto *const indexedStorage = self->getIndexedStorage(runtime);
 
     if (newLength <= beginIndex) {
-      // the new length is prior to beginIndex, clearing the storage.
+                                                                     
       selfHandle->endIndex_ = beginIndex;
-      // Remove the storage. If this array grows again it can be re-allocated.
+                                                                              
       self->setIndexedStorage(runtime, nullptr, runtime.getHeap());
       return ExecutionStatus::RETURNED;
     } else if (newLength - beginIndex <= indexedStorage->capacity()) {
@@ -195,7 +195,7 @@ CallResult<bool> ArrayImpl::_setOwnIndexedImpl(
   if (LLVM_UNLIKELY(self->flags_.frozen))
     return false;
 
-  // Check whether the index is within the storage.
+                                                   
   if (LLVM_LIKELY(index >= beginIndex && index < endIndex)) {
     const auto shv = SmallHermesValue::encodeHermesValue(*value, runtime);
     Handle<ArrayImpl>::vmcast(selfHandle)
@@ -204,9 +204,9 @@ CallResult<bool> ArrayImpl::_setOwnIndexedImpl(
     return true;
   }
 
-  // If indexedStorage hasn't even been allocated.
+                                                  
   if (LLVM_UNLIKELY(!self->getIndexedStorage(runtime))) {
-    // Allocate storage with capacity for 4 elements and length 1.
+                                                                  
     auto arrRes = StorageType::create(runtime, 4, 1);
     if (LLVM_UNLIKELY(arrRes == ExecutionStatus::EXCEPTION)) {
       return ExecutionStatus::EXCEPTION;
@@ -228,12 +228,12 @@ CallResult<bool> ArrayImpl::_setOwnIndexedImpl(
     self = vmcast<ArrayImpl>(selfHandle.get());
     auto *const indexedStorage = self->getIndexedStorage(runtime);
 
-    // Can we do it without reallocation for sure?
+                                                  
     if (index >= endIndex && index - beginIndex < indexedStorage->capacity()) {
       self->endIndex_ = index + 1;
       StorageType::resizeWithinCapacity(
           indexedStorage, runtime, index - beginIndex + 1);
-      // self shouldn't have moved since there haven't been any allocations.
+                                                                            
       indexedStorage->set(runtime, index - beginIndex, shv);
       return true;
     }
@@ -241,10 +241,10 @@ CallResult<bool> ArrayImpl::_setOwnIndexedImpl(
 
   auto indexedStorageHandle =
       runtime.makeMutableHandle(self->getIndexedStorage(runtime));
-  // We only shift an array if the shift amount is within the limit.
+                                                                    
   constexpr uint32_t shiftLimit = (1 << 20);
 
-  // Is the array empty?
+                        
   if (LLVM_UNLIKELY(endIndex == beginIndex)) {
     if (StorageType::resize(indexedStorageHandle, runtime, 1) ==
         ExecutionStatus::EXCEPTION) {
@@ -258,11 +258,11 @@ CallResult<bool> ArrayImpl::_setOwnIndexedImpl(
   } else if (LLVM_UNLIKELY(
                  (index > endIndex && index - endIndex > shiftLimit) ||
                  (index < beginIndex && beginIndex - index > shiftLimit))) {
-    // The new index is too far away from the current index range.
-    // Shifting will lead to a very large allocation.
-    // This is likely a misuse of the array (e.g. use array as an object).
-    // In this case, we should just treat the index access as
-    // a property access.
+                                                                  
+                                                     
+                                                                          
+                                                             
+                         
     auto vr = valueToSymbolID(
         runtime,
         runtime.makeHandle(HermesValue::encodeUntrustedNumberValue(index)));
@@ -279,10 +279,10 @@ CallResult<bool> ArrayImpl::_setOwnIndexedImpl(
                 value) == ExecutionStatus::EXCEPTION)) {
       return ExecutionStatus::EXCEPTION;
     }
-    // self->indexedStorage_ is unmodified, we should return directly.
+                                                                      
     return true;
   } else if (index >= endIndex) {
-    // Extending to the right.
+                              
     if (StorageType::resize(
             indexedStorageHandle, runtime, index - beginIndex + 1) ==
         ExecutionStatus::EXCEPTION) {
@@ -293,7 +293,7 @@ CallResult<bool> ArrayImpl::_setOwnIndexedImpl(
     self->endIndex_ = index + 1;
     indexedStorageHandle->set(runtime, index - beginIndex, shv);
   } else {
-    // Extending to the left. 'index' will become the new 'beginIndex'.
+                                                                       
     assert(index < beginIndex);
 
     if (StorageType::resizeLeft(
@@ -309,7 +309,7 @@ CallResult<bool> ArrayImpl::_setOwnIndexedImpl(
     indexedStorageHandle->set(runtime, 0, shv);
   }
 
-  // Update the potentially changed pointer.
+                                            
   self->setIndexedStorage(
       runtime, indexedStorageHandle.get(), runtime.getHeap());
   return true;
@@ -323,7 +323,7 @@ bool ArrayImpl::_deleteOwnIndexedImpl(
   NoAllocScope noAlloc{runtime};
   if (index >= self->beginIndex_ && index < self->endIndex_) {
     auto *indexedStorage = self->getIndexedStorage(runtime);
-    // Cannot delete indexed elements if we are sealed.
+                                                       
     if (LLVM_UNLIKELY(self->flags_.sealed)) {
       SmallHermesValue elem =
           indexedStorage->at(runtime, index - self->beginIndex_);
@@ -343,12 +343,12 @@ bool ArrayImpl::_deleteOwnIndexedImpl(
 bool ArrayImpl::_checkAllOwnIndexedImpl(
     JSObject *selfObj,
     Runtime &runtime,
-    ObjectVTable::CheckAllOwnIndexedMode /*mode*/
+    ObjectVTable::CheckAllOwnIndexedMode         
 ) {
   auto *self = vmcast<ArrayImpl>(selfObj);
 
-  // If we have any indexed properties at all, they don't satisfy the
-  // requirements.
+                                                                     
+                  
   for (uint32_t i = 0, e = self->endIndex_ - self->beginIndex_; i != e; ++i) {
     if (!self->getIndexedStorage(runtime)->at(runtime, i).isEmpty())
       return false;
@@ -356,8 +356,8 @@ bool ArrayImpl::_checkAllOwnIndexedImpl(
   return true;
 }
 
-//===----------------------------------------------------------------------===//
-// class Arguments
+                                                                                
+                  
 
 const ObjectVTable Arguments::vt{
     VTable(
@@ -413,10 +413,10 @@ CallResult<Handle<Arguments>> Arguments::create(
   PropertyFlags pf{};
   namespace P = Predefined;
 
-/// Adds a property to the object in \p OBJ_HANDLE.  \p SYMBOL provides its name
-/// as a \c Predefined enum value, and its value is  rooted in \p HANDLE.  If
-/// property definition fails, the exceptional execution status will be
-/// propagated to the outer function.
+                                                                                
+                                                                             
+                                                                       
+                                     
 #define DEFINE_PROP(OBJ_HANDLE, SYMBOL, HANDLE)                            \
   do {                                                                     \
     auto status = JSObject::defineNewOwnProperty(                          \
@@ -426,7 +426,7 @@ CallResult<Handle<Arguments>> Arguments::create(
     }                                                                      \
   } while (false)
 
-  // Define the length property.
+                                
   pf.enumerable = 0;
   pf.writable = 1;
   pf.configurable = 1;
@@ -441,9 +441,9 @@ CallResult<Handle<Arguments>> Arguments::create(
 
   if (strictMode ||
       LLVM_UNLIKELY(vmisa<GeneratorInnerFunction>(*curFunction))) {
-    // Define .callee and .caller properties: throw always in strict mode
-    // or for GeneratorInnerFunction, because GeneratorInnerFunction isn't
-    // visible to users.
+                                                                         
+                                                                          
+                        
     auto accessor =
         Handle<PropertyAccessor>::vmcast(&runtime.throwTypeErrorAccessor);
 
@@ -456,8 +456,8 @@ CallResult<Handle<Arguments>> Arguments::create(
     DEFINE_PROP(selfHandle, P::callee, accessor);
     DEFINE_PROP(selfHandle, P::caller, accessor);
   } else {
-    // Define .callee in non-strict mode to point to the current function.
-    // Leave .caller undefined, because it's a non-standard ES extension.
+                                                                          
+                                                                         
     assert(
         vmisa<Callable>(curFunction.getHermesValue()) &&
         "attempt to reify arguments with a non-callable callee");
@@ -475,8 +475,8 @@ CallResult<Handle<Arguments>> Arguments::create(
 #undef DEFINE_PROP
 }
 
-//===----------------------------------------------------------------------===//
-// class JSArray
+                                                                                
+                
 
 const ObjectVTable JSArray::vt{
     VTable(
@@ -555,7 +555,7 @@ CallResult<Handle<JSArray>> JSArray::createNoAllocPropStorage(
       runtime.makeAFixed<JSArray>(
           runtime, prototypeHandle, classHandle, GCPointerBase::NoBarriers()));
 
-  // Only allocate the storage if capacity is not zero.
+                                                       
   if (capacity) {
     if (LLVM_UNLIKELY(capacity > StorageType::maxElements()))
       return runtime.raiseRangeError("Out of memory for array elements");
@@ -583,8 +583,8 @@ CallResult<Handle<JSArray>> JSArray::createAndAllocPropStorage(
     return ExecutionStatus::EXCEPTION;
   }
 
-  // Allocate property storage with size corresponding to number of properties
-  // in the hidden class.
+                                                                              
+                         
   Handle<JSArray> arr = std::move(*res);
   runtime.ignoreAllocationFailure(
       JSObject::allocatePropStorage(
@@ -608,14 +608,14 @@ CallResult<bool> JSArray::setLength(
     Runtime &runtime,
     Handle<> newLength,
     PropOpFlags opFlags) {
-  // About the truncation of double to uint32: in theory this produces UB,
-  // however in practice it is well-defined.
-  // Regardless of what happens in the conversion, 'ulen' can never compare
-  // equal to 'd' unless 'd' is really an uint32 number, in which case the
-  // conversion would have succeeded.
-  // The only way this could fail is if the conversion throws an exception or
-  // aborts the application, which is not the case on any platform we are
-  // targeting.
+                                                                          
+                                            
+                                                                           
+                                                                          
+                                     
+                                                                             
+                                                                         
+               
 
   uint32_t ulen;
   double d;
@@ -623,23 +623,23 @@ CallResult<bool> JSArray::setLength(
     d = newLength->getNumber();
     ulen = truncateToUInt32(d);
   } else {
-    // According to the spec, toNumber() has to be called twice.
-    // https://tc39.es/ecma262/multipage/ordinary-and-exotic-objects-behaviours.html#sec-arraysetlength
-    // There is a note that says:
-    // "In steps 3 and 4, if Desc.[[Value]] is an object then its valueOf method
-    // is called twice. This is legacy behaviour that was specified with this
-    // effect starting with the 2nd Edition of this specification."
+                                                                
+                                                                                                       
+                                 
+                                                                                
+                                                                             
+                                                                   
     auto res = toNumber_RJS(runtime, newLength);
     if (LLVM_UNLIKELY(res == ExecutionStatus::EXCEPTION))
       return ExecutionStatus::EXCEPTION;
     d = res->getNumber();
     ulen = truncateToUInt32(d);
-    // If it is a string, no need to convert again, since it is pretty
-    // expensive. Other types are not so important, since their conversions are
-    // either fast (bool) or slow (object).
-    // We could do the inverse check here - for object - but that is more risky,
-    // since calling toNumber() twice is always correct, but calling it once
-    // might be incorrect.
+                                                                      
+                                                                               
+                                           
+                                                                                
+                                                                            
+                          
     if (!newLength->isString()) {
       res = toNumber_RJS(runtime, newLength);
       if (LLVM_UNLIKELY(res == ExecutionStatus::EXCEPTION))
@@ -659,7 +659,7 @@ CallResult<bool> JSArray::setLength(
     Runtime &runtime,
     uint32_t newLength,
     PropOpFlags opFlags) {
-  // Fast-path: if we are enlarging, do nothing.
+                                                
   const auto currentLength = getLength(*selfHandle, runtime);
   if (LLVM_LIKELY(newLength >= currentLength)) {
     auto shv = SmallHermesValue::encodeNumberValue(newLength, runtime);
@@ -667,25 +667,25 @@ CallResult<bool> JSArray::setLength(
     return true;
   }
 
-  // Length adjusted to the index of the highest non-deletable property + 1.
-  // Nothing smaller than it can be deleted.
+                                                                            
+                                            
   uint32_t adjustedLength = newLength;
 
-  // If we are sealed, we can't shrink past non-empty properties.
+                                                                 
   if (LLVM_UNLIKELY(selfHandle->flags_.sealed)) {
-    // We must scan backwards looking for a non-empty property. We only have
-    // to scan in the intersection between the range of present values and
-    // the range between the current length and the new length.
-    //              newLength         currentLength
-    //                 |                    |
-    //                 +--------------------+
-    //       begin                end
-    //         |                   |
-    //         +-------------------+
-    //                 +-----------+
-    //                 |           |
-    //          lowestScanLen  highestLen
-    //
+                                                                            
+                                                                          
+                                                               
+                                                   
+                                             
+                                             
+                                     
+                                    
+                                    
+                                    
+                                    
+                                         
+      
 
     auto *self = selfHandle.get();
     auto range = _getOwnIndexedRangeImpl(self, runtime);
@@ -702,14 +702,14 @@ CallResult<bool> JSArray::setLength(
 
   if (LLVM_UNLIKELY(selfHandle->clazz_.getNonNull(runtime)
                         ->getHasIndexLikeProperties())) {
-    // Uh-oh. We are making the array smaller and we have index-like named
-    // properties, so we may have to delete some of them: the ones greater or
-    // equal to 'newLength'.
+                                                                          
+                                                                             
+                            
 
-    // We iterate all named properties to find all index-like ones that need to
-    // be deleted. At the same time we keep track of the highest index of a non-
-    // deletable property - nothing smaller than that can be deleted because the
-    // highest non-deletable would have terminated the deletion process.
+                                                                               
+                                                                                
+                                                                                
+                                                                        
 
     using IndexProp = std::pair<uint32_t, SymbolID>;
     llvh::SmallVector<IndexProp, 8> toBeDeleted;
@@ -722,8 +722,8 @@ CallResult<bool> JSArray::setLength(
         [&runtime, &adjustedLength, &toBeDeleted, &scope](
             SymbolID id, NamedPropertyDescriptor desc) {
           GCScopeMarkerRAII marker{scope};
-          // If this property is not an integer index, or it doesn't need to be
-          // deleted (it is less than 'adjustedLength'), ignore it.
+                                                                               
+                                                                   
           auto propNameAsIndex = toArrayIndex(
               runtime.getIdentifierTable().getStringView(runtime, id));
           if (!propNameAsIndex || *propNameAsIndex < adjustedLength)
@@ -736,8 +736,8 @@ CallResult<bool> JSArray::setLength(
           }
         });
 
-    // Scan the properties to be deleted in reverse order (to make deletion more
-    // efficient) and delete those >= adjustedLength.
+                                                                                
+                                                     
     for (auto it = toBeDeleted.rbegin(), e = toBeDeleted.rend(); it != e;
          ++it) {
       if (it->first >= adjustedLength) {
@@ -771,8 +771,8 @@ CallResult<bool> JSArray::setLength(
   return true;
 }
 
-//===----------------------------------------------------------------------===//
-// class JSArrayIterator
+                                                                                
+                        
 
 const ObjectVTable JSArrayIterator::vt{
     VTable(CellKind::JSArrayIteratorKind, cellSize<JSArrayIterator>()),
@@ -805,35 +805,35 @@ PseudoHandle<JSArrayIterator> JSArrayIterator::create(
   return JSObjectInit::initToPseudoHandle(runtime, obj);
 }
 
-/// Iterate to the next element and return.
+                                           
 CallResult<HermesValue> JSArrayIterator::nextElement(
     Handle<JSArrayIterator> self,
     Runtime &runtime) {
   if (!self->iteratedObject_) {
-    // 5. If a is undefined, return CreateIterResultObject(undefined, true).
+                                                                            
     return createIterResultObject(runtime, Runtime::getUndefinedValue(), true)
         .getHermesValue();
   }
 
-  // 4. Let a be the value of the [[IteratedObject]] internal slot of O.
+                                                                        
   Handle<JSObject> a = runtime.makeHandle(self->iteratedObject_);
-  // 6. Let index be the value of the [[ArrayIteratorNextIndex]] internal slot
-  // of O.
+                                                                              
+          
   uint64_t index = self->nextIndex_;
 
   uint64_t len;
   if (auto ta = Handle<JSTypedArrayBase>::dyn_vmcast(a)) {
-    // 8. If a has a [[TypedArrayName]] internal slot, then
-    // a. If IsDetachedBuffer(a.[[ViewedArrayBuffer]]) is true,
-    //    throw a TypeError exception.
-    // b. Let len be the value of O’s [[ArrayLength]] internal slot.
+                                                           
+                                                               
+                                      
+                                                                    
     if (LLVM_UNLIKELY(!ta->attached(runtime))) {
       return runtime.raiseTypeError("TypedArray detached during iteration");
     }
     len = ta->getLength();
   } else {
-    // 9. Else,
-    // a. Let len be ToLength(Get(a, "length")).
+               
+                                                
     auto propRes = JSObject::getNamed_RJS(
         a, runtime, Predefined::getSymbolID(Predefined::length));
     if (LLVM_UNLIKELY(propRes == ExecutionStatus::EXCEPTION)) {
@@ -847,29 +847,29 @@ CallResult<HermesValue> JSArrayIterator::nextElement(
   }
 
   if (index >= len) {
-    // 10. If index ≥ len, then
-    // a. Set the value of the [[IteratedObject]] internal slot of O to
-    // undefined.
+                               
+                                                                       
+                 
     self->iteratedObject_.setNull(runtime.getHeap());
-    // b. Return CreateIterResultObject(undefined, true).
+                                                         
     return createIterResultObject(runtime, Runtime::getUndefinedValue(), true)
         .getHermesValue();
   }
 
-  // 11. Set the value of the [[ArrayIteratorNextIndex]] internal slot of O to
-  // index+1.
+                                                                              
+             
   ++self->nextIndex_;
 
   auto indexHandle =
       runtime.makeHandle(HermesValue::encodeUntrustedNumberValue(index));
 
   if (self->iterationKind_ == IterationKind::Key) {
-    // 12. If itemKind is "key", return CreateIterResultObject(index, false).
+                                                                             
     return createIterResultObject(runtime, indexHandle, false).getHermesValue();
   }
 
-  // 13. Let elementKey be ToString(index).
-  // 14. Let elementValue be Get(a, elementKey).
+                                           
+                                                
   CallResult<PseudoHandle<>> valueRes =
       JSObject::getComputed_RJS(a, runtime, indexHandle);
   if (LLVM_UNLIKELY(valueRes == ExecutionStatus::EXCEPTION)) {
@@ -882,11 +882,11 @@ CallResult<HermesValue> JSArrayIterator::nextElement(
       llvm_unreachable("Early return already occurred in Key case");
       return HermesValue::encodeEmptyValue();
     case IterationKind::Value:
-      // 16. If itemKind is "value", let result be elementValue.
+                                                                
       return createIterResultObject(runtime, valueHandle, false)
           .getHermesValue();
     case IterationKind::Entry: {
-      // 17. b. Let result be CreateArrayFromList(«index, elementValue»).
+                                                                         
       auto resultRes = JSArray::create(runtime, 2, 2);
       if (LLVM_UNLIKELY(resultRes == ExecutionStatus::EXCEPTION)) {
         return ExecutionStatus::EXCEPTION;
@@ -894,7 +894,7 @@ CallResult<HermesValue> JSArrayIterator::nextElement(
       Handle<JSArray> result = *resultRes;
       JSArray::setElementAt(result, runtime, 0, indexHandle);
       JSArray::setElementAt(result, runtime, 1, valueHandle);
-      // 18. Return CreateIterResultObject(result, false).
+                                                          
       return createIterResultObject(runtime, result, false).getHermesValue();
     }
     case IterationKind::NumKinds:
@@ -906,5 +906,5 @@ CallResult<HermesValue> JSArrayIterator::nextElement(
   return HermesValue::encodeEmptyValue();
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

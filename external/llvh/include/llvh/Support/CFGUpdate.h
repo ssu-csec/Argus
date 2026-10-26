@@ -54,21 +54,21 @@ public:
 #endif
 };
 
-// LegalizeUpdates function simplifies updates assuming a graph structure.
-// This function serves double purpose:
-// a) It removes redundant updates, which makes it easier to reverse-apply
-//    them when traversing CFG.
-// b) It optimizes away updates that cancel each other out, as the end result
-//    is the same.
+                                                                          
+                                       
+                                                                          
+                               
+                                                                             
+                  
 template <typename NodePtr>
 void LegalizeUpdates(ArrayRef<Update<NodePtr>> AllUpdates,
                      SmallVectorImpl<Update<NodePtr>> &Result,
                      bool InverseGraph) {
-  // Count the total number of inserions of each edge.
-  // Each insertion adds 1 and deletion subtracts 1. The end number should be
-  // one of {-1 (deletion), 0 (NOP), +1 (insertion)}. Otherwise, the sequence
-  // of updates contains multiple updates of the same kind and we assert for
-  // that case.
+                                                      
+                                                                             
+                                                                             
+                                                                            
+               
   SmallDenseMap<std::pair<NodePtr, NodePtr>, int, 4> Operations;
   Operations.reserve(AllUpdates.size());
 
@@ -76,7 +76,7 @@ void LegalizeUpdates(ArrayRef<Update<NodePtr>> AllUpdates,
     NodePtr From = U.getFrom();
     NodePtr To = U.getTo();
     if (InverseGraph)
-      std::swap(From, To); // Reverse edge for postdominators.
+      std::swap(From, To);                                    
 
     Operations[{From, To}] += (U.getKind() == UpdateKind::Insert ? 1 : -1);
   }
@@ -93,10 +93,10 @@ void LegalizeUpdates(ArrayRef<Update<NodePtr>> AllUpdates,
     Result.push_back({UK, Op.first.first, Op.first.second});
   }
 
-  // Make the order consistent by not relying on pointer values within the
-  // set. Reuse the old Operations map.
-  // In the future, we should sort by something else to minimize the amount
-  // of work needed to perform the series of updates.
+                                                                          
+                                       
+                                                                           
+                                                     
   for (size_t i = 0, e = AllUpdates.size(); i != e; ++i) {
     const auto &U = AllUpdates[i];
     if (!InverseGraph)
@@ -112,7 +112,7 @@ void LegalizeUpdates(ArrayRef<Update<NodePtr>> AllUpdates,
              });
 }
 
-} // end namespace cfg
-} // end namespace llvh
+}                     
+}                      
 
-#endif // LLVM_SUPPORT_CFGUPDATE_H
+#endif                            

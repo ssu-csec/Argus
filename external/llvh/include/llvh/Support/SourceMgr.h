@@ -38,8 +38,8 @@ class raw_ostream;
 class SMDiagnostic;
 class SMFixIt;
 
-/// This owns the files read by a parser, handles include stacks,
-/// and handles diagnostic wrangling.
+                                                                 
+                                     
 class SourceMgr {
 public:
   enum DiagKind {
@@ -49,52 +49,52 @@ public:
     DK_Note,
   };
 
-  /// Clients that want to handle their own diagnostics in a custom way can
-  /// register a function pointer+context as a diagnostic handler.
-  /// It gets called each time PrintMessage is invoked.
+                                                                           
+                                                                  
+                                                       
   using DiagHandlerTy = void (*)(const SMDiagnostic &, void *Context);
 
 private:
   struct SrcBuffer {
-    /// The memory buffer for the file.
+                                       
     std::unique_ptr<MemoryBuffer> Buffer;
 
-    /// Helper type for OffsetCache below: since we're storing many offsets
-    /// into relatively small files (often smaller than 2^8 or 2^16 bytes),
-    /// we select the offset vector element type dynamically based on the
-    /// size of Buffer.
+                                                                           
+                                                                           
+                                                                         
+                       
     using VariableSizeOffsets = PointerUnion4<std::vector<uint8_t> *,
                                               std::vector<uint16_t> *,
                                               std::vector<uint32_t> *,
                                               std::vector<uint64_t> *>;
 
-    /// Vector of offsets into Buffer at which there are line-endings
-    /// (lazily populated). Once populated, the '\n' that marks the end of
-    /// line number N from [1..] is at Buffer[OffsetCache[N-1]]. Since
-    /// these offsets are in sorted (ascending) order, they can be
-    /// binary-searched for the first one after any given offset (eg. an
-    /// offset corresponding to a particular SMLoc).
+                                                                     
+                                                                          
+                                                                      
+                                                                  
+                                                                        
+                                                    
     mutable VariableSizeOffsets OffsetCache;
 
-    /// Lazily populate \c OffsetCache and return it.
+                                                     
     template<typename T>
     std::vector<T> *getOffsets() const;
 
-    /// Populate \c OffsetCache and look up a given \p Ptr in it, assuming
-    /// it points somewhere into \c Buffer. The static type parameter \p T
-    /// must be an unsigned integer type from uint{8,16,32,64}_t large
-    /// enough to store offsets inside \c Buffer.
-    /// \return the line and the line number.
+                                                                          
+                                                                          
+                                                                      
+                                                 
+                                             
     template<typename T>
     std::pair<StringRef, unsigned> getLineNumber(const char *Ptr) const;
 
-    /// Return a reference to the line with the specified 1-based line number.
-    /// If the line is greater than the last line in the buffer, an empty
-    /// reference is returned.
+                                                                              
+                                                                         
+                              
     template<typename T>
     StringRef getLineRef(unsigned line) const;
 
-    /// This is the location of the parent include, or null if at the top level.
+                                                                                
     SMLoc IncludeLoc;
 
     SrcBuffer() = default;
@@ -104,16 +104,16 @@ private:
     ~SrcBuffer();
   };
 
-  /// This is all of the buffers that we are reading from.
+                                                          
   std::vector<SrcBuffer> Buffers;
 
-  /// The end addresses of all buffers.
+                                       
   std::map<const char *, unsigned> BufferEnds;
 
-  /// The id of the buffer which FindBufferContainingLoc() found last.
+                                                                      
   mutable unsigned LastFoundBufId = 0;
 
-  // This is the list of directories we should search for include files in.
+                                                                           
   std::vector<std::string> IncludeDirectories;
 
   DiagHandlerTy DiagHandler = nullptr;
@@ -131,8 +131,8 @@ public:
     IncludeDirectories = Dirs;
   }
 
-  /// Specify a diagnostic handler to be invoked every time PrintMessage is
-  /// called. \p Ctx is passed into the handler when it is invoked.
+                                                                           
+                                                                   
   void setDiagHandler(DiagHandlerTy DH, void *Ctx = nullptr) {
     DiagHandler = DH;
     DiagContext = Ctx;
@@ -165,8 +165,8 @@ public:
     return Buffers[i - 1].IncludeLoc;
   }
 
-  /// Add a new source buffer to this source manager. This takes ownership of
-  /// the memory buffer.
+                                                                             
+                        
   unsigned AddNewSourceBuffer(std::unique_ptr<MemoryBuffer> F,
                               SMLoc IncludeLoc) {
     const char * End = F->getBufferEnd();
@@ -179,96 +179,96 @@ public:
     return BufId;
   }
 
-  /// Search for a file with the specified name in the current directory or in
-  /// one of the IncludeDirs.
-  ///
-  /// If no file is found, this returns 0, otherwise it returns the buffer ID
-  /// of the stacked file. The full path to the included file can be found in
-  /// \p IncludedFile.
+                                                                              
+                             
+     
+                                                                             
+                                                                             
+                      
   unsigned AddIncludeFile(const std::string &Filename, SMLoc IncludeLoc,
                           std::string &IncludedFile);
 
-  /// Return the ID of the buffer containing the specified location.
-  ///
-  /// 0 is returned if the buffer is not found.
+                                                                    
+     
+                                               
   unsigned FindBufferContainingLoc(SMLoc Loc) const;
 
-  /// Find the line number for the specified location in the specified file.
-  /// This is not a fast method.
+                                                                            
+                                
   unsigned FindLineNumber(SMLoc Loc, unsigned BufferID = 0) const {
     return getLineAndColumn(Loc, BufferID).first;
   }
 
-  /// Find the line containing the specified location in the specified file.
-  /// Return the line number and a reference to the line itself.
-  /// This is not a fast method.
+                                                                            
+                                                                
+                                
   std::pair<StringRef, unsigned> FindLine(SMLoc Loc, unsigned BufferID = 0) const;
 
-  /// Return a reference to the specified (1-based) line.
-  /// If the line is greater than the last line in the buffer, an empty
-  /// reference is returned.
+                                                         
+                                                                       
+                            
   StringRef getLineRef(unsigned line, unsigned BufferID) const;
 
-  /// Find the line and column number for the specified location in the
-  /// specified file. This is not a fast method.
+                                                                       
+                                                
   std::pair<unsigned, unsigned> getLineAndColumn(SMLoc Loc,
                                                  unsigned BufferID = 0) const;
 
-  /// Emit a message about the specified location with the specified string.
-  ///
-  /// \param ShowColors Display colored messages if output is a terminal and
-  /// the default error handler is used.
+                                                                            
+     
+                                                                            
+                                        
   void PrintMessage(raw_ostream &OS, SMLoc Loc, DiagKind Kind,
                     const Twine &Msg,
                     ArrayRef<SMRange> Ranges = None,
                     ArrayRef<SMFixIt> FixIts = None,
                     bool ShowColors = true) const;
 
-  /// Emits a diagnostic to llvh::errs().
+                                         
   void PrintMessage(SMLoc Loc, DiagKind Kind, const Twine &Msg,
                     ArrayRef<SMRange> Ranges = None,
                     ArrayRef<SMFixIt> FixIts = None,
                     bool ShowColors = true) const;
 
-  /// Emits a manually-constructed diagnostic to the given output stream.
-  ///
-  /// \param ShowColors Display colored messages if output is a terminal and
-  /// the default error handler is used.
+                                                                         
+     
+                                                                            
+                                        
   void PrintMessage(raw_ostream &OS, const SMDiagnostic &Diagnostic,
                     bool ShowColors = true) const;
 
-  /// Return an SMDiagnostic at the specified location with the specified
-  /// string.
-  ///
-  /// \param Msg If non-null, the kind of message (e.g., "error") which is
-  /// prefixed to the message.
+                                                                         
+             
+     
+                                                                          
+                              
   SMDiagnostic GetMessage(SMLoc Loc, DiagKind Kind, const Twine &Msg,
                           ArrayRef<SMRange> Ranges = None,
                           ArrayRef<SMFixIt> FixIts = None) const;
 
-  /// Prints the names of included files and the line of the file they were
-  /// included from. A diagnostic handler can use this before printing its
-  /// custom formatted message.
-  ///
-  /// \param IncludeLoc The location of the include.
-  /// \param OS the raw_ostream to print on.
+                                                                           
+                                                                          
+                               
+     
+                                                    
+                                            
   void PrintIncludeStack(SMLoc IncludeLoc, raw_ostream &OS) const;
 };
 
-/// Represents a single fixit, a replacement of one range of text with another.
+                                                                               
 class SMFixIt {
   SMRange Range;
 
   std::string Text;
 
 public:
-  // FIXME: Twine.str() is not very efficient.
+                                              
   SMFixIt(SMLoc Loc, const Twine &Insertion)
     : Range(Loc, Loc), Text(Insertion.str()) {
     assert(Loc.isValid());
   }
 
-  // FIXME: Twine.str() is not very efficient.
+                                              
   SMFixIt(SMRange R, const Twine &Replacement)
     : Range(R), Text(Replacement.str()) {
     assert(R.isValid());
@@ -286,8 +286,8 @@ public:
   }
 };
 
-/// Instances of this class encapsulate one diagnostic report, allowing
-/// printing to a raw_ostream as a caret diagnostic.
+                                                                       
+                                                    
 class SMDiagnostic {
   const SourceMgr *SM = nullptr;
   SMLoc Loc;
@@ -300,13 +300,13 @@ class SMDiagnostic {
   SmallVector<SMFixIt, 4> FixIts;
 
 public:
-  // Null diagnostic.
+                     
   SMDiagnostic() = default;
-  // Diagnostic with no location (e.g. file not found, command line arg error).
+                                                                               
   SMDiagnostic(StringRef filename, SourceMgr::DiagKind Knd, StringRef Msg)
     : Filename(filename), LineNo(-1), ColumnNo(-1), Kind(Knd), Message(Msg) {}
 
-  // Diagnostic with a location.
+                                
   SMDiagnostic(const SourceMgr &sm, SMLoc L, StringRef FN,
                int Line, int Col, SourceMgr::DiagKind Kind,
                StringRef Msg, StringRef LineStr,
@@ -335,6 +335,6 @@ public:
              bool ShowKindLabel = true) const;
 };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_SUPPORT_SOURCEMGR_H
+#endif                            

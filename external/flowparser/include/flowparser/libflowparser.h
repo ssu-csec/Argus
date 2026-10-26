@@ -64,33 +64,33 @@ public:
       if (Long_val(v) == 0) {
         return convert_null();
       }
-      // no other immediate values should exist
-      return convert_undefined(); // TODO: raise v8 exception
+                                               
+      return convert_undefined();                            
     };
     switch (Tag_val(v)) {
-      // JObject
+                
       case 0:
         return convert_object(Field(v, 0));
 
-      // JArray
+               
       case 1:
         return convert_array(Field(v, 0));
 
-      // JString
+                
       case 2:
         return convert_string(String_val(Field(v, 0)));
 
-      // JNumber
+                
       case 3:
         return convert_number(Double_val(Field(v, 0)));
 
-      // JBool
+              
       case 4:
         return convert_bool(Long_val(Field(v, 0)));
 
       default:
-        // no other tags exist!
-        return convert_undefined(); // TODO: raise v8 exception
+                               
+        return convert_undefined();                            
     }
   }
 
@@ -102,7 +102,7 @@ public:
 
     content_val = caml_copy_string(content);
 
-    options_val = Val_int(0); // empty list
+    options_val = Val_int(0);              
     for (auto& x : opts) {
       option_val = caml_alloc_tuple(2);
       Store_field(option_val, 0, caml_copy_string(x.first.c_str()));
@@ -121,4 +121,4 @@ void init() {
   caml_startup(argv);
 }
 
-} // namespace flow
+}                  

@@ -24,8 +24,8 @@ using llvh::dyn_cast;
 using llvh::isa;
 
 class LoadConstants : public FunctionPass {
-  /// Check whether a particular operand of an instruction must stay
-  /// as literal and hence cannot be lowered into load_const instruction.
+                                                                    
+                                                                         
   bool operandMustBeLiteral(Instruction *Inst, unsigned opIndex);
 
  public:
@@ -42,9 +42,9 @@ class LoadParameters : public FunctionPass {
   bool runOnFunction(Function *F) override;
 };
 
-/// Lower LoadFrameInst, StoreFrameInst and CreateFunctionInst.
+                                                               
 class LowerLoadStoreFrameInst : public FunctionPass {
-  /// Decide the correct scope to use when dealing with given variable.
+                                                                       
   ScopeCreationInst *
   getScope(IRBuilder &builder, Variable *var, ScopeCreationInst *environment);
 
@@ -55,7 +55,7 @@ class LowerLoadStoreFrameInst : public FunctionPass {
   bool runOnFunction(Function *F) override;
 };
 
-// Lower uses of the JS `arguments` array into HBC*Arguments* instructions.
+                                                                           
 class LowerArgumentsArray : public FunctionPass {
  private:
   CreateArgumentsInst *getCreateArgumentsInst(Function *F);
@@ -66,8 +66,8 @@ class LowerArgumentsArray : public FunctionPass {
   bool runOnFunction(Function *F) override;
 };
 
-/// HBCReifyArguments writes are idempotent, but CSE and such doesn't support
-/// this. This pass dedups by block and then by dominators.
+                                                                             
+                                                           
 class DedupReifyArguments : public FunctionPass {
  public:
   explicit DedupReifyArguments() : FunctionPass("DedupReifyArguments") {}
@@ -82,8 +82,8 @@ class LowerConstruction : public FunctionPass {
   bool runOnFunction(Function *F) override;
 };
 
-/// Lower calls into a series of parameter moves followed by a call with
-/// those moved values. Should only run once, right before MovElimination.
+                                                                        
+                                                                          
 class LowerCalls : public FunctionPass {
  public:
   explicit LowerCalls(HVMRegisterAllocator &RA)
@@ -95,9 +95,9 @@ class LowerCalls : public FunctionPass {
   HVMRegisterAllocator &RA_;
 };
 
-/// A new LoadConstTrue is 2 bytes, while copying an old one with a Mov is 3.
-/// This pass replaces Movs with Loads when it saves space. Must run after RA
-/// since that's when Movs are introduced.
+                                                                             
+                                                                             
+                                          
 class RecreateCheapValues : public FunctionPass {
  public:
   explicit RecreateCheapValues(HVMRegisterAllocator &RA)
@@ -109,12 +109,12 @@ class RecreateCheapValues : public FunctionPass {
   HVMRegisterAllocator &RA_;
 };
 
-/// This pass removes unnecessary Movs and HBCLoadConstInsts that have been
-/// introduced after CSE by register allocation.
-/// It keeps track of all registers that are written to by HBCLoadConstInst
-/// or by Movs whose operand is a HBCLoadConstInst, and removes all successive
-/// instructions that write the same value to that register until it is written
-/// to by a different instruction.
+                                                                           
+                                                
+                                                                           
+                                                                              
+                                                                               
+                                  
 class LoadConstantValueNumbering : public FunctionPass {
  public:
   explicit LoadConstantValueNumbering(HVMRegisterAllocator &RA)
@@ -126,8 +126,8 @@ class LoadConstantValueNumbering : public FunctionPass {
   HVMRegisterAllocator &RA_;
 };
 
-/// Add required Movs for instructions that ended up in Reg256+ that can't
-/// fit in a Reg8 in our bytecode.
+                                                                          
+                                  
 class SpillRegisters : public FunctionPass {
  public:
   explicit SpillRegisters(HVMRegisterAllocator &RA)
@@ -137,10 +137,10 @@ class SpillRegisters : public FunctionPass {
 
  protected:
   HVMRegisterAllocator &RA_;
-  /// The first "high" register.
+                                
   static const int boundary_ = 256;
-  /// The registers from 0 to reserved_ are used for temp space.
-  /// The most we'll currently need appears to be 6 for GetByPNameInst.
+                                                                
+                                                                       
   static const int reserved_ = 6;
 
   bool requiresShortOutput(Instruction *I);
@@ -154,7 +154,7 @@ class SpillRegisters : public FunctionPass {
     assert(i < reserved_ && "Using too many reserved regs.");
     return Register(i);
   }
-  // Push up all register from 0 to reserved_ to use as temp space.
+                                                                   
   void reserveLowRegisters(Function *F) {
     RA_.allocateSpillTempCount(reserved_);
     for (auto &BB : F->getBasicBlockList()) {
@@ -168,10 +168,10 @@ class SpillRegisters : public FunctionPass {
   }
 };
 
-/// Attempt to lower a switch statement into a jump table.
-/// Must be run prior to the pass lowering switches into linear search.
-/// Currently this only affects switches that are suffciently dense and with
-/// positive cases.
+                                                          
+                                                                       
+                                                                            
+                   
 class LowerSwitchIntoJumpTables : public FunctionPass {
  public:
   explicit LowerSwitchIntoJumpTables()
@@ -183,6 +183,6 @@ class LowerSwitchIntoJumpTables : public FunctionPass {
   bool lowerIntoJumpTable(SwitchInst *switchInst);
 };
 
-} // namespace hbc
-} // namespace hermes
+}                 
+}                    
 #endif

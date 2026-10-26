@@ -27,7 +27,7 @@ namespace llvh {
 class Twine;
 class Module;
 
-// Traits class for using GlobalIFunc in symbol table in Module.
+                                                                
 template <typename ValueSubClass> class SymbolTableListTraits;
 
 class GlobalIFunc final : public GlobalIndirectSymbol,
@@ -41,8 +41,8 @@ public:
   GlobalIFunc(const GlobalIFunc &) = delete;
   GlobalIFunc &operator=(const GlobalIFunc &) = delete;
 
-  /// If a parent module is specified, the ifunc is automatically inserted into
-  /// the end of the specified module's ifunc list.
+                                                                               
+                                                   
   static GlobalIFunc *create(Type *Ty, unsigned AddressSpace,
                              LinkageTypes Linkage, const Twine &Name,
                              Constant *Resolver, Module *Parent);
@@ -51,14 +51,14 @@ public:
     GlobalValue::copyAttributesFrom(Src);
   }
 
-  /// This method unlinks 'this' from the containing module, but does not
-  /// delete it.
+                                                                         
+                
   void removeFromParent();
 
-  /// This method unlinks 'this' from the containing module and deletes it.
+                                                                           
   void eraseFromParent();
 
-  /// These methods retrieve and set ifunc resolver function.
+                                                             
   void setResolver(Constant *Resolver) {
     setIndirectSymbol(Resolver);
   }
@@ -69,12 +69,12 @@ public:
     return getIndirectSymbol();
   }
 
-  // Methods for support type inquiry through isa, cast, and dyn_cast:
+                                                                      
   static bool classof(const Value *V) {
     return V->getValueID() == Value::GlobalIFuncVal;
   }
 };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_IR_GLOBALIFUNC_H
+#endif                         

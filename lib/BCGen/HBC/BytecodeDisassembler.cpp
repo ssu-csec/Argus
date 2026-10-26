@@ -36,9 +36,9 @@ enum class BytecodeTable {
   Function,
 };
 
-/// \return a BytecodeTable other than BytecodeTable::None value if
-/// \p operandIndex (a zero-based operand index of \p opCode) references an
-/// entry in a table in bytecode. BytecodeTable::None is returned otherwise.
+                                                                   
+                                                                           
+                                                                            
 static BytecodeTable getBytecodeTableForOperand(
     OpCode opCode,
     unsigned operandIndex) {
@@ -86,8 +86,8 @@ static void dumpFunctionName(
   }
 }
 
-/// Check if the zero based \p operandIndex in instruction \p opCode is a
-/// string table ID.
+                                                                         
+                    
 static bool isOperandStringID(OpCode opCode, unsigned operandIndex) {
   return getBytecodeTableForOperand(opCode, operandIndex) ==
       BytecodeTable::String;
@@ -159,13 +159,13 @@ const char *stringKindTag(StringKind::Kind kind) {
   hermes_fatal("Unrecognised String Kind.");
 }
 
-} // namespace
+}             
 
 void BytecodeDisassembler::disassembleBytecodeFileHeader(raw_ostream &OS) {
   const auto bcopts = bcProvider_->getBytecodeOptions();
   OS << "Bytecode File Information:\n";
-  // If the version number in the bytecode file differs from this, the bytecode
-  // provider would have exited with an error message.
+                                                                               
+                                                      
   OS << "  Bytecode version number: " << hbc::BYTECODE_VERSION << "\n";
   OS << "  Source hash: " << hashAsString(bcProvider_->getSourceHash()) << "\n";
   OS << "  Function count: " << bcProvider_->getFunctionCount() << "\n";
@@ -226,7 +226,7 @@ void BytecodeDisassembler::disassembleStringStorage(raw_ostream &OS) {
         case StringKind::Identifier:
           OS << " #"
              << llvh::format_hex_no_prefix(
-                    hashes[hashID++], 8, /* Upper */ true);
+                    hashes[hashID++], 8,             true);
           break;
 
         default:
@@ -253,8 +253,8 @@ void BytecodeDisassembler::disassembleStringStorage(raw_ostream &OS) {
   (void)hashCount;
 }
 
-/// NOTE: The output might not show the value of every literal used
-/// by NewArrayWithBuffer (explained in serializeBuffer's header).
+                                                                   
+                                                                  
 void BytecodeDisassembler::disassembleArrayBuffer(raw_ostream &OS) {
   auto arrayBuffer = bcProvider_->getArrayBuffer();
   if (arrayBuffer.size() == 0)
@@ -271,8 +271,8 @@ void BytecodeDisassembler::disassembleArrayBuffer(raw_ostream &OS) {
   }
 }
 
-/// NOTE: The output might not show the value of every literal used
-/// by NewObjectWithBuffer (explained in serializeBuffer's header).
+                                                                   
+                                                                   
 void BytecodeDisassembler::disassembleObjectBuffer(raw_ostream &OS) {
   auto objKeyBuffer = bcProvider_->getObjectKeyBuffer();
   auto objValueBuffer = bcProvider_->getObjectValueBuffer();
@@ -303,7 +303,7 @@ void BytecodeDisassembler::disassembleObjectBuffer(raw_ostream &OS) {
   }
 }
 
-/// Converts the given bigint magnitude \p bytes to a string in base 10.
+                                                                        
 static std::string bigintMagnitudeToLengthLimitedString(
     llvh::ArrayRef<uint8_t> bytes) {
   const uint8_t kBase10 = 10;
@@ -326,7 +326,7 @@ static std::string bigintMagnitudeToLengthLimitedString(
   return value;
 }
 
-/// Print the content of the bigint storage.
+                                            
 void BytecodeDisassembler::disassembleBigIntStorage(raw_ostream &OS) {
   auto bigintStorage = bcProvider_->getBigIntStorage();
   auto bigintTable = bcProvider_->getBigIntTable();
@@ -435,10 +435,10 @@ void BytecodeDisassembler::disassembleExceptionHandlersPretty(
 
 namespace {
 
-/// Given a SwitchImm instruction, loop through each entry of the associated
-/// jump table.
-/// F: (current index into primary jump table, jump target offset, destination
-/// instruction) -> void.
+                                                                            
+               
+                                                                              
+                         
 template <typename F>
 void switchJumpTableForEach(const inst::Inst *inst, F f) {
   assert(inst->opCode == inst::OpCode::SwitchImm && "expected SwitchImm");
@@ -447,9 +447,9 @@ void switchJumpTableForEach(const inst::Inst *inst, F f) {
   assert(start < end);
   unsigned numberOfEntries = end - start;
 
-  /// Get the current SwitchImm instruction's subview [start, end] start pointer
-  /// from primary jump table. This is the same computation done by the
-  /// interpreter to figure out the start of the jump table view.
+                                                                                
+                                                                       
+                                                                 
   const auto *curJmpTableView =
       reinterpret_cast<const uint32_t *>(llvh::alignAddr(
           (const uint8_t *)inst + inst->iSwitchImm.op2, sizeof(uint32_t)));
@@ -463,7 +463,7 @@ void switchJumpTableForEach(const inst::Inst *inst, F f) {
       (const uint8_t *)inst + jumpTargetOffset);
   }
 }
-} // namespace
+}             
 
 void BytecodeVisitor::visitInstructionsInFunction(unsigned funcId) {
   funcId_ = funcId;
@@ -474,9 +474,9 @@ void BytecodeVisitor::visitInstructionsInFunction(unsigned funcId) {
 
   beforeStart(funcId, bytecodeStart);
   visitInstructionsInBody(
-      bytecodeStart, bytecodeEnd, /* visitSwitchImmTargets = */ true);
+      bytecodeStart, bytecodeEnd,                               true);
   afterStart();
-} // namespace hbc
+}                 
 
 void BytecodeVisitor::visitInstructionsInBody(
     const uint8_t *bytecodeStart,
@@ -490,7 +490,7 @@ void BytecodeVisitor::visitInstructionsInBody(
     auto instLength = md.size;
     preVisitInstruction(md.opCode, ip, instLength);
 
-    // Visit branch targets of the SwitchImm instruction.
+                                                         
     if (op == OpCode::SwitchImm && visitSwitchImmTargets) {
       switchJumpTableForEach(
           (inst::Inst const *)ip,
@@ -615,7 +615,7 @@ void JumpTargetsVisitor::preVisitInstruction(
     int length) {
   switch (opcode) {
     case OpCode::SwitchImm:
-      // Decode jump table of SwitchImm instruction.
+                                                    
       switchInsts_.push_back((inst::Inst const *)ip);
       break;
 
@@ -643,7 +643,7 @@ void JumpTargetsVisitor::visitOperand(
         operandType == OperandType::Addr32) {     \
       ctype operandVal;                           \
       decodeOperand(operandBuf, &operandVal);     \
-      /* operandVal is relative to current ip.*/  \
+                                                  \
       createOrSetLabel(ip + (int32_t)operandVal); \
     }                                             \
     break;                                        \
@@ -673,13 +673,13 @@ void PrettyDisassembleVisitor::dumpOperandFunction(
   dumpFunctionName(OS, *bcProvider_, functionID, functionHeader, options_);
 }
 
-/// Dump a string table entry referenced by an opcode operand. It is truncated
-/// to about 16 characters (by appending "...") and all non-ASCII values are
-/// escaped.
+                                                                              
+                                                                            
+            
 void PrettyDisassembleVisitor::dumpOperandString(
     StringID stringID,
     raw_ostream &OS) {
-  // After this limit we truncate the string.
+                                             
   static constexpr unsigned LEN_LIMIT = 16;
   unsigned len = 0;
 
@@ -753,7 +753,7 @@ void PrettyDisassembleVisitor::preVisitInstruction(
     os_ << "L" << label->second << ":\n";
   }
   printSourceLineForOffset(offset);
-  // Use the overrided indention for next line's output.
+                                                        
   os_ << llvh::left_justify("", getIndentation());
   uint32_t globalVirtualOffset = funcVirtualOffset_ + offset;
   if ((options_ & DisassemblyOptions::IncludeVirtualOffsets) ==
@@ -775,7 +775,7 @@ void PrettyDisassembleVisitor::visitOperand(
   }
   os_ << " ";
 
-  // Special handling for CallBuiltin and GetBuiltinClosure.
+                                                            
   if (operandIndex == 1 &&
       (opcode_ == inst::OpCode::CallBuiltin ||
        opcode_ == inst::OpCode::CallBuiltinLong ||
@@ -800,7 +800,7 @@ void PrettyDisassembleVisitor::visitOperand(
     decodeOperand(operandBuf, &operandVal);                         \
     if (operandType == OperandType::Addr8 ||                        \
         operandType == OperandType::Addr32) {                       \
-      /* operandVal is relative to current ip.*/                    \
+                                                                    \
       os_ << "L" << jumpTargets_[ip + (int32_t)operandVal];         \
     } else if (bytecodeTable == BytecodeTable::String) {            \
       dumpOperandString(operandVal, os_);                           \
@@ -813,7 +813,7 @@ void PrettyDisassembleVisitor::visitOperand(
       (void)hermes::numberToString(operandVal, buf, sizeof(buf));   \
       os_ << buf;                                                   \
     } else {                                                        \
-      /* Trick to print out 1-byte value as int instead of char. */ \
+                                                                    \
       os_ << +operandVal;                                           \
     }                                                               \
     break;                                                          \
@@ -839,8 +839,8 @@ void PrettyDisassembleVisitor::printSourceLineForOffset(uint32_t opcodeOffset) {
   }
 }
 
-/// Visitor to disassemble a function in non-pretty mode which
-/// does not display jump labels and decode string operands.
+                                                              
+                                                            
 class DisassembleVisitor : public BytecodeVisitor {
  private:
   raw_ostream &os_;
@@ -871,9 +871,9 @@ class DisassembleVisitor : public BytecodeVisitor {
     }
 
     switch (operandType) {
-// For each operand, we load it based on the size of
-// this operand's type. The + sign before the value is a
-// trick to print out 1-byte value as int instead of char.
+                                                    
+                                                        
+                                                          
 #define DEFINE_OPERAND_TYPE(name, ctype)              \
   case OperandType::name: {                           \
     ctype operandVal;                                 \
@@ -989,10 +989,10 @@ void BytecodeSectionWalker::printSectionRanges(bool human) {
   }
 }
 
-/// Visitor to build regex pattern/flag string table.
+                                                     
 class RegexStringTableVisitor : public BytecodeVisitor {
  private:
-  /// RegexIndex => <RegexPattern_StringID, RegexFlag_StringID> map.
+                                                                    
   std::vector<std::pair<uint32_t, uint32_t>> regexStringIDMap_;
 
  protected:
@@ -1029,8 +1029,8 @@ class RegexStringTableVisitor : public BytecodeVisitor {
 void BytecodeDisassembler::disassembleFunctionPretty(
     unsigned funcId,
     raw_ostream &OS) {
-  // Build jump targets table so that we can map from label address to label
-  // number.
+                                                                            
+            
   JumpTargetsVisitor jumpVisitor(bcProvider_);
   jumpVisitor.visitInstructionsInFunction(funcId);
 
@@ -1039,7 +1039,7 @@ void BytecodeDisassembler::disassembleFunctionPretty(
       bcProvider_, jumpTargets, OS, options_);
   disassembleVisitor.visitInstructionsInFunction(funcId);
 
-  // Print out switch jump tables, if any.
+                                          
   auto &switchInsts = jumpVisitor.getSwitchIntructions();
   if (!switchInsts.empty()) {
     OS << "\n " << "Jump Tables: \n";
@@ -1062,7 +1062,7 @@ void BytecodeDisassembler::disassembleFunctionRaw(
   DisassembleVisitor disassembleVisitor(bcProvider_, OS);
   disassembleVisitor.visitInstructionsInFunction(funcId);
 
-  // Print out switch jump tables, if any.
+                                          
   auto &switchInsts = disassembleVisitor.getSwitchIntructions();
   if (!switchInsts.empty()) {
     OS << "\n " << "Jump Tables: \n";
@@ -1112,9 +1112,9 @@ void BytecodeDisassembler::disassembleRegexs(raw_ostream &OS) {
   OS << '\n';
 }
 
-/// Outputs disassembly in a format resembling that of the "objdump" tool.
-/// This is meant to be consumed by tools that expect such a format, not
-/// for humans to read.
+                                                                          
+                                                                        
+                       
 class ObjdumpDisassembleVisitor : public BytecodeVisitor {
  private:
   unsigned funcId_ = 0;
@@ -1137,7 +1137,7 @@ class ObjdumpDisassembleVisitor : public BytecodeVisitor {
         << ":\t";
     for (int i = 0; i < length; ++i)
       os_ << llvh::format_hex_no_prefix(ip[i], 2) << " ";
-    // Align/justify to help any humans debugging the output.
+                                                             
     for (int i = length; i < 20; ++i)
       os_ << "   ";
     os_ << llvh::left_justify(getOpCodeString(opcode), 32);
@@ -1165,7 +1165,7 @@ class ObjdumpDisassembleVisitor : public BytecodeVisitor {
     decodeOperand(operandBuf, &operandVal);                                  \
     if (operandType == OperandType::Addr8 ||                                 \
         operandType == OperandType::Addr32) {                                \
-      /* operandVal is relative to current ip.*/                             \
+                                                                             \
       os_ << llvh::format_hex_no_prefix(                                     \
           ip + (int32_t)operandVal - bytecodeStart_ + funcOffset_, 8);       \
     } else if (operandType == OperandType::Double) {                         \
@@ -1175,7 +1175,7 @@ class ObjdumpDisassembleVisitor : public BytecodeVisitor {
     } else if (                                                              \
         operandType == OperandType::Reg8 ||                                  \
         operandType == OperandType::Reg32) {                                 \
-      /* "+" is a trick to print out 1-byte value as int instead of char. */ \
+                                                                             \
       os_ << "%r" << +operandVal;                                            \
     } else {                                                                 \
       os_ << "$"                                                             \
@@ -1193,13 +1193,13 @@ class ObjdumpDisassembleVisitor : public BytecodeVisitor {
       raw_ostream &os)
       : BytecodeVisitor(bcProvider), os_(os) {}
 
-  /// Disassemble a synthetic function with all opcodes with all zero operands.
+                                                                               
   void listOpCodes() {
     os_ << "\n"
         << llvh::format_hex_no_prefix((unsigned)-1, 16) << " <_" << (unsigned)-1
         << ">:\n";
 
-    // Synthesize the function body.
+                                    
     std::vector<uint8_t> bytecode;
     for (uint8_t op = 0; op < (uint8_t)inst::OpCode::_last; ++op) {
       bytecode.push_back(op);
@@ -1212,7 +1212,7 @@ class ObjdumpDisassembleVisitor : public BytecodeVisitor {
     visitInstructionsInBody(
         bytecode.data(),
         bytecode.data() + bytecode.size(),
-        /* visitSwitchImmTargets = */ false);
+                                      false);
   }
 };
 
@@ -1285,5 +1285,5 @@ void BytecodeDisassembler::disassemble(raw_ostream &OS) {
   bcProvider_->getDebugInfo()->disassemble(OS);
 }
 
-} // namespace hbc
-} // namespace hermes
+}                 
+}                    

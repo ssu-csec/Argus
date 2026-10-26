@@ -35,4 +35,4 @@ void StringKind::Accumulator::push_back(Kind k) {
   }
 }
 
-} // namespace hermes
+}                    

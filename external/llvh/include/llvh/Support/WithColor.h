@@ -19,7 +19,7 @@ extern cl::OptionCategory ColorCategory;
 
 class raw_ostream;
 
-// Symbolic names for various syntax elements.
+                                              
 enum class HighlightColor {
   Address,
   String,
@@ -32,36 +32,36 @@ enum class HighlightColor {
   Note
 };
 
-/// An RAII object that temporarily switches an output stream to a specific
-/// color.
+                                                                           
+          
 class WithColor {
   raw_ostream &OS;
-  /// Determine whether colors should be displayed.
+                                                   
   bool colorsEnabled(raw_ostream &OS);
 
 public:
-  /// To be used like this: WithColor(OS, HighlightColor::String) << "text";
+                                                                            
   WithColor(raw_ostream &OS, HighlightColor S);
   ~WithColor();
 
   raw_ostream &get() { return OS; }
   operator raw_ostream &() { return OS; }
 
-  /// Convenience method for printing "error: " to stderr.
+                                                          
   static raw_ostream &error();
-  /// Convenience method for printing "warning: " to stderr.
+                                                            
   static raw_ostream &warning();
-  /// Convenience method for printing "note: " to stderr.
+                                                         
   static raw_ostream &note();
 
-  /// Convenience method for printing "error: " to the given stream.
+                                                                    
   static raw_ostream &error(raw_ostream &OS, StringRef Prefix = "");
-  /// Convenience method for printing "warning: " to the given stream.
+                                                                      
   static raw_ostream &warning(raw_ostream &OS, StringRef Prefix = "");
-  /// Convenience method for printing "note: " to the given stream.
+                                                                   
   static raw_ostream &note(raw_ostream &OS, StringRef Prefix = "");
 };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_LIB_DEBUGINFO_WITHCOLOR_H
+#endif                                  

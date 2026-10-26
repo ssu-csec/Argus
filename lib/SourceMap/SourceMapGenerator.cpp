@@ -14,11 +14,11 @@ namespace hermes {
 
 namespace {
 
-/// A VLQ (VariableLengthQuantity) is a type of encoding used in source maps.
-/// Values are represented in a pseudo-base64 using continuation bits.
-/// The value is signed because SourceMaps are delta-encoded, so relative
-/// offsets (for example, between columns) may be negative. We wrap an int32_t
-/// in a struct so we can overload operator<< to output in the VLQ format.
+                                                                             
+                                                                      
+                                                                         
+                                                                              
+                                                                          
 struct VLQ {
   int32_t val;
 };
@@ -26,7 +26,7 @@ struct VLQ {
 llvh::raw_ostream &operator<<(llvh::raw_ostream &OS, VLQ vlq) {
   return base64vlq::encode(OS, vlq.val);
 }
-} // namespace
+}             
 
 uint32_t SourceMapGenerator::addSource(
     llvh::StringRef filename,
@@ -81,12 +81,12 @@ SourceMapGenerator::State SourceMapGenerator::encodeSourceLocations(
     const SourceMapGenerator::State &lastState,
     llvh::ArrayRef<SourceMap::Segment> segments,
     llvh::raw_ostream &OS) {
-  // Currently we only support a single source, so the source ID (and its delta)
-  // is always 0.
+                                                                                
+                 
   SourceMapGenerator::State state = lastState, prevState = lastState;
   bool first = true;
   for (const SourceMap::Segment &seg : segments) {
-    // Segments are separated by commas.
+                                        
     state.generatedColumn = seg.generatedColumn;
     OS << (first ? "" : ",")
        << VLQ{state.generatedColumn - prevState.generatedColumn};
@@ -114,7 +114,7 @@ std::string SourceMapGenerator::getVLQMappingsString() const {
   llvh::raw_string_ostream OS(result);
   State state;
   for (const SourceMap::SegmentList &segments : lines_) {
-    // The generated column (unlike other fields) resets with each new line.
+                                                                            
     state.generatedColumn = 0;
     state = encodeSourceLocations(state, segments, OS);
     OS << ';';
@@ -135,7 +135,7 @@ SourceMapGenerator SourceMapGenerator::mergedWithInputSourceMaps() const {
 
   auto sources = getSources();
 
-  // Create a new SourceMapGenerator with the merged data.
+                                                          
   SourceMapGenerator merged;
 
   for (uint32_t i = 0, e = lines_.size(); i < e; ++i) {
@@ -150,12 +150,12 @@ SourceMapGenerator SourceMapGenerator::mergedWithInputSourceMaps() const {
       newSeg.representedLocation = llvh::None;
 
       if (inputSeg.hasValue() && inputSeg->representedLocation.hasValue()) {
-        // We have an input source map and were able to find a merged source
-        // location.
+                                                                            
+                    
 
         auto loc = inputSeg->representedLocation.getValue();
-        // Our _output_ sourceRoot is empty, so make sure to canonicalize
-        // the path based on the input map's sourceRoot.
+                                                                         
+                                                        
         std::string filename = inputMap->getSourceFullPath(loc.sourceIndex);
 
         newSeg.representedLocation = SourceMap::Segment::SourceLocation(
@@ -163,23 +163,23 @@ SourceMapGenerator SourceMapGenerator::mergedWithInputSourceMaps() const {
                 filename, inputMap->getSourceMetadata(loc.sourceIndex)),
             loc.lineIndex,
             loc.columnIndex
-            // TODO: Handle name index
+                                      
         );
       }
 
       if (!inputMap && !newSeg.representedLocation.hasValue() &&
           seg.representedLocation.hasValue()) {
-        // Failed to find a merged location because there is no input source
-        // map. Use the existing location, but copy over the source file name.
+                                                                            
+                                                                              
         newSeg.representedLocation = seg.representedLocation;
         newSeg.representedLocation->sourceIndex = merged.addSource(
             sources[seg.representedLocation->sourceIndex],
             getSourceMetadata(seg.representedLocation->sourceIndex));
       }
 
-      // Push the new segment even if it has no represented location. If there
-      // is an input source map, all locations we emit will be in terms of it,
-      // or be explicitly unmapped.
+                                                                              
+                                                                              
+                                   
       newLine.push_back(std::move(newSeg));
     }
 
@@ -193,8 +193,8 @@ void SourceMapGenerator::outputAsJSON(llvh::raw_ostream &OS) const {
   if (inputSourceMaps_.empty()) {
     this->outputAsJSONImpl(OS);
   } else {
-    // If there are input source maps, we must merge them into a new
-    // SourceMapGenerator before output.
+                                                                    
+                                        
     mergedWithInputSourceMaps().outputAsJSONImpl(OS);
   }
 }
@@ -247,4 +247,4 @@ void SourceMapGenerator::addFunctionOffsets(
   functionOffsets_[segmentID] = std::move(functionOffsets);
 }
 
-} // namespace hermes
+}                    

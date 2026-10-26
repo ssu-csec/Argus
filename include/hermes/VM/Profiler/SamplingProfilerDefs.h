@@ -10,16 +10,16 @@
 
 #if defined(__EMSCRIPTEN__)
 #define HERMESVM_SAMPLING_PROFILER_AVAILABLE 0
-#else // !defined(__EMSCRIPTEN__)
+#else                            
 
 #define HERMESVM_SAMPLING_PROFILER_AVAILABLE 1
 
 #if defined(_WINDOWS)
 #define HERMESVM_SAMPLING_PROFILER_WINDOWS
-#else // !defined(_WINDOWS)
+#else                      
 #define HERMESVM_SAMPLING_PROFILER_POSIX
-#endif // !defined(_WINDOWS)
+#endif                      
 
-#endif // !defined(__EMSCRIPTEN__)
+#endif                            
 
-#endif // HERMES_VM_PROFILER_SAMPLINGPROFILERDEFS_H
+#endif                                             

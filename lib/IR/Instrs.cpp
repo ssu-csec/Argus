@@ -87,8 +87,8 @@ SideEffectKind UnaryOperatorInst::getSideEffect() {
   }
 
   switch (getOperatorKind()) {
-    case OpKind::VoidKind: // void
-    case OpKind::TypeofKind: // typeof
+    case OpKind::VoidKind:        
+    case OpKind::TypeofKind:          
       return SideEffectKind::None;
 
     default:
@@ -124,7 +124,7 @@ BinaryOperatorInst::OpKind BinaryOperatorInst::parseAssignmentOperator(
 llvh::Optional<BinaryOperatorInst::OpKind>
 BinaryOperatorInst::tryGetReverseOperator(BinaryOperatorInst::OpKind op) {
   switch (op) {
-    // Commutative operators
+                            
     case OpKind::EqualKind:
     case OpKind::NotEqualKind:
     case OpKind::StrictlyEqualKind:
@@ -136,7 +136,7 @@ BinaryOperatorInst::tryGetReverseOperator(BinaryOperatorInst::OpKind op) {
     case OpKind::AndKind:
       return op;
 
-    // Rewritable operators
+                           
     case OpKind::LessThanKind:
       return OpKind::GreaterThanKind;
     case OpKind::LessThanOrEqualKind:
@@ -154,14 +154,14 @@ BinaryOperatorInst::tryGetReverseOperator(BinaryOperatorInst::OpKind op) {
 SideEffectKind
 BinaryOperatorInst::getBinarySideEffect(Type leftTy, Type rightTy, OpKind op) {
   switch (op) {
-    // The 'in' and 'instanceof' operators may execute arbitrary code, or throw
-    // when given primitive types:
+                                                                               
+                                  
     case OpKind::InKind:
     case OpKind::InstanceOfKind:
       return SideEffectKind::Unknown;
 
-    // Strict equality does not throw or have other side effects (per
-    // ES5 11.9.6).
+                                                                     
+                   
     case OpKind::StrictlyNotEqualKind:
     case OpKind::StrictlyEqualKind:
       return SideEffectKind::None;
@@ -172,8 +172,8 @@ BinaryOperatorInst::getBinarySideEffect(Type leftTy, Type rightTy, OpKind op) {
     case OpKind::LessThanOrEqualKind:
     case OpKind::GreaterThanKind:
     case OpKind::GreaterThanOrEqualKind:
-      // This instruction does not read/write memory if the LHS and RHS types
-      // are known to be primitive.
+                                                                             
+                                   
       if (leftTy.isPrimitive() && rightTy.isPrimitive())
         return SideEffectKind::None;
       break;
@@ -182,24 +182,24 @@ BinaryOperatorInst::getBinarySideEffect(Type leftTy, Type rightTy, OpKind op) {
     case OpKind::DivideKind:
     case OpKind::ModuloKind:
     case OpKind::ExponentiationKind:
-      // We can only reason about primitive types.
+                                                  
       if (!leftTy.isPrimitive() || !rightTy.isPrimitive())
         break;
-      // if either of the operands can be a BigInt, this instruction may throw
-      // for one of the following reasons:
-      // - BigInt doesn't have unsigned right shift.
-      // - BigInt division by zero.
-      // - BigInt as exponent can't be negative
+                                                                              
+                                          
+                                                    
+                                   
+                                               
       if (leftTy.canBeBigInt() || rightTy.canBeBigInt())
         return SideEffectKind::Unknown;
-      // We have primitive operands that are not BigInt.
+                                                        
       return SideEffectKind::None;
 
     case OpKind::AddKind:
-      // We can only reason about primitive types.
+                                                  
       if (!leftTy.isPrimitive() || !rightTy.isPrimitive())
         break;
-      // If one of the operands is a string, it is side effect free.
+                                                                    
       if (leftTy.isStringType() || rightTy.isStringType())
         return SideEffectKind::None;
       [[fallthrough]];
@@ -211,23 +211,23 @@ BinaryOperatorInst::getBinarySideEffect(Type leftTy, Type rightTy, OpKind op) {
     case OpKind::OrKind:
     case OpKind::XorKind:
     case OpKind::AndKind:
-      // We can only reason about primitive types.
+                                                  
       if (!leftTy.isPrimitive() || !rightTy.isPrimitive())
         break;
-      // If both operands are BigInt, it is side effect free.
+                                                             
       if (leftTy.isBigIntType() && rightTy.isBigIntType())
         return SideEffectKind::None;
-      // However BigInt arithmetic operands don't mix with any other type.
+                                                                          
       if (leftTy.canBeBigInt() || rightTy.canBeBigInt())
         return SideEffectKind::Unknown;
-      // We have primitive operands that are not BigInt.
+                                                        
       return SideEffectKind::None;
 
     default:
       hermes_fatal("Invalid binary operator");
   }
 
-  // This binary operation may execute arbitrary code.
+                                                      
   return SideEffectKind::Unknown;
 }
 
@@ -243,7 +243,7 @@ SwitchInst::SwitchInst(
   assert(blocks.size() && "Empty switch statement (no cases?)");
   assert(values.size() == blocks.size() && "Block-value pairs mismatch");
 
-  // Push the switch targets.
+                             
   for (int i = 0, e = values.size(); i < e; ++i) {
     pushOperand(values[i]);
     pushOperand(blocks[i]);
@@ -251,15 +251,15 @@ SwitchInst::SwitchInst(
 }
 
 unsigned SwitchInst::getNumCasePair() const {
-  // The number of cases is computed as the total number of operands, minus
-  // the input value and the default basic block. Take this number and divide
-  // it in two, because we are counting pairs.
+                                                                           
+                                                                             
+                                              
   return (getNumOperands() - FirstCaseIdx) / 2;
 }
 
 std::pair<Literal *, BasicBlock *> SwitchInst::getCasePair(unsigned i) const {
-  // The values and lables are twined together. Find the index of the pair
-  // that we are fetching and return the two values.
+                                                                          
+                                                    
   unsigned base = i * 2 + FirstCaseIdx;
   return std::make_pair(
       cast<Literal>(getOperand(base)), cast<BasicBlock>(getOperand(base + 1)));
@@ -292,7 +292,7 @@ Value *SwitchInst::getInputValue() const {
 PhiInst::PhiInst(const ValueListType &values, const BasicBlockListType &blocks)
     : Instruction(ValueKind::PhiInstKind) {
   assert(values.size() == blocks.size() && "Block-value pairs mismatch");
-  // Push the incoming values.
+                              
   for (int i = 0, e = values.size(); i < e; ++i) {
     pushOperand(values[i]);
     pushOperand(blocks[i]);
@@ -300,11 +300,11 @@ PhiInst::PhiInst(const ValueListType &values, const BasicBlockListType &blocks)
 }
 
 unsigned PhiInst::getNumEntries() const {
-  // The PHI operands are just pairs of values and basic blocks.
+                                                                
   return getNumOperands() / 2;
 }
 
-/// Returns the index of the first operand for phi entry pair.
+                                                              
 static unsigned indexOfPhiEntry(unsigned index) {
   return index * 2;
 }
@@ -326,26 +326,26 @@ void PhiInst::addEntry(Value *val, BasicBlock *BB) {
 }
 
 void PhiInst::removeEntry(unsigned index) {
-  // Remove the pair at the right offset. See calculation of getEntry above.
+                                                                            
   unsigned startIdx = indexOfPhiEntry(index);
-  // Remove the value:
+                      
   removeOperand(startIdx);
-  // Remove the basic block. Notice that we use the same index because the
-  // list is shifted.
+                                                                          
+                     
   removeOperand(startIdx);
 }
 
 void PhiInst::removeEntry(BasicBlock *BB) {
   unsigned i = 0;
-  // For each one of the entries:
+                                 
   while (i < getNumEntries()) {
-    // If this entry is from the BB we want to remove, then remove it.
+                                                                      
     if (getEntry(i).second == BB) {
       removeEntry(i);
-      // keep the current iteration index.
+                                          
       continue;
     }
-    // Else, move to the next entry.
+                                    
     i++;
   }
 }
@@ -408,7 +408,7 @@ SwitchImmInst::SwitchImmInst(
   assert(blocks.size() && "Empty switch statement (no cases?)");
   assert(values.size() == blocks.size() && "Block-value pairs mismatch");
 
-  // Push the switch targets.
+                             
   for (size_t i = 0, e = values.size(); i < e; ++i) {
     assert(values[i]->isUInt32Representible() && "case value must be uint32_t");
     pushOperand(values[i]);
@@ -435,7 +435,7 @@ void SwitchImmInst::setSuccessor(unsigned idx, BasicBlock *B) {
 Instruction::Variety Instruction::getVariety() const {
   const ValueKind kind = getKind();
 
-  // Get the operator kind, if the instruction has one.
+                                                       
   unsigned operatorKind;
   switch (kind) {
     case ValueKind::BinaryOperatorInstKind:
@@ -458,18 +458,18 @@ Instruction::Variety Instruction::getVariety() const {
       break;
   }
 
-  // Combine the two kinds into a single value.
+                                               
   return Variety(std::make_pair(static_cast<unsigned>(kind), operatorKind));
 }
 
 bool Instruction::isIdenticalTo(const Instruction *RHS) const {
-  // Check if both instructions have the same variety and number of operands.
-  // This should filter out most cases.
+                                                                             
+                                       
   if (getVariety() != RHS->getVariety() ||
       getNumOperands() != RHS->getNumOperands())
     return false;
 
-  // Check operands.
+                    
   for (unsigned i = 0, e = getNumOperands(); i != e; ++i)
     if (getOperand(i) != RHS->getOperand(i))
       return false;
@@ -478,27 +478,27 @@ bool Instruction::isIdenticalTo(const Instruction *RHS) const {
 }
 
 namespace {
-/// Return the hash code of the visited instruction.
+                                                    
 class InstructionHashConstructor
     : public InstructionVisitor<InstructionHashConstructor, llvh::hash_code> {
  public:
-  /// Return default hash code.
+                               
   llvh::hash_code visitInstruction(const Instruction &V) {
     return llvh::hash_code();
   }
 
-  /// IMPLEMENT anything that needs special handling here. visitInstruction will
-  /// be called for Instructions we do not know how to handle speically.
+                                                                                
+                                                                        
 };
-} // namespace
+}             
 
 llvh::hash_code Instruction::getHashCode() const {
   llvh::hash_code hc = llvh::hash_combine(getVariety(), getNumOperands());
 
-  // Check operands.
+                    
   for (unsigned i = 0, e = getNumOperands(); i != e; ++i)
     hc = llvh::hash_combine(hc, getOperand(i));
 
-  // Hash in any special attributes for an instruction.
+                                                       
   return llvh::hash_combine(hc, InstructionHashConstructor().visit(*this));
 }

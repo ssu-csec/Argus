@@ -45,7 +45,7 @@ StringIDMap createPredefinedStringSet() {
   return predefined;
 }
 
-} // namespace
+}             
 
 namespace hermes {
 namespace vm {
@@ -60,7 +60,7 @@ llvh::Optional<SymbolID> getPredefinedStringID(llvh::StringRef str) {
   return it->second;
 }
 
-// Use local constexpr arrays to avoid complaint about global constructors.
+                                                                           
 static constexpr uint8_t _predefPropertyLengths[] = {
 #define PROP(id) sizeof("(InternalProperty" #id ")") - 1,
 #define NAMED_PROP(name) sizeof("(InternalProperty" #name ")") - 1,
@@ -82,9 +82,9 @@ const llvh::ArrayRef<uint8_t> predefSymbolLengths = _predefSymbolLengths;
 const llvh::ArrayRef<uint8_t> predefStringLengths = _predefStringLengths;
 
 const llvh::ArrayRef<char> predefStringAndSymbolChars =
-// One buffer contains all strings.
-// This ensures that all the strings live together in memory,
-// and that we don't touch multiple separate pages on startup.
+                                   
+                                                             
+                                                              
 #define PROP(id) "(InternalProperty" #id ")"
 #define NAMED_PROP(name) "(InternalProperty" #name ")"
 #include "hermes/VM/InternalProperties.def"
@@ -94,5 +94,5 @@ const llvh::ArrayRef<char> predefStringAndSymbolChars =
 #include "hermes/VM/PredefinedSymbols.def"
     ;
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

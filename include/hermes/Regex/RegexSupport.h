@@ -15,12 +15,12 @@
 namespace hermes {
 namespace regex {
 using GroupName = llvh::SmallVector<char16_t, 5>;
-// A map from identifier -> groupNum
-// /(?<id_foo>a)(b)(?<id_bar>c)/
-// would be represented as { id_foo -> 1, id_bar -> 3 }
+                                    
+                                
+                                                       
 using ParsedGroupNamesMapping =
     llvh::DenseMap<llvh::ArrayRef<char16_t>, uint32_t>;
-} // namespace regex
-} // namespace hermes
+}                   
+}                    
 
-#endif // HERMES_REGEX_REGEXSUPPORT_H
+#endif                               

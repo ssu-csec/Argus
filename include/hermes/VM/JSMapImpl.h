@@ -17,9 +17,9 @@
 namespace hermes {
 namespace vm {
 
-/// The implementation of a JSMap object. Internally, a Map works the same way
-/// as a Set, and hence we share the same implementation for them, with
-/// different CellKind.
+                                                                              
+                                                                       
+                       
 template <CellKind C>
 class JSMapImpl final : public JSObject {
   using Super = JSObject;
@@ -38,7 +38,7 @@ class JSMapImpl final : public JSObject {
       Runtime &runtime,
       Handle<JSObject> parentHandle);
 
-  /// Allocate the internal element storage.
+                                            
   static ExecutionStatus initializeStorage(
       Handle<JSMapImpl> self,
       Runtime &runtime) {
@@ -51,12 +51,12 @@ class JSMapImpl final : public JSObject {
     return ExecutionStatus::RETURNED;
   }
 
-  /// Advance iterator and return the next.
+                                           
   HashMapEntry *iteratorNext(Runtime &runtime, HashMapEntry *entry) {
     return storage_.getNonNull(runtime)->iteratorNext(runtime, entry);
   }
 
-  /// Add a value.
+                  
   static void addValue(
       Handle<JSMapImpl> self,
       Runtime &runtime,
@@ -70,7 +70,7 @@ class JSMapImpl final : public JSObject {
         value);
   }
 
-  /// \return true if a key exists.
+                                   
   static bool hasKey(Handle<JSMapImpl> self, Runtime &runtime, Handle<> key) {
     self->assertInitialized();
     return OrderedHashMap::has(
@@ -84,7 +84,7 @@ class JSMapImpl final : public JSObject {
         runtime.makeHandle<OrderedHashMap>(self->storage_), runtime, key);
   }
 
-  /// Delelet a key. \return true if succeeds.
+                                              
   static bool
   deleteKey(Handle<JSMapImpl> self, Runtime &runtime, Handle<> key) {
     self->assertInitialized();
@@ -92,19 +92,19 @@ class JSMapImpl final : public JSObject {
         runtime.makeHandle<OrderedHashMap>(self->storage_), runtime, key);
   }
 
-  /// \returns the size.
+                        
   static uint32_t getSize(JSMapImpl *self, Runtime &runtime) {
     self->assertInitialized();
     return self->storage_.getNonNull(runtime)->size();
   }
 
-  /// Clear all elements from the storage.
+                                          
   static void clear(Handle<JSMapImpl> self, Runtime &runtime) {
     self->assertInitialized();
     self->storage_.getNonNull(runtime)->clear(runtime);
   }
 
-  /// Call \p callbackfn for each entry, with \p thisArg as this.
+                                                                 
   static ExecutionStatus forEach(
       Handle<JSMapImpl> self,
       Runtime &runtime,
@@ -136,7 +136,7 @@ class JSMapImpl final : public JSObject {
     return ExecutionStatus::RETURNED;
   }
 
-  /// Build the metadata for this map implementation, and store it into \p mb.
+                                                                              
   static void MapOrSetBuildMeta(const GCCell *cell, Metadata::Builder &mb);
 
   JSMapImpl(
@@ -146,7 +146,7 @@ class JSMapImpl final : public JSObject {
       : JSObject(runtime, *parent, *clazz) {}
 
  private:
-  /// The underlying storage.
+                             
   GCPointer<OrderedHashMap> storage_{nullptr};
 
   void assertInitialized() {
@@ -154,7 +154,7 @@ class JSMapImpl final : public JSObject {
   }
 };
 
-/// JSMapTypeTraits binds iterator type and its corresponding container type.
+                                                                             
 template <CellKind T>
 struct JSMapTypeTraits;
 template <>
@@ -180,13 +180,13 @@ class JSMapIteratorImpl final : public JSObject {
     return cell->getKind() == C;
   }
 
-  /// Create a handle of JSMapIterator.
+                                       
   static PseudoHandle<JSMapIteratorImpl<C>> create(
       Runtime &runtime,
       Handle<JSObject> prototype);
 
-  /// Initialize the iterator, set its targeting Set data and iteration kind.
-  /// The \p gc parameter is necessary for write barriers.
+                                                                             
+                                                          
   void initializeIterator(
       Runtime &runtime,
       Handle<JSMapImpl<JSMapTypeTraits<C>::ContainerKind>> data,
@@ -197,22 +197,22 @@ class JSMapIteratorImpl final : public JSObject {
     assert(data_ && "Invalid storage data");
   }
 
-  /// Check if the iterator has been properly initialized.
-  /// data_ is nullptr either when the iterator is not initialized,
-  /// or iteration has finished.
+                                                          
+                                                                   
+                                
   bool isInitialized() const {
     return data_ || iterationFinished_;
   }
 
-  /// Iterate to the next element and return.
+                                             
   static CallResult<HermesValue> nextElement(
       Handle<JSMapIteratorImpl> self,
       Runtime &runtime) {
     MutableHandle<> value{runtime};
     if (!self->iterationFinished_) {
-      // Iteration has not yet reached the end previously.
+                                                          
       assert(self->data_ && "Storage uninitialized");
-      // Advance the iterator.
+                              
       self->itr_.set(
           runtime,
           self->data_.getNonNull(runtime)->iteratorNext(
@@ -227,8 +227,8 @@ class JSMapIteratorImpl final : public JSObject {
             value = self->itr_.getNonNull(runtime)->value;
             break;
           case IterationKind::Entry: {
-            // If we are iterating both key and value, we need to create an
-            // array.
+                                                                           
+                     
             auto arrRes = JSArray::create(runtime, 2, 2);
             if (arrRes == ExecutionStatus::EXCEPTION) {
               return ExecutionStatus::EXCEPTION;
@@ -246,8 +246,8 @@ class JSMapIteratorImpl final : public JSObject {
             return HermesValue::encodeEmptyValue();
         }
       } else {
-        // If the next element in the iterator is invalid, we have
-        // reached the end.
+                                                                  
+                           
         self->iterationFinished_ = true;
         self->data_.setNull(runtime.getHeap());
       }
@@ -256,7 +256,7 @@ class JSMapIteratorImpl final : public JSObject {
         .getHermesValue();
   }
 
-  /// Build the metadata for this map implementation, and store it into \p mb.
+                                                                              
   static void MapOrSetIteratorBuildMeta(
       const GCCell *cell,
       Metadata::Builder &mb);
@@ -268,16 +268,16 @@ class JSMapIteratorImpl final : public JSObject {
       : JSObject(runtime, *parent, *clazz) {}
 
  private:
-  /// The internal pointer to the Map data. nullptr if the iterator has not been
-  /// initialized or the iteration has ended.
+                                                                                
+                                             
   GCPointer<JSMapImpl<JSMapTypeTraits<C>::ContainerKind>> data_{nullptr};
 
-  /// Iteration pointer to the element storage in the Map.
+                                                          
   GCPointer<HashMapEntry> itr_{nullptr};
 
   IterationKind iterationKind_;
 
-  /// Indicating whether iteration has reached the end.
+                                                       
   bool iterationFinished_{false};
 };
 
@@ -286,7 +286,7 @@ using JSSet = JSMapImpl<CellKind::JSSetKind>;
 using JSMapIterator = JSMapIteratorImpl<CellKind::JSMapIteratorKind>;
 using JSSetIterator = JSMapIteratorImpl<CellKind::JSSetIteratorKind>;
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMES_VM_JSMAPIMPL_H
+#endif                         

@@ -17,48 +17,48 @@
 
 namespace hermes {
 
-/// Convert a double to a 32-bit integer according to ES5.1 section 9.5.
-/// It can also be used for converting to an unsigned integer, which has the
-/// same bit pattern.
-/// NaN and Infinity are always converted to 0. The rest of the numbers are
-/// converted to a (conceptually) infinite-width integer and the low 32 bits of
-/// the integer are then returned.
-/// This is the out-of-line "slow path" which performs a relatively slow
-/// conversion by manipulating bits in the representation of the double value.
+                                                                        
+                                                                            
+                     
+                                                                           
+                                                                               
+                                  
+                                                                        
+                                                                              
 int32_t truncateToInt32SlowPath(double d);
 
-/// Convert a double to a 32-bit integer according to ES5.1 section 9.5.
-/// It can also be used for converting to an unsigned integer, which has the
-/// same bit pattern.
-/// NaN and Infinity are always converted to 0. The rest of the numbers are
-/// converted to a (conceptually) infinite-width integer and the low 32 bits of
-/// the integer are then returned.
+                                                                        
+                                                                            
+                     
+                                                                           
+                                                                               
+                                  
 int32_t truncateToInt32(double d) LLVM_NO_SANITIZE("float-cast-overflow");
 inline int32_t truncateToInt32(double d) {
-  /// ARM64 has different behavior when the double value can't fit into
-  /// int64_t (results in 2^63-1 instead of -2^63 on x86-64), and 2^63-1 can't
-  /// be represented precisely in double, so it's converted to 2^63. The result
-  /// is that a double value 2^63 still goes through the fast path and
-  /// eventually is casted to int32_t and -1 is returned, which is wrong. The
-  /// solution is to use smaller width integer (so every value can be
-  /// represented in double). In constant path, we check the range of
-  /// [-2^53, 2^53], where 53 is the number of precision bits for double. In
-  /// non-constant fast path, we do a left shift followed by right shift of 1
-  /// bit to avoid imprecise conversion between double and int64_t on 2^63 (
-  /// the top 2 bits "10" becomes "00" after the shifting).
-  /// On 32bit platform, this non-constant path produces less efficient code,
-  /// so instead, we use conversion to int32_t directly.
-  /// In addition, use __builtin_constant_p() to avoid UB caused by constant
-  /// propagation.
+                                                                       
+                                                                              
+                                                                               
+                                                                      
+                                                                             
+                                                                     
+                                                                     
+                                                                            
+                                                                             
+                                                                            
+                                                           
+                                                                             
+                                                        
+                                                                            
+                  
 
   if constexpr (sizeof(void *) == 8) {
-    // Use this builtin to avoid undefined behavior caused by constant
-    // propagation when \p d can't fit into int64_t.
+                                                                      
+                                                    
 #if defined(__GNUC__) || defined(__clang__)
     if (__builtin_constant_p(d)) {
 #endif
-      // Be aggressive on constant path, use the maximum precision bits
-      // of double type for range check.
+                                                                       
+                                        
       if (d >= (int64_t)(-1ULL << 53) && d <= (1LL << 53)) {
         return (int32_t)(int64_t)d;
       }
@@ -73,8 +73,8 @@ inline int32_t truncateToInt32(double d) {
 #if defined(__GNUC__) || defined(__clang__)
     if (__builtin_constant_p(d)) {
 #endif
-      // Converted to int32_t directly on 32bit arch for efficiency.
-      // Many uint32_t values may fall to slow path though.
+                                                                    
+                                                           
       if (d >= (int64_t)(-1ULL << 53) && d <= (1LL << 53)) {
         return (int32_t)(int64_t)d;
       }
@@ -93,29 +93,29 @@ inline uint32_t truncateToUInt32(double d) {
   return (uint32_t)truncateToInt32(d);
 }
 
-/// Convert a string in the range defined by [first, last) to an array index
-/// following ES5.1 15.4:
-/// "A property name P (in the form of a String value) is an array index if and
-/// only if ToString(ToUint32(P)) is equal to P and ToUint32(P) is not equal to
-/// 2**32−1."
-/// IT must meet the requirements of InputIterator and its 'value_type' must be
-/// an integral type holding a superset of ASCII, typically char, char16_t,
-/// char32_t or wchar_t.
-/// \return an "empty" OptValue if the string isn't a valid index, or the
-///   converted uint32_t value otherwise.
+                                                                            
+                         
+                                                                               
+                                                                               
+             
+                                                                               
+                                                                           
+                        
+                                                                         
+                                         
 template <typename IT>
 OptValue<uint32_t> toArrayIndex(IT first, IT last) {
-  /// Empty string is invalid.
+                              
   if (first == last)
     return llvh::None;
 
-  // Leading 0 is special.
+                          
   if (*first == '0') {
     ++first;
-    // Just "0"?
+                
     if (first == last)
       return 0;
-    // Leading 0 is invalid otherwise.
+                                      
     return llvh::None;
   }
 
@@ -125,25 +125,25 @@ OptValue<uint32_t> toArrayIndex(IT first, IT last) {
     if (ch < '0' || ch > '9')
       return llvh::None;
     uint64_t tmp = (uint64_t)res * 10 + (ch - '0');
-    // Check for overflow.
+                          
     if (tmp & ((uint64_t)0xFFFFFFFFu << 32))
       return llvh::None;
     res = (uint32_t)tmp;
   } while (++first != last);
 
-  // 0xFFFFFFFF is not a valid array index.
+                                           
   if (res == 0xFFFFFFFFu)
     return llvh::None;
 
   return res;
 }
 
-/// A convenient wrapper around 'toArrayIndex(first,last)'.
+                                                           
 inline OptValue<uint32_t> toArrayIndex(llvh::StringRef str) {
   return toArrayIndex(str.begin(), str.end());
 }
 
-/// Attempt to convert a double to a valid JavaScript array number.
+                                                                   
 OptValue<uint32_t> doubleToArrayIndex(double d)
     LLVM_NO_SANITIZE("float-cast-overflow");
 inline OptValue<uint32_t> doubleToArrayIndex(double d) {
@@ -153,28 +153,28 @@ inline OptValue<uint32_t> doubleToArrayIndex(double d) {
   return llvh::None;
 }
 
-/// Size of buffer that must be passed to numberToString.
+                                                         
 const size_t NUMBER_TO_STRING_BUF_SIZE = 32;
 
-/// Convert a double number to string, following ES5.1 9.8.1.
-/// \param m the number to convert
-/// \param dest output buffer
-/// \param destSize size of dest, at least NUMBER_TO_STRING_BUF_SIZE
-/// \return the length of the generated string (excluding the terminating zero).
+                                                             
+                                  
+                             
+                                                                    
+                                                                                
 size_t numberToString(double m, char *dest, size_t destSize);
 
-/// Takes a letter (a-z or A-Z) and makes it lowercase.
+                                                       
 template <typename T>
 inline T charLetterToLower(T ch) {
   return ch | 32;
 }
 
-/// Takes a non-empty string (without the leading "0x" if hex) and parses it
-/// as radix \p radix, calling \p digitCallback with the value of each digit,
-/// going from left to right.
-/// \param AllowNumericSeparator when true, allow '_' as a separator and ignore
-/// it when parsing.
-/// \returns true if the string was successfully parsed, false otherwise.
+                                                                            
+                                                                             
+                             
+                                                                               
+                    
+                                                                         
 template <bool AllowNumericSeparator, class Iterable, typename Callback>
 bool parseIntWithRadixDigits(Iterable str, int radix, Callback digitCallback) {
   assert(
@@ -188,14 +188,14 @@ bool parseIntWithRadixDigits(Iterable str, int radix, Callback digitCallback) {
     } else if ('a' <= cLow && cLow < 'a' + radix - 10) {
       digitCallback(cLow - 'a' + 0xa);
     } else if (AllowNumericSeparator && LLVM_UNLIKELY(c == '_')) {
-      // Ensure the '_' is in a valid location.
-      // It can only be between two existing digits.
+                                               
+                                                    
       if (it == str.begin() || it == str.end() - 1) {
         return false;
       }
-      // Note that the previous character must not be '_' if the current
-      // character is '_', because we would have returned None.
-      // So just check if the next character is '_'.
+                                                                        
+                                                               
+                                                    
       char next = *(it + 1);
       if (next == '_') {
         return false;
@@ -207,11 +207,11 @@ bool parseIntWithRadixDigits(Iterable str, int radix, Callback digitCallback) {
   return true;
 }
 
-/// Takes a non-empty string (without the leading "0x" if hex) and parses it
-/// as radix \p radix.
-/// \param AllowNumericSeparator when true, allow '_' as a separator and ignore
-///    it when parsing.
-/// \returns the double that results on success, empty on error.
+                                                                            
+                      
+                                                                               
+                       
+                                                                
 template <bool AllowNumericSeparator, class Iterable>
 OptValue<double> parseIntWithRadix(Iterable str, int radix) {
   double result = 0;
@@ -223,21 +223,21 @@ OptValue<double> parseIntWithRadix(Iterable str, int radix) {
   if (!success)
     return llvh::None;
 
-  // The largest value that fits in the 53-bit mantissa (2**53).
+                                                                
   const double MAX_MANTISSA = 9007199254740992.0;
   if (result >= MAX_MANTISSA && llvh::isPowerOf2_32(radix)) {
-    // If the result is too high, manually reconstruct the double if
-    // the radix is 2, 4, 8, 16, 32.
-    // Go through the digits bit by bit, and manually round when necessary.
+                                                                    
+                                    
+                                                                           
     result = 0;
 
-    // Keep track of how far along parsing is using this enum.
+                                                              
     enum Mode {
-      LEADING_ZERO, // Haven't seen a set bit yet.
-      MANTISSA, // Lower bits that allow exact representation.
-      EXP_LOW_BIT, // Lowest bit of the exponent (determine rounding).
-      EXP_LEADING_ZERO, // Zeros in the exponent.
-      EXPONENT, // Seen a set bit in the exponent.
+      LEADING_ZERO,                               
+      MANTISSA,                                               
+      EXP_LOW_BIT,                                                    
+      EXP_LEADING_ZERO,                          
+      EXPONENT,                                   
     };
 
     size_t remainingMantissa = 53;
@@ -252,11 +252,11 @@ OptValue<double> parseIntWithRadix(Iterable str, int radix) {
     auto e = str.end();
     for (size_t bitMask = 0;;) {
       if (bitMask == 0) {
-        // Only need to do this check every log2(radix) iterations.
+                                                                   
         if (itr == e) {
           break;
         }
-        // We know it fits in 7 bits after the first pass.
+                                                          
         char c = (char)*itr;
         if (AllowNumericSeparator && LLVM_UNLIKELY(c == '_')) {
           ++itr;
@@ -266,12 +266,12 @@ OptValue<double> parseIntWithRadix(Iterable str, int radix) {
         if ('0' <= c && c <= '9') {
           curDigit = c - '0';
         } else {
-          // Must be valid, else we would have returned NaN on first pass.
+                                                                          
           assert('a' <= cLow && cLow < 'a' + radix - 10);
           curDigit = cLow - 'a' + 0xa;
         }
         ++itr;
-        // Reset bitmask to look at the first bit.
+                                                  
         bitMask = radix >> 1;
       }
       bool curBit = (curDigit & bitMask) != 0;
@@ -279,21 +279,21 @@ OptValue<double> parseIntWithRadix(Iterable str, int radix) {
 
       switch (curMode) {
         case Mode::LEADING_ZERO:
-          // Go through the string until we hit a nonzero bit.
+                                                              
           if (curBit) {
             --remainingMantissa;
             result = 1;
-            // No more leading zeros.
+                                     
             curMode = Mode::MANTISSA;
           }
           break;
         case Mode::MANTISSA:
-          // Read into the lower bits of the mantissa (plain binary).
+                                                                     
           result *= 2;
           result += curBit;
           --remainingMantissa;
           if (remainingMantissa == 0) {
-            // Out of bits, set the last bit and go to the next curMode.
+                                                                        
             lastMantissaBit = curBit;
             curMode = Mode::EXP_LOW_BIT;
           }
@@ -318,15 +318,15 @@ OptValue<double> parseIntWithRadix(Iterable str, int radix) {
       case Mode::LEADING_ZERO:
       case Mode::MANTISSA:
       case Mode::EXP_LOW_BIT:
-        // Nothing to do here, already read those in.
+                                                     
         break;
       case Mode::EXP_LEADING_ZERO:
-        // Rounding up.
+                       
         result += lowestExponentBit && lastMantissaBit;
         result *= expFactor;
         break;
       case Mode::EXPONENT:
-        // Rounding up.
+                       
         result += lowestExponentBit;
         result *= expFactor;
         break;
@@ -335,10 +335,10 @@ OptValue<double> parseIntWithRadix(Iterable str, int radix) {
   return result;
 }
 
-} // namespace hermes
+}                    
 
 extern "C" {
 size_t hermes_numberToString(double m, char *dest, size_t destSize);
 }
 
-#endif // HERMES_SUPPORT_CONVERSIONS_H
+#endif                                

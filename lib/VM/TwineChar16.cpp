@@ -166,5 +166,5 @@ void TwineChar16::toVector(llvh::SmallVectorImpl<char16_t> &out) const {
   childToVector(rightChild_, rightKind_, rightSize_);
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

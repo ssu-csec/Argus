@@ -14,18 +14,18 @@
 namespace hermes {
 namespace platform_intl {
 
-/// https://402.ecma-international.org/8.0/#sec-todatetimeoptions
+                                                                 
 vm::CallResult<Options> toDateTimeOptions(
     vm::Runtime &runtime,
     Options options,
     std::u16string_view required,
     std::u16string_view defaults);
 
-/// https://402.ecma-international.org/8.0/#sec-case-sensitivity-and-case-mapping
+                                                                                 
 std::u16string toASCIIUppercase(std::u16string_view tz);
 
-} // namespace platform_intl
-} // namespace hermes
+}                           
+}                    
 
 #endif
 

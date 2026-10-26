@@ -14,8 +14,8 @@
 namespace hermes {
 namespace vm {
 
-/// JSCallableProxy acts like both a Proxy and like a NativeFunction.
-/// See JSProxy for more discussion.
+                                                                     
+                                    
 class JSCallableProxy : public NativeFunction {
  public:
   friend void JSCallableProxyBuildMeta(
@@ -48,7 +48,7 @@ class JSCallableProxy : public NativeFunction {
             runtime,
             parent,
             clazz,
-            nullptr /* context */,
+            nullptr              ,
             &JSCallableProxy::_proxyNativeCall) {}
 
  private:
@@ -63,7 +63,7 @@ class JSCallableProxy : public NativeFunction {
   detail::ProxySlots slots_;
 };
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMES_VM_JSCALLABLEPROXY_H
+#endif                               

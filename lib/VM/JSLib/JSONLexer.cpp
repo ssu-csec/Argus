@@ -20,7 +20,7 @@ static const char *FalseString = "false";
 static const char *NullString = "null";
 
 static bool isJSONWhiteSpace(char16_t ch) {
-  // JSONWhiteSpace includes <TAB>, <CR>, <LF>, <SP>.
+                                                     
   return (ch == u'\t' || ch == u'\r' || ch == u'\n' || ch == u' ');
 }
 
@@ -33,12 +33,12 @@ ExecutionStatus JSONLexer::advanceStrAsSymbol() {
 }
 
 ExecutionStatus JSONLexer::advanceHelper(bool forKey) {
-  // Skip whitespaces.
+                      
   while (curCharPtr_.hasChar() && isJSONWhiteSpace(*curCharPtr_)) {
     ++curCharPtr_;
   }
 
-  // End of buffer.
+                   
   if (!curCharPtr_.hasChar()) {
     token_.setEof();
     return ExecutionStatus::RETURNED;
@@ -122,7 +122,7 @@ ExecutionStatus JSONLexer::scanNumber() {
   size_t len = str8.size();
   assert(len > 0 && "scanNumber must be called on a number-looking char");
   if (str8[0] == '0' && len > 1 && str8[1] >= '0' && str8[1] <= '9') {
-    // The integer part cannot start with 0, unless it's 0.
+                                                           
     return errorWithChar(u"Unexpected character in number: ", str8[1]);
   }
 
@@ -142,12 +142,12 @@ ExecutionStatus JSONLexer::scanString() {
   assert(*curCharPtr_ == '"');
   ++curCharPtr_;
   bool hasEscape = false;
-  // Ideally we don't have to use tmpStorage. In the case of a plain string with
-  // no escapes, we construct an ArrayRef at the end of scanning that points to
-  // the beginning and end of the string.
+                                                                                
+                                                                               
+                                         
   SmallU16String<32> tmpStorage;
   curCharPtr_.beginCapture();
-  // Make sure we don't somehow leave a dangling open capture.
+                                                              
   auto ensureCaptureClosed =
       llvh::make_scope_exit([this] { curCharPtr_.cancelCapture(); });
   bool allAscii = true;
@@ -155,7 +155,7 @@ ExecutionStatus JSONLexer::scanString() {
 
   while (curCharPtr_.hasChar()) {
     if (*curCharPtr_ == '"') {
-      // End of string.
+                       
       llvh::ArrayRef<char16_t> strRef =
           hasEscape ? tmpStorage.arrayRef() : curCharPtr_.endCapture();
       ++curCharPtr_;
@@ -180,8 +180,8 @@ ExecutionStatus JSONLexer::scanString() {
     char16_t scannedChar = -1;
     if (*curCharPtr_ == u'\\') {
       if (!hasEscape) {
-        // This is the first escape character encountered, so append everything
-        // we've seen so far to tmpStorage.
+                                                                               
+                                           
         tmpStorage.append(curCharPtr_.endCapture());
       }
       hasEscape = true;
@@ -258,5 +258,5 @@ ExecutionStatus JSONLexer::scanWord(const char *word, JSONTokenKind kind) {
   return ExecutionStatus::RETURNED;
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

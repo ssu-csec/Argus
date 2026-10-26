@@ -26,13 +26,13 @@
 
 using namespace llvh;
 
-// This ugly hack is brought to you courtesy of constructor/destructor ordering
-// being unspecified by C++.  Basically the problem is that a Statistic object
-// gets destroyed, which ends up calling 'GetLibSupportInfoOutputFile()'
-// (below), which calls this function.  LibSupportInfoOutputFilename used to be
-// a global variable, but sometimes it would get destroyed before the Statistic,
-// causing havoc to ensue.  We "fix" this by creating the string the first time
-// it is needed and never destroying it.
+                                                                               
+                                                                              
+                                                                        
+                                                                               
+                                                                                
+                                                                               
+                                        
 static ManagedStatic<std::string> LibSupportInfoOutputFilename;
 static std::string &getLibSupportInfoOutputFilename() {
   return *LibSupportInfoOutputFilename;
@@ -55,14 +55,14 @@ namespace {
 std::unique_ptr<raw_fd_ostream> llvh::CreateInfoOutputFile() {
   const std::string &OutputFilename = getLibSupportInfoOutputFilename();
   if (OutputFilename.empty())
-    return llvh::make_unique<raw_fd_ostream>(2, false); // stderr.
+    return llvh::make_unique<raw_fd_ostream>(2, false);           
   if (OutputFilename == "-")
-    return llvh::make_unique<raw_fd_ostream>(1, false); // stdout.
+    return llvh::make_unique<raw_fd_ostream>(1, false);           
 
-  // Append mode is used because the info output file is opened and closed
-  // each time -stats or -time-passes wants to print output to it. To
-  // compensate for this, the test-suite Makefiles have code to delete the
-  // info output file before running commands which write to it.
+                                                                          
+                                                                     
+                                                                          
+                                                                
   std::error_code EC;
   auto Result = llvh::make_unique<raw_fd_ostream>(
       OutputFilename, EC, sys::fs::F_Append | sys::fs::F_Text);
@@ -71,7 +71,7 @@ std::unique_ptr<raw_fd_ostream> llvh::CreateInfoOutputFile() {
 
   errs() << "Error opening info-output-file '"
     << OutputFilename << " for appending!\n";
-  return llvh::make_unique<raw_fd_ostream>(2, false); // stderr.
+  return llvh::make_unique<raw_fd_ostream>(2, false);           
 }
 
 namespace {
@@ -80,13 +80,13 @@ struct CreateDefaultTimerGroup {
     return new TimerGroup("misc", "Miscellaneous Ungrouped Timers");
   }
 };
-} // namespace
+}             
 static ManagedStatic<TimerGroup, CreateDefaultTimerGroup> DefaultTimerGroup;
 static TimerGroup *getDefaultTimerGroup() { return &*DefaultTimerGroup; }
 
-//===----------------------------------------------------------------------===//
-// Timer Implementation
-//===----------------------------------------------------------------------===//
+                                                                                
+                       
+                                                                                
 
 void Timer::init(StringRef Name, StringRef Description) {
   init(Name, Description, *getDefaultTimerGroup());
@@ -102,7 +102,7 @@ void Timer::init(StringRef Name, StringRef Description, TimerGroup &tg) {
 }
 
 Timer::~Timer() {
-  if (!TG) return;  // Never initialized, or already cleared.
+  if (!TG) return;                                           
   TG->removeTimer(*this);
 }
 
@@ -150,7 +150,7 @@ void Timer::clear() {
 }
 
 static void printVal(double Val, double Total, raw_ostream &OS) {
-  if (Total < 1e-7)   // Avoid dividing by zero.
+  if (Total < 1e-7)                             
     OS << "        -----     ";
   else
     OS << format("  %7.4f (%5.1f%%)", Val, Val*100/Total);
@@ -172,9 +172,9 @@ void TimeRecord::print(const TimeRecord &Total, raw_ostream &OS) const {
 }
 
 
-//===----------------------------------------------------------------------===//
-//   NamedRegionTimer Implementation
-//===----------------------------------------------------------------------===//
+                                                                                
+                                    
+                                                                                
 
 namespace {
 
@@ -216,18 +216,18 @@ NamedRegionTimer::NamedRegionTimer(StringRef Name, StringRef Description,
                  : &NamedGroupedTimers->get(Name, Description, GroupName,
                                             GroupDescription)) {}
 
-//===----------------------------------------------------------------------===//
-//   TimerGroup Implementation
-//===----------------------------------------------------------------------===//
+                                                                                
+                              
+                                                                                
 
-/// This is the global list of TimerGroups, maintained by the TimerGroup
-/// ctor/dtor and is protected by the TimerLock lock.
+                                                                        
+                                                     
 static TimerGroup *TimerGroupList = nullptr;
 
 TimerGroup::TimerGroup(StringRef Name, StringRef Description)
   : Name(Name.begin(), Name.end()),
     Description(Description.begin(), Description.end()) {
-  // Add the group to TimerGroupList.
+                                     
   sys::SmartScopedLock<true> L(*TimerLock);
   if (TimerGroupList)
     TimerGroupList->Prev = &Next;
@@ -246,12 +246,12 @@ TimerGroup::TimerGroup(StringRef Name, StringRef Description,
 }
 
 TimerGroup::~TimerGroup() {
-  // If the timer group is destroyed before the timers it owns, accumulate and
-  // print the timing data.
+                                                                              
+                           
   while (FirstTimer)
     removeTimer(*FirstTimer);
 
-  // Remove the group from the TimerGroupList.
+                                              
   sys::SmartScopedLock<true> L(*TimerLock);
   *Prev = Next;
   if (Next)
@@ -262,19 +262,19 @@ TimerGroup::~TimerGroup() {
 void TimerGroup::removeTimer(Timer &T) {
   sys::SmartScopedLock<true> L(*TimerLock);
 
-  // If the timer was started, move its data to TimersToPrint.
+                                                              
   if (T.hasTriggered())
     TimersToPrint.emplace_back(T.Time, T.Name, T.Description);
 
   T.TG = nullptr;
 
-  // Unlink the timer from our list.
+                                    
   *T.Prev = T.Next;
   if (T.Next)
     T.Next->Prev = T.Prev;
 
-  // Print the report when all timers in this group are destroyed if some of
-  // them were started.
+                                                                            
+                       
   if (FirstTimer || TimersToPrint.empty())
     return;
 
@@ -285,7 +285,7 @@ void TimerGroup::removeTimer(Timer &T) {
 void TimerGroup::addTimer(Timer &T) {
   sys::SmartScopedLock<true> L(*TimerLock);
 
-  // Add the timer to our list.
+                               
   if (FirstTimer)
     FirstTimer->Prev = &T.Next;
   T.Next = FirstTimer;
@@ -294,24 +294,24 @@ void TimerGroup::addTimer(Timer &T) {
 }
 
 void TimerGroup::PrintQueuedTimers(raw_ostream &OS) {
-  // Sort the timers in descending order by amount of time taken.
+                                                                 
   llvh::sort(TimersToPrint);
 
   TimeRecord Total;
   for (const PrintRecord &Record : TimersToPrint)
     Total += Record.Time;
 
-  // Print out timing header.
+                             
   OS << "===" << std::string(73, '-') << "===\n";
-  // Figure out how many spaces to indent TimerGroup name.
+                                                          
   unsigned Padding = (80-Description.length())/2;
-  if (Padding > 80) Padding = 0;         // Don't allow "negative" numbers
+  if (Padding > 80) Padding = 0;                                          
   OS.indent(Padding) << Description << '\n';
   OS << "===" << std::string(73, '-') << "===\n";
 
-  // If this is not an collection of ungrouped times, print the total time.
-  // Ungrouped timers don't really make sense to add up.  We still print the
-  // TOTAL line to make the percentages make sense.
+                                                                           
+                                                                            
+                                                   
   if (this != getDefaultTimerGroup())
     OS << format("  Total Execution Time: %5.4f seconds (%5.4f wall clock)\n",
                  Total.getProcessTime(), Total.getWallTime());
@@ -328,7 +328,7 @@ void TimerGroup::PrintQueuedTimers(raw_ostream &OS) {
     OS << "  ---Mem---";
   OS << "  --- Name ---\n";
 
-  // Loop through all of the timing data, printing it out.
+                                                          
   for (const PrintRecord &Record : make_range(TimersToPrint.rbegin(),
                                               TimersToPrint.rend())) {
     Record.Time.print(Total, OS);
@@ -343,7 +343,7 @@ void TimerGroup::PrintQueuedTimers(raw_ostream &OS) {
 }
 
 void TimerGroup::prepareToPrintList() {
-  // See if any of our timers were started, if so add them to TimersToPrint.
+                                                                            
   for (Timer *T = FirstTimer; T; T = T->Next) {
     if (!T->hasTriggered()) continue;
     bool WasRunning = T->isRunning();
@@ -362,7 +362,7 @@ void TimerGroup::print(raw_ostream &OS) {
 
   prepareToPrintList();
 
-  // If any timers were started, print the group.
+                                                 
   if (!TimersToPrint.empty())
     PrintQueuedTimers(OS);
 }

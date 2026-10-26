@@ -10,9 +10,9 @@
 #ifndef LLVM_DEMANGLE_ITANIUMDEMANGLE_H
 #define LLVM_DEMANGLE_ITANIUMDEMANGLE_H
 
-// FIXME: (possibly) incomplete list of features that clang mangles that this
-// file does not yet support:
-//   - C++ modules TS
+                                                                             
+                             
+                     
 
 #include "llvh/Demangle/Compiler.h"
 #include "llvh/Demangle/StringView.h"
@@ -97,8 +97,8 @@
 
 namespace llvh {
 namespace itanium_demangle {
-// Base class of all AST nodes. The AST is built by the parser, then is
-// traversed by the printLeft/Right functions to produce a demangled string.
+                                                                       
+                                                                            
 class Node {
 public:
   enum Kind : unsigned char {
@@ -107,25 +107,25 @@ public:
 #undef ENUMERATOR
   };
 
-  /// Three-way bool to track a cached value. Unknown is possible if this node
-  /// has an unexpanded parameter pack below it that may affect this cache.
+                                                                              
+                                                                           
   enum class Cache : unsigned char { Yes, No, Unknown, };
 
 private:
   Kind K;
 
-  // FIXME: Make these protected.
+                                 
 public:
-  /// Tracks if this node has a component on its right side, in which case we
-  /// need to call printRight.
+                                                                             
+                              
   Cache RHSComponentCache;
 
-  /// Track if this node is a (possibly qualified) array type. This can affect
-  /// how we format the output string.
+                                                                              
+                                      
   Cache ArrayCache;
 
-  /// Track if this node is a (possibly qualified) function type. This can
-  /// affect how we format the output string.
+                                                                          
+                                             
   Cache FunctionCache;
 
 public:
@@ -134,14 +134,14 @@ public:
       : K(K_), RHSComponentCache(RHSComponentCache_), ArrayCache(ArrayCache_),
         FunctionCache(FunctionCache_) {}
 
-  /// Visit the most-derived object corresponding to this object.
+                                                                 
   template<typename Fn> void visit(Fn F) const;
 
-  // The following function is provided by all derived classes:
-  //
-  // Call F with arguments that, when passed to the constructor of this node,
-  // would construct an equivalent node.
-  //template<typename Fn> void match(Fn F) const;
+                                                               
+    
+                                                                             
+                                        
+                                                 
 
   bool hasRHSComponent(OutputStream &S) const {
     if (RHSComponentCache != Cache::Unknown)
@@ -167,8 +167,8 @@ public:
   virtual bool hasArraySlow(OutputStream &) const { return false; }
   virtual bool hasFunctionSlow(OutputStream &) const { return false; }
 
-  // Dig through "glue" nodes like ParameterPack and ForwardTemplateReference to
-  // get at a node that actually represents some concrete syntax.
+                                                                                
+                                                                 
   virtual const Node *getSyntaxNode(OutputStream &) const {
     return this;
   }
@@ -179,18 +179,18 @@ public:
       printRight(S);
   }
 
-  // Print the "left" side of this Node into OutputStream.
+                                                          
   virtual void printLeft(OutputStream &) const = 0;
 
-  // Print the "right". This distinction is necessary to represent C++ types
-  // that appear on the RHS of their subtype, such as arrays or functions.
-  // Since most types don't have such a component, provide a default
-  // implementation.
+                                                                            
+                                                                          
+                                                                    
+                    
   virtual void printRight(OutputStream &) const {}
 
   virtual StringView getBaseName() const { return StringView(); }
 
-  // Silence compiler warnings, this dtor will never be called.
+                                                               
   virtual ~Node() = default;
 
 #ifndef NDEBUG
@@ -224,8 +224,8 @@ public:
       size_t AfterComma = S.getCurrentPosition();
       Elements[Idx]->print(S);
 
-      // Elements[Idx] is an empty parameter pack expansion, we should erase the
-      // comma we just printed.
+                                                                                
+                               
       if (AfterComma == S.getCurrentPosition()) {
         S.setCurrentPosition(BeforeComma);
         continue;
@@ -474,7 +474,7 @@ public:
   }
 
   void printLeft(OutputStream &s) const override {
-    // We rewrite objc_object<SomeProtocol>* into id<SomeProtocol>.
+                                                                   
     if (Pointee->getKind() != KObjCProtoName ||
         !static_cast<const ObjCProtoName *>(Pointee)->isObjCObject()) {
       Pointee->printLeft(s);
@@ -506,16 +506,16 @@ enum class ReferenceKind {
   RValue,
 };
 
-// Represents either a LValue or an RValue reference type.
+                                                          
 class ReferenceType : public Node {
   const Node *Pointee;
   ReferenceKind RK;
 
   mutable bool Printing = false;
 
-  // Dig through any refs to refs, collapsing the ReferenceTypes as we go. The
-  // rule here is rvalue ref to rvalue ref collapses to a rvalue ref, and any
-  // other combination collapses to a lvalue ref.
+                                                                              
+                                                                             
+                                                 
   std::pair<ReferenceKind, const Node *> collapse(OutputStream &S) const {
     auto SoFar = std::make_pair(RK, Pointee);
     for (;;) {
@@ -601,7 +601,7 @@ class NodeOrString {
   const void *Second;
 
 public:
-  /* implicit */ NodeOrString(StringView Str) {
+                 NodeOrString(StringView Str) {
     const char *FirstChar = Str.begin();
     const char *SecondChar = Str.end();
     if (SecondChar == nullptr) {
@@ -612,7 +612,7 @@ public:
     Second = static_cast<const void *>(SecondChar);
   }
 
-  /* implicit */ NodeOrString(Node *N)
+                 NodeOrString(Node *N)
       : First(static_cast<const void *>(N)), Second(nullptr) {}
   NodeOrString() : First(nullptr), Second(nullptr) {}
 
@@ -639,8 +639,8 @@ class ArrayType final : public Node {
 public:
   ArrayType(const Node *Base_, NodeOrString Dimension_)
       : Node(KArrayType,
-             /*RHSComponentCache=*/Cache::Yes,
-             /*ArrayCache=*/Cache::Yes),
+                                   Cache::Yes,
+                            Cache::Yes),
         Base(Base_), Dimension(Dimension_) {}
 
   template<typename Fn> void match(Fn F) const { F(Base, Dimension); }
@@ -674,8 +674,8 @@ public:
   FunctionType(const Node *Ret_, NodeArray Params_, Qualifiers CVQuals_,
                FunctionRefQual RefQual_, const Node *ExceptionSpec_)
       : Node(KFunctionType,
-             /*RHSComponentCache=*/Cache::Yes, /*ArrayCache=*/Cache::No,
-             /*FunctionCache=*/Cache::Yes),
+                                   Cache::Yes,                Cache::No,
+                               Cache::Yes),
         Ret(Ret_), Params(Params_), CVQuals(CVQuals_), RefQual(RefQual_),
         ExceptionSpec(ExceptionSpec_) {}
 
@@ -686,13 +686,13 @@ public:
   bool hasRHSComponentSlow(OutputStream &) const override { return true; }
   bool hasFunctionSlow(OutputStream &) const override { return true; }
 
-  // Handle C++'s ... quirky decl grammar by using the left & right
-  // distinction. Consider:
-  //   int (*f(float))(char) {}
-  // f is a function that takes a float and returns a pointer to a function
-  // that takes a char and returns an int. If we're trying to print f, start
-  // by printing out the return types's left, then print our parameters, then
-  // finally print right of the return type.
+                                                                   
+                           
+                               
+                                                                           
+                                                                            
+                                                                             
+                                            
   void printLeft(OutputStream &S) const override {
     Ret->printLeft(S);
     S += " ";
@@ -765,8 +765,8 @@ public:
                    const Node *Attrs_, Qualifiers CVQuals_,
                    FunctionRefQual RefQual_)
       : Node(KFunctionEncoding,
-             /*RHSComponentCache=*/Cache::Yes, /*ArrayCache=*/Cache::No,
-             /*FunctionCache=*/Cache::Yes),
+                                   Cache::Yes,                Cache::No,
+                               Cache::Yes),
         Ret(Ret_), Name(Name_), Params(Params_), Attrs(Attrs_),
         CVQuals(CVQuals_), RefQual(RefQual_) {}
 
@@ -902,7 +902,7 @@ struct LocalName : Node {
 };
 
 class QualifiedName final : public Node {
-  // qualifier::name
+                    
   const Node *Qualifier;
   const Node *Name;
 
@@ -953,25 +953,25 @@ public:
   template<typename Fn> void match(Fn F) const { F(Dimension); }
 
   void printLeft(OutputStream &S) const override {
-    // FIXME: This should demangle as "vector pixel".
+                                                     
     S += "pixel vector[";
     S += Dimension.asString();
     S += "]";
   }
 };
 
-/// An unexpanded parameter pack (either in the expression or type context). If
-/// this AST is correct, this node will have a ParameterPackExpansion node above
-/// it.
-///
-/// This node is created when some <template-args> are found that apply to an
-/// <encoding>, and is stored in the TemplateParams table. In order for this to
-/// appear in the final AST, it has to referenced via a <template-param> (ie,
-/// T_).
+                                                                               
+                                                                                
+       
+   
+                                                                             
+                                                                               
+                                                                             
+        
 class ParameterPack final : public Node {
   NodeArray Data;
 
-  // Setup OutputStream for a pack expansion unless we're already expanding one.
+                                                                                
   void initializePackExpansion(OutputStream &S) const {
     if (S.CurrentPackMax == std::numeric_limits<unsigned>::max()) {
       S.CurrentPackMax = static_cast<unsigned>(Data.size());
@@ -1033,11 +1033,11 @@ public:
   }
 };
 
-/// A variadic template argument. This node represents an occurrence of
-/// J<something>E in some <template-args>. It isn't itself unexpanded, unless
-/// one of it's Elements is. The parser inserts a ParameterPack into the
-/// TemplateParams table if the <template-args> this pack belongs to apply to an
-/// <encoding>.
+                                                                       
+                                                                             
+                                                                        
+                                                                                
+               
 class TemplateArgumentPack final : public Node {
   NodeArray Elements;
 public:
@@ -1053,8 +1053,8 @@ public:
   }
 };
 
-/// A pack expansion. Below this node, there are some unexpanded ParameterPacks
-/// which each have Child->ParameterPackSize elements.
+                                                                               
+                                                      
 class ParameterPackExpansion final : public Node {
   const Node *Child;
 
@@ -1072,25 +1072,25 @@ public:
     SwapAndRestore<unsigned> SavePackMax(S.CurrentPackMax, Max);
     size_t StreamPos = S.getCurrentPosition();
 
-    // Print the first element in the pack. If Child contains a ParameterPack,
-    // it will set up S.CurrentPackMax and print the first element.
+                                                                              
+                                                                   
     Child->print(S);
 
-    // No ParameterPack was found in Child. This can occur if we've found a pack
-    // expansion on a <function-param>.
+                                                                                
+                                       
     if (S.CurrentPackMax == Max) {
       S += "...";
       return;
     }
 
-    // We found a ParameterPack, but it has no elements. Erase whatever we may
-    // of printed.
+                                                                              
+                  
     if (S.CurrentPackMax == 0) {
       S.setCurrentPosition(StreamPos);
       return;
     }
 
-    // Else, iterate through the rest of the elements in the pack.
+                                                                  
     for (unsigned I = 1, E = S.CurrentPackMax; I < E; ++I) {
       S += ", ";
       S.CurrentPackIndex = I;
@@ -1118,32 +1118,32 @@ public:
   }
 };
 
-/// A forward-reference to a template argument that was not known at the point
-/// where the template parameter name was parsed in a mangling.
-///
-/// This is created when demangling the name of a specialization of a
-/// conversion function template:
-///
-/// \code
-/// struct A {
-///   template<typename T> operator T*();
-/// };
-/// \endcode
-///
-/// When demangling a specialization of the conversion function template, we
-/// encounter the name of the template (including the \c T) before we reach
-/// the template argument list, so we cannot substitute the parameter name
-/// for the corresponding argument while parsing. Instead, we create a
-/// \c ForwardTemplateReference node that is resolved after we parse the
-/// template arguments.
+                                                                              
+                                                               
+   
+                                                                     
+                                 
+   
+         
+              
+                                         
+      
+            
+   
+                                                                            
+                                                                           
+                                                                          
+                                                                      
+                                                                        
+                       
 struct ForwardTemplateReference : Node {
   size_t Index;
   Node *Ref = nullptr;
 
-  // If we're currently printing this node. It is possible (though invalid) for
-  // a forward template reference to refer to itself via a substitution. This
-  // creates a cyclic AST, which will stack overflow printing. To fix this, bail
-  // out if more than one print* function is active.
+                                                                               
+                                                                             
+                                                                                
+                                                    
   mutable bool Printing = false;
 
   ForwardTemplateReference(size_t Index_)
@@ -1151,9 +1151,9 @@ struct ForwardTemplateReference : Node {
              Cache::Unknown),
         Index(Index_) {}
 
-  // We don't provide a matcher for these, because the value of the node is
-  // not determined by its construction parameters, and it generally needs
-  // special handling.
+                                                                           
+                                                                          
+                      
   template<typename Fn> void match(Fn F) const = delete;
 
   bool hasRHSComponentSlow(OutputStream &S) const override {
@@ -1196,7 +1196,7 @@ struct ForwardTemplateReference : Node {
 };
 
 struct NameWithTemplateArgs : Node {
-  // name<template_args>
+                        
   Node *Name;
   Node *TemplateArgs;
 
@@ -1439,7 +1439,7 @@ public:
   }
 };
 
-// -- Expression Nodes --
+                         
 
 class BinaryExpr : public Node {
   const Node *LHS;
@@ -1454,8 +1454,8 @@ public:
   template<typename Fn> void match(Fn F) const { F(LHS, InfixOperator, RHS); }
 
   void printLeft(OutputStream &S) const override {
-    // might be a template argument expression, then we need to disambiguate
-    // with parens.
+                                                                            
+                   
     if (InfixOperator == ">")
       S += "(";
 
@@ -1569,7 +1569,7 @@ public:
 };
 
 class CastExpr : public Node {
-  // cast_kind<to>(from)
+                        
   const StringView CastKind;
   const Node *To;
   const Node *From;
@@ -1626,12 +1626,12 @@ public:
 };
 
 class NewExpr : public Node {
-  // new (expr_list) type(init_list)
+                                    
   NodeArray ExprList;
   Node *Type;
   NodeArray InitList;
-  bool IsGlobal; // ::operator new ?
-  bool IsArray;  // new[] ?
+  bool IsGlobal;                    
+  bool IsArray;            
 public:
   NewExpr(NodeArray ExprList_, Node *Type_, NodeArray InitList_, bool IsGlobal_,
           bool IsArray_)
@@ -1826,25 +1826,25 @@ public:
     S += '(';
 
     if (IsLeftFold) {
-      // init op ... op pack
+                            
       if (Init != nullptr) {
         Init->print(S);
         S += ' ';
         S += OperatorName;
         S += ' ';
       }
-      // ... op pack
+                    
       S += "... ";
       S += OperatorName;
       S += ' ';
       PrintPack();
-    } else { // !IsLeftFold
-      // pack op ...
+    } else {               
+                    
       PrintPack();
       S += ' ';
       S += OperatorName;
       S += " ...";
-      // pack op ... op init
+                            
       if (Init != nullptr) {
         S += ' ';
         S += OperatorName;
@@ -1884,7 +1884,7 @@ public:
 };
 
 class IntegerCastExpr : public Node {
-  // ty(integer)
+                
   const Node *Ty;
   StringView Integer;
 
@@ -1991,8 +1991,8 @@ using FloatLiteral = FloatLiteralImpl<float>;
 using DoubleLiteral = FloatLiteralImpl<double>;
 using LongDoubleLiteral = FloatLiteralImpl<long double>;
 
-/// Visit the node. Calls \c F(P), where \c P is the node cast to the
-/// appropriate derived class.
+                                                                     
+                              
 template<typename Fn>
 void Node::visit(Fn F) const {
   switch (K) {
@@ -2003,7 +2003,7 @@ void Node::visit(Fn F) const {
   assert(0 && "unknown mangling node kind");
 }
 
-/// Determine the kind of a node from its type.
+                                               
 template<typename NodeT> struct NodeKind;
 #define SPECIALIZATION(X) \
   template<> struct NodeKind<X> { \
@@ -2139,23 +2139,23 @@ struct Db {
   const char *First;
   const char *Last;
 
-  // Name stack, this is used by the parser to hold temporary names that were
-  // parsed. The parser collapses multiple names into new nodes to construct
-  // the AST. Once the parser is finished, names.size() == 1.
+                                                                             
+                                                                            
+                                                             
   PODSmallVector<Node *, 32> Names;
 
-  // Substitution table. Itanium supports name substitutions as a means of
-  // compression. The string "S42_" refers to the 44nd entry (base-36) in this
-  // table.
+                                                                          
+                                                                              
+           
   PODSmallVector<Node *, 32> Subs;
 
-  // Template parameter table. Like the above, but referenced like "T42_".
-  // This has a smaller size compared to Subs and Names because it can be
-  // stored on the stack.
+                                                                          
+                                                                         
+                         
   PODSmallVector<Node *, 8> TemplateParams;
 
-  // Set of unresolved forward <template-param> references. These can occur in a
-  // conversion operator's type, and are resolved in the enclosing <encoding>.
+                                                                                
+                                                                              
   PODSmallVector<ForwardTemplateReference *, 4> ForwardTemplateRefs;
 
   void (*TypeCallback)(void *, const char *) = nullptr;
@@ -2238,7 +2238,7 @@ struct Db {
   Node *parseTemplateArgs(bool TagTemplates = false);
   Node *parseTemplateArg();
 
-  /// Parse the <expr> production.
+                                  
   Node *parseExpr();
   Node *parsePrefixExpr(StringView Kind);
   Node *parseBinaryExpr(StringView Kind);
@@ -2251,7 +2251,7 @@ struct Db {
   Node *parseBracedExpr();
   Node *parseFoldExpr();
 
-  /// Parse the <type> production.
+                                  
   Node *parseType();
   Node *parseFunctionType();
   Node *parseVectorType();
@@ -2265,8 +2265,8 @@ struct Db {
   bool parseCallOffset();
   Node *parseSpecialName();
 
-  /// Holds some extra information about a <name> that is being parsed. This
-  /// information is only pertinent if the <name> refers to an <encoding>.
+                                                                            
+                                                                          
   struct NameState {
     bool CtorDtorConversion = false;
     bool EndsWithTemplateArgs = false;
@@ -2291,7 +2291,7 @@ struct Db {
     return false;
   }
 
-  /// Parse the <name> production>
+                                  
   Node *parseName(NameState *State = nullptr);
   Node *parseLocalName(NameState *State);
   Node *parseOperatorName(NameState *State);
@@ -2304,35 +2304,35 @@ struct Db {
 
   Node *parseAbiTags(Node *N);
 
-  /// Parse the <unresolved-name> production.
+                                             
   Node *parseUnresolvedName();
   Node *parseSimpleId();
   Node *parseBaseUnresolvedName();
   Node *parseUnresolvedType();
   Node *parseDestructorName();
 
-  /// Top-level entry point into the parser.
+                                            
   Node *parse();
 };
 
 const char* parse_discriminator(const char* first, const char* last);
 
-// <name> ::= <nested-name> // N
-//        ::= <local-name> # See Scope Encoding below  // Z
-//        ::= <unscoped-template-name> <template-args>
-//        ::= <unscoped-name>
-//
-// <unscoped-template-name> ::= <unscoped-name>
-//                          ::= <substitution>
+                                
+                                                           
+                                                      
+                             
+  
+                                               
+                                              
 template<typename Alloc> Node *Db<Alloc>::parseName(NameState *State) {
-  consumeIf('L'); // extension
+  consumeIf('L');             
 
   if (look() == 'N')
     return parseNestedName(State);
   if (look() == 'Z')
     return parseLocalName(State);
 
-  //        ::= <unscoped-template-name> <template-args>
+                                                        
   if (look() == 'S' && look(1) != 't') {
     Node *S = parseSubstitution();
     if (S == nullptr)
@@ -2349,7 +2349,7 @@ template<typename Alloc> Node *Db<Alloc>::parseName(NameState *State) {
   Node *N = parseUnscopedName(State);
   if (N == nullptr)
     return nullptr;
-  //        ::= <unscoped-template-name> <template-args>
+                                                        
   if (look() == 'I') {
     Subs.push_back(N);
     Node *TA = parseTemplateArgs(State != nullptr);
@@ -2358,13 +2358,13 @@ template<typename Alloc> Node *Db<Alloc>::parseName(NameState *State) {
     if (State) State->EndsWithTemplateArgs = true;
     return make<NameWithTemplateArgs>(N, TA);
   }
-  //        ::= <unscoped-name>
+                               
   return N;
 }
 
-// <local-name> := Z <function encoding> E <entity name> [<discriminator>]
-//              := Z <function encoding> E s [<discriminator>]
-//              := Z <function encoding> Ed [ <parameter number> ] _ <entity name>
+                                                                          
+                                                              
+                                                                                  
 template<typename Alloc> Node *Db<Alloc>::parseLocalName(NameState *State) {
   if (!consumeIf('Z'))
     return nullptr;
@@ -2397,9 +2397,9 @@ template<typename Alloc> Node *Db<Alloc>::parseLocalName(NameState *State) {
   return make<LocalName>(Encoding, Entity);
 }
 
-// <unscoped-name> ::= <unqualified-name>
-//                 ::= St <unqualified-name>   # ::std::
-// extension       ::= StL<unqualified-name>
+                                         
+                                                        
+                                            
 template<typename Alloc> Node *Db<Alloc>::parseUnscopedName(NameState *State) {
  if (consumeIf("StL") || consumeIf("St")) {
    Node *R = parseUnqualifiedName(State);
@@ -2410,14 +2410,14 @@ template<typename Alloc> Node *Db<Alloc>::parseUnscopedName(NameState *State) {
  return parseUnqualifiedName(State);
 }
 
-// <unqualified-name> ::= <operator-name> [abi-tags]
-//                    ::= <ctor-dtor-name>
-//                    ::= <source-name>
-//                    ::= <unnamed-type-name>
-//                    ::= DC <source-name>+ E      # structured binding declaration
+                                                    
+                                          
+                                       
+                                             
+                                                                                   
 template<typename Alloc>
 Node *Db<Alloc>::parseUnqualifiedName(NameState *State) {
-  // <ctor-dtor-name>s are special-cased in parseNestedName().
+                                                              
   Node *Result;
   if (look() == 'U')
     Result = parseUnnamedTypeName(State);
@@ -2439,12 +2439,12 @@ Node *Db<Alloc>::parseUnqualifiedName(NameState *State) {
   return Result;
 }
 
-// <unnamed-type-name> ::= Ut [<nonnegative number>] _
-//                     ::= <closure-type-name>
-//
-// <closure-type-name> ::= Ul <lambda-sig> E [ <nonnegative number> ] _
-//
-// <lambda-sig> ::= <parameter type>+  # Parameter types or "v" if the lambda has no parameters
+                                                      
+                                              
+  
+                                                                       
+  
+                                                                                               
 template<typename Alloc> Node *Db<Alloc>::parseUnnamedTypeName(NameState *) {
   if (consumeIf("Ut")) {
     StringView Count = parseNumber();
@@ -2473,7 +2473,7 @@ template<typename Alloc> Node *Db<Alloc>::parseUnnamedTypeName(NameState *) {
   return nullptr;
 }
 
-// <source-name> ::= <positive length number> <identifier>
+                                                          
 template<typename Alloc> Node *Db<Alloc>::parseSourceName(NameState *) {
   size_t Length = 0;
   if (parsePositiveInteger(&Length))
@@ -2487,57 +2487,57 @@ template<typename Alloc> Node *Db<Alloc>::parseSourceName(NameState *) {
   return make<NameType>(Name);
 }
 
-//   <operator-name> ::= aa    # &&
-//                   ::= ad    # & (unary)
-//                   ::= an    # &
-//                   ::= aN    # &=
-//                   ::= aS    # =
-//                   ::= cl    # ()
-//                   ::= cm    # ,
-//                   ::= co    # ~
-//                   ::= cv <type>    # (cast)
-//                   ::= da    # delete[]
-//                   ::= de    # * (unary)
-//                   ::= dl    # delete
-//                   ::= dv    # /
-//                   ::= dV    # /=
-//                   ::= eo    # ^
-//                   ::= eO    # ^=
-//                   ::= eq    # ==
-//                   ::= ge    # >=
-//                   ::= gt    # >
-//                   ::= ix    # []
-//                   ::= le    # <=
-//                   ::= li <source-name>  # operator ""
-//                   ::= ls    # <<
-//                   ::= lS    # <<=
-//                   ::= lt    # <
-//                   ::= mi    # -
-//                   ::= mI    # -=
-//                   ::= ml    # *
-//                   ::= mL    # *=
-//                   ::= mm    # -- (postfix in <expression> context)
-//                   ::= na    # new[]
-//                   ::= ne    # !=
-//                   ::= ng    # - (unary)
-//                   ::= nt    # !
-//                   ::= nw    # new
-//                   ::= oo    # ||
-//                   ::= or    # |
-//                   ::= oR    # |=
-//                   ::= pm    # ->*
-//                   ::= pl    # +
-//                   ::= pL    # +=
-//                   ::= pp    # ++ (postfix in <expression> context)
-//                   ::= ps    # + (unary)
-//                   ::= pt    # ->
-//                   ::= qu    # ?
-//                   ::= rm    # %
-//                   ::= rM    # %=
-//                   ::= rs    # >>
-//                   ::= rS    # >>=
-//                   ::= ss    # <=> C++2a
-//                   ::= v <digit> <source-name>        # vendor extended operator
+                                   
+                                          
+                                  
+                                   
+                                  
+                                   
+                                  
+                                  
+                                              
+                                         
+                                          
+                                       
+                                  
+                                   
+                                  
+                                   
+                                   
+                                   
+                                  
+                                   
+                                   
+                                                        
+                                   
+                                    
+                                  
+                                  
+                                   
+                                  
+                                   
+                                                                     
+                                      
+                                   
+                                          
+                                  
+                                    
+                                   
+                                  
+                                   
+                                    
+                                  
+                                   
+                                                                     
+                                          
+                                   
+                                  
+                                  
+                                   
+                                   
+                                    
+                                          
+                                                                                  
 template<typename Alloc> Node *Db<Alloc>::parseOperatorName(NameState *State) {
   switch (look()) {
   case 'a':
@@ -2568,13 +2568,13 @@ template<typename Alloc> Node *Db<Alloc>::parseOperatorName(NameState *State) {
     case 'o':
       First += 2;
       return make<NameType>("operator~");
-    //                   ::= cv <type>    # (cast)
+                                                  
     case 'v': {
       First += 2;
       SwapAndRestore<bool> SaveTemplate(TryToParseTemplateArgs, false);
-      // If we're parsing an encoding, State != nullptr and the conversion
-      // operators' <type> could have a <template-param> that refers to some
-      // <template-arg>s further ahead in the mangled name.
+                                                                          
+                                                                            
+                                                           
       SwapAndRestore<bool> SavePermit(PermitForwardTemplateReferences,
                                       PermitForwardTemplateReferences ||
                                           State != nullptr);
@@ -2639,7 +2639,7 @@ template<typename Alloc> Node *Db<Alloc>::parseOperatorName(NameState *State) {
     case 'e':
       First += 2;
       return make<NameType>("operator<=");
-    //                   ::= li <source-name>  # operator ""
+                                                            
     case 'i': {
       First += 2;
       Node *SN = parseSourceName(State);
@@ -2759,7 +2759,7 @@ template<typename Alloc> Node *Db<Alloc>::parseOperatorName(NameState *State) {
       return make<NameType>("operator<=>");
     }
     return nullptr;
-  // ::= v <digit> <source-name>        # vendor extended operator
+                                                                  
   case 'v':
     if (std::isdigit(look(1))) {
       First += 2;
@@ -2773,14 +2773,14 @@ template<typename Alloc> Node *Db<Alloc>::parseOperatorName(NameState *State) {
   return nullptr;
 }
 
-// <ctor-dtor-name> ::= C1  # complete object constructor
-//                  ::= C2  # base object constructor
-//                  ::= C3  # complete object allocating constructor
-//   extension      ::= C5    # ?
-//                  ::= D0  # deleting destructor
-//                  ::= D1  # complete object destructor
-//                  ::= D2  # base object destructor
-//   extension      ::= D5    # ?
+                                                         
+                                                     
+                                                                    
+                                 
+                                                 
+                                                        
+                                                    
+                                 
 template<typename Alloc>
 Node *Db<Alloc>::parseCtorDtorName(Node *&SoFar, NameState *State) {
   if (SoFar->getKind() == Node::KSpecialSubstitution) {
@@ -2824,23 +2824,23 @@ Node *Db<Alloc>::parseCtorDtorName(Node *&SoFar, NameState *State) {
   return nullptr;
 }
 
-// <nested-name> ::= N [<CV-Qualifiers>] [<ref-qualifier>] <prefix> <unqualified-name> E
-//               ::= N [<CV-Qualifiers>] [<ref-qualifier>] <template-prefix> <template-args> E
-//
-// <prefix> ::= <prefix> <unqualified-name>
-//          ::= <template-prefix> <template-args>
-//          ::= <template-param>
-//          ::= <decltype>
-//          ::= # empty
-//          ::= <substitution>
-//          ::= <prefix> <data-member-prefix>
-//  extension ::= L
-//
-// <data-member-prefix> := <member source-name> [<template-args>] M
-//
-// <template-prefix> ::= <prefix> <template unqualified-name>
-//                   ::= <template-param>
-//                   ::= <substitution>
+                                                                                        
+                                                                                              
+  
+                                           
+                                                 
+                                
+                          
+                       
+                              
+                                             
+                   
+  
+                                                                   
+  
+                                                             
+                                         
+                                       
 template<typename Alloc> Node *Db<Alloc>::parseNestedName(NameState *State) {
   if (!consumeIf('N'))
     return nullptr;
@@ -2871,16 +2871,16 @@ template<typename Alloc> Node *Db<Alloc>::parseNestedName(NameState *State) {
   }
 
   while (!consumeIf('E')) {
-    consumeIf('L'); // extension
+    consumeIf('L');             
 
-    // <data-member-prefix> := <member source-name> [<template-args>] M
+                                                                       
     if (consumeIf('M')) {
       if (SoFar == nullptr)
         return nullptr;
       continue;
     }
 
-    //          ::= <template-param>
+                                    
     if (look() == 'T') {
       if (!PushComponent(parseTemplateParam()))
         return nullptr;
@@ -2888,7 +2888,7 @@ template<typename Alloc> Node *Db<Alloc>::parseNestedName(NameState *State) {
       continue;
     }
 
-    //          ::= <template-prefix> <template-args>
+                                                     
     if (look() == 'I') {
       Node *TA = parseTemplateArgs(State != nullptr);
       if (TA == nullptr || SoFar == nullptr)
@@ -2901,7 +2901,7 @@ template<typename Alloc> Node *Db<Alloc>::parseNestedName(NameState *State) {
       continue;
     }
 
-    //          ::= <decltype>
+                              
     if (look() == 'D' && (look(1) == 't' || look(1) == 'T')) {
       if (!PushComponent(parseDecltype()))
         return nullptr;
@@ -2909,7 +2909,7 @@ template<typename Alloc> Node *Db<Alloc>::parseNestedName(NameState *State) {
       continue;
     }
 
-    //          ::= <substitution>
+                                  
     if (look() == 'S' && look(1) != 't') {
       Node *S = parseSubstitution();
       if (!PushComponent(S))
@@ -2919,7 +2919,7 @@ template<typename Alloc> Node *Db<Alloc>::parseNestedName(NameState *State) {
       continue;
     }
 
-    // Parse an <unqualified-name> thats actually a <ctor-dtor-name>.
+                                                                     
     if (look() == 'C' || (look() == 'D' && look(1) != 'C')) {
       if (SoFar == nullptr)
         return nullptr;
@@ -2932,7 +2932,7 @@ template<typename Alloc> Node *Db<Alloc>::parseNestedName(NameState *State) {
       continue;
     }
 
-    //          ::= <prefix> <unqualified-name>
+                                               
     if (!PushComponent(parseUnqualifiedName(State)))
       return nullptr;
     Subs.push_back(SoFar);
@@ -2945,9 +2945,9 @@ template<typename Alloc> Node *Db<Alloc>::parseNestedName(NameState *State) {
   return SoFar;
 }
 
-// <simple-id> ::= <source-name> [ <template-args> ]
+                                                    
 template<typename Alloc> Node *Db<Alloc>::parseSimpleId() {
-  Node *SN = parseSourceName(/*NameState=*/nullptr);
+  Node *SN = parseSourceName(              nullptr);
   if (SN == nullptr)
     return nullptr;
   if (look() == 'I') {
@@ -2959,8 +2959,8 @@ template<typename Alloc> Node *Db<Alloc>::parseSimpleId() {
   return SN;
 }
 
-// <destructor-name> ::= <unresolved-type>  # e.g., ~T or ~decltype(f())
-//                   ::= <simple-id>        # e.g., ~A<2*N>
+                                                                        
+                                                           
 template<typename Alloc> Node *Db<Alloc>::parseDestructorName() {
   Node *Result;
   if (std::isdigit(look()))
@@ -2972,9 +2972,9 @@ template<typename Alloc> Node *Db<Alloc>::parseDestructorName() {
   return make<DtorName>(Result);
 }
 
-// <unresolved-type> ::= <template-param>
-//                   ::= <decltype>
-//                   ::= <substitution>
+                                         
+                                   
+                                       
 template<typename Alloc> Node *Db<Alloc>::parseUnresolvedType() {
   if (look() == 'T') {
     Node *TP = parseTemplateParam();
@@ -2993,13 +2993,13 @@ template<typename Alloc> Node *Db<Alloc>::parseUnresolvedType() {
   return parseSubstitution();
 }
 
-// <base-unresolved-name> ::= <simple-id>                                # unresolved name
-//          extension     ::= <operator-name>                            # unresolved operator-function-id
-//          extension     ::= <operator-name> <template-args>            # unresolved operator template-id
-//                        ::= on <operator-name>                         # unresolved operator-function-id
-//                        ::= on <operator-name> <template-args>         # unresolved operator template-id
-//                        ::= dn <destructor-name>                       # destructor or pseudo-destructor;
-//                                                                         # e.g. ~X or ~X<N-1>
+                                                                                          
+                                                                                                          
+                                                                                                          
+                                                                                                          
+                                                                                                          
+                                                                                                           
+                                                                                               
 template<typename Alloc> Node *Db<Alloc>::parseBaseUnresolvedName() {
   if (std::isdigit(look()))
     return parseSimpleId();
@@ -3009,7 +3009,7 @@ template<typename Alloc> Node *Db<Alloc>::parseBaseUnresolvedName() {
 
   consumeIf("on");
 
-  Node *Oper = parseOperatorName(/*NameState=*/nullptr);
+  Node *Oper = parseOperatorName(              nullptr);
   if (Oper == nullptr)
     return nullptr;
   if (look() == 'I') {
@@ -3021,22 +3021,22 @@ template<typename Alloc> Node *Db<Alloc>::parseBaseUnresolvedName() {
   return Oper;
 }
 
-// <unresolved-name>
-//  extension        ::= srN <unresolved-type> [<template-args>] <unresolved-qualifier-level>* E <base-unresolved-name>
-//                   ::= [gs] <base-unresolved-name>                     # x or (with "gs") ::x
-//                   ::= [gs] sr <unresolved-qualifier-level>+ E <base-unresolved-name>
-//                                                                       # A::x, N::y, A<T>::z; "gs" means leading "::"
-//                   ::= sr <unresolved-type> <base-unresolved-name>     # T::x / decltype(p)::x
-//  extension        ::= sr <unresolved-type> <template-args> <base-unresolved-name>
-//                                                                       # T::N::x /decltype(p)::N::x
-//  (ignored)        ::= srN <unresolved-type>  <unresolved-qualifier-level>+ E <base-unresolved-name>
-//
-// <unresolved-qualifier-level> ::= <simple-id>
+                    
+                                                                                                                       
+                                                                                               
+                                                                                       
+                                                                                                                       
+                                                                                                
+                                                                                    
+                                                                                                     
+                                                                                                      
+  
+                                               
 template<typename Alloc> Node *Db<Alloc>::parseUnresolvedName() {
   Node *SoFar = nullptr;
 
-  // srN <unresolved-type> [<template-args>] <unresolved-qualifier-level>* E <base-unresolved-name>
-  // srN <unresolved-type>                   <unresolved-qualifier-level>+ E <base-unresolved-name>
+                                                                                                   
+                                                                                                   
   if (consumeIf("srN")) {
     SoFar = parseUnresolvedType();
     if (SoFar == nullptr)
@@ -3068,7 +3068,7 @@ template<typename Alloc> Node *Db<Alloc>::parseUnresolvedName() {
 
   bool Global = consumeIf("gs");
 
-  // [gs] <base-unresolved-name>                     # x or (with "gs") ::x
+                                                                           
   if (!consumeIf("sr")) {
     SoFar = parseBaseUnresolvedName();
     if (SoFar == nullptr)
@@ -3078,7 +3078,7 @@ template<typename Alloc> Node *Db<Alloc>::parseUnresolvedName() {
     return SoFar;
   }
 
-  // [gs] sr <unresolved-qualifier-level>+ E   <base-unresolved-name>
+                                                                     
   if (std::isdigit(look())) {
     do {
       Node *Qual = parseSimpleId();
@@ -3094,8 +3094,8 @@ template<typename Alloc> Node *Db<Alloc>::parseUnresolvedName() {
         return nullptr;
     } while (!consumeIf('E'));
   }
-  //      sr <unresolved-type>                 <base-unresolved-name>
-  //      sr <unresolved-type> <template-args> <base-unresolved-name>
+                                                                     
+                                                                     
   else {
     SoFar = parseUnresolvedType();
     if (SoFar == nullptr)
@@ -3119,8 +3119,8 @@ template<typename Alloc> Node *Db<Alloc>::parseUnresolvedName() {
   return make<QualifiedName>(SoFar, Base);
 }
 
-// <abi-tags> ::= <abi-tag> [<abi-tags>]
-// <abi-tag> ::= B <source-name>
+                                        
+                                
 template<typename Alloc> Node *Db<Alloc>::parseAbiTags(Node *N) {
   while (consumeIf('B')) {
     StringView SN = parseBareSourceName();
@@ -3133,7 +3133,7 @@ template<typename Alloc> Node *Db<Alloc>::parseAbiTags(Node *N) {
   return N;
 }
 
-// <number> ::= [n] <non-negative decimal integer>
+                                                  
 template<typename Alloc>
 StringView Db<Alloc>::parseNumber(bool AllowNegative) {
   const char *Tmp = First;
@@ -3146,7 +3146,7 @@ StringView Db<Alloc>::parseNumber(bool AllowNegative) {
   return StringView(Tmp, First);
 }
 
-// <positive length number> ::= [0-9]*
+                                      
 template<typename Alloc> bool Db<Alloc>::parsePositiveInteger(size_t *Out) {
   *Out = 0;
   if (look() < '0' || look() > '9')
@@ -3167,14 +3167,14 @@ template<typename Alloc> StringView Db<Alloc>::parseBareSourceName() {
   return R;
 }
 
-// <function-type> ::= [<CV-qualifiers>] [<exception-spec>] [Dx] F [Y] <bare-function-type> [<ref-qualifier>] E
-//
-// <exception-spec> ::= Do                # non-throwing exception-specification (e.g., noexcept, throw())
-//                  ::= DO <expression> E # computed (instantiation-dependent) noexcept
-//                  ::= Dw <type>+ E      # dynamic exception specification with instantiation-dependent types
-//
-// <ref-qualifier> ::= R                   # & ref-qualifier
-// <ref-qualifier> ::= O                   # && ref-qualifier
+                                                                                                               
+  
+                                                                                                          
+                                                                                       
+                                                                                                              
+  
+                                                            
+                                                             
 template<typename Alloc> Node *Db<Alloc>::parseFunctionType() {
   Qualifiers CVQuals = parseCVQualifiers();
 
@@ -3204,11 +3204,11 @@ template<typename Alloc> Node *Db<Alloc>::parseFunctionType() {
       return nullptr;
   }
 
-  consumeIf("Dx"); // transaction safe
+  consumeIf("Dx");                    
 
   if (!consumeIf('F'))
     return nullptr;
-  consumeIf('Y'); // extern "C"
+  consumeIf('Y');              
   Node *ReturnType = parseType();
   if (ReturnType == nullptr)
     return nullptr;
@@ -3239,11 +3239,11 @@ template<typename Alloc> Node *Db<Alloc>::parseFunctionType() {
                             ReferenceQualifier, ExceptionSpec);
 }
 
-// extension:
-// <vector-type>           ::= Dv <positive dimension number> _ <extended element type>
-//                         ::= Dv [<dimension expression>] _ <element type>
-// <extended element type> ::= <element type>
-//                         ::= p # AltiVec vector pixel
+             
+                                                                                       
+                                                                           
+                                             
+                                                       
 template<typename Alloc> Node *Db<Alloc>::parseVectorType() {
   if (!consumeIf("Dv"))
     return nullptr;
@@ -3276,8 +3276,8 @@ template<typename Alloc> Node *Db<Alloc>::parseVectorType() {
   return make<VectorType>(ElemType, StringView());
 }
 
-// <decltype>  ::= Dt <expression> E  # decltype of an id-expression or class member access (C++0x)
-//             ::= DT <expression> E  # decltype of an expression (C++0x)
+                                                                                                   
+                                                                         
 template<typename Alloc> Node *Db<Alloc>::parseDecltype() {
   if (!consumeIf('D'))
     return nullptr;
@@ -3291,8 +3291,8 @@ template<typename Alloc> Node *Db<Alloc>::parseDecltype() {
   return make<EnclosingExpr>("decltype(", E, ")");
 }
 
-// <array-type> ::= A <positive dimension number> _ <element type>
-//              ::= A [<dimension expression>] _ <element type>
+                                                                  
+                                                               
 template<typename Alloc> Node *Db<Alloc>::parseArrayType() {
   if (!consumeIf('A'))
     return nullptr;
@@ -3318,7 +3318,7 @@ template<typename Alloc> Node *Db<Alloc>::parseArrayType() {
   return make<ArrayType>(Ty, Dimension);
 }
 
-// <pointer-to-member-type> ::= M <class type> <member type>
+                                                            
 template<typename Alloc> Node *Db<Alloc>::parsePointerToMemberType() {
   if (!consumeIf('M'))
     return nullptr;
@@ -3331,10 +3331,10 @@ template<typename Alloc> Node *Db<Alloc>::parsePointerToMemberType() {
   return make<PointerToMemberType>(ClassType, MemberType);
 }
 
-// <class-enum-type> ::= <name>     # non-dependent type name, dependent type name, or dependent typename-specifier
-//                   ::= Ts <name>  # dependent elaborated type specifier using 'struct' or 'class'
-//                   ::= Tu <name>  # dependent elaborated type specifier using 'union'
-//                   ::= Te <name>  # dependent elaborated type specifier using 'enum'
+                                                                                                                   
+                                                                                                   
+                                                                                       
+                                                                                      
 template<typename Alloc> Node *Db<Alloc>::parseClassEnumType() {
   StringView ElabSpef;
   if (consumeIf("Ts"))
@@ -3354,18 +3354,18 @@ template<typename Alloc> Node *Db<Alloc>::parseClassEnumType() {
   return Name;
 }
 
-// <qualified-type>     ::= <qualifiers> <type>
-// <qualifiers> ::= <extended-qualifier>* <CV-qualifiers>
-// <extended-qualifier> ::= U <source-name> [<template-args>] # vendor extended type qualifier
+                                               
+                                                         
+                                                                                              
 template<typename Alloc> Node *Db<Alloc>::parseQualifiedType() {
   if (consumeIf('U')) {
     StringView Qual = parseBareSourceName();
     if (Qual.empty())
       return nullptr;
 
-    // FIXME parse the optional <template-args> here!
+                                                     
 
-    // extension            ::= U <objc-name> <objc-type>  # objc-type<identifier>
+                                                                                  
     if (Qual.startsWith("objcproto")) {
       StringView ProtoSourceName = Qual.dropFront(std::strlen("objcproto"));
       StringView Proto;
@@ -3397,26 +3397,26 @@ template<typename Alloc> Node *Db<Alloc>::parseQualifiedType() {
   return Ty;
 }
 
-// <type>      ::= <builtin-type>
-//             ::= <qualified-type>
-//             ::= <function-type>
-//             ::= <class-enum-type>
-//             ::= <array-type>
-//             ::= <pointer-to-member-type>
-//             ::= <template-param>
-//             ::= <template-template-param> <template-args>
-//             ::= <decltype>
-//             ::= P <type>        # pointer
-//             ::= R <type>        # l-value reference
-//             ::= O <type>        # r-value reference (C++11)
-//             ::= C <type>        # complex pair (C99)
-//             ::= G <type>        # imaginary (C99)
-//             ::= <substitution>  # See Compression below
-// extension   ::= U <objc-name> <objc-type>  # objc-type<identifier>
-// extension   ::= <vector-type> # <vector-type> starts with Dv
-//
-// <objc-name> ::= <k0 number> objcproto <k1 number> <identifier>  # k0 = 9 + <number of digits in k1> + k1
-// <objc-type> ::= <source-name>  # PU<11+>objcproto 11objc_object<source-name> 11objc_object -> id<source-name>
+                                 
+                                   
+                                  
+                                    
+                               
+                                           
+                                   
+                                                            
+                             
+                                            
+                                                      
+                                                              
+                                                       
+                                                    
+                                                          
+                                                                     
+                                                               
+  
+                                                                                                           
+                                                                                                                
 template<typename Alloc> Node *Db<Alloc>::parseType() {
   Node *Result = nullptr;
 
@@ -3424,7 +3424,7 @@ template<typename Alloc> Node *Db<Alloc>::parseType() {
     TypeCallback(TypeCallbackContext, First);
 
   switch (look()) {
-  //             ::= <qualified-type>
+                                     
   case 'r':
   case 'V':
   case 'K': {
@@ -3446,92 +3446,92 @@ template<typename Alloc> Node *Db<Alloc>::parseType() {
     Result = parseQualifiedType();
     break;
   }
-  // <builtin-type> ::= v    # void
+                                   
   case 'v':
     ++First;
     return make<NameType>("void");
-  //                ::= w    # wchar_t
+                                      
   case 'w':
     ++First;
     return make<NameType>("wchar_t");
-  //                ::= b    # bool
+                                   
   case 'b':
     ++First;
     return make<NameType>("bool");
-  //                ::= c    # char
+                                   
   case 'c':
     ++First;
     return make<NameType>("char");
-  //                ::= a    # signed char
+                                          
   case 'a':
     ++First;
     return make<NameType>("signed char");
-  //                ::= h    # unsigned char
+                                            
   case 'h':
     ++First;
     return make<NameType>("unsigned char");
-  //                ::= s    # short
+                                    
   case 's':
     ++First;
     return make<NameType>("short");
-  //                ::= t    # unsigned short
+                                             
   case 't':
     ++First;
     return make<NameType>("unsigned short");
-  //                ::= i    # int
+                                  
   case 'i':
     ++First;
     return make<NameType>("int");
-  //                ::= j    # unsigned int
+                                           
   case 'j':
     ++First;
     return make<NameType>("unsigned int");
-  //                ::= l    # long
+                                   
   case 'l':
     ++First;
     return make<NameType>("long");
-  //                ::= m    # unsigned long
+                                            
   case 'm':
     ++First;
     return make<NameType>("unsigned long");
-  //                ::= x    # long long, __int64
+                                                 
   case 'x':
     ++First;
     return make<NameType>("long long");
-  //                ::= y    # unsigned long long, __int64
+                                                          
   case 'y':
     ++First;
     return make<NameType>("unsigned long long");
-  //                ::= n    # __int128
+                                       
   case 'n':
     ++First;
     return make<NameType>("__int128");
-  //                ::= o    # unsigned __int128
+                                                
   case 'o':
     ++First;
     return make<NameType>("unsigned __int128");
-  //                ::= f    # float
+                                    
   case 'f':
     ++First;
     return make<NameType>("float");
-  //                ::= d    # double
+                                     
   case 'd':
     ++First;
     return make<NameType>("double");
-  //                ::= e    # long double, __float80
+                                                     
   case 'e':
     ++First;
     return make<NameType>("long double");
-  //                ::= g    # __float128
+                                         
   case 'g':
     ++First;
     return make<NameType>("__float128");
-  //                ::= z    # ellipsis
+                                       
   case 'z':
     ++First;
     return make<NameType>("...");
 
-  // <builtin-type> ::= u <source-name>    # vendor extended type
+                                                                 
   case 'u': {
     ++First;
     StringView Res = parseBareSourceName();
@@ -3541,55 +3541,55 @@ template<typename Alloc> Node *Db<Alloc>::parseType() {
   }
   case 'D':
     switch (look(1)) {
-    //                ::= Dd   # IEEE 754r decimal floating point (64 bits)
+                                                                           
     case 'd':
       First += 2;
       return make<NameType>("decimal64");
-    //                ::= De   # IEEE 754r decimal floating point (128 bits)
+                                                                            
     case 'e':
       First += 2;
       return make<NameType>("decimal128");
-    //                ::= Df   # IEEE 754r decimal floating point (32 bits)
+                                                                           
     case 'f':
       First += 2;
       return make<NameType>("decimal32");
-    //                ::= Dh   # IEEE 754r half-precision floating point (16 bits)
+                                                                                  
     case 'h':
       First += 2;
       return make<NameType>("decimal16");
-    //                ::= Di   # char32_t
+                                         
     case 'i':
       First += 2;
       return make<NameType>("char32_t");
-    //                ::= Ds   # char16_t
+                                         
     case 's':
       First += 2;
       return make<NameType>("char16_t");
-    //                ::= Da   # auto (in dependent new-expressions)
+                                                                    
     case 'a':
       First += 2;
       return make<NameType>("auto");
-    //                ::= Dc   # decltype(auto)
+                                               
     case 'c':
       First += 2;
       return make<NameType>("decltype(auto)");
-    //                ::= Dn   # std::nullptr_t (i.e., decltype(nullptr))
+                                                                         
     case 'n':
       First += 2;
       return make<NameType>("std::nullptr_t");
 
-    //             ::= <decltype>
+                                 
     case 't':
     case 'T': {
       Result = parseDecltype();
       break;
     }
-    // extension   ::= <vector-type> # <vector-type> starts with Dv
+                                                                   
     case 'v': {
       Result = parseVectorType();
       break;
     }
-    //           ::= Dp <type>       # pack expansion (C++0x)
+                                                             
     case 'p': {
       First += 2;
       Node *Child = parseType();
@@ -3598,34 +3598,34 @@ template<typename Alloc> Node *Db<Alloc>::parseType() {
       Result = make<ParameterPackExpansion>(Child);
       break;
     }
-    // Exception specifier on a function type.
+                                              
     case 'o':
     case 'O':
     case 'w':
-    // Transaction safe function type.
+                                      
     case 'x':
       Result = parseFunctionType();
       break;
     }
     break;
-  //             ::= <function-type>
+                                    
   case 'F': {
     Result = parseFunctionType();
     break;
   }
-  //             ::= <array-type>
+                                 
   case 'A': {
     Result = parseArrayType();
     break;
   }
-  //             ::= <pointer-to-member-type>
+                                             
   case 'M': {
     Result = parsePointerToMemberType();
     break;
   }
-  //             ::= <template-param>
+                                     
   case 'T': {
-    // This could be an elaborate type specifier on a <class-enum-type>.
+                                                                        
     if (look(1) == 's' || look(1) == 'u' || look(1) == 'e') {
       Result = parseClassEnumType();
       break;
@@ -3635,15 +3635,15 @@ template<typename Alloc> Node *Db<Alloc>::parseType() {
     if (Result == nullptr)
       return nullptr;
 
-    // Result could be either of:
-    //   <type>        ::= <template-param>
-    //   <type>        ::= <template-template-param> <template-args>
-    //
-    //   <template-template-param> ::= <template-param>
-    //                             ::= <substitution>
-    //
-    // If this is followed by some <template-args>, and we're permitted to
-    // parse them, take the second production.
+                                 
+                                           
+                                                                    
+      
+                                                       
+                                                     
+      
+                                                                          
+                                              
 
     if (TryToParseTemplateArgs && look() == 'I') {
       Node *TA = parseTemplateArgs();
@@ -3653,7 +3653,7 @@ template<typename Alloc> Node *Db<Alloc>::parseType() {
     }
     break;
   }
-  //             ::= P <type>        # pointer
+                                              
   case 'P': {
     ++First;
     Node *Ptr = parseType();
@@ -3662,7 +3662,7 @@ template<typename Alloc> Node *Db<Alloc>::parseType() {
     Result = make<PointerType>(Ptr);
     break;
   }
-  //             ::= R <type>        # l-value reference
+                                                        
   case 'R': {
     ++First;
     Node *Ref = parseType();
@@ -3671,7 +3671,7 @@ template<typename Alloc> Node *Db<Alloc>::parseType() {
     Result = make<ReferenceType>(Ref, ReferenceKind::LValue);
     break;
   }
-  //             ::= O <type>        # r-value reference (C++11)
+                                                                
   case 'O': {
     ++First;
     Node *Ref = parseType();
@@ -3680,7 +3680,7 @@ template<typename Alloc> Node *Db<Alloc>::parseType() {
     Result = make<ReferenceType>(Ref, ReferenceKind::RValue);
     break;
   }
-  //             ::= C <type>        # complex pair (C99)
+                                                         
   case 'C': {
     ++First;
     Node *P = parseType();
@@ -3689,7 +3689,7 @@ template<typename Alloc> Node *Db<Alloc>::parseType() {
     Result = make<PostfixQualifiedType>(P, " complex");
     break;
   }
-  //             ::= G <type>        # imaginary (C99)
+                                                      
   case 'G': {
     ++First;
     Node *P = parseType();
@@ -3698,22 +3698,22 @@ template<typename Alloc> Node *Db<Alloc>::parseType() {
     Result = make<PostfixQualifiedType>(P, " imaginary");
     break;
   }
-  //             ::= <substitution>  # See Compression below
+                                                            
   case 'S': {
     if (look(1) && look(1) != 't') {
       Node *Sub = parseSubstitution();
       if (Sub == nullptr)
         return nullptr;
 
-      // Sub could be either of:
-      //   <type>        ::= <substitution>
-      //   <type>        ::= <template-template-param> <template-args>
-      //
-      //   <template-template-param> ::= <template-param>
-      //                             ::= <substitution>
-      //
-      // If this is followed by some <template-args>, and we're permitted to
-      // parse them, take the second production.
+                                
+                                           
+                                                                      
+        
+                                                         
+                                                       
+        
+                                                                            
+                                                
 
       if (TryToParseTemplateArgs && look() == 'I') {
         Node *TA = parseTemplateArgs();
@@ -3723,22 +3723,22 @@ template<typename Alloc> Node *Db<Alloc>::parseType() {
         break;
       }
 
-      // If all we parsed was a substitution, don't re-insert into the
-      // substitution table.
+                                                                      
+                            
       return Sub;
     }
     LLVM_FALLTHROUGH;
   }
-  //        ::= <class-enum-type>
+                                 
   default: {
     Result = parseClassEnumType();
     break;
   }
   }
 
-  // If we parsed a type, insert it into the substitution table. Note that all
-  // <builtin-type>s and <substitution>s have already bailed out, because they
-  // don't get substitutions.
+                                                                              
+                                                                              
+                             
   if (Result != nullptr)
     Subs.push_back(Result);
   return Result;
@@ -3768,7 +3768,7 @@ template<typename Alloc> Node *Db<Alloc>::parseIntegerLiteral(StringView Lit) {
   return nullptr;
 }
 
-// <CV-Qualifiers> ::= [r] [V] [K]
+                                  
 template<typename Alloc> Qualifiers Db<Alloc>::parseCVQualifiers() {
   Qualifiers CVR = QualNone;
   if (consumeIf('r'))
@@ -3780,10 +3780,10 @@ template<typename Alloc> Qualifiers Db<Alloc>::parseCVQualifiers() {
   return CVR;
 }
 
-// <function-param> ::= fp <top-level CV-Qualifiers> _                                     # L == 0, first parameter
-//                  ::= fp <top-level CV-Qualifiers> <parameter-2 non-negative number> _   # L == 0, second and later parameters
-//                  ::= fL <L-1 non-negative number> p <top-level CV-Qualifiers> _         # L > 0, first parameter
-//                  ::= fL <L-1 non-negative number> p <top-level CV-Qualifiers> <parameter-2 non-negative number> _   # L > 0, second and later parameters
+                                                                                                                    
+                                                                                                                                
+                                                                                                                   
+                                                                                                                                                           
 template<typename Alloc> Node *Db<Alloc>::parseFunctionParam() {
   if (consumeIf("fp")) {
     parseCVQualifiers();
@@ -3806,11 +3806,11 @@ template<typename Alloc> Node *Db<Alloc>::parseFunctionParam() {
   return nullptr;
 }
 
-// [gs] nw <expression>* _ <type> E                     # new (expr-list) type
-// [gs] nw <expression>* _ <type> <initializer>         # new (expr-list) type (init)
-// [gs] na <expression>* _ <type> E                     # new[] (expr-list) type
-// [gs] na <expression>* _ <type> <initializer>         # new[] (expr-list) type (init)
-// <initializer> ::= pi <expression>* E                 # parenthesized initialization
+                                                                              
+                                                                                     
+                                                                                
+                                                                                       
+                                                                                      
 template<typename Alloc> Node *Db<Alloc>::parseNewExpr() {
   bool Global = consumeIf("gs");
   bool IsArray = look(1) == 'a';
@@ -3842,8 +3842,8 @@ template<typename Alloc> Node *Db<Alloc>::parseNewExpr() {
   return make<NewExpr>(ExprList, Ty, NodeArray(), Global, IsArray);
 }
 
-// cv <type> <expression>                               # conversion with one argument
-// cv <type> _ <expression>* E                          # conversion with a different number of arguments
+                                                                                      
+                                                                                                         
 template<typename Alloc> Node *Db<Alloc>::parseConversionExpr() {
   if (!consumeIf("cv"))
     return nullptr;
@@ -3874,12 +3874,12 @@ template<typename Alloc> Node *Db<Alloc>::parseConversionExpr() {
   return make<ConversionExpr>(Ty, makeNodeArray(E, E + 1));
 }
 
-// <expr-primary> ::= L <type> <value number> E                          # integer literal
-//                ::= L <type> <value float> E                           # floating literal
-//                ::= L <string type> E                                  # string literal
-//                ::= L <nullptr type> E                                 # nullptr literal (i.e., "LDnE")
-// FIXME:         ::= L <type> <real-part float> _ <imag-part float> E   # complex floating point literal (C 2000)
-//                ::= L <mangled-name> E                                 # external name
+                                                                                          
+                                                                                           
+                                                                                         
+                                                                                                         
+                                                                                                                  
+                                                                                        
 template<typename Alloc> Node *Db<Alloc>::parseExprPrimary() {
   if (!consumeIf('L'))
     return nullptr;
@@ -3949,11 +3949,11 @@ template<typename Alloc> Node *Db<Alloc>::parseExprPrimary() {
     }
     return nullptr;
   case 'T':
-    // Invalid mangled name per
-    //   http://sourcerytools.com/pipermail/cxx-abi-dev/2011-August/002422.html
+                               
+                                                                               
     return nullptr;
   default: {
-    // might be named type
+                          
     Node *T = parseType();
     if (T == nullptr)
       return nullptr;
@@ -3970,22 +3970,22 @@ template<typename Alloc> Node *Db<Alloc>::parseExprPrimary() {
   }
 }
 
-// <braced-expression> ::= <expression>
-//                     ::= di <field source-name> <braced-expression>    # .name = expr
-//                     ::= dx <index expression> <braced-expression>     # [expr] = expr
-//                     ::= dX <range begin expression> <range end expression> <braced-expression>
+                                       
+                                                                                       
+                                                                                        
+                                                                                                 
 template<typename Alloc> Node *Db<Alloc>::parseBracedExpr() {
   if (look() == 'd') {
     switch (look(1)) {
     case 'i': {
       First += 2;
-      Node *Field = parseSourceName(/*NameState=*/nullptr);
+      Node *Field = parseSourceName(              nullptr);
       if (Field == nullptr)
         return nullptr;
       Node *Init = parseBracedExpr();
       if (Init == nullptr)
         return nullptr;
-      return make<BracedExpr>(Field, Init, /*isArray=*/false);
+      return make<BracedExpr>(Field, Init,             false);
     }
     case 'x': {
       First += 2;
@@ -3995,7 +3995,7 @@ template<typename Alloc> Node *Db<Alloc>::parseBracedExpr() {
       Node *Init = parseBracedExpr();
       if (Init == nullptr)
         return nullptr;
-      return make<BracedExpr>(Index, Init, /*isArray=*/true);
+      return make<BracedExpr>(Index, Init,             true);
     }
     case 'X': {
       First += 2;
@@ -4015,11 +4015,11 @@ template<typename Alloc> Node *Db<Alloc>::parseBracedExpr() {
   return parseExpr();
 }
 
-// (not yet in the spec)
-// <fold-expr> ::= fL <binary-operator-name> <expression> <expression>
-//             ::= fR <binary-operator-name> <expression> <expression>
-//             ::= fl <binary-operator-name> <expression>
-//             ::= fr <binary-operator-name> <expression>
+                        
+                                                                      
+                                                                      
+                                                         
+                                                         
 template<typename Alloc> Node *Db<Alloc>::parseFoldExpr() {
   if (!consumeIf('f'))
     return nullptr;
@@ -4035,7 +4035,7 @@ template<typename Alloc> Node *Db<Alloc>::parseFoldExpr() {
     return nullptr;
   ++First;
 
-  // FIXME: This map is duplicated in parseOperatorName and parseExpr.
+                                                                      
   StringView OperatorName;
   if      (consumeIf("aa")) OperatorName = "&&";
   else if (consumeIf("an")) OperatorName = "&";
@@ -4085,50 +4085,50 @@ template<typename Alloc> Node *Db<Alloc>::parseFoldExpr() {
   return make<FoldExpr>(IsLeftFold, OperatorName, Pack, Init);
 }
 
-// <expression> ::= <unary operator-name> <expression>
-//              ::= <binary operator-name> <expression> <expression>
-//              ::= <ternary operator-name> <expression> <expression> <expression>
-//              ::= cl <expression>+ E                                   # call
-//              ::= cv <type> <expression>                               # conversion with one argument
-//              ::= cv <type> _ <expression>* E                          # conversion with a different number of arguments
-//              ::= [gs] nw <expression>* _ <type> E                     # new (expr-list) type
-//              ::= [gs] nw <expression>* _ <type> <initializer>         # new (expr-list) type (init)
-//              ::= [gs] na <expression>* _ <type> E                     # new[] (expr-list) type
-//              ::= [gs] na <expression>* _ <type> <initializer>         # new[] (expr-list) type (init)
-//              ::= [gs] dl <expression>                                 # delete expression
-//              ::= [gs] da <expression>                                 # delete[] expression
-//              ::= pp_ <expression>                                     # prefix ++
-//              ::= mm_ <expression>                                     # prefix --
-//              ::= ti <type>                                            # typeid (type)
-//              ::= te <expression>                                      # typeid (expression)
-//              ::= dc <type> <expression>                               # dynamic_cast<type> (expression)
-//              ::= sc <type> <expression>                               # static_cast<type> (expression)
-//              ::= cc <type> <expression>                               # const_cast<type> (expression)
-//              ::= rc <type> <expression>                               # reinterpret_cast<type> (expression)
-//              ::= st <type>                                            # sizeof (a type)
-//              ::= sz <expression>                                      # sizeof (an expression)
-//              ::= at <type>                                            # alignof (a type)
-//              ::= az <expression>                                      # alignof (an expression)
-//              ::= nx <expression>                                      # noexcept (expression)
-//              ::= <template-param>
-//              ::= <function-param>
-//              ::= dt <expression> <unresolved-name>                    # expr.name
-//              ::= pt <expression> <unresolved-name>                    # expr->name
-//              ::= ds <expression> <expression>                         # expr.*expr
-//              ::= sZ <template-param>                                  # size of a parameter pack
-//              ::= sZ <function-param>                                  # size of a function parameter pack
-//              ::= sP <template-arg>* E                                 # sizeof...(T), size of a captured template parameter pack from an alias template
-//              ::= sp <expression>                                      # pack expansion
-//              ::= tw <expression>                                      # throw expression
-//              ::= tr                                                   # throw with no operand (rethrow)
-//              ::= <unresolved-name>                                    # f(p), N::f(p), ::f(p),
-//                                                                       # freestanding dependent name (e.g., T::x),
-//                                                                       # objectless nonstatic member reference
-//              ::= fL <binary-operator-name> <expression> <expression>
-//              ::= fR <binary-operator-name> <expression> <expression>
-//              ::= fl <binary-operator-name> <expression>
-//              ::= fr <binary-operator-name> <expression>
-//              ::= <expr-primary>
+                                                      
+                                                                    
+                                                                                  
+                                                                               
+                                                                                                       
+                                                                                                                          
+                                                                                               
+                                                                                                      
+                                                                                                 
+                                                                                                        
+                                                                                            
+                                                                                              
+                                                                                    
+                                                                                    
+                                                                                        
+                                                                                              
+                                                                                                          
+                                                                                                         
+                                                                                                        
+                                                                                                              
+                                                                                          
+                                                                                                 
+                                                                                           
+                                                                                                  
+                                                                                                
+                                    
+                                    
+                                                                                    
+                                                                                     
+                                                                                     
+                                                                                                   
+                                                                                                            
+                                                                                                                                                          
+                                                                                         
+                                                                                           
+                                                                                                          
+                                                                                                 
+                                                                                                                    
+                                                                                                                
+                                                                       
+                                                                       
+                                                          
+                                                          
+                                  
 template<typename Alloc> Node *Db<Alloc>::parseExpr() {
   bool Global = consumeIf("gs");
   if (numLeft() < 2)
@@ -4140,7 +4140,7 @@ template<typename Alloc> Node *Db<Alloc>::parseExpr() {
   case 'T':
     return parseTemplateParam();
   case 'f': {
-    // Disambiguate a fold expression from a <function-param>.
+                                                              
     if (look(1) == 'p' || (look(1) == 'L' && std::isdigit(look(2))))
       return parseFunctionParam();
     return parseFoldExpr();
@@ -4180,7 +4180,7 @@ template<typename Alloc> Node *Db<Alloc>::parseExpr() {
     return nullptr;
   case 'c':
     switch (First[1]) {
-    // cc <type> <expression>                               # const_cast<type>(expression)
+                                                                                          
     case 'c': {
       First += 2;
       Node *Ty = parseType();
@@ -4191,7 +4191,7 @@ template<typename Alloc> Node *Db<Alloc>::parseExpr() {
         return Ex;
       return make<CastExpr>("const_cast", Ty, Ex);
     }
-    // cl <expression>+ E                                   # call
+                                                                  
     case 'l': {
       First += 2;
       Node *Callee = parseExpr();
@@ -4223,7 +4223,7 @@ template<typename Alloc> Node *Db<Alloc>::parseExpr() {
       Node *Ex = parseExpr();
       if (Ex == nullptr)
         return Ex;
-      return make<DeleteExpr>(Ex, Global, /*is_array=*/true);
+      return make<DeleteExpr>(Ex, Global,              true);
     }
     case 'c': {
       First += 2;
@@ -4243,7 +4243,7 @@ template<typename Alloc> Node *Db<Alloc>::parseExpr() {
       Node *E = parseExpr();
       if (E == nullptr)
         return E;
-      return make<DeleteExpr>(E, Global, /*is_array=*/false);
+      return make<DeleteExpr>(E, Global,              false);
     }
     case 'n':
       return parseUnresolvedName();
@@ -4597,17 +4597,17 @@ template<typename Alloc> Node *Db<Alloc>::parseExpr() {
   return nullptr;
 }
 
-// <call-offset> ::= h <nv-offset> _
-//               ::= v <v-offset> _
-//
-// <nv-offset> ::= <offset number>
-//               # non-virtual base override
-//
-// <v-offset>  ::= <offset number> _ <virtual offset number>
-//               # virtual base override, with vcall offset
+                                    
+                                   
+  
+                                  
+                                            
+  
+                                                            
+                                                           
 template<typename Alloc> bool Db<Alloc>::parseCallOffset() {
-  // Just scan through the call offset, we never add this information into the
-  // output.
+                                                                              
+            
   if (consumeIf('h'))
     return parseNumber(true).empty() || !consumeIf('_');
   if (consumeIf('v'))
@@ -4616,29 +4616,29 @@ template<typename Alloc> bool Db<Alloc>::parseCallOffset() {
   return true;
 }
 
-// <special-name> ::= TV <type>    # virtual table
-//                ::= TT <type>    # VTT structure (construction vtable index)
-//                ::= TI <type>    # typeinfo structure
-//                ::= TS <type>    # typeinfo name (null-terminated byte string)
-//                ::= Tc <call-offset> <call-offset> <base encoding>
-//                    # base is the nominal target function of thunk
-//                    # first call-offset is 'this' adjustment
-//                    # second call-offset is result adjustment
-//                ::= T <call-offset> <base encoding>
-//                    # base is the nominal target function of thunk
-//                ::= GV <object name> # Guard variable for one-time initialization
-//                                     # No <type>
-//                ::= TW <object name> # Thread-local wrapper
-//                ::= TH <object name> # Thread-local initialization
-//                ::= GR <object name> _             # First temporary
-//                ::= GR <object name> <seq-id> _    # Subsequent temporaries
-//      extension ::= TC <first type> <number> _ <second type> # construction vtable for second-in-first
-//      extension ::= GR <object name> # reference temporary for object
+                                                  
+                                                                              
+                                                       
+                                                                                
+                                                                    
+                                                                    
+                                                              
+                                                               
+                                                     
+                                                                    
+                                                                                   
+                                                  
+                                                             
+                                                                    
+                                                                      
+                                                                             
+                                                                                                        
+                                                                       
 template<typename Alloc> Node *Db<Alloc>::parseSpecialName() {
   switch (look()) {
   case 'T':
     switch (look(1)) {
-    // TV <type>    # virtual table
+                                   
     case 'V': {
       First += 2;
       Node *Ty = parseType();
@@ -4646,7 +4646,7 @@ template<typename Alloc> Node *Db<Alloc>::parseSpecialName() {
         return nullptr;
       return make<SpecialName>("vtable for ", Ty);
     }
-    // TT <type>    # VTT structure (construction vtable index)
+                                                               
     case 'T': {
       First += 2;
       Node *Ty = parseType();
@@ -4654,7 +4654,7 @@ template<typename Alloc> Node *Db<Alloc>::parseSpecialName() {
         return nullptr;
       return make<SpecialName>("VTT for ", Ty);
     }
-    // TI <type>    # typeinfo structure
+                                        
     case 'I': {
       First += 2;
       Node *Ty = parseType();
@@ -4662,7 +4662,7 @@ template<typename Alloc> Node *Db<Alloc>::parseSpecialName() {
         return nullptr;
       return make<SpecialName>("typeinfo for ", Ty);
     }
-    // TS <type>    # typeinfo name (null-terminated byte string)
+                                                                 
     case 'S': {
       First += 2;
       Node *Ty = parseType();
@@ -4670,7 +4670,7 @@ template<typename Alloc> Node *Db<Alloc>::parseSpecialName() {
         return nullptr;
       return make<SpecialName>("typeinfo name for ", Ty);
     }
-    // Tc <call-offset> <call-offset> <base encoding>
+                                                     
     case 'c': {
       First += 2;
       if (parseCallOffset() || parseCallOffset())
@@ -4680,8 +4680,8 @@ template<typename Alloc> Node *Db<Alloc>::parseSpecialName() {
         return nullptr;
       return make<SpecialName>("covariant return thunk to ", Encoding);
     }
-    // extension ::= TC <first type> <number> _ <second type>
-    //               # construction vtable for second-in-first
+                                                             
+                                                              
     case 'C': {
       First += 2;
       Node *FirstType = parseType();
@@ -4694,7 +4694,7 @@ template<typename Alloc> Node *Db<Alloc>::parseSpecialName() {
         return nullptr;
       return make<CtorVtableSpecialName>(SecondType, FirstType);
     }
-    // TW <object name> # Thread-local wrapper
+                                              
     case 'W': {
       First += 2;
       Node *Name = parseName();
@@ -4702,7 +4702,7 @@ template<typename Alloc> Node *Db<Alloc>::parseSpecialName() {
         return nullptr;
       return make<SpecialName>("thread-local wrapper routine for ", Name);
     }
-    // TH <object name> # Thread-local initialization
+                                                     
     case 'H': {
       First += 2;
       Node *Name = parseName();
@@ -4710,7 +4710,7 @@ template<typename Alloc> Node *Db<Alloc>::parseSpecialName() {
         return nullptr;
       return make<SpecialName>("thread-local initialization routine for ", Name);
     }
-    // T <call-offset> <base encoding>
+                                      
     default: {
       ++First;
       bool IsVirt = look() == 'v';
@@ -4727,7 +4727,7 @@ template<typename Alloc> Node *Db<Alloc>::parseSpecialName() {
     }
   case 'G':
     switch (look(1)) {
-    // GV <object name> # Guard variable for one-time initialization
+                                                                    
     case 'V': {
       First += 2;
       Node *Name = parseName();
@@ -4735,9 +4735,9 @@ template<typename Alloc> Node *Db<Alloc>::parseSpecialName() {
         return nullptr;
       return make<SpecialName>("guard variable for ", Name);
     }
-    // GR <object name> # reference temporary for object
-    // GR <object name> _             # First temporary
-    // GR <object name> <seq-id> _    # Subsequent temporaries
+                                                        
+                                                       
+                                                              
     case 'R': {
       First += 2;
       Node *Name = parseName();
@@ -4754,17 +4754,17 @@ template<typename Alloc> Node *Db<Alloc>::parseSpecialName() {
   return nullptr;
 }
 
-// <encoding> ::= <function name> <bare-function-type>
-//            ::= <data name>
-//            ::= <special-name>
+                                                      
+                             
+                                
 template<typename Alloc> Node *Db<Alloc>::parseEncoding() {
   if (look() == 'G' || look() == 'T')
     return parseSpecialName();
 
   auto IsEndOfEncoding = [&] {
-    // The set of chars that can potentially follow an <encoding> (none of which
-    // can start a <type>). Enumerating these allows us to avoid speculative
-    // parsing.
+                                                                                
+                                                                            
+               
     return numLeft() == 0 || look() == 'E' || look() == '.' || look() == '_';
   };
 
@@ -4847,7 +4847,7 @@ struct FloatData<long double>
 #elif defined(__arm__) || defined(__mips__) || defined(__hexagon__)
     static const size_t mangled_size = 16;
 #else
-    static const size_t mangled_size = 20;  // May need to be adjusted to 16 or 24 on other platforms
+    static const size_t mangled_size = 20;                                                           
 #endif
     static const size_t max_demangled_size = 40;
     static constexpr const char *spec = "%LaL";
@@ -4869,7 +4869,7 @@ Node *Db<Alloc>::parseFloatingLiteral() {
   return make<FloatLiteralImpl<Float>>(Data);
 }
 
-// <seq-id> ::= <0-9A-Z>+
+                         
 template<typename Alloc> bool Db<Alloc>::parseSeqId(size_t *Out) {
   if (!(look() >= '0' && look() <= '9') &&
       !(look() >= 'A' && look() <= 'Z'))
@@ -4891,16 +4891,16 @@ template<typename Alloc> bool Db<Alloc>::parseSeqId(size_t *Out) {
   }
 }
 
-// <substitution> ::= S <seq-id> _
-//                ::= S_
-// <substitution> ::= Sa # ::std::allocator
-// <substitution> ::= Sb # ::std::basic_string
-// <substitution> ::= Ss # ::std::basic_string < char,
-//                                               ::std::char_traits<char>,
-//                                               ::std::allocator<char> >
-// <substitution> ::= Si # ::std::basic_istream<char,  std::char_traits<char> >
-// <substitution> ::= So # ::std::basic_ostream<char,  std::char_traits<char> >
-// <substitution> ::= Sd # ::std::basic_iostream<char, std::char_traits<char> >
+                                  
+                        
+                                           
+                                              
+                                                      
+                                                                          
+                                                                         
+                                                                               
+                                                                               
+                                                                               
 template<typename Alloc> Node *Db<Alloc>::parseSubstitution() {
   if (!consumeIf('S'))
     return nullptr;
@@ -4937,9 +4937,9 @@ template<typename Alloc> Node *Db<Alloc>::parseSubstitution() {
     }
     if (!SpecialSub)
       return nullptr;
-    // Itanium C++ ABI 5.1.2: If a name that would use a built-in <substitution>
-    // has ABI tags, the tags are appended to the substitution; the result is a
-    // substitutable component.
+                                                                                
+                                                                               
+                               
     Node *WithTags = parseAbiTags(SpecialSub);
     if (WithTags != SpecialSub) {
       Subs.push_back(WithTags);
@@ -4948,14 +4948,14 @@ template<typename Alloc> Node *Db<Alloc>::parseSubstitution() {
     return SpecialSub;
   }
 
-  //                ::= S_
+                          
   if (consumeIf('_')) {
     if (Subs.empty())
       return nullptr;
     return Subs[0];
   }
 
-  //                ::= S <seq-id> _
+                                    
   size_t Index = 0;
   if (parseSeqId(&Index))
     return nullptr;
@@ -4965,8 +4965,8 @@ template<typename Alloc> Node *Db<Alloc>::parseSubstitution() {
   return Subs[Index];
 }
 
-// <template-param> ::= T_    # first template parameter
-//                  ::= T <parameter-2 non-negative number> _
+                                                        
+                                                             
 template<typename Alloc> Node *Db<Alloc>::parseTemplateParam() {
   if (!consumeIf('T'))
     return nullptr;
@@ -4980,14 +4980,14 @@ template<typename Alloc> Node *Db<Alloc>::parseTemplateParam() {
       return nullptr;
   }
 
-  // Itanium ABI 5.1.8: In a generic lambda, uses of auto in the parameter list
-  // are mangled as the corresponding artificial template type parameter.
+                                                                               
+                                                                         
   if (ParsingLambdaParams)
     return make<NameType>("auto");
 
-  // If we're in a context where this <template-param> refers to a
-  // <template-arg> further ahead in the mangled name (currently just conversion
-  // operator types), then we should only look it up in the right context.
+                                                                  
+                                                                                
+                                                                          
   if (PermitForwardTemplateReferences) {
     Node *ForwardRef = make<ForwardTemplateReference>(Index);
     if (!ForwardRef)
@@ -5003,11 +5003,11 @@ template<typename Alloc> Node *Db<Alloc>::parseTemplateParam() {
   return TemplateParams[Index];
 }
 
-// <template-arg> ::= <type>                    # type or template
-//                ::= X <expression> E          # expression
-//                ::= <expr-primary>            # simple expressions
-//                ::= J <template-arg>* E       # argument pack
-//                ::= LZ <encoding> E           # extension
+                                                                  
+                                                            
+                                                                    
+                                                               
+                                                           
 template<typename Alloc> Node *Db<Alloc>::parseTemplateArg() {
   switch (look()) {
   case 'X': {
@@ -5030,7 +5030,7 @@ template<typename Alloc> Node *Db<Alloc>::parseTemplateArg() {
     return make<TemplateArgumentPack>(Args);
   }
   case 'L': {
-    //                ::= LZ <encoding> E           # extension
+                                                               
     if (look(1) == 'Z') {
       First += 2;
       Node *Arg = parseEncoding();
@@ -5038,7 +5038,7 @@ template<typename Alloc> Node *Db<Alloc>::parseTemplateArg() {
         return nullptr;
       return Arg;
     }
-    //                ::= <expr-primary>            # simple expressions
+                                                                        
     return parseExprPrimary();
   }
   default:
@@ -5046,15 +5046,15 @@ template<typename Alloc> Node *Db<Alloc>::parseTemplateArg() {
   }
 }
 
-// <template-args> ::= I <template-arg>* E
-//     extension, the abi says <template-arg>+
+                                          
+                                              
 template <typename Alloc>
 Node *Db<Alloc>::parseTemplateArgs(bool TagTemplates) {
   if (!consumeIf('I'))
     return nullptr;
 
-  // <template-params> refer to the innermost <template-args>. Clear out any
-  // outer args that we may have inserted into TemplateParams.
+                                                                            
+                                                              
   if (TagTemplates)
     TemplateParams.clear();
 
@@ -5085,11 +5085,11 @@ Node *Db<Alloc>::parseTemplateArgs(bool TagTemplates) {
   return make<TemplateArgs>(popTrailingNodeArray(ArgsBegin));
 }
 
-// <mangled-name> ::= _Z <encoding>
-//                ::= <type>
-// extension      ::= ___Z <encoding> _block_invoke
-// extension      ::= ___Z <encoding> _block_invoke<decimal-digit>+
-// extension      ::= ___Z <encoding> _block_invoke_<decimal-digit>+
+                                   
+                            
+                                                   
+                                                                   
+                                                                    
 template<typename Alloc> Node *Db<Alloc>::parse() {
   if (consumeIf("_Z")) {
     Node *Encoding = parseEncoding();
@@ -5124,7 +5124,7 @@ template<typename Alloc> Node *Db<Alloc>::parse() {
   return Ty;
 }
 
-}  // namespace itanium_demangle
-}  // namespace llvh
+}                               
+}                   
 
-#endif // LLVM_DEMANGLE_ITANIUMDEMANGLE_H
+#endif                                   

@@ -27,7 +27,7 @@ namespace llvh {
 typedef std::thread thread;
 }
 
-#else // !LLVM_ENABLE_THREADS
+#else                        
 
 #include <utility>
 
@@ -48,6 +48,6 @@ struct thread {
 
 }
 
-#endif // LLVM_ENABLE_THREADS
+#endif                       
 
 #endif

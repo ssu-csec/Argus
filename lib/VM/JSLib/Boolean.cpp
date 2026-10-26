@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//===----------------------------------------------------------------------===//
-/// \file
-/// ES5.1 15.7 Initialize the Boolean constructor.
-//===----------------------------------------------------------------------===//
+                                                                                
+         
+                                                  
+                                                                                
 
 #include "JSLibInternal.h"
 
@@ -29,7 +29,7 @@ Handle<JSObject> createBooleanConstructor(Runtime &runtime) {
       1,
       CellKind::JSBooleanKind);
 
-  // Boolean.prototype.xxx methods.
+                                   
   defineMethod(
       runtime,
       booleanPrototype,
@@ -92,5 +92,5 @@ booleanPrototypeValueOf(void *, Runtime &runtime, NativeArgs args) {
   return HermesValue::encodeBoolValue(boolPtr->getPrimitiveBoolean());
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

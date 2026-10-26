@@ -13,7 +13,7 @@
 
 namespace hermes {
 
-/// Deletes simple dead code patterns.
+                                      
 class DCE : public ModulePass {
  public:
   explicit DCE() : hermes::ModulePass("DCE") {}
@@ -22,6 +22,6 @@ class DCE : public ModulePass {
   bool runOnModule(Module *M) override;
 };
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_OPTIMIZER_SCALAR_DCE_H
+#endif                                 

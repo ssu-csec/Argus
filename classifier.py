@@ -7,16 +7,16 @@ from pathlib import Path
 from datetime import datetime
 from urllib.parse import urlparse
 
-# ==========================================
-# Path setup
-# ==========================================
+                                            
+            
+                                            
 RESULT_DIR        = os.path.expanduser("~/mixed-hermes/pipeline_results")
 MIXED_HERMES_ROOT = Path(os.path.expanduser("~/mixed-hermes"))
 
 def _resolve_csv_path():
     """Generate a non-colliding timestamped CSV filename inside reports/."""
     base_dir = os.path.expanduser("~/mixed-hermes/csv_reports")
-    os.makedirs(base_dir, exist_ok=True)          # auto-create folder
+    os.makedirs(base_dir, exist_ok=True)                              
     date_str = datetime.now().strftime("%Y%m%d")
     base_name = f"malicious_domains_{date_str}"
     candidate = os.path.join(base_dir, f"{base_name}.csv")
@@ -27,17 +27,19 @@ def _resolve_csv_path():
     return candidate
 
 CSV_OUTPUT = _resolve_csv_path()
+DOMAIN_FINDINGS_CSV = CSV_OUTPUT.replace("malicious_domains_", "domain_findings_")
+DOMAIN_FINDINGS_JSON = DOMAIN_FINDINGS_CSV.replace(".csv", ".json")
 
-# ==========================================
-# Whitelist and tracker-blacklist keywords
-# ==========================================
+                                            
+                                          
+                                            
 WHITELIST_KEYWORDS = [
     "login", "signin", "/auth/", "/auth?", "auth.",
     "sso", "oauth", "verify", "returnurl", "logout"
 ]
 
-# Affiliate / first-party CDN domain map (same operator under different TLDs).
-# Used by is_first_party() to recognize these as first-party.
+                                                                              
+                                                             
 AFFILIATED_DOMAINS = {
     "naver.com":     ["pstatic.net", "nstatic.net"],
     "instagram.com": ["facebook.com", "fbcdn.net", "cdninstagram.com"],
@@ -45,27 +47,27 @@ AFFILIATED_DOMAINS = {
 }
 
 TRACKER_KEYWORDS = [
-    # General behavior and logging keywords
+                                           
     "collect", "pixel", "logging", "logger", "/log/", "/log?",
     "beacon", "metric", "analytics", "/ads/", "/ads?", "adserver", "stats",
     "telemetry", "monitor", "insight", "impress", "measure", "report", "trace", "pulse", "record",
-    # Boundary-aware patterns to avoid collisions with common words:
-    #   track: avoid soundtrack, backtrack, racetrack
+                                                                    
+                                                     
     "tracker", "tracking", "/track/", "/track?", ".track.",
-    #   event: avoid preventDefault, eventlistener
+                                                  
     "/event/", "/event?", "event.", "events.",
-    #   ping: avoid shopping, mapping, zipping
+                                              
     "/ping/", "/ping?", "/ping.",
-    #   segment: avoid URL-path "segment" — match the Segment.io platform only
+                                                                              
     "segment.io", "segment.com", "cdn.segment.",
-    # Established third-party tracker / ad-platform domain keywords
+                                                                   
     "googletagmanager", "google-analytics", "doubleclick", "criteo", "hotjar", "crazyegg",
     "mixpanel", "appdynamics", "newrelic", "datadog", "facebook"
 ]
 
-# ==========================================
-# Statistics counters
-# ==========================================
+                                            
+                     
+                                            
 stats = {
     "total_scanned": 0,
     "total_malicious": 0,
@@ -73,18 +75,18 @@ stats = {
     "evasion_dynamic": 0,
     "fingerprinting": 0,
     "camouflaged_3rd_party": 0,
-    "dual_context": 0,        # Rule 3: AUTONOMOUS exfiltration
-    "isolated_exfil": 0,      # Rule 1: physically isolated WCC exfiltration
-    "parasitic_branch": 0,    # Rule 2: same source -> render + exfil simultaneously
-    "semantic_crossval": 0    # Rule 5: destination reputation + source sensitivity
+    "dual_context": 0,                                                         
+    "isolated_exfil": 0,                                                    
+    "parasitic_branch": 0,                                                          
+    "semantic_crossval": 0                                                         
 }
 
 malicious_records = []
-domain_context_map = {}  # domain -> {"AUTONOMOUS": n, "EVENT_DRIVEN": n, "UNKNOWN": n}
+domain_context_map = {}                                                                
 
-# ==========================================
-# 🔍 Rule 1: WCC Physical Isolation Detector
-# ==========================================
+                                            
+                                           
+                                            
 def detect_isolated_exfil(domain_name, routes):
     """
     Rule 1 (Physical Disconnection — Method A):
@@ -98,7 +100,7 @@ def detect_isolated_exfil(domain_name, routes):
     background SDK-style code that never touches the rendering layer —
     i.e., structurally disconnected from normal UI execution.
     """
-    # Nodes that indicate interaction with the UI / DOM frame layer
+                                                                   
     UI_INDICATOR_NODES = {"StoreFrameInst", "PhiInst", "LoadFrameInst"}
 
     isolated_routes = []
@@ -106,22 +108,22 @@ def detect_isolated_exfil(domain_name, routes):
         path_nodes = r.get("path_nodes", [])
         sink_type  = r.get("sink_type", "")
 
-        # Only flag Network/Navigation sinks (actual exfiltration)
+                                                                  
         if sink_type not in {"Network", "Navigation"}:
             continue
 
-        # If the entire path has ZERO UI-indicator nodes → physically isolated
+                                                                              
         has_ui_node = any(node in UI_INDICATOR_NODES for node in path_nodes)
-        if not has_ui_node and path_nodes:  # path must be non-empty
+        if not has_ui_node and path_nodes:                          
             isolated_routes.append(r)
 
     return isolated_routes
 
 
-# ==========================================
-# 🔍 Rule 2: Parasitic Branch Detector
-# ==========================================
-# Sink types that are purely for rendering (non-malicious by themselves)
+                                            
+                                     
+                                            
+                                                                        
 RENDER_SINKS = {"innerHTML", "textContent", "innerText", "outerHTML",
                 "insertAdjacentHTML", "value", "document.write"}
 def detect_parasitic_branch(domain_name, routes):
@@ -131,7 +133,7 @@ def detect_parasitic_branch(domain_name, routes):
     Network/Navigation sink (exfiltration) at the same time.
     This is the classic 'parasite' pattern — piggybacks on legitimate data flow.
     """
-    # Group routes by source
+                            
     source_groups = {}
     for r in routes:
         src = r.get("source_name", "") or "[Dynamic_Source]"
@@ -142,73 +144,89 @@ def detect_parasitic_branch(domain_name, routes):
         sink_types  = {r.get("sink_type", "") for r in src_routes}
         sink_names  = [r.get("sink_name", "") for r in src_routes]
 
-        # Has both rendering (Render) and network/navigation sinks
+                                                                  
         has_render_sink = any(
             any(rs in sn for rs in RENDER_SINKS) for sn in sink_names
         ) or "Render" in sink_types
         has_net_sink = sink_types & {"Network", "Navigation"}
 
         if has_render_sink and has_net_sink:
-            # Only flag the network/navigation routes (the parasitic part)
+                                                                          
             for r in src_routes:
                 if r.get("sink_type", "") in {"Network", "Navigation"}:
                     parasitic.append(r)
     return parasitic
 
-# ==========================================
-# 🔍 Rule 3: Dual Execution Context Detector (domain-level)
-# ==========================================
-def detect_dual_context(domain_name, routes, event_driven_count=0):
+                                            
+                                                          
+                                            
+def detect_dual_context(domain_name, routes):
     """
-    Rule 3 (Context Duality — domain-level):
-    The domain's script simultaneously contains:
-      - EVENT_DRIVEN context: legitimate code triggered by user interaction
-      - AUTONOMOUS routes  : tracking code that self-executes silently
+    Evaluate Rule 3 as a domain-level structural property.
 
-    Duality evidence comes from two sources:
-      1) Taint routes with trigger_context == EVENT_DRIVEN
-      2) Engine metadata: event_driven_functions count (pre-scan of addEventListener/on* bindings)
-    When either proves EVENT_DRIVEN presence alongside AUTONOMOUS routes,
-    every AUTONOMOUS network/navigation/storage route is flagged.
+    A domain satisfies R3 only when its actual taint routes contain both an
+    AUTONOMOUS route and an EVENT_DRIVEN route.  The engine's
+    event_driven_functions count is diagnostic metadata and is deliberately
+    not accepted as a substitute for an EVENT_DRIVEN taint route.
+
+    The returned route lists are evidence for the domain-level finding; R3
+    does not independently assert that each evidence route is malicious.
     """
-    trigger_contexts = {r.get("trigger_context", "UNKNOWN") for r in routes}
+    eligible_routes = [
+        r for r in routes
+        if r.get("route_id") is not None
+        and bool(r.get("path_nodes"))
+        and r.get("trigger_context") in {"AUTONOMOUS", "EVENT_DRIVEN"}
+    ]
+    autonomous_routes = [
+        r for r in eligible_routes if r.get("trigger_context") == "AUTONOMOUS"
+    ]
+    event_driven_routes = [
+        r for r in eligible_routes if r.get("trigger_context") == "EVENT_DRIVEN"
+    ]
+    unknown_context_routes = [
+        r for r in routes
+        if r.get("route_id") is not None
+        and bool(r.get("path_nodes"))
+        and r.get("trigger_context", "UNKNOWN") not in {"AUTONOMOUS", "EVENT_DRIVEN"}
+    ]
+    ineligible_routes = [
+        r for r in routes
+        if r not in eligible_routes and r not in unknown_context_routes
+    ]
+    is_dual_context = bool(autonomous_routes and event_driven_routes)
 
-    has_event_driven = "EVENT_DRIVEN" in trigger_contexts or event_driven_count > 0
-    has_autonomous   = "AUTONOMOUS"   in trigger_contexts
-
-    if not (has_event_driven and has_autonomous):
-        return []  # No duality — skip
-
-    # Flag all AUTONOMOUS routes reaching exfiltration sinks
-    dual_routes = []
-    for r in routes:
-        if (r.get("trigger_context") == "AUTONOMOUS" and
-                r.get("sink_type", "") in {"Network", "Navigation", "Storage"}):
-            dual_routes.append(r)
-    return dual_routes
+    return {
+        "domain_name": domain_name,
+        "is_dual_context": is_dual_context,
+        "autonomous_routes": autonomous_routes,
+        "event_driven_routes": event_driven_routes,
+        "unknown_context_routes": unknown_context_routes,
+        "ineligible_routes": ineligible_routes,
+    }
 
 
-# ==========================================
-# 🔍 Rule 5: Semantic Cross-Validation Detector (domain-level)
-# ==========================================
-# Sensitive source types that raise the risk level
+                                            
+                                                             
+                                            
+                                                  
 SENSITIVE_SOURCES = {
     "location.href", "location.hostname", "location.origin", "location.pathname",
     "document.URL", "document.cookie",
     "screen.width", "screen.height", "screen.colorDepth",
     "navigator.userAgent", "navigator.language", "navigator.platform",
-    # Timing & session fingerprinting sources
+                                             
     "Date", "performance.now", "Math.random",
-    # Obfuscated sources (from C++ engine: indirect property / call that couldn't be resolved).
-    # Legitimate code has no reason to hide its data origin;
-    # when these reach a known tracker endpoint, it is a stronger signal of covert exfiltration.
+                                                                                               
+                                                            
+                                                                                                
     "Obfuscated_Property", "Obfuscated_Call", "Dynamic_Source"
 }
 
-# Fingerprinting source prefixes: device/browser properties whose network
-# transmission constitutes fingerprinting regardless of destination.
-# Uses prefix match ("screen.") instead of substring ("screen") to avoid
-# false positives like "fullscreen" or "navigator.sendBeacon".
+                                                                         
+                                                                    
+                                                                        
+                                                              
 FINGERPRINT_PREFIXES = ("screen.", "navigator.")
 
 def detect_semantic_validation(domain_name, routes, domain_has_tracker=False):
@@ -231,32 +249,32 @@ def detect_semantic_validation(domain_name, routes, domain_has_tracker=False):
 
     Each route is classified as exactly one of {A, B, neither} — never both.
     """
-    semantic = []       # General Semantic (A)
-    fingerprint = []    # Fingerprinting (B)
+    semantic = []                             
+    fingerprint = []                        
 
     for r in routes:
         dest_url    = r.get("destination_url", "")
         source_name = r.get("source_name", "") or ""
         sink_type   = r.get("sink_type", "")
 
-        # Only check routes that actually exfiltrate data externally
+                                                                    
         if sink_type not in {"Network", "Navigation"}:
             continue
 
         dest_lower = dest_url.lower()
 
-        # (B) Fingerprinting: device-identifying source → 3rd-party tracker (data-flow based)
+                                                                                             
         is_fingerprint_src = any(source_name.startswith(p) for p in FINGERPRINT_PREFIXES)
         if is_fingerprint_src:
             if not is_first_party(domain_name, dest_url):
                 fingerprint.append(r)
-            continue  # mutually exclusive — skip general check for this route
+            continue                                                          
 
-        # Whitelist: skip legitimate 1st-party auth/login endpoints (general semantic only)
+                                                                                           
         if is_first_party(domain_name, dest_url) and any(kw in dest_lower for kw in WHITELIST_KEYWORDS):
             continue
 
-        # (A-1) Static: tracker destination + sensitive source
+                                                              
         is_tracker_dest = any(kw in dest_lower for kw in TRACKER_KEYWORDS)
         is_sensitive_src = any(s in source_name for s in SENSITIVE_SOURCES)
 
@@ -264,20 +282,20 @@ def detect_semantic_validation(domain_name, routes, domain_has_tracker=False):
             semantic.append(r)
             continue
 
-        # (A-2) Dynamic (Hybrid): destination is DYNAMIC_URL but domain-level tracker traffic is observed.
-        # Even when static analysis cannot resolve the URL, Puppeteer's dynamic capture
-        # proves the tracker is present. Sensitive source → network sink + domain-level
-        # tracker observation satisfies Semantic Cross-Validation.
+                                                                                                          
+                                                                                       
+                                                                                       
+                                                                  
         if (dest_url == "DYNAMIC_URL" or "{VAR}" in dest_url) and domain_has_tracker and is_sensitive_src:
-            r["_semantic_evidence"] = "domain_level"  # marker used downstream by Party_Check
+            r["_semantic_evidence"] = "domain_level"                                         
             semantic.append(r)
 
     return semantic, fingerprint
 
 
-# ==========================================
-# First-party vs third-party check
-# ==========================================
+                                            
+                                  
+                                            
 def is_first_party(source_domain, dest_url, include_affiliated=True):
     """
     source_domain: the site under analysis (e.g., nexon.com).
@@ -286,21 +304,21 @@ def is_first_party(source_domain, dest_url, include_affiliated=True):
                         if False, only the same TLD is first-party (used for CNAME scans).
     """
     if dest_url == "DYNAMIC_URL" or not dest_url.startswith("http"):
-        return False  # obfuscated or malformed URLs are conservatively treated as third-party (suspicious)
+        return False                                                                                       
 
     try:
-        # Extract the domain portion from the destination URL (e.g., nxlogin.nexon.com).
+                                                                                        
         parsed_uri = urlparse(dest_url)
         dest_netloc = parsed_uri.netloc.lower()
 
-        # Strip "www." and compare on the bare domain.
+                                                      
         base_source = source_domain.replace("www.", "").lower()
 
-        # If the destination domain ends with the source domain, it's first-party.
+                                                                                  
         if dest_netloc == base_source or dest_netloc.endswith("." + base_source):
             return True
 
-        # Affiliate / first-party CDN map (e.g., pstatic.net → naver.com).
+                                                                          
         if include_affiliated:
             for affiliated in AFFILIATED_DOMAINS.get(base_source, []):
                 if dest_netloc == affiliated or dest_netloc.endswith("." + affiliated):
@@ -310,9 +328,9 @@ def is_first_party(source_domain, dest_url, include_affiliated=True):
     except (ValueError, AttributeError):
         return False
 
-# ==========================================
-# Party check (unified rule)
-# ==========================================
+                                            
+                            
+                                            
 def determine_unified_party(domain_name, dest_url, sink_type):
     first_party = is_first_party(domain_name, dest_url)
     is_cookie_or_storage = sink_type == "Storage" or any(kw in dest_url for kw in ("path=/", "domain=", "expires="))
@@ -327,9 +345,9 @@ def determine_unified_party(domain_name, dest_url, sink_type):
     else:
         return "1st-Party" if first_party else "3rd-Party/Unknown"
 
-# ==========================================
-# Heuristic inference for unknown sources
-# ==========================================
+                                            
+                                         
+                                            
 def infer_unknown_source(route: dict) -> str:
     """
     Heuristically infer a source label from sink/path info when source_name is empty.
@@ -361,15 +379,16 @@ def infer_unknown_source(route: dict) -> str:
         return "Inferred: Indirect Prop Access (2-hop)"
     return "Inferred: Unresolved Source (Engine Limit)"
 
-# ==========================================
-# Per-file analysis
-# ==========================================
+                                            
+                   
+                                            
 def analyze_json(file_path, draw_graphs=False):
     global stats, malicious_records, domain_context_map
 
     domain_name = file_path.name.replace("_report.json", "").replace("_log.json", "").replace(".json", "")
+    domain_name = domain_name.strip().lower().rstrip(".")
 
-    # [Hybrid Cross-Validation] Load the actual network log captured by the crawler.
+                                                                                    
     network_log_file = MIXED_HERMES_ROOT / "crawler" / "collected_scripts" / domain_name / "network_logs.json"
 
     network_url_list = []
@@ -382,15 +401,15 @@ def analyze_json(file_path, draw_graphs=False):
     else:
         print(f"  [⚠️  Warning] network_logs.json not found for {domain_name}: {network_log_file}")
 
-    # Domain-level tracker observation flag (used by Rule 5 A-2 Hybrid Evidence).
-    # True if at least one third-party tracker URL appears in network_logs.
+                                                                                 
+                                                                           
     domain_has_tracker = any(
         not is_first_party(domain_name, url) and
         any(kw in url.lower() for kw in TRACKER_KEYWORDS)
         for url in network_url_list
     )
 
-    # Third-party tracker domains actually observed for this site (for the Observed_Trackers column).
+                                                                                                     
     observed_tracker_domains = sorted(set(
         urlparse(url).netloc
         for url in network_url_list
@@ -412,11 +431,22 @@ def analyze_json(file_path, draw_graphs=False):
 
     routes = data.get("s2s_routes", [])
 
-    # Per-domain trigger-context distribution (used by Rule 3 mixed-execution evidence).
+                                                                           
     ctx_counts = {"AUTONOMOUS": 0, "EVENT_DRIVEN": 0, "UNKNOWN": 0}
     for r in routes:
         ctx = r.get("trigger_context", "UNKNOWN")
         ctx_counts[ctx] = ctx_counts.get(ctx, 0) + 1
+    context_bases = {
+        r.get("trigger_context_basis", "LEGACY_UNSPECIFIED") for r in routes
+    }
+    if not context_bases:
+        ctx_counts["r3_context_basis"] = "NO_ROUTES"
+    elif context_bases == {"SINK_EXECUTION_CHAIN"}:
+        ctx_counts["r3_context_basis"] = "SINK_EXECUTION_CHAIN"
+    elif len(context_bases) == 1:
+        ctx_counts["r3_context_basis"] = next(iter(context_bases))
+    else:
+        ctx_counts["r3_context_basis"] = "MIXED_OR_PARTIAL"
     ctx_counts["event_driven_functions"] = data.get("event_driven_functions", 0)
     domain_context_map[domain_name] = ctx_counts
 
@@ -426,28 +456,28 @@ def analyze_json(file_path, draw_graphs=False):
         source_name = route.get("source_name", "") or ""
         dest_url = route.get("destination_url", "")
 
-        # Heuristic inference for unknown sources: label routes the engine couldn't resolve.
+                                                                                            
         if not source_name.strip():
             source_name = infer_unknown_source(route)
-            route["source_name"] = source_name  # so downstream rule functions see the same value
+            route["source_name"] = source_name                                                   
 
         threat_type = None
         trigger_context = route.get("trigger_context", "UNKNOWN")
 
-        # [Unified Hybrid Search]
-        # Sink-type-aware URL resolution based on the full Source → Sink → Destination data flow.
+                                 
+                                                                                                 
         predicted_url = None
         is_hybrid_eligible = ("{VAR}" in dest_url)
 
-        # Phase 0: detect cookie/storage patterns.
-        # The destination_url may be a cookie string rather than a URL.
-        # Example: "{VAR}=; path=/; domain=nexon.com; expires={VAR};"
+                                                  
+                                                                       
+                                                                     
         is_cookie_pattern = any(kw in dest_url for kw in ("path=/", "domain=", "expires="))
 
-        # Phase 1: Hybrid Reconstruction (fragment matching).
-        # Reconstruct partial URLs containing {VAR} by matching against real URLs in network_logs.
-        # Cookie strings (path=/, domain=, ...) are not URLs, so we skip them.
-        # If reconstruction fails or the URL is pure DYNAMIC_URL, leave it as-is (conservative).
+                                                             
+                                                                                                  
+                                                                              
+                                                                                                
         if is_hybrid_eligible and not is_cookie_pattern:
             static_fragments = [frag for frag in dest_url.split("{VAR}") if len(frag.strip()) >= 2]
             if static_fragments:
@@ -456,8 +486,8 @@ def analyze_json(file_path, draw_graphs=False):
                         predicted_url = real_url + " (🌟 Hybrid Reconstructed)"
                         break
 
-        # Phase 2: CNAME-cloaking scan — match tracker keywords against the netloc only.
-        # CNAME cloaking applies to same-TLD subdomains only (affiliate domains excluded).
+                                                                                        
+                                                                                          
         if not predicted_url and (dest_url == "DYNAMIC_URL" or is_hybrid_eligible) and not is_cookie_pattern:
             for real_url in network_url_list:
                 if is_first_party(domain_name, real_url, include_affiliated=False) and real_url.startswith("http"):
@@ -470,23 +500,23 @@ def analyze_json(file_path, draw_graphs=False):
             dest_url = predicted_url
             route["destination_url"] = dest_url
 
-        # Check first-party status and whitelist-keyword presence in one pass.
+                                                                              
         first_party = is_first_party(domain_name, dest_url)
         dest_url_lower = dest_url.lower()
         has_whitelist_keyword = any(keyword in dest_url_lower for keyword in WHITELIST_KEYWORDS)
 
-        # Party-check resolution (refined for paper reporting).
+                                                               
         party_check = determine_unified_party(domain_name, dest_url, sink_type)
 
-        # ── Collect all independent rule matches for this route ──
-        active_rules = []  # list of (threat_type, party_check) tuples
+                                                                   
+        active_rules = []                                             
 
-        # [Rule 4] DOM Evasion — img.src / frame.href bypass (exfiltration only)
+                                                                                
         if "(Evasion Suspected)" in sink_name and sink_type in {"Network", "Navigation"}:
             if has_whitelist_keyword and first_party:
-                pass  # Whitelist: legitimate first-party login — skip entirely.
+                pass                                                            
             elif has_whitelist_keyword and not first_party:
-                # URLs containing {VAR} have an unknown domain → cannot confirm camouflage; treat as Dynamic Obfuscated.
+                                                                                                                        
                 if "{VAR}" in dest_url or dest_url == "DYNAMIC_URL":
                     active_rules.append(("DOM_Evasion (Rule 4) [Dynamic Obfuscated]", party_check))
                     stats["evasion_dynamic"] += 1
@@ -494,7 +524,7 @@ def analyze_json(file_path, draw_graphs=False):
                     active_rules.append(("Evasion_with_Camouflage (Rule 4) [Disguised Tracker]", party_check))
                     stats["camouflaged_3rd_party"] += 1
             else:
-                # URLs containing {VAR} are also unresolved → Dynamic Obfuscated.
+                                                                                 
                 is_dest_unresolved = (dest_url == "DYNAMIC_URL" or "{VAR}" in dest_url)
                 label = "DOM_Evasion (Rule 4) [Dynamic Obfuscated]" if is_dest_unresolved else "DOM_Evasion (Rule 4)"
                 active_rules.append((label, party_check))
@@ -503,13 +533,13 @@ def analyze_json(file_path, draw_graphs=False):
                 else:
                     stats["evasion_dom"] += 1
 
-        # NOTE: Fingerprinting is now handled inside detect_semantic_validation()
-        #       at domain level (mutually exclusive with general Rule 5).
+                                                                                 
+                                                                         
 
-        # NOTE: Rule 3 (Dual Execution Context) is handled at domain level
-        #       by detect_dual_context() below — not here.
+                                                                          
+                                                          
 
-        # Append one row per matched rule (order-independent, fully parallel)
+                                                                             
         for threat_type, p_check in active_rules:
             is_malicious = True
             domain_threats.append({
@@ -523,19 +553,47 @@ def analyze_json(file_path, draw_graphs=False):
                 "Party_Check": p_check
             })
 
-    # ── Rules 1, 2, 3, 5: always evaluated independently of Rule 4 ──
-    event_driven_count = data.get("event_driven_functions", 0)
+                                                                      
+                                                                       
     isolated = detect_isolated_exfil(domain_name, routes)
     parasitic = detect_parasitic_branch(domain_name, routes)
-    dual      = detect_dual_context(domain_name, routes, event_driven_count)
+    dual_finding = detect_dual_context(domain_name, routes)
+    r3_matched = dual_finding["is_dual_context"]
+    domain_context_map[domain_name].update({
+        "r3_dual_context": r3_matched,
+        "eligible_autonomous_route_count": len(dual_finding["autonomous_routes"]),
+        "eligible_event_driven_route_count": len(dual_finding["event_driven_routes"]),
+        "eligible_unknown_route_count": len(dual_finding["unknown_context_routes"]),
+        "ineligible_route_count": len(dual_finding["ineligible_routes"]),
+        "autonomous_evidence_route_ids": [
+            r.get("route_id") for r in dual_finding["autonomous_routes"]
+        ] if r3_matched else [],
+        "event_driven_evidence_route_ids": [
+            r.get("route_id") for r in dual_finding["event_driven_routes"]
+        ] if r3_matched else [],
+        "unknown_context_route_ids": [
+            r.get("route_id") for r in dual_finding["unknown_context_routes"]
+            if r.get("route_id") is not None
+        ] if r3_matched else [],
+        "ineligible_route_ids": [
+            r.get("route_id") for r in dual_finding["ineligible_routes"]
+            if r.get("route_id") is not None
+        ],
+    })
     semantic, fingerprint = detect_semantic_validation(domain_name, routes, domain_has_tracker)
+    independent_rule_match = bool(
+        domain_threats or isolated or parasitic or semantic or fingerprint
+    )
+    domain_context_map[domain_name]["independent_tracking_rule_match"] = (
+        independent_rule_match
+    )
 
-    if domain_threats or isolated or parasitic or dual or semantic or fingerprint:
+    if independent_rule_match:
         is_malicious = True
         stats["total_malicious"] += 1
         malicious_records.extend(domain_threats)
 
-        # ── Rule 1: WCC isolation check ──
+                                           
         for r in isolated:
             src       = r.get("source_name", "") or "Unknown"
             sink_name = r.get("sink_name", "")
@@ -559,7 +617,7 @@ def analyze_json(file_path, draw_graphs=False):
                     "Party_Check": "Unknown (WCC Isolated)"
                 })
 
-        # ── Rule 2: Parasitic branch check ──
+                                              
         for r in parasitic:
             src       = r.get("source_name", "") or "Unknown"
             sink_name = r.get("sink_name", "")
@@ -577,36 +635,14 @@ def analyze_json(file_path, draw_graphs=False):
                 "Party_Check": "3rd-Party (Parasitic)"
             })
 
-        # ── Rule 3: Domain-level dual execution context ──
-        for r in dual:
-            src       = r.get("source_name", "") or "Unknown"
-            sink_name = r.get("sink_name", "")
-            dest_url  = r.get("destination_url", "DYNAMIC_URL")
-            # Rule 3 is a domain-level structural property:
-            # record every AUTONOMOUS route as evidence of duality,
-            # even if also captured by Rule 4 (they are different threat dimensions)
-            stats["dual_context"] += 1
-            # Party_Check: derived from the actual destination (no hard-coded values).
-            r3_party = determine_unified_party(domain_name, dest_url, r.get("sink_type", ""))
-            malicious_records.append({
-                "Domain": domain_name,
-                "Threat_Type": "Dual_Execution_Context (Rule 3)",
-                "Trigger_Context": "AUTONOMOUS",
-                "Leaked_Data (Source)": src,
-                "Leak_Method (Sink)": sink_name,
-                "Destination": dest_url,
-                "Observed_Trackers": observed_trackers_str,
-                "Party_Check": r3_party
-            })
-
-        # ── Rule 5a: Semantic Cross-Validation (general) ──
+                                                            
         for r in semantic:
             src       = r.get("source_name", "") or "Unknown"
             sink_name = r.get("sink_name", "")
             dest_url  = r.get("destination_url", "DYNAMIC_URL")
             tctx      = r.get("trigger_context", "UNKNOWN")
             is_domain_level = r.pop("_semantic_evidence", None) == "domain_level"
-            # Branch the Threat_Type label by evidence strength.
+                                                                
             if is_domain_level:
                 threat_label = "Semantic_CrossValidation (Rule 5) [Probabilistic]"
                 party = "3rd-Party (Domain-level Evidence)"
@@ -625,7 +661,7 @@ def analyze_json(file_path, draw_graphs=False):
                 "Party_Check": party
             })
 
-        # ── Rule 5b: Fingerprinting Leak (mutually exclusive with 5a) ──
+                                                                         
         for r in fingerprint:
             src       = r.get("source_name", "") or "Unknown"
             sink_name = r.get("sink_name", "")
@@ -645,7 +681,7 @@ def analyze_json(file_path, draw_graphs=False):
             })
 
 
-        # 🎨 [Graph Integration] If flagged malicious and --draw-graphs is set, render GTG + CTG
+                                                                                               
         if draw_graphs:
             print(f"    [🎨 Graphviz] Malicious domain visualization triggered: {domain_name}")
             viz_script = os.path.expanduser("~/mixed-hermes/build/bin/report/viz_tool7.py")
@@ -655,7 +691,7 @@ def analyze_json(file_path, draw_graphs=False):
                 graph_dir = os.path.join(RESULT_DIR, "graphs")
                 os.makedirs(graph_dir, exist_ok=True)
 
-                # Render both GTG and CTG dot files into PNGs
+                                                             
                 for graph_type in ["gtg", "ctg"]:
                     dot_file = str(file_path).replace(".json", f"_{graph_type}.dot")
                     png_file = os.path.join(graph_dir, f"{domain_name}_{graph_type}.png")
@@ -666,9 +702,93 @@ def analyze_json(file_path, draw_graphs=False):
             except Exception as e:
                 print(f"    [❌ Graph Error] Visualization failed: {e}")
 
-# ==========================================
-# Main entry point
-# ==========================================
+
+def is_corrected_r3(ctx):
+    return (
+        bool(ctx.get("r3_dual_context", False))
+        and ctx.get("r3_context_basis") == "SINK_EXECUTION_CHAIN"
+    )
+
+
+def write_domain_findings():
+    """Persist domain-scoped R3 findings separately from route verdicts."""
+    findings = []
+    for domain_name in sorted(domain_context_map):
+        ctx = domain_context_map[domain_name]
+        matched = bool(ctx.get("r3_dual_context", False))
+        independent_match = bool(ctx.get("independent_tracking_rule_match", False))
+        context_basis = ctx.get("r3_context_basis", "LEGACY_UNSPECIFIED")
+        valid_for_corrected_headline = context_basis == "SINK_EXECUTION_CHAIN"
+        if matched and not valid_for_corrected_headline:
+            result_class = "R3_LEGACY_CONTEXT_REQUIRES_RERUN"
+        elif matched and independent_match:
+            result_class = "R3_WITH_INDEPENDENT_RULE_MATCH"
+        elif matched:
+            result_class = "STRUCTURAL_R3_ONLY_UNCONFIRMED"
+        else:
+            result_class = "NOT_R3"
+        findings.append({
+            "domain": domain_name,
+            "report_id": domain_name,
+            "rule": "R3",
+            "scope": "DOMAIN",
+            "context_basis": context_basis,
+            "decision_expression": "AUTONOMOUS_ROUTE_COUNT>0 AND EVENT_DRIVEN_ROUTE_COUNT>0",
+            "matched": matched,
+            "valid_for_corrected_headline": valid_for_corrected_headline,
+            "independent_tracking_rule_match": independent_match,
+            "result_class": result_class,
+            "autonomous_route_count": ctx.get("eligible_autonomous_route_count", 0),
+            "event_driven_route_count": ctx.get("eligible_event_driven_route_count", 0),
+            "unknown_route_count": ctx.get("eligible_unknown_route_count", 0),
+            "ineligible_route_count": ctx.get("ineligible_route_count", 0),
+            "autonomous_evidence_route_ids": ctx.get(
+                "autonomous_evidence_route_ids", []
+            ),
+            "event_driven_evidence_route_ids": ctx.get(
+                "event_driven_evidence_route_ids", []
+            ),
+            "unknown_context_route_ids": ctx.get(
+                "unknown_context_route_ids", []
+            ),
+            "ineligible_route_ids": ctx.get("ineligible_route_ids", []),
+            "event_driven_functions_diagnostic": ctx.get(
+                "event_driven_functions", 0
+            ),
+        })
+
+    with open(DOMAIN_FINDINGS_JSON, "w", encoding="utf-8") as output:
+        json.dump(findings, output, indent=2, ensure_ascii=False)
+
+    fieldnames = [
+        "domain", "report_id", "rule", "scope", "context_basis",
+        "decision_expression", "matched", "valid_for_corrected_headline",
+        "independent_tracking_rule_match", "result_class",
+        "autonomous_route_count", "event_driven_route_count",
+        "unknown_route_count", "ineligible_route_count",
+        "autonomous_evidence_route_ids",
+        "event_driven_evidence_route_ids", "unknown_context_route_ids",
+        "ineligible_route_ids", "event_driven_functions_diagnostic",
+    ]
+    with open(DOMAIN_FINDINGS_CSV, "w", newline="", encoding="utf-8-sig") as output:
+        writer = csv.DictWriter(output, fieldnames=fieldnames)
+        writer.writeheader()
+        for finding in findings:
+            row = dict(finding)
+            for key in (
+                "autonomous_evidence_route_ids",
+                "event_driven_evidence_route_ids",
+                "unknown_context_route_ids",
+                "ineligible_route_ids",
+            ):
+                row[key] = json.dumps(row[key], separators=(",", ":"))
+            writer.writerow(row)
+
+    return findings
+
+                                            
+                  
+                                            
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Hephaistos V2 Intelligent Classifier")
     parser.add_argument("--draw-graphs", action="store_true", help="Automatically generate GTG/CTG graph images for malicious domains")
@@ -687,12 +807,27 @@ if __name__ == "__main__":
     for js_file in json_files:
         analyze_json(js_file, draw_graphs=args.draw_graphs)
 
-    # Write results to CSV (dedup, sort by rule number, append final statistics).
+    domain_findings = write_domain_findings()
+    stats["dual_context"] = sum(
+        1 for finding in domain_findings
+        if finding["matched"] and finding["valid_for_corrected_headline"]
+    )
+    r3_with_independent_match = sum(
+        1 for finding in domain_findings
+        if finding["result_class"] == "R3_WITH_INDEPENDENT_RULE_MATCH"
+    )
+    structural_r3_only = sum(
+        1 for finding in domain_findings
+        if finding["result_class"] == "STRUCTURAL_R3_ONLY_UNCONFIRMED"
+    )
+    print(f" Domain-level R3 findings saved: {DOMAIN_FINDINGS_CSV}")
+    print(f" Domain-level R3 JSON saved: {DOMAIN_FINDINGS_JSON}")
+
+                                                                                 
     if malicious_records:
         RULE_ORDER = {
             "Isolated_Exfiltration (Rule 1)":                         1,
             "Parasitic_Branch (Rule 2)":                               2,
-            "Dual_Execution_Context (Rule 3)":                         3,
             "DOM_Evasion (Rule 4)":                                    4,
             "DOM_Evasion (Rule 4) [Dynamic Obfuscated]":                        4,
             "Evasion_with_Camouflage (Rule 4) [Disguised Tracker]":             4,
@@ -701,10 +836,10 @@ if __name__ == "__main__":
             "Fingerprinting_Leak (Rule 5)":                            5,
         }
 
-        # ── Deduplication ──────────────────────────────────────────────────
-        # Group records by (Domain, Source, Sink, Destination).
-        # When multiple rules fire on the same taint route, merge them into
-        # one row with combined Threat_Type labels instead of separate rows.
+                                                                             
+                                                               
+                                                                           
+                                                                            
         def _normalize_dest(dest: str) -> str:
             if not dest or dest == "DYNAMIC_URL": return "DYNAMIC_URL"
             if "{VAR}" in dest: return "DYNAMIC_URL"
@@ -712,7 +847,7 @@ if __name__ == "__main__":
                 return "DYNAMIC_URL"
             return dest
 
-        dedup: dict = {}  # key -> merged record
+        dedup: dict = {}                        
         for rec in malicious_records:
             dest_norm = _normalize_dest(rec.get("Destination", ""))
             key = (
@@ -729,23 +864,23 @@ if __name__ == "__main__":
                 if threat not in existing:
                     dedup[key]["Threat_Type"] = existing + " | " + threat
                 
-                # Clean up overlapping Threat_Type labels: if a single route has both R4 (resolved) and R4 [Dynamic Obfuscated], drop the weaker label.
+                                                                                                                                                       
                 _labels_now = [l.strip() for l in dedup[key]["Threat_Type"].split(" | ")]
                 if "DOM_Evasion (Rule 4)" in _labels_now and "DOM_Evasion (Rule 4) [Dynamic Obfuscated]" in _labels_now:
                     _labels_now = sorted(set(l for l in _labels_now if l != "DOM_Evasion (Rule 4) [Dynamic Obfuscated]"))
                     dedup[key]["Threat_Type"] = " | ".join(_labels_now)
 
-                # Upgrade to a more concrete destination when available, and refresh Party_Check.
+                                                                                                 
                 if dedup[key]["Destination"] == "DYNAMIC_URL" and rec.get("Destination", "") != "DYNAMIC_URL":
                     dedup[key]["Destination"] = rec.get("Destination", "DYNAMIC_URL")
-                    # Destination became concrete, so recompute Party_Check (preserve confirmed labels like Rule 5 Deterministic).
+                                                                                                                                  
                     new_party = determine_unified_party(dedup[key]["Domain"], dedup[key]["Destination"], dedup[key]["Leak_Method (Sink)"])
                     if "WCC Isolated" not in dedup[key]["Party_Check"] and "Confirmed 3rd-Party" not in dedup[key]["Party_Check"]:
                         dedup[key]["Party_Check"] = new_party
 
         deduped = list(dedup.values())
 
-        # Sort deduplicated rows by lowest rule number present, then domain
+                                                                           
         def sort_key(rec):
             labels = rec.get("Threat_Type", "").split(" | ")
             min_rule = min(RULE_ORDER.get(lbl, 99) for lbl in labels)
@@ -753,35 +888,35 @@ if __name__ == "__main__":
 
         deduped.sort(key=sort_key)
 
-        # ── Confidence-score computation ──────────────────────────────────
-        # Assign each deduped row a Confidence_Score in 1..5:
-        #   +1 per unique Rule fired (up to 3)
-        #   +1 if AUTONOMOUS context
-        #   +1 if Hybrid/Predicted 3rd-Party destination (dynamic confirmation)
+                                                                            
+                                                             
+                                              
+                                    
+                                                                               
         def compute_confidence(rec: dict) -> int:
             score = 0
             labels = [l.strip() for l in rec.get("Threat_Type", "").split(" | ")]
             rule_nums = {RULE_ORDER.get(l, 99) for l in labels if RULE_ORDER.get(l, 99) != 99}
-            score += min(len(rule_nums), 3)          # up to +3 from triggered rules
+            score += min(len(rule_nums), 3)                                         
             if rec.get("Trigger_Context") == "AUTONOMOUS":
-                score += 1                           # +1 for page-load (autonomous) execution
+                score += 1                                                        
             dest = rec.get("Destination", "")
             if "Predicted 3rd-Party" in dest or "Hybrid Reconstructed" in dest or "CNAME Cloaked" in dest:
-                score += 1                           # +1 for dynamic confirmation
-            return max(1, min(score, 5))             # clamp to 1..5
+                score += 1                                                        
+            return max(1, min(score, 5))                            
 
         for rec in deduped:
             rec["Confidence_Score"] = compute_confidence(rec)
 
-        # ── Post-dedup Party_Check refinement ──────────────────────────────
-        # Rule 1 hardcodes Party_Check as "Unknown (WCC Isolated)" at append time.
-        # After merging, if the same row also carries Rule 5 (semantic confirmation)
-        # or a Predicted/Hybrid 3rd-party destination, the party is no longer unknown.
+                                                                             
+                                                                                  
+                                                                                    
+                                                                                      
         for rec in deduped:
             threat = rec.get("Threat_Type", "")
             dest   = rec.get("Destination", "")
             if "Isolated_Exfiltration (Rule 1)" in threat and "WCC Isolated" in rec.get("Party_Check", ""):
-                # Refine Party_Check when Rule 5 is additionally present or when dynamic analysis resolved the destination.
+                                                                                                                           
                 if "CNAME Cloaked" in dest:
                     rec["Party_Check"] = "1st-Party (CNAME Cloaked)"
                 elif "Hybrid Reconstructed" in dest and "1st-Party" in determine_unified_party(rec["Domain"], dest, rec["Leak_Method (Sink)"]):
@@ -791,15 +926,15 @@ if __name__ == "__main__":
                         "Hybrid Reconstructed" in dest):
                     rec["Party_Check"] = "3rd-Party (WCC Isolated)"
 
-        # ── Recompute stats from deduped results ───────────────────────────
-        # Pre-dedup stats[] are inflated (counted per raw append).
-        # Re-derive accurate counts from the final merged rows.
+                                                                             
+                                                                  
+                                                               
         final_stats = {
             "total_scanned":       stats["total_scanned"],
             "total_malicious":     len({rec["Domain"] for rec in deduped}),
             "isolated_exfil":      0,
             "parasitic_branch":    0,
-            "dual_context":        0,
+            "dual_context":        stats["dual_context"],
             "evasion_dom":         0,
             "evasion_dynamic":     0,
             "fingerprinting":      0,
@@ -809,7 +944,6 @@ if __name__ == "__main__":
         LABEL_TO_STAT = {
             "Isolated_Exfiltration (Rule 1)":                         "isolated_exfil",
             "Parasitic_Branch (Rule 2)":                               "parasitic_branch",
-            "Dual_Execution_Context (Rule 3)":                         "dual_context",
             "DOM_Evasion (Rule 4)":                                    "evasion_dom",
             "DOM_Evasion (Rule 4) [Dynamic Obfuscated]":                        "evasion_dynamic",
             "Evasion_with_Camouflage (Rule 4) [Disguised Tracker]":             "camouflaged_3rd_party",
@@ -836,7 +970,7 @@ if __name__ == "__main__":
             dict_writer.writeheader()
             dict_writer.writerows(deduped)
 
-            # Append the statistics block.
+                                          
             writer = csv.writer(output_file)
             writer.writerow([])
             writer.writerow([])
@@ -847,7 +981,9 @@ if __name__ == "__main__":
             writer.writerow(["[Detailed Evasion Technique Statistics]"])
             writer.writerow(["Isolated Exfiltration (Rule 1)",           f"{final_stats['isolated_exfil']} cases"])
             writer.writerow(["Parasitic Branch (Rule 2)",                f"{final_stats['parasitic_branch']} cases"])
-            writer.writerow(["Dual Execution Context (Rule 3)",          f"{final_stats['dual_context']} cases"])
+            writer.writerow(["Dual Execution Context (Rule 3)",          f"{final_stats['dual_context']} unique domains"])
+            writer.writerow(["  ├ R3 with independent rule match",       f"{r3_with_independent_match} unique domains"])
+            writer.writerow(["  └ Structural R3 Only (Unconfirmed)",     f"{structural_r3_only} unique domains"])
             writer.writerow(["DOM Evasion (Rule 4)",                     f"{final_stats['evasion_dom'] + final_stats['evasion_dynamic']} cases"])
             writer.writerow(["  └ Destination Identified",                 f"{final_stats['evasion_dom']} cases"])
             writer.writerow(["  └ Destination Hidden (Dynamic Obfuscated)", f"{final_stats['evasion_dynamic']} cases"])
@@ -857,10 +993,10 @@ if __name__ == "__main__":
             writer.writerow(["  └ Fingerprinting Leak (Rule 5 sub-case)",     f"{final_stats['fingerprinting']} cases"])
             writer.writerow(["Camouflaged 3rd-party leak",                f"{final_stats['camouflaged_3rd_party']} cases (Core finding!)"])
 
-            # Per-domain mixed-tracker evidence summary.
+                                                        
             writer.writerow([])
             writer.writerow(["[Per-Domain Mixed Tracker Evidence]"])
-            # Per-domain rule-hit aggregation.
+                                              
             domain_rules: dict = {}
             for rec in deduped:
                 dom = rec["Domain"]
@@ -876,15 +1012,27 @@ if __name__ == "__main__":
                 event = ctx.get("EVENT_DRIVEN", 0)
                 ed_funcs = ctx.get("event_driven_functions", 0)
                 rules_hit = sorted(domain_rules.get(dom, set()))
+                if is_corrected_r3(domain_context_map[dom]):
+                    rules_hit = sorted(set(rules_hit) | {3})
                 rules_str = ",".join(f"R{r}" for r in rules_hit) if rules_hit else "None"
-                is_dual = (auto > 0) and (event > 0 or ed_funcs > 0)
+                is_dual = is_corrected_r3(ctx)
                 ctx_label = "Mixed (Dual Context)" if is_dual else "Single Context"
                 writer.writerow([f"  {dom}", f"Routes: AUTONOMOUS={auto} EVENT_DRIVEN={event} | Handlers={ed_funcs} ({ctx_label})", f"Rules: {rules_str}"])
 
-        # ── --summary: per-domain summary table ────────────────────────────
+                                                                             
         if args.summary:
             summary_path = CSV_OUTPUT.replace(".csv", "_summary.csv")
-            domain_summary: dict = {}
+            domain_summary: dict = {
+                dom: {
+                    "Domain": dom,
+                    "Rule_1": 0, "Rule_2": 0, "Rule_3": 0,
+                    "Rule_4": 0, "Rule_5": 0,
+                    "Total_Routes": 0,
+                    "Max_Confidence": 0,
+                    "3rd_Party_Confirmed": 0,
+                }
+                for dom in domain_context_map
+            }
             for rec in deduped:
                 dom = rec["Domain"]
                 if dom not in domain_summary:
@@ -906,6 +1054,10 @@ if __name__ == "__main__":
                     if 1 <= rnum <= 5:
                         entry[f"Rule_{rnum}"] += 1
 
+            for dom, entry in domain_summary.items():
+                if is_corrected_r3(domain_context_map.get(dom, {})):
+                    entry["Rule_3"] = 1
+
             summary_rows = sorted(domain_summary.values(), key=lambda r: -r["Total_Routes"])
             with open(summary_path, 'w', newline='', encoding='utf-8-sig') as sf:
                 sw = csv.DictWriter(sf, fieldnames=["Domain","Rule_1","Rule_2","Rule_3","Rule_4","Rule_5","Total_Routes","Max_Confidence","3rd_Party_Confirmed"])
@@ -914,7 +1066,7 @@ if __name__ == "__main__":
             print(f" Per-domain summary saved: {summary_path}")
 
 
-    # final_stats is available only if malicious_records existed; fall back to raw stats otherwise
+                                                                                                  
     _s = final_stats if malicious_records else stats
     print(" Analysis Complete! [Final Statistical Report]")
     print(f"- Total domains scanned : {_s['total_scanned']}")
@@ -922,7 +1074,9 @@ if __name__ == "__main__":
     print("[Detailed Evasion Technique Statistics]")
     print(f"  > Isolated Exfiltration (Rule 1)        : {_s['isolated_exfil']} cases")
     print(f"  > Parasitic Branch (Rule 2)             : {_s['parasitic_branch']} cases")
-    print(f"  > Dual Execution Context (Rule 3)       : {_s['dual_context']} cases")
+    print(f"  > Dual Execution Context (Rule 3)       : {_s['dual_context']} unique domains")
+    print(f"  >   ├ R3 with independent rule match   : {r3_with_independent_match} unique domains")
+    print(f"  >   └ Structural R3 Only (Unconfirmed) : {structural_r3_only} unique domains")
     print(f"  > DOM Evasion (Rule 4)                  : {_s['evasion_dom'] + _s['evasion_dynamic']} cases")
     print(f"  >   └ Destination Identified             : {_s['evasion_dom']} cases")
     print(f"  >   └ Destination Hidden (Dyn. Obfusc.) : {_s['evasion_dynamic']} cases")

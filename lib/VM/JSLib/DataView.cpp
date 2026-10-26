@@ -19,10 +19,10 @@
 namespace hermes {
 namespace vm {
 
-/// @name DataView.prototype
-/// @{
+                            
+      
 
-// ES6 24.2.4.1
+               
 CallResult<HermesValue>
 dataViewPrototypeBuffer(void *, Runtime &runtime, NativeArgs args) {
   auto self = args.dyncastThis<JSDataView>();
@@ -33,7 +33,7 @@ dataViewPrototypeBuffer(void *, Runtime &runtime, NativeArgs args) {
   return self->getBuffer(runtime).getHermesValue();
 }
 
-// ES6 24.2.4.2
+               
 CallResult<HermesValue>
 dataViewPrototypeByteLength(void *, Runtime &runtime, NativeArgs args) {
   auto self = args.dyncastThis<JSDataView>();
@@ -44,7 +44,7 @@ dataViewPrototypeByteLength(void *, Runtime &runtime, NativeArgs args) {
   return HermesValue::encodeUntrustedNumberValue(self->byteLength());
 }
 
-// ES6 24.2.4.3
+               
 CallResult<HermesValue>
 dataViewPrototypeByteOffset(void *, Runtime &runtime, NativeArgs args) {
   auto self = args.dyncastThis<JSDataView>();
@@ -55,7 +55,7 @@ dataViewPrototypeByteOffset(void *, Runtime &runtime, NativeArgs args) {
   return HermesValue::encodeUntrustedNumberValue(self->byteOffset());
 }
 
-// ES6 24.2.4.5 - 22.2.4.20 && ES 2018 24.3.1.1
+                                               
 namespace {
 template <typename T>
 CallResult<HermesValue> dataViewPrototypeGetEncoder(Runtime &, T value) {
@@ -141,7 +141,7 @@ dataViewPrototypeSet(void *, Runtime &runtime, NativeArgs args) {
   self->set<T>(runtime, byteOffset, value, littleEndian);
   return HermesValue::encodeUndefinedValue();
 }
-} // namespace
+}             
 
 #define TYPED_ARRAY(name, type)                                   \
   CallResult<HermesValue> dataViewPrototypeGet##name(             \
@@ -158,12 +158,12 @@ dataViewPrototypeSet(void *, Runtime &runtime, NativeArgs args) {
 #undef TYPED_ARRAY_NO_CLAMP
 #undef TYPED_ARRAY
 
-/// @}
+      
 
-// ES 2018 24.3.2.1
+                   
 CallResult<HermesValue>
 dataViewConstructor(void *, Runtime &runtime, NativeArgs args) {
-  // 1. If NewTarget is undefined, throw a TypeError exception.
+                                                               
   if (!args.isConstructorCall()) {
     return runtime.raiseTypeError(
         "DataView() called in function context instead of constructor");
@@ -171,24 +171,24 @@ dataViewConstructor(void *, Runtime &runtime, NativeArgs args) {
   auto self = args.vmcastThis<JSDataView>();
   auto buffer = args.dyncastArg<JSArrayBuffer>(0);
   auto byteLength = args.getArgHandle(2);
-  // 2. If Type(buffer) is not Object, throw a TypeError exception
-  // 3. If buffer does not have an [[ArrayBufferData]] internal slot, throw a
-  // TypeError exception.
+                                                                  
+                                                                             
+                         
   if (!buffer) {
     return runtime.raiseTypeError(
         "new DataView(buffer, [byteOffset], [byteLength]): "
         "buffer must be an ArrayBuffer");
   }
 
-  // 4. Let offset be ToIndex(byteOffset).
+                                          
   auto res = toIndex(runtime, args.getArgHandle(1));
   if (res == ExecutionStatus::EXCEPTION) {
     return ExecutionStatus::EXCEPTION;
   }
   auto offset = res->getNumberAs<uint64_t>();
-  // 6. Let bufferByteLength be buffer.[[ArrayBufferByteLength]].
+                                                                 
   auto bufferByteLength = buffer->size();
-  // 7. If offset > bufferByteLength, throw a RangeError exception.
+                                                                   
   if (offset > bufferByteLength) {
     return runtime.raiseRangeError(
         "new DataView(buffer, [byteOffset], "
@@ -196,19 +196,19 @@ dataViewConstructor(void *, Runtime &runtime, NativeArgs args) {
         "buffer's byte length");
   }
   double viewByteLength = 0;
-  // 8. If byteLength is either not present or undefined, then
+                                                              
   if (byteLength->isUndefined()) {
-    // 8a. Let viewByteLength be bufferByteLength - offset.
+                                                           
     viewByteLength = bufferByteLength - offset;
   } else {
-    // 9a. Let viewByteLength be ? ToIndex(byteLength).
+                                                       
     auto res2 = toIndex(runtime, byteLength);
     if (res2 == ExecutionStatus::EXCEPTION) {
       return ExecutionStatus::EXCEPTION;
     }
     viewByteLength = res2->getNumber();
-    // 9b. If offset+viewByteLength > bufferByteLength, throw a RangeError
-    // exception.
+                                                                          
+                 
     if (offset + viewByteLength > bufferByteLength) {
       return runtime.raiseRangeError(
           "new DataView(buffer, [byteOffset], "
@@ -230,7 +230,7 @@ Handle<JSObject> createDataViewConstructor(Runtime &runtime) {
       1,
       CellKind::JSDataViewKind);
 
-  // DataView.prototype.xxx() methods.
+                                      
   defineAccessor(
       runtime,
       proto,
@@ -287,10 +287,10 @@ Handle<JSObject> createDataViewConstructor(Runtime &runtime) {
       runtime.getPredefinedStringHandle(Predefined::DataView),
       dpf);
 
-  // DataView.xxx() methods.
+                            
 
   return cons;
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

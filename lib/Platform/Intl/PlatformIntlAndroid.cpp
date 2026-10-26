@@ -7,11 +7,11 @@
 
 #include "hermes/Platform/Intl/PlatformIntl.h"
 
-// Android ICU uses different package names than ICU4J, and claims
-// other differences.  So for now, consider this impl specific to
-// Android.  It's likely it could be made to work against the
-// non-Android ICU4J packages, too, if necessary, but it would take a
-// bit more work.
+                                                                  
+                                                                 
+                                                             
+                                                                     
+                 
 
 #include <fbjni/fbjni.h>
 
@@ -70,9 +70,9 @@ using JPartMap = jni::JMap<jni::JString, jni::JString>;
 using JPartsList = jni::JList<JPartMap>;
 
 jni::local_ref<jstring> stringToJava(const std::u16string &utf16) {
-  // Work around a bug in fbjni where make_jstring returns null for empty
-  // u16strings.
-  // TODO(T101910387): Switch back to make_jstring once it is fixed.
+                                                                         
+                
+                                                                    
   const auto env = jni::Environment::current();
   static_assert(
       sizeof(jchar) == sizeof(std::u16string::value_type),
@@ -122,7 +122,7 @@ Options optionsFromJava(jni::alias_ref<JOptionsMap> result) {
   Options ret;
   for (const auto &kv : *result) {
     if (!kv.first || !kv.second) {
-      // ignore nulls
+                     
       continue;
     }
 
@@ -152,13 +152,13 @@ Options optionsFromJava(jni::alias_ref<JOptionsMap> result) {
           Option(
               stringFromJava(jni::static_ref_cast<jni::JString>(kv.second))));
     } else {
-      // ignore mistyped value
+                              
     }
   }
   return ret;
 }
 
-// Part: Map<String, String>
+                            
 Part partFromJava(jni::alias_ref<JPartMap> result) {
   if (!result) {
     return Part();
@@ -167,7 +167,7 @@ Part partFromJava(jni::alias_ref<JPartMap> result) {
   Part ret;
   for (const auto &kv : *result) {
     if (!kv.first || !kv.second) {
-      // ignore nulls
+                     
       continue;
     }
 
@@ -242,7 +242,7 @@ class JIntl : public jni::JavaClass<JIntl> {
   }
 };
 
-} // namespace
+}             
 
 vm::CallResult<std::vector<std::u16string>> getCanonicalLocales(
     vm::Runtime &runtime,
@@ -341,7 +341,7 @@ class CollatorAndroid : public Collator {
  private:
   jni::global_ref<JCollator> jCollator_;
 };
-} // namespace
+}             
 
 Collator::Collator() = default;
 
@@ -460,11 +460,11 @@ class DateTimeFormatAndroid : public DateTimeFormat {
   }
 
   std::u16string format(double jsTimeValue) noexcept {
-    // I don't believe the Java logic can throw an exception (the JS
-    // method can, but the errors all come from the Intl.cpp logic).  If
-    // I am incorrect, this will need to add a try/catch and take a
-    // runtime to call raiseRangeError on it.  This is true for all the
-    // format methods.
+                                                                    
+                                                                        
+                                                                   
+                                                                       
+                      
     return stringFromJava(jDateTimeFormat_->format(jsTimeValue));
   }
 
@@ -475,7 +475,7 @@ class DateTimeFormatAndroid : public DateTimeFormat {
  private:
   jni::global_ref<JDateTimeFormat> jDateTimeFormat_;
 };
-} // namespace
+}             
 
 DateTimeFormat::DateTimeFormat() = default;
 
@@ -598,11 +598,11 @@ class NumberFormatAndroid : public NumberFormat {
   }
 
   std::u16string format(double number) noexcept {
-    // I don't believe the Java logic can throw an exception (the JS
-    // method can, but the errors all come from the Intl.cpp logic).  If
-    // I am incorrect, this will need to add a try/catch and take a
-    // runtime to call raiseRangeError on it.  This is true for all the
-    // format methods.
+                                                                    
+                                                                        
+                                                                   
+                                                                       
+                      
     return stringFromJava(jNumberFormat_->format(number));
   }
 
@@ -613,7 +613,7 @@ class NumberFormatAndroid : public NumberFormat {
  private:
   jni::global_ref<JNumberFormat> jNumberFormat_;
 };
-} // namespace
+}             
 
 NumberFormat::NumberFormat() = default;
 
@@ -672,5 +672,5 @@ std::vector<Part> NumberFormat::formatToParts(double number) noexcept {
   return static_cast<NumberFormatAndroid *>(this)->formatToParts(number);
 }
 
-} // namespace platform_intl
-} // namespace hermes
+}                           
+}                    

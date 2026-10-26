@@ -15,10 +15,10 @@ namespace hbc {
 
 void SerializedLiteralParserBase::parseTagAndSeqLength() {
   auto tag = buffer_[currIdx_];
-  // If the first bit in the tag is set to 1, it is an indication that the
-  // sequence is longer than 15 elements, and that the tag is two bytes long.
-  // The format is still the same as described in
-  // `SerializedLiteralParserBase.h`.
+                                                                          
+                                                                             
+                                                 
+                                     
   if (tag & 0x80) {
     leftInSeq_ = ((tag & 0x0f) << 8) | (buffer_[currIdx_ + 1]);
     currIdx_ += 2;
@@ -30,5 +30,5 @@ void SerializedLiteralParserBase::parseTagAndSeqLength() {
   lastTag_ = tag & SerializedLiteralGenerator::TagMask;
 }
 
-} // namespace hbc
-} // namespace hermes
+}                 
+}                    

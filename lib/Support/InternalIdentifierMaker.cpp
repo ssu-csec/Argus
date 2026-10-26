@@ -18,4 +18,4 @@ Identifier InternalIdentifierMaker::next(llvh::StringRef hint) {
   nameBuilder << "?anon_" << counter_++ << "_" << hint;
   return stringTable_.getIdentifier(nameBuilder.str());
 }
-} // namespace hermes
+}                    

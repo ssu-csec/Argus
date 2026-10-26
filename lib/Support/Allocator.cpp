@@ -9,7 +9,7 @@
 
 namespace hermes {
 
-/// Allocate a size in a new slab. This is the Allocate slow path.
+                                                                  
 void *BacktrackingBumpPtrAllocator::allocateNewSlab(
     size_t size,
     size_t alignment) {
@@ -20,8 +20,8 @@ void *BacktrackingBumpPtrAllocator::allocateNewSlab(
   state_->slab++;
   state_->offset = 0;
   if (state_->slab == slabs_.size()) {
-    // Use `new Slab` without parentheses to avoid zeroing out the memory
-    // for the new slab.
+                                                                         
+                        
     slabs_.emplace_back(new Slab);
   }
   auto currentSlab =
@@ -37,4 +37,4 @@ void *BacktrackingBumpPtrAllocator::allocateNewSlab(
   return ptr;
 }
 
-} // namespace hermes
+}                    

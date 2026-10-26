@@ -28,10 +28,10 @@ void copyStringTo(
   env->ReleaseStringChars(jstr.get(), chr);
 }
 
-/// Converts a SmallVector of char16_t into a Java \c String.
-/// \p env The JNI environment to create the string in.
-/// \p str The string to copy into the Java Heap.
-/// \return the resulting string.
+                                                             
+                                                       
+                                                 
+                                 
 local_ref<JString> toJavaString(JNIEnv *env, llvh::ArrayRef<char16_t> str) {
   static_assert(
       sizeof(jchar) == sizeof(*str.data()),
@@ -45,15 +45,15 @@ local_ref<JString> toJavaString(JNIEnv *env, llvh::ArrayRef<char16_t> str) {
   return jStr;
 }
 
-} // anonymous namespace
+}                       
 
-/// Provides JNI bindings for using existing Android APIs to perform
-/// unicode-related tasks.
-/// NOTE: All public exports from this header should be marked `noexcept`.
+                                                                    
+                          
+                                                                          
 class JAndroidUnicodeUtils
     : public facebook::jni::JavaClass<JAndroidUnicodeUtils> {
-  /// Abort if there exists a pending Java exception. This throws the Java
-  /// exception out of a noexcept handler, which will call std::terminate().
+                                                                          
+                                                                            
   static void abortOnJavaException() noexcept {
     FACEBOOK_JNI_THROW_PENDING_EXCEPTION();
   }
@@ -62,8 +62,8 @@ class JAndroidUnicodeUtils
   static auto constexpr kJavaDescriptor =
       "Lcom/facebook/hermes/unicode/AndroidUnicodeUtils;";
 
-  /// Compares two strings using the user's chosen locale to order chars.
-  /// Equivalent of left.localeCompare(right) in JS.
+                                                                         
+                                                    
   static jint localeCompare(
       llvh::ArrayRef<char16_t> left,
       llvh::ArrayRef<char16_t> right) noexcept {
@@ -157,7 +157,7 @@ void normalize(llvh::SmallVectorImpl<char16_t> &buf, NormalizationForm form) {
   JAndroidUnicodeUtils::normalize(buf, form);
 }
 
-} // namespace platform_unicode
-} // namespace hermes
+}                              
+}                    
 
-#endif // HERMES_PLATFORM_UNICODE_JAVA
+#endif                                

@@ -13,8 +13,8 @@
 
 namespace hermes {
 
-/// Detect calls to unsafe intrinsics like `__uasm.add32()` and replace them
-/// with CallIntrinsicsInst.
+                                                                            
+                            
 class EmitWasmIntrinsics : public FunctionPass {
  public:
   explicit EmitWasmIntrinsics() : FunctionPass("EmitWasmIntrinsics") {}
@@ -22,7 +22,7 @@ class EmitWasmIntrinsics : public FunctionPass {
   bool runOnFunction(Function *F) override;
 };
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_OPTIMIZER_EMITWASMINTRINSICS_H
-#endif // HERMES_RUN_WASM
+#endif                                         
+#endif                   

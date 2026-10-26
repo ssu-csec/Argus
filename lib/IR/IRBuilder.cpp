@@ -28,9 +28,9 @@ Function *IRBuilder::createFunction(
     SMRange sourceRange,
     bool isGlobal,
     Function *insertBefore) {
-  // Function must have a name. If the source doesn't provide the function name,
-  // Hermes will try to infer the name from the name of a variable or property
-  // it is assigned to. If there was no inference, an empty string is used.
+                                                                                
+                                                                              
+                                                                           
   if (!OriginalName.isValid()) {
     OriginalName = createIdentifier("");
   }
@@ -55,8 +55,8 @@ GeneratorFunction *IRBuilder::createGeneratorFunction(
     SMRange sourceRange,
     Function *insertBefore) {
   if (!OriginalName.isValid()) {
-    // Function must have a name, even it's empty.
-    // Eventually we will give it a properly inferred name.
+                                                  
+                                                           
     OriginalName = createIdentifier("");
   }
   return new GeneratorFunction(
@@ -66,7 +66,7 @@ GeneratorFunction *IRBuilder::createGeneratorFunction(
       definitionKind,
       strictMode,
       sourceVisibility,
-      /* isGlobal */ false,
+                     false,
       sourceRange,
       insertBefore);
 }
@@ -79,8 +79,8 @@ GeneratorInnerFunction *IRBuilder::createGeneratorInnerFunction(
     SMRange sourceRange,
     Function *insertBefore) {
   if (!OriginalName.isValid()) {
-    // Function must have a name, even it's empty.
-    // Eventually we will give it a properly inferred name.
+                                                  
+                                                           
     OriginalName = createIdentifier("");
   }
   return new GeneratorInnerFunction(
@@ -89,7 +89,7 @@ GeneratorInnerFunction *IRBuilder::createGeneratorInnerFunction(
       OriginalName,
       definitionKind,
       strictMode,
-      /* isGlobal */ false,
+                     false,
       sourceRange,
       insertBefore);
 }
@@ -99,8 +99,8 @@ Function *IRBuilder::createTopLevelFunction(
     bool strictMode,
     SourceVisibility sourceVisibility,
     SMRange sourceRange) {
-  // Notice that this synthesized name is not a legal javascript name and
-  // can't collide with functions in the processed program.
+                                                                         
+                                                           
   return createFunction(
       scopeDesc,
       "global",
@@ -142,8 +142,8 @@ AsyncFunction *IRBuilder::createAsyncFunction(
     SMRange sourceRange,
     Function *insertBefore) {
   if (!OriginalName.isValid()) {
-    // Function must have a name, even it's empty.
-    // Eventually we will give it a properly inferred name.
+                                                  
+                                                           
     OriginalName = createIdentifier("");
   }
   return new AsyncFunction(
@@ -153,7 +153,7 @@ AsyncFunction *IRBuilder::createAsyncFunction(
       definitionKind,
       strictMode,
       sourceVisibility,
-      /* isGlobal */ false,
+                     false,
       sourceRange,
       insertBefore);
 }
@@ -200,7 +200,7 @@ LiteralNumber *IRBuilder::getLiteralNumber(double value) {
   return M->getLiteralNumber(value);
 }
 
-// FIXME: use proper language semantics.
+                                        
 LiteralNumber *IRBuilder::getLiteralPositiveZero() {
   return M->getLiteralNumber(+0.0);
 }
@@ -1039,16 +1039,16 @@ inline void IRBuilder::justInsert(Instruction *Inst) {
 }
 
 void IRBuilder::insert(Instruction *Inst) {
-  // Set the statement of the new instruction based on the current function's
-  // statement counter.
+                                                                             
+                       
   OptValue<uint32_t> statementOpt = getFunction()->getStatementCount();
   uint32_t statement;
   if (LLVM_LIKELY(statementOpt.hasValue())) {
     statement = *statementOpt;
   } else {
-    // If we've cleared the statement count,
-    // then just set the new instruction's statement to the statement of the
-    // instruction we're inserting at (0 if it doesn't exist).
+                                            
+                                                                            
+                                                              
     statement = InsertionPoint != Block->getInstList().end()
         ? InsertionPoint->getStatementIndex()
         : 0;
@@ -1104,7 +1104,7 @@ void IRBuilder::transferInstructionToCurrentBlock(Instruction *inst) {
   if (oldBlock == Block || !llvh::isa<TerminatorInst>(inst))
     return;
 
-  // If we moved the terminator, we want to update all successors' phi-nodes.
+                                                                             
   for (auto *use : oldBlock->getUsers()) {
     auto *phi = llvh::dyn_cast<PhiInst>(use);
     if (!phi)

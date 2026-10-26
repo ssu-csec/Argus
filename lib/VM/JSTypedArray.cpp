@@ -18,8 +18,8 @@
 namespace hermes {
 namespace vm {
 
-/// @name JSTypedArrayBase
-/// @{
+                          
+      
 
 JSTypedArrayBase::JSTypedArrayBase(
     Runtime &runtime,
@@ -52,7 +52,7 @@ bool JSTypedArrayBase::_haveOwnIndexedImpl(
     Runtime &,
     uint32_t index) {
   auto *self = vmcast<JSTypedArrayBase>(selfObj);
-  // Check whether the index is within the storage.
+                                                   
   return index < self->getLength();
 }
 
@@ -61,7 +61,7 @@ OptValue<PropertyFlags> JSTypedArrayBase::_getOwnIndexedPropertyFlagsImpl(
     Runtime &runtime,
     uint32_t index) {
   auto *self = vmcast<JSTypedArrayBase>(selfObj);
-  // Check whether the index is within the storage.
+                                                   
   if (LLVM_UNLIKELY(index >= self->getLength())) {
     return llvh::None;
   }
@@ -83,22 +83,22 @@ bool JSTypedArrayBase::_deleteOwnIndexedImpl(
     Handle<JSObject> selfHandle,
     Runtime &runtime,
     uint32_t index) {
-  // Opposite of _haveOwnIndexedImpl.  This is not specified as such,
-  // but is a consequence of 9.1.10.1 OrdinaryDelete on TypedArrays.
-  // Informally, because elements of typed arrays are
-  // non-configurable, delete never changes anything, and returns true
-  // if the element does not exist, and false if it does.
+                                                                     
+                                                                    
+                                                     
+                                                                      
+                                                         
   return !_haveOwnIndexedImpl(*selfHandle, runtime, index);
 }
 
 bool JSTypedArrayBase::_checkAllOwnIndexedImpl(
     JSObject *selfObj,
     Runtime &,
-    ObjectVTable::CheckAllOwnIndexedMode /*mode*/) {
+    ObjectVTable::CheckAllOwnIndexedMode         ) {
   auto *self = vmcast<JSTypedArrayBase>(selfObj);
 
-  // If we have any indexed properties at all, they don't satisfy the
-  // requirements.
+                                                                     
+                  
   return self->getLength() == 0;
 }
 
@@ -197,8 +197,8 @@ ExecutionStatus JSTypedArrayBase::createBuffer(
       JSArrayBuffer::create(
           runtime, Handle<JSObject>::vmcast(&runtime.arrayBufferPrototype)));
 
-  // Ensure that the buffer size in bytes will not overflow
-  // JSArrayBuffer::size_type (maybe not same as JSTypedArrayBase::size_type).
+                                                           
+                                                                              
   if (length > (std::numeric_limits<JSArrayBuffer::size_type>::max() /
                 selfObj->getByteWidth())) {
     return runtime.raiseRangeError(
@@ -207,10 +207,10 @@ ExecutionStatus JSTypedArrayBase::createBuffer(
   JSArrayBuffer::size_type bufferSize = length * selfObj->getByteWidth();
   if (JSArrayBuffer::createDataBlock(runtime, tmpbuf, bufferSize) ==
       ExecutionStatus::EXCEPTION) {
-    // Failed to allocate, don't modify what it currently points to.
+                                                                    
     return ExecutionStatus::EXCEPTION;
   }
-  // Commit the change.
+                       
   setBuffer(runtime, *selfObj, *tmpbuf, 0, bufferSize, selfObj->getByteWidth());
   return ExecutionStatus::RETURNED;
 }
@@ -242,7 +242,7 @@ ExecutionStatus JSTypedArrayBase::setToCopyOfTypedArray(
     size_type srcIndex,
     size_type count) {
   if (count == 0) {
-    // Don't do anything if the copy size is 0.
+                                               
     return ExecutionStatus::RETURNED;
   }
   assert(
@@ -251,11 +251,11 @@ ExecutionStatus JSTypedArrayBase::setToCopyOfTypedArray(
       "Must call setToCopyOfTypedArray with two TypedArrays with different "
       "backing ArrayBuffers");
   if (dst->getKind() == src->getKind()) {
-    // Preserve byte-wise equality if they're the same type.
+                                                            
     JSTypedArrayBase::setToCopyOfBytes(
         runtime, dst, dstIndex, src, srcIndex, count);
   } else {
-    // Else must do type conversions.
+                                     
     MutableHandle<> storage(runtime);
     for (auto k = srcIndex; k < srcIndex + count; ++k) {
       storage =
@@ -279,8 +279,8 @@ void JSTypedArrayBase::setToCopyOfBytes(
   assert(
       dst->getKind() == src->getKind() &&
       "Cannot copy bytes across separate typed arrays");
-  // They must be of the same type, which means their byte widths must be the
-  // same as well.
+                                                                             
+                  
   assert(
       srcIndex + count <= src->getLength() &&
       "Cannot read that many elements from src");
@@ -316,7 +316,7 @@ void JSTypedArrayBase::setBuffer(
   self->length_ = size / byteWidth;
 }
 
-/// @}
+      
 
 template <typename T, CellKind C>
 const ObjectVTable JSTypedArray<T, C>::vt{
@@ -370,7 +370,7 @@ CallResult<Handle<JSTypedArrayBase>> JSTypedArray<T, C>::allocateSpecies(
     return ExecutionStatus::EXCEPTION;
   }
   auto obj = runtime.makeHandle<JSObject>(callRes->get());
-  // validate that the constructed object is a TypedArray.
+                                                          
   if (JSTypedArrayBase::validateTypedArray(runtime, obj) ==
       ExecutionStatus::EXCEPTION) {
     return ExecutionStatus::EXCEPTION;
@@ -388,15 +388,15 @@ PseudoHandle<JSTypedArray<T, C>> JSTypedArray<T, C>::create(
       runtime.getHiddenClassForPrototype(
           *parentHandle, numOverlapSlots<JSTypedArray>()));
   return JSObjectInit::initToPseudoHandle(runtime, cell);
-  // NOTE: If any fields are ever added beyond the base class, then the
-  // *BuildMeta functions must be updated to call addJSObjectOverlapSlots.
+                                                                       
+                                                                          
   static_assert(
       sizeof(JSTypedArray<T, C>) == sizeof(JSTypedArrayBase),
       "must update BuildMeta");
 }
 
-/// @name Specializations for specific types
-/// @{
+                                            
+      
 
 #define TYPED_ARRAY(name, type)                                    \
   template <>                                                      \
@@ -424,7 +424,7 @@ PseudoHandle<JSTypedArray<T, C>> JSTypedArray<T, C>::create(
   }
 #include "hermes/VM/TypedArrays.def"
 
-/// @}
+      
 
 template <typename T, CellKind C>
 JSTypedArray<T, C>::JSTypedArray(
@@ -492,8 +492,8 @@ HermesValue JSTypedArray<T, C>::_getOwnIndexedImpl(
 
   if (LLVM_UNLIKELY(!self->attached(runtime))) {
     noAllocs.release();
-    // NOTE: This should be a TypeError to be fully spec-compliant, but
-    // getOwnIndexed is not allowed to return an exception.
+                                                                       
+                                                           
     return _getOwnRetEncoder<T>::encodeMayAlloc(runtime, 0);
   }
   if (LLVM_LIKELY(index < self->getLength())) {
@@ -571,11 +571,11 @@ CallResult<bool> JSTypedArray<T, C>::_setOwnIndexedImpl(
   return true;
 }
 
-// Since there are a limited number of TypedArray's, forward define them here
-// to avoid header file recompile churn.
+                                                                             
+                                        
 #define TYPED_ARRAY(name, type) \
   template class JSTypedArray<type, CellKind::name##ArrayKind>;
 #include "hermes/VM/TypedArrays.def"
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

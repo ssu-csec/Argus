@@ -68,29 +68,29 @@ template <typename Class> struct class_match {
   template <typename ITy> bool match(ITy *V) { return isa<Class>(V); }
 };
 
-/// Match an arbitrary value and ignore it.
+                                           
 inline class_match<Value> m_Value() { return class_match<Value>(); }
 
-/// Match an arbitrary binary operation and ignore it.
+                                                      
 inline class_match<BinaryOperator> m_BinOp() {
   return class_match<BinaryOperator>();
 }
 
-/// Matches any compare instruction and ignore it.
+                                                  
 inline class_match<CmpInst> m_Cmp() { return class_match<CmpInst>(); }
 
-/// Match an arbitrary ConstantInt and ignore it.
+                                                 
 inline class_match<ConstantInt> m_ConstantInt() {
   return class_match<ConstantInt>();
 }
 
-/// Match an arbitrary undef constant.
+                                      
 inline class_match<UndefValue> m_Undef() { return class_match<UndefValue>(); }
 
-/// Match an arbitrary Constant and ignore it.
+                                              
 inline class_match<Constant> m_Constant() { return class_match<Constant>(); }
 
-/// Matching combinators
+                        
 template <typename LTy, typename RTy> struct match_combine_or {
   LTy L;
   RTy R;
@@ -120,13 +120,13 @@ template <typename LTy, typename RTy> struct match_combine_and {
   }
 };
 
-/// Combine two pattern matchers matching L || R
+                                                
 template <typename LTy, typename RTy>
 inline match_combine_or<LTy, RTy> m_CombineOr(const LTy &L, const RTy &R) {
   return match_combine_or<LTy, RTy>(L, R);
 }
 
-/// Combine two pattern matchers matching L && R
+                                                
 template <typename LTy, typename RTy>
 inline match_combine_and<LTy, RTy> m_CombineAnd(const LTy &L, const RTy &R) {
   return match_combine_and<LTy, RTy>(L, R);
@@ -151,9 +151,9 @@ struct apint_match {
     return false;
   }
 };
-// Either constexpr if or renaming ConstantFP::getValueAPF to
-// ConstantFP::getValue is needed to do it via single template
-// function for both apint/apfloat.
+                                                             
+                                                              
+                                   
 struct apfloat_match {
   const APFloat *&Res;
   apfloat_match(const APFloat *&R) : Res(R) {}
@@ -172,12 +172,12 @@ struct apfloat_match {
   }
 };
 
-/// Match a ConstantInt or splatted ConstantVector, binding the
-/// specified pointer to the contained APInt.
+                                                               
+                                             
 inline apint_match m_APInt(const APInt *&Res) { return Res; }
 
-/// Match a ConstantFP or splatted ConstantVector, binding the
-/// specified pointer to the contained APFloat.
+                                                              
+                                               
 inline apfloat_match m_APFloat(const APFloat *&Res) { return Res; }
 
 template <int64_t Val> struct constantint_match {
@@ -186,23 +186,23 @@ template <int64_t Val> struct constantint_match {
       const APInt &CIV = CI->getValue();
       if (Val >= 0)
         return CIV == static_cast<uint64_t>(Val);
-      // If Val is negative, and CI is shorter than it, truncate to the right
-      // number of bits.  If it is larger, then we have to sign extend.  Just
-      // compare their negated values.
+                                                                             
+                                                                             
+                                      
       return -CIV == -Val;
     }
     return false;
   }
 };
 
-/// Match a ConstantInt with a specific value.
+                                              
 template <int64_t Val> inline constantint_match<Val> m_ConstantInt() {
   return constantint_match<Val>();
 }
 
-/// This helper class is used to match scalar and vector integer constants that
-/// satisfy a specified predicate.
-/// For vector constants, undefined elements are ignored.
+                                                                               
+                                  
+                                                         
 template <typename Predicate> struct cst_pred_ty : public Predicate {
   template <typename ITy> bool match(ITy *V) {
     if (const auto *CI = dyn_cast<ConstantInt>(V))
@@ -212,7 +212,7 @@ template <typename Predicate> struct cst_pred_ty : public Predicate {
         if (const auto *CI = dyn_cast_or_null<ConstantInt>(C->getSplatValue()))
           return this->isValue(CI->getValue());
 
-        // Non-splat vector constant: check each element for a match.
+                                                                     
         unsigned NumElts = V->getType()->getVectorNumElements();
         assert(NumElts != 0 && "Constant vector with no elements?");
         for (unsigned i = 0; i != NumElts; ++i) {
@@ -232,8 +232,8 @@ template <typename Predicate> struct cst_pred_ty : public Predicate {
   }
 };
 
-/// This helper class is used to match scalar and vector constants that
-/// satisfy a specified predicate, and bind them to an APInt.
+                                                                       
+                                                             
 template <typename Predicate> struct api_pred_ty : public Predicate {
   const APInt *&Res;
 
@@ -257,9 +257,9 @@ template <typename Predicate> struct api_pred_ty : public Predicate {
   }
 };
 
-/// This helper class is used to match scalar and vector floating-point
-/// constants that satisfy a specified predicate.
-/// For vector constants, undefined elements are ignored.
+                                                                       
+                                                 
+                                                         
 template <typename Predicate> struct cstfp_pred_ty : public Predicate {
   template <typename ITy> bool match(ITy *V) {
     if (const auto *CF = dyn_cast<ConstantFP>(V))
@@ -269,7 +269,7 @@ template <typename Predicate> struct cstfp_pred_ty : public Predicate {
         if (const auto *CF = dyn_cast_or_null<ConstantFP>(C->getSplatValue()))
           return this->isValue(CF->getValueAPF());
 
-        // Non-splat vector constant: check each element for a match.
+                                                                     
         unsigned NumElts = V->getType()->getVectorNumElements();
         assert(NumElts != 0 && "Constant vector with no elements?");
         for (unsigned i = 0; i != NumElts; ++i) {
@@ -289,20 +289,20 @@ template <typename Predicate> struct cstfp_pred_ty : public Predicate {
   }
 };
 
-///////////////////////////////////////////////////////////////////////////////
-//
-// Encapsulate constant value queries for use in templated predicate matchers.
-// This allows checking if constants match using compound predicates and works
-// with vector constants, possibly with relaxed constraints. For example, ignore
-// undef values.
-//
-///////////////////////////////////////////////////////////////////////////////
+                                                                               
+  
+                                                                              
+                                                                              
+                                                                                
+                
+  
+                                                                               
 
 struct is_all_ones {
   bool isValue(const APInt &C) { return C.isAllOnesValue(); }
 };
-/// Match an integer or vector with all bits set.
-/// For vectors, this includes constants with undefined elements.
+                                                 
+                                                                 
 inline cst_pred_ty<is_all_ones> m_AllOnes() {
   return cst_pred_ty<is_all_ones>();
 }
@@ -310,9 +310,9 @@ inline cst_pred_ty<is_all_ones> m_AllOnes() {
 struct is_maxsignedvalue {
   bool isValue(const APInt &C) { return C.isMaxSignedValue(); }
 };
-/// Match an integer or vector with values having all bits except for the high
-/// bit set (0x7f...).
-/// For vectors, this includes constants with undefined elements.
+                                                                              
+                      
+                                                                 
 inline cst_pred_ty<is_maxsignedvalue> m_MaxSignedValue() {
   return cst_pred_ty<is_maxsignedvalue>();
 }
@@ -323,8 +323,8 @@ inline api_pred_ty<is_maxsignedvalue> m_MaxSignedValue(const APInt *&V) {
 struct is_negative {
   bool isValue(const APInt &C) { return C.isNegative(); }
 };
-/// Match an integer or vector of negative values.
-/// For vectors, this includes constants with undefined elements.
+                                                  
+                                                                 
 inline cst_pred_ty<is_negative> m_Negative() {
   return cst_pred_ty<is_negative>();
 }
@@ -335,8 +335,8 @@ inline api_pred_ty<is_negative> m_Negative(const APInt *&V) {
 struct is_nonnegative {
   bool isValue(const APInt &C) { return C.isNonNegative(); }
 };
-/// Match an integer or vector of nonnegative values.
-/// For vectors, this includes constants with undefined elements.
+                                                     
+                                                                 
 inline cst_pred_ty<is_nonnegative> m_NonNegative() {
   return cst_pred_ty<is_nonnegative>();
 }
@@ -347,8 +347,8 @@ inline api_pred_ty<is_nonnegative> m_NonNegative(const APInt *&V) {
 struct is_one {
   bool isValue(const APInt &C) { return C.isOneValue(); }
 };
-/// Match an integer 1 or a vector with all elements equal to 1.
-/// For vectors, this includes constants with undefined elements.
+                                                                
+                                                                 
 inline cst_pred_ty<is_one> m_One() {
   return cst_pred_ty<is_one>();
 }
@@ -356,8 +356,8 @@ inline cst_pred_ty<is_one> m_One() {
 struct is_zero_int {
   bool isValue(const APInt &C) { return C.isNullValue(); }
 };
-/// Match an integer 0 or a vector with all elements equal to 0.
-/// For vectors, this includes constants with undefined elements.
+                                                                
+                                                                 
 inline cst_pred_ty<is_zero_int> m_ZeroInt() {
   return cst_pred_ty<is_zero_int>();
 }
@@ -368,8 +368,8 @@ struct is_zero {
     return C && (C->isNullValue() || cst_pred_ty<is_zero_int>().match(C));
   }
 };
-/// Match any null constant or a vector with all elements equal to 0.
-/// For vectors, this includes constants with undefined elements.
+                                                                     
+                                                                 
 inline is_zero m_Zero() {
   return is_zero();
 }
@@ -377,8 +377,8 @@ inline is_zero m_Zero() {
 struct is_power2 {
   bool isValue(const APInt &C) { return C.isPowerOf2(); }
 };
-/// Match an integer or vector power-of-2.
-/// For vectors, this includes constants with undefined elements.
+                                          
+                                                                 
 inline cst_pred_ty<is_power2> m_Power2() {
   return cst_pred_ty<is_power2>();
 }
@@ -389,8 +389,8 @@ inline api_pred_ty<is_power2> m_Power2(const APInt *&V) {
 struct is_power2_or_zero {
   bool isValue(const APInt &C) { return !C || C.isPowerOf2(); }
 };
-/// Match an integer or vector of 0 or power-of-2 values.
-/// For vectors, this includes constants with undefined elements.
+                                                         
+                                                                 
 inline cst_pred_ty<is_power2_or_zero> m_Power2OrZero() {
   return cst_pred_ty<is_power2_or_zero>();
 }
@@ -401,8 +401,8 @@ inline api_pred_ty<is_power2_or_zero> m_Power2OrZero(const APInt *&V) {
 struct is_sign_mask {
   bool isValue(const APInt &C) { return C.isSignMask(); }
 };
-/// Match an integer or vector with only the sign bit(s) set.
-/// For vectors, this includes constants with undefined elements.
+                                                             
+                                                                 
 inline cst_pred_ty<is_sign_mask> m_SignMask() {
   return cst_pred_ty<is_sign_mask>();
 }
@@ -410,8 +410,8 @@ inline cst_pred_ty<is_sign_mask> m_SignMask() {
 struct is_lowbit_mask {
   bool isValue(const APInt &C) { return C.isMask(); }
 };
-/// Match an integer or vector with only the low bit(s) set.
-/// For vectors, this includes constants with undefined elements.
+                                                            
+                                                                 
 inline cst_pred_ty<is_lowbit_mask> m_LowBitMask() {
   return cst_pred_ty<is_lowbit_mask>();
 }
@@ -419,8 +419,8 @@ inline cst_pred_ty<is_lowbit_mask> m_LowBitMask() {
 struct is_nan {
   bool isValue(const APFloat &C) { return C.isNaN(); }
 };
-/// Match an arbitrary NaN constant. This includes quiet and signalling nans.
-/// For vectors, this includes constants with undefined elements.
+                                                                             
+                                                                 
 inline cstfp_pred_ty<is_nan> m_NaN() {
   return cstfp_pred_ty<is_nan>();
 }
@@ -428,8 +428,8 @@ inline cstfp_pred_ty<is_nan> m_NaN() {
 struct is_any_zero_fp {
   bool isValue(const APFloat &C) { return C.isZero(); }
 };
-/// Match a floating-point negative zero or positive zero.
-/// For vectors, this includes constants with undefined elements.
+                                                          
+                                                                 
 inline cstfp_pred_ty<is_any_zero_fp> m_AnyZeroFP() {
   return cstfp_pred_ty<is_any_zero_fp>();
 }
@@ -437,8 +437,8 @@ inline cstfp_pred_ty<is_any_zero_fp> m_AnyZeroFP() {
 struct is_pos_zero_fp {
   bool isValue(const APFloat &C) { return C.isPosZero(); }
 };
-/// Match a floating-point positive zero.
-/// For vectors, this includes constants with undefined elements.
+                                         
+                                                                 
 inline cstfp_pred_ty<is_pos_zero_fp> m_PosZeroFP() {
   return cstfp_pred_ty<is_pos_zero_fp>();
 }
@@ -446,13 +446,13 @@ inline cstfp_pred_ty<is_pos_zero_fp> m_PosZeroFP() {
 struct is_neg_zero_fp {
   bool isValue(const APFloat &C) { return C.isNegZero(); }
 };
-/// Match a floating-point negative zero.
-/// For vectors, this includes constants with undefined elements.
+                                         
+                                                                 
 inline cstfp_pred_ty<is_neg_zero_fp> m_NegZeroFP() {
   return cstfp_pred_ty<is_neg_zero_fp>();
 }
 
-///////////////////////////////////////////////////////////////////////////////
+                                                                               
 
 template <typename Class> struct bind_ty {
   Class *&VR;
@@ -468,25 +468,25 @@ template <typename Class> struct bind_ty {
   }
 };
 
-/// Match a value, capturing it if we match.
+                                            
 inline bind_ty<Value> m_Value(Value *&V) { return V; }
 inline bind_ty<const Value> m_Value(const Value *&V) { return V; }
 
-/// Match an instruction, capturing it if we match.
+                                                   
 inline bind_ty<Instruction> m_Instruction(Instruction *&I) { return I; }
-/// Match a binary operator, capturing it if we match.
+                                                      
 inline bind_ty<BinaryOperator> m_BinOp(BinaryOperator *&I) { return I; }
 
-/// Match a ConstantInt, capturing the value if we match.
+                                                         
 inline bind_ty<ConstantInt> m_ConstantInt(ConstantInt *&CI) { return CI; }
 
-/// Match a Constant, capturing the value if we match.
+                                                      
 inline bind_ty<Constant> m_Constant(Constant *&C) { return C; }
 
-/// Match a ConstantFP, capturing the value if we match.
+                                                        
 inline bind_ty<ConstantFP> m_ConstantFP(ConstantFP *&C) { return C; }
 
-/// Match a specified Value*.
+                             
 struct specificval_ty {
   const Value *Val;
 
@@ -495,11 +495,11 @@ struct specificval_ty {
   template <typename ITy> bool match(ITy *V) { return V == Val; }
 };
 
-/// Match if we have a specific specified value.
+                                                
 inline specificval_ty m_Specific(const Value *V) { return V; }
 
-/// Stores a reference to the Value *, not the Value * itself,
-/// thus can be used in commutative matchers.
+                                                              
+                                             
 template <typename Class> struct deferredval_ty {
   Class *const &Val;
 
@@ -508,14 +508,14 @@ template <typename Class> struct deferredval_ty {
   template <typename ITy> bool match(ITy *const V) { return V == Val; }
 };
 
-/// A commutative-friendly version of m_Specific().
+                                                   
 inline deferredval_ty<Value> m_Deferred(Value *const &V) { return V; }
 inline deferredval_ty<const Value> m_Deferred(const Value *const &V) {
   return V;
 }
 
-/// Match a specified floating point value or vector of all elements of
-/// that value.
+                                                                       
+               
 struct specific_fpval {
   double Val;
 
@@ -532,11 +532,11 @@ struct specific_fpval {
   }
 };
 
-/// Match a specific floating point value or vector with all elements
-/// equal to the value.
+                                                                     
+                       
 inline specific_fpval m_SpecificFP(double V) { return specific_fpval(V); }
 
-/// Match a float 1.0 or vector with all elements equal to 1.0.
+                                                               
 inline specific_fpval m_FPOne() { return m_SpecificFP(1.0); }
 
 struct bind_const_intval_ty {
@@ -554,8 +554,8 @@ struct bind_const_intval_ty {
   }
 };
 
-/// Match a specified integer value or vector of all elements of that
-// value.
+                                                                     
+         
 struct specific_intval {
   uint64_t Val;
 
@@ -571,24 +571,24 @@ struct specific_intval {
   }
 };
 
-/// Match a specific integer value or vector with all elements equal to
-/// the value.
+                                                                       
+              
 inline specific_intval m_SpecificInt(uint64_t V) { return specific_intval(V); }
 
-/// Match a ConstantInt and bind to its value.  This does not match
-/// ConstantInts wider than 64-bits.
+                                                                   
+                                    
 inline bind_const_intval_ty m_ConstantInt(uint64_t &V) { return V; }
 
-//===----------------------------------------------------------------------===//
-// Matcher for any binary operator.
-//
+                                                                                
+                                   
+  
 template <typename LHS_t, typename RHS_t, bool Commutable = false>
 struct AnyBinaryOp_match {
   LHS_t L;
   RHS_t R;
 
-  // The evaluation order is always stable, regardless of Commutability.
-  // The LHS is always matched first.
+                                                                        
+                                     
   AnyBinaryOp_match(const LHS_t &LHS, const RHS_t &RHS) : L(LHS), R(RHS) {}
 
   template <typename OpTy> bool match(OpTy *V) {
@@ -605,9 +605,9 @@ inline AnyBinaryOp_match<LHS, RHS> m_BinOp(const LHS &L, const RHS &R) {
   return AnyBinaryOp_match<LHS, RHS>(L, R);
 }
 
-//===----------------------------------------------------------------------===//
-// Matchers for specific binary operators.
-//
+                                                                                
+                                          
+  
 
 template <typename LHS_t, typename RHS_t, unsigned Opcode,
           bool Commutable = false>
@@ -615,8 +615,8 @@ struct BinaryOp_match {
   LHS_t L;
   RHS_t R;
 
-  // The evaluation order is always stable, regardless of Commutability.
-  // The LHS is always matched first.
+                                                                        
+                                     
   BinaryOp_match(const LHS_t &LHS, const RHS_t &RHS) : L(LHS), R(RHS) {}
 
   template <typename OpTy> bool match(OpTy *V) {
@@ -659,7 +659,7 @@ inline BinaryOp_match<LHS, RHS, Instruction::FSub> m_FSub(const LHS &L,
   return BinaryOp_match<LHS, RHS, Instruction::FSub>(L, R);
 }
 
-/// Match 'fneg X' as 'fsub -0.0, X'.
+                                     
 template <typename RHS>
 inline BinaryOp_match<cstfp_pred_ty<is_neg_zero_fp>, RHS, Instruction::FSub>
 m_FNeg(const RHS &X) {
@@ -841,9 +841,9 @@ m_NUWShl(const LHS &L, const RHS &R) {
       L, R);
 }
 
-//===----------------------------------------------------------------------===//
-// Class that matches a group of binary opcodes.
-//
+                                                                                
+                                                
+  
 template <typename LHS_t, typename RHS_t, typename Predicate>
 struct BinOpPred_match : Predicate {
   LHS_t L;
@@ -890,44 +890,44 @@ struct is_idiv_op {
   }
 };
 
-/// Matches shift operations.
+                             
 template <typename LHS, typename RHS>
 inline BinOpPred_match<LHS, RHS, is_shift_op> m_Shift(const LHS &L,
                                                       const RHS &R) {
   return BinOpPred_match<LHS, RHS, is_shift_op>(L, R);
 }
 
-/// Matches logical shift operations.
+                                     
 template <typename LHS, typename RHS>
 inline BinOpPred_match<LHS, RHS, is_right_shift_op> m_Shr(const LHS &L,
                                                           const RHS &R) {
   return BinOpPred_match<LHS, RHS, is_right_shift_op>(L, R);
 }
 
-/// Matches logical shift operations.
+                                     
 template <typename LHS, typename RHS>
 inline BinOpPred_match<LHS, RHS, is_logical_shift_op>
 m_LogicalShift(const LHS &L, const RHS &R) {
   return BinOpPred_match<LHS, RHS, is_logical_shift_op>(L, R);
 }
 
-/// Matches bitwise logic operations.
+                                     
 template <typename LHS, typename RHS>
 inline BinOpPred_match<LHS, RHS, is_bitwiselogic_op>
 m_BitwiseLogic(const LHS &L, const RHS &R) {
   return BinOpPred_match<LHS, RHS, is_bitwiselogic_op>(L, R);
 }
 
-/// Matches integer division operations.
+                                        
 template <typename LHS, typename RHS>
 inline BinOpPred_match<LHS, RHS, is_idiv_op> m_IDiv(const LHS &L,
                                                     const RHS &R) {
   return BinOpPred_match<LHS, RHS, is_idiv_op>(L, R);
 }
 
-//===----------------------------------------------------------------------===//
-// Class that matches exact binary ops.
-//
+                                                                                
+                                       
+  
 template <typename SubPattern_t> struct Exact_match {
   SubPattern_t SubPattern;
 
@@ -944,9 +944,9 @@ template <typename T> inline Exact_match<T> m_Exact(const T &SubPattern) {
   return SubPattern;
 }
 
-//===----------------------------------------------------------------------===//
-// Matchers for CmpInst classes
-//
+                                                                                
+                               
+  
 
 template <typename LHS_t, typename RHS_t, typename Class, typename PredicateTy,
           bool Commutable = false>
@@ -955,8 +955,8 @@ struct CmpClass_match {
   LHS_t L;
   RHS_t R;
 
-  // The evaluation order is always stable, regardless of Commutability.
-  // The LHS is always matched first.
+                                                                        
+                                     
   CmpClass_match(PredicateTy &Pred, const LHS_t &LHS, const RHS_t &RHS)
       : Predicate(Pred), L(LHS), R(RHS) {}
 
@@ -990,11 +990,11 @@ m_FCmp(FCmpInst::Predicate &Pred, const LHS &L, const RHS &R) {
   return CmpClass_match<LHS, RHS, FCmpInst, FCmpInst::Predicate>(Pred, L, R);
 }
 
-//===----------------------------------------------------------------------===//
-// Matchers for instructions with a given opcode and number of operands.
-//
+                                                                                
+                                                                        
+  
 
-/// Matches instructions with Opcode and three operands.
+                                                        
 template <typename T0, unsigned Opcode> struct OneOps_match {
   T0 Op1;
 
@@ -1009,7 +1009,7 @@ template <typename T0, unsigned Opcode> struct OneOps_match {
   }
 };
 
-/// Matches instructions with Opcode and three operands.
+                                                        
 template <typename T0, typename T1, unsigned Opcode> struct TwoOps_match {
   T0 Op1;
   T1 Op2;
@@ -1025,7 +1025,7 @@ template <typename T0, typename T1, unsigned Opcode> struct TwoOps_match {
   }
 };
 
-/// Matches instructions with Opcode and three operands.
+                                                        
 template <typename T0, typename T1, typename T2, unsigned Opcode>
 struct ThreeOps_match {
   T0 Op1;
@@ -1045,15 +1045,15 @@ struct ThreeOps_match {
   }
 };
 
-/// Matches SelectInst.
+                       
 template <typename Cond, typename LHS, typename RHS>
 inline ThreeOps_match<Cond, LHS, RHS, Instruction::Select>
 m_Select(const Cond &C, const LHS &L, const RHS &R) {
   return ThreeOps_match<Cond, LHS, RHS, Instruction::Select>(C, L, R);
 }
 
-/// This matches a select of two constants, e.g.:
-/// m_SelectCst<-1, 0>(m_Value(V))
+                                                 
+                                  
 template <int64_t L, int64_t R, typename Cond>
 inline ThreeOps_match<Cond, constantint_match<L>, constantint_match<R>,
                       Instruction::Select>
@@ -1061,7 +1061,7 @@ m_SelectCst(const Cond &C) {
   return m_Select(C, m_ConstantInt<L>(), m_ConstantInt<R>());
 }
 
-/// Matches InsertElementInst.
+                              
 template <typename Val_t, typename Elt_t, typename Idx_t>
 inline ThreeOps_match<Val_t, Elt_t, Idx_t, Instruction::InsertElement>
 m_InsertElement(const Val_t &Val, const Elt_t &Elt, const Idx_t &Idx) {
@@ -1069,14 +1069,14 @@ m_InsertElement(const Val_t &Val, const Elt_t &Elt, const Idx_t &Idx) {
       Val, Elt, Idx);
 }
 
-/// Matches ExtractElementInst.
+                               
 template <typename Val_t, typename Idx_t>
 inline TwoOps_match<Val_t, Idx_t, Instruction::ExtractElement>
 m_ExtractElement(const Val_t &Val, const Idx_t &Idx) {
   return TwoOps_match<Val_t, Idx_t, Instruction::ExtractElement>(Val, Idx);
 }
 
-/// Matches ShuffleVectorInst.
+                              
 template <typename V1_t, typename V2_t, typename Mask_t>
 inline ThreeOps_match<V1_t, V2_t, Mask_t, Instruction::ShuffleVector>
 m_ShuffleVector(const V1_t &v1, const V2_t &v2, const Mask_t &m) {
@@ -1084,13 +1084,13 @@ m_ShuffleVector(const V1_t &v1, const V2_t &v2, const Mask_t &m) {
                                                                         m);
 }
 
-/// Matches LoadInst.
+                     
 template <typename OpTy>
 inline OneOps_match<OpTy, Instruction::Load> m_Load(const OpTy &Op) {
   return OneOps_match<OpTy, Instruction::Load>(Op);
 }
 
-/// Matches StoreInst.
+                      
 template <typename ValueOpTy, typename PointerOpTy>
 inline TwoOps_match<ValueOpTy, PointerOpTy, Instruction::Store>
 m_Store(const ValueOpTy &ValueOp, const PointerOpTy &PointerOp) {
@@ -1098,9 +1098,9 @@ m_Store(const ValueOpTy &ValueOp, const PointerOpTy &PointerOp) {
                                                                   PointerOp);
 }
 
-//===----------------------------------------------------------------------===//
-// Matchers for CastInst classes
-//
+                                                                                
+                                
+  
 
 template <typename Op_t, unsigned Opcode> struct CastClass_match {
   Op_t Op;
@@ -1114,31 +1114,31 @@ template <typename Op_t, unsigned Opcode> struct CastClass_match {
   }
 };
 
-/// Matches BitCast.
+                    
 template <typename OpTy>
 inline CastClass_match<OpTy, Instruction::BitCast> m_BitCast(const OpTy &Op) {
   return CastClass_match<OpTy, Instruction::BitCast>(Op);
 }
 
-/// Matches PtrToInt.
+                     
 template <typename OpTy>
 inline CastClass_match<OpTy, Instruction::PtrToInt> m_PtrToInt(const OpTy &Op) {
   return CastClass_match<OpTy, Instruction::PtrToInt>(Op);
 }
 
-/// Matches Trunc.
+                  
 template <typename OpTy>
 inline CastClass_match<OpTy, Instruction::Trunc> m_Trunc(const OpTy &Op) {
   return CastClass_match<OpTy, Instruction::Trunc>(Op);
 }
 
-/// Matches SExt.
+                 
 template <typename OpTy>
 inline CastClass_match<OpTy, Instruction::SExt> m_SExt(const OpTy &Op) {
   return CastClass_match<OpTy, Instruction::SExt>(Op);
 }
 
-/// Matches ZExt.
+                 
 template <typename OpTy>
 inline CastClass_match<OpTy, Instruction::ZExt> m_ZExt(const OpTy &Op) {
   return CastClass_match<OpTy, Instruction::ZExt>(Op);
@@ -1151,33 +1151,33 @@ m_ZExtOrSExt(const OpTy &Op) {
   return m_CombineOr(m_ZExt(Op), m_SExt(Op));
 }
 
-/// Matches UIToFP.
+                   
 template <typename OpTy>
 inline CastClass_match<OpTy, Instruction::UIToFP> m_UIToFP(const OpTy &Op) {
   return CastClass_match<OpTy, Instruction::UIToFP>(Op);
 }
 
-/// Matches SIToFP.
+                   
 template <typename OpTy>
 inline CastClass_match<OpTy, Instruction::SIToFP> m_SIToFP(const OpTy &Op) {
   return CastClass_match<OpTy, Instruction::SIToFP>(Op);
 }
 
-/// Matches FPTrunc
+                   
 template <typename OpTy>
 inline CastClass_match<OpTy, Instruction::FPTrunc> m_FPTrunc(const OpTy &Op) {
   return CastClass_match<OpTy, Instruction::FPTrunc>(Op);
 }
 
-/// Matches FPExt
+                 
 template <typename OpTy>
 inline CastClass_match<OpTy, Instruction::FPExt> m_FPExt(const OpTy &Op) {
   return CastClass_match<OpTy, Instruction::FPExt>(Op);
 }
 
-//===----------------------------------------------------------------------===//
-// Matchers for control flow.
-//
+                                                                                
+                             
+  
 
 struct br_match {
   BasicBlock *&Succ;
@@ -1219,9 +1219,9 @@ inline brc_match<Cond_t> m_Br(const Cond_t &C, BasicBlock *&T, BasicBlock *&F) {
   return brc_match<Cond_t>(C, T, F);
 }
 
-//===----------------------------------------------------------------------===//
-// Matchers for max/min idioms, eg: "select (sgt x, y), x, y" -> smax(x,y).
-//
+                                                                                
+                                                                           
+  
 
 template <typename CmpInst_t, typename LHS_t, typename RHS_t, typename Pred_t,
           bool Commutable = false>
@@ -1229,20 +1229,20 @@ struct MaxMin_match {
   LHS_t L;
   RHS_t R;
 
-  // The evaluation order is always stable, regardless of Commutability.
-  // The LHS is always matched first.
+                                                                        
+                                     
   MaxMin_match(const LHS_t &LHS, const RHS_t &RHS) : L(LHS), R(RHS) {}
 
   template <typename OpTy> bool match(OpTy *V) {
-    // Look for "(x pred y) ? x : y" or "(x pred y) ? y : x".
+                                                             
     auto *SI = dyn_cast<SelectInst>(V);
     if (!SI)
       return false;
     auto *Cmp = dyn_cast<CmpInst_t>(SI->getCondition());
     if (!Cmp)
       return false;
-    // At this point we have a select conditioned on a comparison.  Check that
-    // it is the values returned by the select that are being compared.
+                                                                              
+                                                                       
     Value *TrueVal = SI->getTrueValue();
     Value *FalseVal = SI->getFalseValue();
     Value *LHS = Cmp->getOperand(0);
@@ -1252,65 +1252,65 @@ struct MaxMin_match {
       return false;
     typename CmpInst_t::Predicate Pred =
         LHS == TrueVal ? Cmp->getPredicate() : Cmp->getInversePredicate();
-    // Does "(x pred y) ? x : y" represent the desired max/min operation?
+                                                                         
     if (!Pred_t::match(Pred))
       return false;
-    // It does!  Bind the operands.
+                                   
     return (L.match(LHS) && R.match(RHS)) ||
            (Commutable && L.match(RHS) && R.match(LHS));
   }
 };
 
-/// Helper class for identifying signed max predicates.
+                                                       
 struct smax_pred_ty {
   static bool match(ICmpInst::Predicate Pred) {
     return Pred == CmpInst::ICMP_SGT || Pred == CmpInst::ICMP_SGE;
   }
 };
 
-/// Helper class for identifying signed min predicates.
+                                                       
 struct smin_pred_ty {
   static bool match(ICmpInst::Predicate Pred) {
     return Pred == CmpInst::ICMP_SLT || Pred == CmpInst::ICMP_SLE;
   }
 };
 
-/// Helper class for identifying unsigned max predicates.
+                                                         
 struct umax_pred_ty {
   static bool match(ICmpInst::Predicate Pred) {
     return Pred == CmpInst::ICMP_UGT || Pred == CmpInst::ICMP_UGE;
   }
 };
 
-/// Helper class for identifying unsigned min predicates.
+                                                         
 struct umin_pred_ty {
   static bool match(ICmpInst::Predicate Pred) {
     return Pred == CmpInst::ICMP_ULT || Pred == CmpInst::ICMP_ULE;
   }
 };
 
-/// Helper class for identifying ordered max predicates.
+                                                        
 struct ofmax_pred_ty {
   static bool match(FCmpInst::Predicate Pred) {
     return Pred == CmpInst::FCMP_OGT || Pred == CmpInst::FCMP_OGE;
   }
 };
 
-/// Helper class for identifying ordered min predicates.
+                                                        
 struct ofmin_pred_ty {
   static bool match(FCmpInst::Predicate Pred) {
     return Pred == CmpInst::FCMP_OLT || Pred == CmpInst::FCMP_OLE;
   }
 };
 
-/// Helper class for identifying unordered max predicates.
+                                                          
 struct ufmax_pred_ty {
   static bool match(FCmpInst::Predicate Pred) {
     return Pred == CmpInst::FCMP_UGT || Pred == CmpInst::FCMP_UGE;
   }
 };
 
-/// Helper class for identifying unordered min predicates.
+                                                          
 struct ufmin_pred_ty {
   static bool match(FCmpInst::Predicate Pred) {
     return Pred == CmpInst::FCMP_ULT || Pred == CmpInst::FCMP_ULE;
@@ -1341,69 +1341,69 @@ inline MaxMin_match<ICmpInst, LHS, RHS, umin_pred_ty> m_UMin(const LHS &L,
   return MaxMin_match<ICmpInst, LHS, RHS, umin_pred_ty>(L, R);
 }
 
-/// Match an 'ordered' floating point maximum function.
-/// Floating point has one special value 'NaN'. Therefore, there is no total
-/// order. However, if we can ignore the 'NaN' value (for example, because of a
-/// 'no-nans-float-math' flag) a combination of a fcmp and select has 'maximum'
-/// semantics. In the presence of 'NaN' we have to preserve the original
-/// select(fcmp(ogt/ge, L, R), L, R) semantics matched by this predicate.
-///
-///                         max(L, R)  iff L and R are not NaN
-///  m_OrdFMax(L, R) =      R          iff L or R are NaN
+                                                       
+                                                                            
+                                                                               
+                                                                               
+                                                                        
+                                                                         
+   
+                                                              
+                                                         
 template <typename LHS, typename RHS>
 inline MaxMin_match<FCmpInst, LHS, RHS, ofmax_pred_ty> m_OrdFMax(const LHS &L,
                                                                  const RHS &R) {
   return MaxMin_match<FCmpInst, LHS, RHS, ofmax_pred_ty>(L, R);
 }
 
-/// Match an 'ordered' floating point minimum function.
-/// Floating point has one special value 'NaN'. Therefore, there is no total
-/// order. However, if we can ignore the 'NaN' value (for example, because of a
-/// 'no-nans-float-math' flag) a combination of a fcmp and select has 'minimum'
-/// semantics. In the presence of 'NaN' we have to preserve the original
-/// select(fcmp(olt/le, L, R), L, R) semantics matched by this predicate.
-///
-///                         min(L, R)  iff L and R are not NaN
-///  m_OrdFMin(L, R) =      R          iff L or R are NaN
+                                                       
+                                                                            
+                                                                               
+                                                                               
+                                                                        
+                                                                         
+   
+                                                              
+                                                         
 template <typename LHS, typename RHS>
 inline MaxMin_match<FCmpInst, LHS, RHS, ofmin_pred_ty> m_OrdFMin(const LHS &L,
                                                                  const RHS &R) {
   return MaxMin_match<FCmpInst, LHS, RHS, ofmin_pred_ty>(L, R);
 }
 
-/// Match an 'unordered' floating point maximum function.
-/// Floating point has one special value 'NaN'. Therefore, there is no total
-/// order. However, if we can ignore the 'NaN' value (for example, because of a
-/// 'no-nans-float-math' flag) a combination of a fcmp and select has 'maximum'
-/// semantics. In the presence of 'NaN' we have to preserve the original
-/// select(fcmp(ugt/ge, L, R), L, R) semantics matched by this predicate.
-///
-///                         max(L, R)  iff L and R are not NaN
-///  m_UnordFMax(L, R) =    L          iff L or R are NaN
+                                                         
+                                                                            
+                                                                               
+                                                                               
+                                                                        
+                                                                         
+   
+                                                              
+                                                         
 template <typename LHS, typename RHS>
 inline MaxMin_match<FCmpInst, LHS, RHS, ufmax_pred_ty>
 m_UnordFMax(const LHS &L, const RHS &R) {
   return MaxMin_match<FCmpInst, LHS, RHS, ufmax_pred_ty>(L, R);
 }
 
-/// Match an 'unordered' floating point minimum function.
-/// Floating point has one special value 'NaN'. Therefore, there is no total
-/// order. However, if we can ignore the 'NaN' value (for example, because of a
-/// 'no-nans-float-math' flag) a combination of a fcmp and select has 'minimum'
-/// semantics. In the presence of 'NaN' we have to preserve the original
-/// select(fcmp(ult/le, L, R), L, R) semantics matched by this predicate.
-///
-///                          min(L, R)  iff L and R are not NaN
-///  m_UnordFMin(L, R) =     L          iff L or R are NaN
+                                                         
+                                                                            
+                                                                               
+                                                                               
+                                                                        
+                                                                         
+   
+                                                               
+                                                          
 template <typename LHS, typename RHS>
 inline MaxMin_match<FCmpInst, LHS, RHS, ufmin_pred_ty>
 m_UnordFMin(const LHS &L, const RHS &R) {
   return MaxMin_match<FCmpInst, LHS, RHS, ufmin_pred_ty>(L, R);
 }
 
-//===----------------------------------------------------------------------===//
-// Matchers for overflow check patterns: e.g. (a + b) u< a
-//
+                                                                                
+                                                          
+  
 
 template <typename LHS_t, typename RHS_t, typename Sum_t>
 struct UAddWithOverflow_match {
@@ -1423,12 +1423,12 @@ struct UAddWithOverflow_match {
     Value *AddLHS, *AddRHS;
     auto AddExpr = m_Add(m_Value(AddLHS), m_Value(AddRHS));
 
-    // (a + b) u< a, (a + b) u< b
+                                 
     if (Pred == ICmpInst::ICMP_ULT)
       if (AddExpr.match(ICmpLHS) && (ICmpRHS == AddLHS || ICmpRHS == AddRHS))
         return L.match(AddLHS) && R.match(AddRHS) && S.match(ICmpLHS);
 
-    // a >u (a + b), b >u (a + b)
+                                 
     if (Pred == ICmpInst::ICMP_UGT)
       if (AddExpr.match(ICmpRHS) && (ICmpLHS == AddLHS || ICmpLHS == AddRHS))
         return L.match(AddLHS) && R.match(AddRHS) && S.match(ICmpRHS);
@@ -1437,10 +1437,10 @@ struct UAddWithOverflow_match {
   }
 };
 
-/// Match an icmp instruction checking for unsigned overflow on addition.
-///
-/// S is matched to the addition whose result is being checked for overflow, and
-/// L and R are matched to the LHS and RHS of S.
+                                                                         
+   
+                                                                                
+                                                
 template <typename LHS_t, typename RHS_t, typename Sum_t>
 UAddWithOverflow_match<LHS_t, RHS_t, Sum_t>
 m_UAddWithOverflow(const LHS_t &L, const RHS_t &R, const Sum_t &S) {
@@ -1459,13 +1459,13 @@ template <typename Opnd_t> struct Argument_match {
   }
 };
 
-/// Match an argument.
+                      
 template <unsigned OpI, typename Opnd_t>
 inline Argument_match<Opnd_t> m_Argument(const Opnd_t &Op) {
   return Argument_match<Opnd_t>(OpI, Op);
 }
 
-/// Intrinsic matchers.
+                       
 struct IntrinsicID_match {
   unsigned ID;
 
@@ -1479,10 +1479,10 @@ struct IntrinsicID_match {
   }
 };
 
-/// Intrinsic matches are combinations of ID matchers, and argument
-/// matchers. Higher arity matcher are defined recursively in terms of and-ing
-/// them with lower arity matchers. Here's some convenient typedefs for up to
-/// several arguments, and more can be added as needed
+                                                                   
+                                                                              
+                                                                             
+                                                      
 template <typename T0 = void, typename T1 = void, typename T2 = void,
           typename T3 = void, typename T4 = void, typename T5 = void,
           typename T6 = void, typename T7 = void, typename T8 = void,
@@ -1508,8 +1508,8 @@ struct m_Intrinsic_Ty<T0, T1, T2, T3> {
                         Argument_match<T3>>;
 };
 
-/// Match intrinsic calls like this:
-/// m_Intrinsic<Intrinsic::fabs>(m_Value(X))
+                                    
+                                            
 template <Intrinsic::ID IntrID> inline IntrinsicID_match m_Intrinsic() {
   return IntrinsicID_match(IntrID);
 }
@@ -1538,7 +1538,7 @@ m_Intrinsic(const T0 &Op0, const T1 &Op1, const T2 &Op2, const T3 &Op3) {
   return m_CombineAnd(m_Intrinsic<IntrID>(Op0, Op1, Op2), m_Argument<3>(Op3));
 }
 
-// Helper intrinsic matching specializations.
+                                             
 template <typename Opnd0>
 inline typename m_Intrinsic_Ty<Opnd0>::Ty m_BitReverse(const Opnd0 &Op0) {
   return m_Intrinsic<Intrinsic::bitreverse>(Op0);
@@ -1571,18 +1571,18 @@ inline typename m_Intrinsic_Ty<Opnd0, Opnd1>::Ty m_FMax(const Opnd0 &Op0,
   return m_Intrinsic<Intrinsic::maxnum>(Op0, Op1);
 }
 
-//===----------------------------------------------------------------------===//
-// Matchers for two-operands operators with the operators in either order
-//
+                                                                                
+                                                                         
+  
 
-/// Matches a BinaryOperator with LHS and RHS in either order.
+                                                              
 template <typename LHS, typename RHS>
 inline AnyBinaryOp_match<LHS, RHS, true> m_c_BinOp(const LHS &L, const RHS &R) {
   return AnyBinaryOp_match<LHS, RHS, true>(L, R);
 }
 
-/// Matches an ICmp with a predicate over LHS and RHS in either order.
-/// Does not swap the predicate.
+                                                                      
+                                
 template <typename LHS, typename RHS>
 inline CmpClass_match<LHS, RHS, ICmpInst, ICmpInst::Predicate, true>
 m_c_ICmp(ICmpInst::Predicate &Pred, const LHS &L, const RHS &R) {
@@ -1590,88 +1590,88 @@ m_c_ICmp(ICmpInst::Predicate &Pred, const LHS &L, const RHS &R) {
                                                                        R);
 }
 
-/// Matches a Add with LHS and RHS in either order.
+                                                   
 template <typename LHS, typename RHS>
 inline BinaryOp_match<LHS, RHS, Instruction::Add, true> m_c_Add(const LHS &L,
                                                                 const RHS &R) {
   return BinaryOp_match<LHS, RHS, Instruction::Add, true>(L, R);
 }
 
-/// Matches a Mul with LHS and RHS in either order.
+                                                   
 template <typename LHS, typename RHS>
 inline BinaryOp_match<LHS, RHS, Instruction::Mul, true> m_c_Mul(const LHS &L,
                                                                 const RHS &R) {
   return BinaryOp_match<LHS, RHS, Instruction::Mul, true>(L, R);
 }
 
-/// Matches an And with LHS and RHS in either order.
+                                                    
 template <typename LHS, typename RHS>
 inline BinaryOp_match<LHS, RHS, Instruction::And, true> m_c_And(const LHS &L,
                                                                 const RHS &R) {
   return BinaryOp_match<LHS, RHS, Instruction::And, true>(L, R);
 }
 
-/// Matches an Or with LHS and RHS in either order.
+                                                   
 template <typename LHS, typename RHS>
 inline BinaryOp_match<LHS, RHS, Instruction::Or, true> m_c_Or(const LHS &L,
                                                               const RHS &R) {
   return BinaryOp_match<LHS, RHS, Instruction::Or, true>(L, R);
 }
 
-/// Matches an Xor with LHS and RHS in either order.
+                                                    
 template <typename LHS, typename RHS>
 inline BinaryOp_match<LHS, RHS, Instruction::Xor, true> m_c_Xor(const LHS &L,
                                                                 const RHS &R) {
   return BinaryOp_match<LHS, RHS, Instruction::Xor, true>(L, R);
 }
 
-/// Matches a 'Neg' as 'sub 0, V'.
+                                  
 template <typename ValTy>
 inline BinaryOp_match<cst_pred_ty<is_zero_int>, ValTy, Instruction::Sub>
 m_Neg(const ValTy &V) {
   return m_Sub(m_ZeroInt(), V);
 }
 
-/// Matches a 'Not' as 'xor V, -1' or 'xor -1, V'.
+                                                  
 template <typename ValTy>
 inline BinaryOp_match<ValTy, cst_pred_ty<is_all_ones>, Instruction::Xor, true>
 m_Not(const ValTy &V) {
   return m_c_Xor(V, m_AllOnes());
 }
 
-/// Matches an SMin with LHS and RHS in either order.
+                                                     
 template <typename LHS, typename RHS>
 inline MaxMin_match<ICmpInst, LHS, RHS, smin_pred_ty, true>
 m_c_SMin(const LHS &L, const RHS &R) {
   return MaxMin_match<ICmpInst, LHS, RHS, smin_pred_ty, true>(L, R);
 }
-/// Matches an SMax with LHS and RHS in either order.
+                                                     
 template <typename LHS, typename RHS>
 inline MaxMin_match<ICmpInst, LHS, RHS, smax_pred_ty, true>
 m_c_SMax(const LHS &L, const RHS &R) {
   return MaxMin_match<ICmpInst, LHS, RHS, smax_pred_ty, true>(L, R);
 }
-/// Matches a UMin with LHS and RHS in either order.
+                                                    
 template <typename LHS, typename RHS>
 inline MaxMin_match<ICmpInst, LHS, RHS, umin_pred_ty, true>
 m_c_UMin(const LHS &L, const RHS &R) {
   return MaxMin_match<ICmpInst, LHS, RHS, umin_pred_ty, true>(L, R);
 }
-/// Matches a UMax with LHS and RHS in either order.
+                                                    
 template <typename LHS, typename RHS>
 inline MaxMin_match<ICmpInst, LHS, RHS, umax_pred_ty, true>
 m_c_UMax(const LHS &L, const RHS &R) {
   return MaxMin_match<ICmpInst, LHS, RHS, umax_pred_ty, true>(L, R);
 }
 
-/// Matches FAdd with LHS and RHS in either order.
+                                                  
 template <typename LHS, typename RHS>
 inline BinaryOp_match<LHS, RHS, Instruction::FAdd, true>
 m_c_FAdd(const LHS &L, const RHS &R) {
   return BinaryOp_match<LHS, RHS, Instruction::FAdd, true>(L, R);
 }
 
-/// Matches FMul with LHS and RHS in either order.
+                                                  
 template <typename LHS, typename RHS>
 inline BinaryOp_match<LHS, RHS, Instruction::FMul, true>
 m_c_FMul(const LHS &L, const RHS &R) {
@@ -1690,15 +1690,15 @@ template <typename Opnd_t> struct Signum_match {
     unsigned ShiftWidth = TypeSize - 1;
     Value *OpL = nullptr, *OpR = nullptr;
 
-    // This is the representation of signum we match:
-    //
-    //  signum(x) == (x >> 63) | (-x >>u 63)
-    //
-    // An i1 value is its own signum, so it's correct to match
-    //
-    //  signum(x) == (x >> 0)  | (-x >>u 0)
-    //
-    // for i1 values.
+                                                     
+      
+                                            
+      
+                                                              
+      
+                                           
+      
+                     
 
     auto LHS = m_AShr(m_Value(OpL), m_SpecificInt(ShiftWidth));
     auto RHS = m_LShr(m_Neg(m_Value(OpR)), m_SpecificInt(ShiftWidth));
@@ -1708,17 +1708,17 @@ template <typename Opnd_t> struct Signum_match {
   }
 };
 
-/// Matches a signum pattern.
-///
-/// signum(x) =
-///      x >  0  ->  1
-///      x == 0  ->  0
-///      x <  0  -> -1
+                             
+   
+               
+                      
+                      
+                      
 template <typename Val_t> inline Signum_match<Val_t> m_Signum(const Val_t &V) {
   return Signum_match<Val_t>(V);
 }
 
-} // end namespace PatternMatch
-} // end namespace llvh
+}                              
+}                      
 
-#endif // LLVM_IR_PATTERNMATCH_H
+#endif                          

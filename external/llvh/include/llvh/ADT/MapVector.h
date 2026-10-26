@@ -34,9 +34,9 @@
 
 namespace llvh {
 
-/// This class implements a map that also provides access to all stored values
-/// in a deterministic order. The values are kept in a std::vector and the
-/// mapping is done with DenseMap from Keys to indexes in that vector.
+                                                                              
+                                                                          
+                                                                      
 template<typename KeyT, typename ValueT,
          typename MapType = DenseMap<KeyT, unsigned>,
          typename VectorType = std::vector<std::pair<KeyT, ValueT>>>
@@ -57,7 +57,7 @@ public:
   using reverse_iterator = typename VectorType::reverse_iterator;
   using const_reverse_iterator = typename VectorType::const_reverse_iterator;
 
-  /// Clear the MapVector and return the underlying vector.
+                                                           
   VectorType takeVector() {
     Map.clear();
     return std::move(Vector);
@@ -65,8 +65,8 @@ public:
 
   size_type size() const { return Vector.size(); }
 
-  /// Grow the MapVector so that it can contain at least \p NumEntries items
-  /// before resizing again.
+                                                                            
+                            
   void reserve(size_type NumEntries) {
     Map.reserve(NumEntries);
     Vector.reserve(NumEntries);
@@ -112,7 +112,7 @@ public:
     return Vector[I].second;
   }
 
-  // Returns a copy of the value.  Only allowed if ValueT is copyable.
+                                                                      
   ValueT lookup(const KeyT &Key) const {
     static_assert(std::is_copy_constructible<ValueT>::value,
                   "Cannot call lookup() if ValueT is not copyable.");
@@ -133,7 +133,7 @@ public:
   }
 
   std::pair<iterator, bool> insert(std::pair<KeyT, ValueT> &&KV) {
-    // Copy KV.first into the map, then move it into the vector.
+                                                                
     std::pair<KeyT, typename MapType::mapped_type> Pair = std::make_pair(KV.first, 0);
     std::pair<typename MapType::iterator, bool> Result = Map.insert(Pair);
     auto &I = Result.first->second;
@@ -162,27 +162,27 @@ public:
                             (Vector.begin() + Pos->second);
   }
 
-  /// Remove the last element from the vector.
+                                              
   void pop_back() {
     typename MapType::iterator Pos = Map.find(Vector.back().first);
     Map.erase(Pos);
     Vector.pop_back();
   }
 
-  /// Remove the element given by Iterator.
-  ///
-  /// Returns an iterator to the element following the one which was removed,
-  /// which may be end().
-  ///
-  /// \note This is a deceivingly expensive operation (linear time).  It's
-  /// usually better to use \a remove_if() if possible.
+                                           
+     
+                                                                             
+                         
+     
+                                                                          
+                                                       
   typename VectorType::iterator erase(typename VectorType::iterator Iterator) {
     Map.erase(Iterator->first);
     auto Next = Vector.erase(Iterator);
     if (Next == Vector.end())
       return Next;
 
-    // Update indices in the map.
+                                 
     size_t Index = Next - Vector.begin();
     for (auto &I : Map) {
       assert(I.second != Index && "Index was already erased!");
@@ -192,9 +192,9 @@ public:
     return Next;
   }
 
-  /// Remove all elements with the key value Key.
-  ///
-  /// Returns the number of elements removed.
+                                                 
+     
+                                             
   size_type erase(const KeyT &Key) {
     auto Iterator = find(Key);
     if (Iterator == end())
@@ -203,10 +203,10 @@ public:
     return 1;
   }
 
-  /// Remove the elements that match the predicate.
-  ///
-  /// Erase all elements that match \c Pred in a single pass.  Takes linear
-  /// time.
+                                                   
+     
+                                                                           
+           
   template <class Predicate> void remove_if(Predicate Pred);
 };
 
@@ -216,32 +216,32 @@ void MapVector<KeyT, ValueT, MapType, VectorType>::remove_if(Function Pred) {
   auto O = Vector.begin();
   for (auto I = O, E = Vector.end(); I != E; ++I) {
     if (Pred(*I)) {
-      // Erase from the map.
+                            
       Map.erase(I->first);
       continue;
     }
 
     if (I != O) {
-      // Move the value and update the index in the map.
+                                                        
       *O = std::move(*I);
       Map[O->first] = O - Vector.begin();
     }
     ++O;
   }
-  // Erase trailing entries in the vector.
+                                          
   Vector.erase(O, Vector.end());
 }
 
-/// A MapVector that performs no allocations if smaller than a certain
-/// size.
+                                                                      
+         
 template <typename KeyT, typename ValueT, unsigned N>
 struct SmallMapVector
     : MapVector<KeyT, ValueT, SmallDenseMap<KeyT, unsigned, N>,
                 SmallVector<std::pair<KeyT, ValueT>, N>> {
 };
 
-} // end namespace llvh
+}                      
 
 #pragma GCC diagnostic pop
 
-#endif // LLVM_ADT_MAPVECTOR_H
+#endif                        

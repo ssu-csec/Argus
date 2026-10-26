@@ -14,8 +14,8 @@
 namespace hermes {
 namespace irgen {
 
-//===----------------------------------------------------------------------===//
-// FunctionContext
+                                                                                
+                  
 
 FunctionContext::FunctionContext(
     ESTreeIRGen *irGen,
@@ -32,18 +32,29 @@ FunctionContext::FunctionContext(
   irGen->functionContext_ = this;
   irGen->currentIRScopeDesc_ = function->getFunctionScopeDesc();
 
-  // Temporarily set the current IR scope to nullptr. IRGen should materialize
-  // currentIRScopeDesc_ before trying to access it.
+                                                                              
+                                                    
   irGen->currentIRScope_ = nullptr;
 
-  // Initialize it to LiteralUndefined by default to avoid corner cases.
+                                                                        
   this->capturedNewTarget = irGen->Builder.getLiteralUndefined();
 
+                                                                            
+                                                                            
+                                                                               
+  if (function->getDefinitionKind() == Function::DefinitionKind::ES6Arrow &&
+      oldContext_) {
+    capturedThis = oldContext_->capturedThis;
+    derivedThis = oldContext_->derivedThis;
+    capturedNewTarget = oldContext_->capturedNewTarget;
+    capturedArguments = oldContext_->capturedArguments;
+  }
+
   if (semInfo_) {
-    // Allocate the label table. Each label definition will be encountered in
-    // the AST before it is referenced (because of the nature of JavaScript), at
-    // which point we will initialize the GotoLabel structure with basic blocks
-    // targets.
+                                                                             
+                                                                                
+                                                                               
+               
     labels_.resize(semInfo_->labelCount);
   }
 }
@@ -62,8 +73,8 @@ Identifier FunctionContext::genAnonymousLabelName(llvh::StringRef hint) {
   return anonymousIDs_.next(hint);
 }
 
-//===----------------------------------------------------------------------===//
-// EnterBlockScope
+                                                                                
+                  
 EnterBlockScope::EnterBlockScope(FunctionContext *currentContext)
     : currentContext_(currentContext),
       oldIRScopeDesc_(currentContext->irGen_->currentIRScopeDesc_),
@@ -81,19 +92,19 @@ EnterBlockScope::~EnterBlockScope() {
   irgen->Builder.setCurrentSourceLevelScope(irgen->currentIRScopeDesc_);
 }
 
-//===----------------------------------------------------------------------===//
-// ESTreeIRGen
+                                                                                
+              
 
 void ESTreeIRGen::genFunctionDeclaration(
     ESTree::FunctionDeclarationNode *func) {
-  // Find the name of the function.
+                                   
   Identifier functionName = getNameFieldFromID(func->_id);
   LLVM_DEBUG(llvh::dbgs() << "IRGen function \"" << functionName << "\".\n");
 
-  Function *newFunc = func->_async
-      ? genAsyncFunction(functionName, nullptr, func)
-      : func->_generator ? genGeneratorFunction(functionName, nullptr, func)
-                         : genES5Function(functionName, nullptr, func);
+  Function *newFunc = func->_generator
+      ? genGeneratorFunction(functionName, nullptr, func)
+      : func->_async ? genAsyncFunction(functionName, nullptr, func)
+                     : genES5Function(functionName, nullptr, func);
 
   functionForDecl[func] = {newFunc, AlreadyEmitted::No};
 }
@@ -114,7 +125,7 @@ void ESTreeIRGen::emitCreateFunction(ESTree::FunctionDeclarationNode *func) {
   assert(
       funcStorage && "function declaration variable should have been hoisted");
 
-  // Store the newly created closure into a frame variable with the same name.
+                                                                              
   auto *newClosure =
       Builder.createCreateFunctionInst(it->second.first, currentIRScope_);
 
@@ -160,27 +171,27 @@ Value *ESTreeIRGen::genFunctionExpression(
           Variable::DeclKind::Var,
           closureName);
 
-      // Insert the synthesized variable into the name table, so it can be
-      // looked up internally as well.
+                                                                          
+                                      
       nameTable_.insertIntoScope(
           curFunction()->functionScope,
           tempClosureVar->getName(),
           tempClosureVar);
 
-      // Alias the lexical name to the synthesized variable.
+                                                            
       originalNameIden = getNameFieldFromID(FE->_id);
       nameTable_.insert(originalNameIden, tempClosureVar);
     } else {
-      // Use the expression's ID for its closure name, as well as its variable
-      // name -- which is OK because we're in a new scope.
+                                                                              
+                                                          
       originalNameIden = getNameFieldFromID(FE->_id);
 
       auto closureName = genAnonymousLabelName(originalNameIden.str());
       tempClosureVar = Builder.createVariable(
           currentIRScopeDesc_, Variable::DeclKind::Const, closureName);
 
-      // ES2023 dictates that function expression's ID are non-strict immutable
-      // bindings.
+                                                                               
+                  
       tempClosureVar->setStrictImmutableBinding(false);
 
       nameTable_.insertIntoScope(
@@ -188,10 +199,10 @@ Value *ESTreeIRGen::genFunctionExpression(
     }
   }
 
-  Function *newFunc = FE->_async
-      ? genAsyncFunction(originalNameIden, tempClosureVar, FE)
-      : FE->_generator
+  Function *newFunc = FE->_generator
       ? genGeneratorFunction(originalNameIden, tempClosureVar, FE)
+      : FE->_async
+      ? genAsyncFunction(originalNameIden, tempClosureVar, FE)
       : genES5Function(originalNameIden, tempClosureVar, FE);
 
   Value *closure = Builder.createCreateFunctionInst(newFunc, currentIRScope_);
@@ -211,9 +222,8 @@ Value *ESTreeIRGen::genArrowFunctionExpression(
       << Builder.getInsertionBlock()->getParent()->getInternalName() << ".\n");
 
   if (AF->_async) {
-    Builder.getModule()->getContext().getSourceErrorManager().error(
-        AF->getSourceRange(), Twine("async functions are unsupported"));
-    return Builder.getLiteralUndefined();
+    auto *asyncFn = genAsyncFunction(nameHint, nullptr, AF);
+    return Builder.createCreateFunctionInst(asyncFn, currentIRScope_);
   }
 
   auto *newFunc = Builder.createFunction(
@@ -227,7 +237,7 @@ Value *ESTreeIRGen::genArrowFunctionExpression(
   {
     FunctionContext newFunctionContext{this, newFunc, AF->getSemInfo()};
 
-    // Propagate captured "this", "new.target" and "arguments" from parents.
+                                                                            
     auto *prev = curFunction()->getPreviousContext();
     curFunction()->capturedThis = prev->capturedThis;
     curFunction()->capturedNewTarget = prev->capturedNewTarget;
@@ -240,21 +250,21 @@ Value *ESTreeIRGen::genArrowFunctionExpression(
     emitFunctionEpilogue(Builder.getLiteralUndefined());
   }
 
-  // Emit CreateFunctionInst after we have restored the builder state.
+                                                                      
   return Builder.createCreateFunctionInst(newFunc, currentIRScope_);
 }
 
 namespace {
 ESTree::NodeKind getLazyFunctionKind(ESTree::FunctionLikeNode *node) {
   if (node->isMethodDefinition) {
-    // This is not a regular function expression but getter/setter.
-    // If we want to reparse it later, we have to start from an
-    // identifier and not from a 'function' keyword.
+                                                                   
+                                                               
+                                                    
     return ESTree::NodeKind::Property;
   }
   return node->getKind();
 }
-} // namespace
+}             
 Function *ESTreeIRGen::genES5Function(
     Identifier originalName,
     Variable *lazyClosureAlias,
@@ -265,25 +275,126 @@ Function *ESTreeIRGen::genES5Function(
   auto *body = ESTree::getBlockStatement(functionNode);
   assert(body && "body of ES5 function cannot be null");
 
+  auto preParameterInitializers =
+      functionNode->loweredClassPreParameterInitializers;
+                                                                         
+                                                                               
+                                                                                     
+  const bool validPreParameterInitializers = [&]() {
+    if (preParameterInitializers.empty())
+      return true;
+    if (functionNode->loweredClassFunctionKind !=
+            ESTree::LoweredClassFunctionKind::Constructor ||
+        functionNode->strictness != ESTree::Strictness::StrictMode ||
+        isGeneratorInnerFunction || ESTree::isGenerator(functionNode) ||
+        ESTree::isAsync(functionNode) || body->isLazyFunctionBody)
+      return false;
+    auto cursor = body->_body.begin();
+    for (auto *recorded : preParameterInitializers) {
+      if (cursor == body->_body.end() || &*cursor != recorded)
+        return false;
+      auto *statement =
+          llvh::dyn_cast<ESTree::ExpressionStatementNode>(recorded);
+      auto *privateInit = statement
+          ? llvh::dyn_cast<ESTree::NativePrivateOperationNode>(statement->_expression)
+          : nullptr;
+      auto *publicInit = statement
+          ? llvh::dyn_cast<ESTree::NativePublicFieldOperationNode>(statement->_expression)
+          : nullptr;
+      ESTree::NodeList *arguments = nullptr;
+      if (privateInit && (privateInit->_operation->str()=="init" || privateInit->_operation->str()=="init_member"))
+        arguments=&privateInit->_arguments;
+      else if (publicInit && publicInit->_operation->str()=="define_instance")
+        arguments=&publicInit->_arguments;
+      if (!arguments || arguments->size()!=3) return false;
+      auto argument=arguments->begin();
+      if (!llvh::isa<ESTree::ThisExpressionNode>(&*argument++)) return false;
+      auto *key=&*argument++;
+      if (privateInit ? !llvh::isa<ESTree::IdentifierNode>(key)
+          : !(llvh::isa<ESTree::StringLiteralNode>(key) ||
+              llvh::isa<ESTree::NumericLiteralNode>(key) ||
+              llvh::isa<ESTree::IdentifierNode>(key))) return false;
+      auto *value=&*argument;
+      ESTree::NodeList *evaluateArguments=nullptr;
+      if (auto *evaluate=llvh::dyn_cast<ESTree::NativePrivateOperationNode>(value)) {
+        if (!privateInit || evaluate->_operation->str()!="evaluate") return false;
+        evaluateArguments=&evaluate->_arguments;
+      } else if (auto *evaluate=llvh::dyn_cast<ESTree::NativePublicFieldOperationNode>(value)) {
+        if (!publicInit || evaluate->_operation->str()!="evaluate") return false;
+        evaluateArguments=&evaluate->_arguments;
+      }
+      if (evaluateArguments) {
+        if (evaluateArguments->size()!=2) return false;
+        auto operand=evaluateArguments->begin();
+        if (!llvh::isa<ESTree::IdentifierNode>(&*operand++) ||
+            !llvh::isa<ESTree::ThisExpressionNode>(&*operand)) return false;
+      } else if (privateInit && privateInit->_operation->str()=="init_member") {
+                                                                               
+                                                                                
+        if (!llvh::isa<ESTree::IdentifierNode>(value)) return false;
+      } else {
+        auto *undefinedValue=llvh::dyn_cast<ESTree::UnaryExpressionNode>(value);
+        auto *zero=undefinedValue
+            ? llvh::dyn_cast<ESTree::NumericLiteralNode>(undefinedValue->_argument)
+            : nullptr;
+        if (!undefinedValue || undefinedValue->_operator->str()!="void" ||
+            !zero || zero->_value!=0.0) return false;
+      }
+      ++cursor;
+    }
+    return true;
+  }();
+
+                                                                           
+                                                                              
+                                                                             
+  Function::DefinitionKind definitionKind=Function::DefinitionKind::ES5Function;
+  switch (functionNode->loweredClassFunctionKind) {
+    case ESTree::LoweredClassFunctionKind::DerivedConstructor:
+      definitionKind=Function::DefinitionKind::ES6DerivedConstructor;break;
+    case ESTree::LoweredClassFunctionKind::Constructor:
+      definitionKind=Function::DefinitionKind::ES6Constructor;break;
+    case ESTree::LoweredClassFunctionKind::Method:
+      definitionKind=Function::DefinitionKind::ES6Method;break;
+    case ESTree::LoweredClassFunctionKind::None:break;
+  }
+  assert(!isGeneratorInnerFunction ||
+         functionNode->loweredClassFunctionKind==ESTree::LoweredClassFunctionKind::None);
+
   Function *newFunction = isGeneratorInnerFunction
       ? Builder.createGeneratorInnerFunction(
             newScopeDesc(),
             genAnonymousFunctionNameIfNeeded(originalName),
-            Function::DefinitionKind::ES5Function,
+            llvh::isa<ESTree::ArrowFunctionExpressionNode>(functionNode)
+                ? Function::DefinitionKind::ES6Arrow
+                : Function::DefinitionKind::ES5Function,
             ESTree::isStrict(functionNode->strictness),
             functionNode->getSourceRange(),
-            /* insertBefore */ nullptr)
+                               nullptr)
       : Builder.createFunction(
             newScopeDesc(),
             genAnonymousFunctionNameIfNeeded(originalName),
-            Function::DefinitionKind::ES5Function,
+            definitionKind,
             ESTree::isStrict(functionNode->strictness),
             functionNode->sourceVisibility,
             functionNode->getSourceRange(),
-            /* isGlobal */ false,
-            /* insertBefore */ nullptr);
+                           false,
+                               nullptr);
 
   newFunction->setLazyClosureAlias(lazyClosureAlias);
+
+  if (!validPreParameterInitializers) {
+                                                                            
+                                                                   
+    Builder.getModule()->getContext().getSourceErrorManager().error(
+        functionNode->getSourceRange(),
+        "[NATIVE_PRIVATE_UNSUPPORTED] PRE_PARAMETER_METADATA");
+    FunctionContext rejectedContext{
+        this, newFunction, functionNode->getSemInfo()};
+    emitFunctionPreamble(Builder.createBasicBlock(newFunction));
+    emitFunctionEpilogue(Builder.getLiteralUndefined());
+    return curFunction()->function;
+  }
 
   if (auto *bodyBlock = llvh::dyn_cast<ESTree::BlockStatementNode>(body)) {
     if (bodyBlock->isLazyFunctionBody) {
@@ -297,11 +408,13 @@ Function *ESTreeIRGen::genES5Function(
 
   FunctionContext newFunctionContext{
       this, newFunction, functionNode->getSemInfo()};
+  newFunctionContext.asyncGeneratorBody = isGeneratorInnerFunction &&
+      ESTree::isAsync(functionNode) && ESTree::isGenerator(functionNode);
 
   if (isGeneratorInnerFunction) {
-    // StartGeneratorInst
-    // ResumeGeneratorInst
-    // at the beginning of the function, to allow for the first .next() call.
+                         
+                          
+                                                                             
     auto *initGenBB = Builder.createBasicBlock(newFunction);
     Builder.setInsertionBlock(initGenBB);
     Builder.createStartGeneratorInst();
@@ -311,22 +424,22 @@ Function *ESTreeIRGen::genES5Function(
     genResumeGenerator(GenFinally::No, prologueResumeIsReturn, prologueBB);
 
     if (hasSimpleParams(functionNode)) {
-      // If there are simple params, then we don't need an extra yield/resume.
-      // They can simply be initialized on the first call to `.next`.
+                                                                              
+                                                                     
       Builder.setInsertionBlock(prologueBB);
       emitFunctionPreamble(prologueBB);
       initCaptureStateInES5Function();
       emitTopLevelDeclarations(
           functionNode, body, DoEmitParameters::YesMultiScopes);
     } else {
-      // If there are non-simple params, then we must add a new yield/resume.
-      // The `.next()` call will occur once in the outer function, before
-      // the iterator is returned to the caller of the `function*`.
+                                                                             
+                                                                         
+                                                                   
       auto *entryPointBB = Builder.createBasicBlock(newFunction);
       auto *entryPointResumeIsReturn =
           Builder.createAllocStackInst(genAnonymousLabelName("isReturn_entry"));
 
-      // Initialize parameters.
+                               
       Builder.setInsertionBlock(prologueBB);
       emitFunctionPreamble(prologueBB);
       initCaptureStateInES5Function();
@@ -335,7 +448,7 @@ Function *ESTreeIRGen::genES5Function(
       Builder.createSaveAndYieldInst(
           Builder.getLiteralUndefined(), entryPointBB);
 
-      // Actual entry point of function from the caller's perspective.
+                                                                      
       Builder.setInsertionBlock(entryPointBB);
       genResumeGenerator(
           GenFinally::No,
@@ -345,11 +458,30 @@ Function *ESTreeIRGen::genES5Function(
   } else {
     emitFunctionPreamble(Builder.createBasicBlock(newFunction));
     initCaptureStateInES5Function();
+                                                                     
+                                                                          
+                                                                             
+                                                                 
+    for (auto *initializer : preParameterInitializers)
+      genStatement(initializer, IsLoopBody::No);
     emitTopLevelDeclarations(
         functionNode, body, DoEmitParameters::YesMultiScopes);
   }
 
-  genFunctionBody(body);
+  if (preParameterInitializers.empty()) {
+    genFunctionBody(body);
+  } else {
+                                                                            
+                                                                          
+                                                                            
+    auto statement = body->_body.begin();
+    for (auto *initializer : preParameterInitializers) {
+      assert(statement != body->_body.end() && &*statement == initializer);
+      ++statement;
+    }
+    for (; statement != body->_body.end(); ++statement)
+      genStatement(&*statement, IsLoopBody::No);
+  }
   emitFunctionEpilogue(Builder.getLiteralUndefined());
 
   return curFunction()->function;
@@ -366,16 +498,20 @@ Function *ESTreeIRGen::genGeneratorFunction(
         functionNode->getSourceRange(), "generator compilation is disabled");
   }
 
-  // Build the outer function which creates the generator.
-  // Does not have an associated source range.
+  const bool asyncGenerator = ESTree::isAsync(functionNode) && ESTree::isGenerator(functionNode);
+                                                          
+                                              
   auto *outerFn = Builder.createGeneratorFunction(
       newScopeDesc(),
       genAnonymousFunctionNameIfNeeded(originalName),
-      Function::DefinitionKind::ES5Function,
+      asyncGenerator ? Function::DefinitionKind::ES6AsyncGenerator :
+      llvh::isa<ESTree::ArrowFunctionExpressionNode>(functionNode)
+          ? Function::DefinitionKind::ES6Arrow
+          : Function::DefinitionKind::ES5Function,
       ESTree::isStrict(functionNode->strictness),
       functionNode->sourceVisibility,
       functionNode->getSourceRange(),
-      /* insertBefore */ nullptr);
+                         nullptr);
   outerFn->setLazyClosureAlias(lazyClosureAlias);
 
   auto *body = ESTree::getBlockStatement(functionNode);
@@ -389,13 +525,19 @@ Function *ESTreeIRGen::genGeneratorFunction(
   {
     FunctionContext outerFnContext{this, outerFn, functionNode->getSemInfo()};
 
-    // Build the inner function. This must be done in the outerFnContext
-    // since it's lexically considered a child function.
+                                                                        
+                                                        
+                                                                           
+                                                                      
+                                                                        
+    const auto savedClassKind = functionNode->loweredClassFunctionKind;
+    functionNode->loweredClassFunctionKind = ESTree::LoweredClassFunctionKind::None;
     auto *innerFn = genES5Function(
         genAnonymousLabelName(originalName.isValid() ? originalName.str() : ""),
         nullptr,
         functionNode,
         true);
+    functionNode->loweredClassFunctionKind = savedClassKind;
 
     emitFunctionPreamble(Builder.createBasicBlock(outerFn));
     initCaptureStateInES5Function();
@@ -404,17 +546,22 @@ Function *ESTreeIRGen::genGeneratorFunction(
         ESTree::getBlockStatement(functionNode),
         DoEmitParameters::No);
 
-    // Create a generator function, which will store the arguments.
+                                                                   
     auto *gen = Builder.createCreateGeneratorInst(innerFn, currentIRScope_);
 
     if (!hasSimpleParams(functionNode)) {
-      // If there are non-simple params, step the inner function once to
-      // initialize them.
-      Value *next = Builder.createLoadPropertyInst(gen, "next");
-      Builder.createCallInst(CallInst::kNoTextifiedCallee, next, gen, {});
+                                                                        
+                         
+      if (asyncGenerator) {
+        genBuiltinCall(BuiltinMethod::HermesBuiltin_asyncGeneratorStart, {gen});
+      } else {
+        Value *next = Builder.createLoadPropertyInst(gen, "next");
+        Builder.createCallInst(CallInst::kNoTextifiedCallee, next, gen, {});
+      }
     }
 
-    emitFunctionEpilogue(gen);
+    emitFunctionEpilogue(asyncGenerator
+        ? genBuiltinCall(BuiltinMethod::HermesBuiltin_asyncGeneratorWrap, {gen}) : gen);
   }
 
   return outerFn;
@@ -427,9 +574,9 @@ void ESTreeIRGen::setupLazyScope(
   assert(
       bodyBlock->isLazyFunctionBody &&
       "setupLazyScope can only be used with lazy function bodies");
-  // Set the AST position and variable context so we can continue later.
-  // Save the scope chain starting from function's parent (i.e., the last
-  // materialized scope).
+                                                                        
+                                                                         
+                         
   function->setLazyScope(
       saveScopeChain(function->getFunctionScopeDesc()->getParent()));
   auto &lazySource = function->getLazySource();
@@ -439,7 +586,7 @@ void ESTreeIRGen::setupLazyScope(
   lazySource.paramYield = bodyBlock->paramYield;
   lazySource.paramAwait = bodyBlock->paramAwait;
 
-  // Set the function's .length.
+                                
   function->setExpectedParamCountIncludingThis(
       countExpectedArgumentsIncludingThis(functionNode));
 }
@@ -459,13 +606,18 @@ Function *ESTreeIRGen::genAsyncFunction(
   auto *asyncFn = Builder.createAsyncFunction(
       newScopeDesc(),
       genAnonymousFunctionNameIfNeeded(originalName),
-      Function::DefinitionKind::ES5Function,
+      llvh::isa<ESTree::ArrowFunctionExpressionNode>(functionNode)
+          ? Function::DefinitionKind::ES6Arrow
+          : functionNode->loweredClassFunctionKind ==
+                    ESTree::LoweredClassFunctionKind::Method
+          ? Function::DefinitionKind::ES6Method
+          : Function::DefinitionKind::ES5Function,
       ESTree::isStrict(functionNode->strictness),
       functionNode->sourceVisibility,
       functionNode->getSourceRange(),
-      /* insertBefore */ nullptr);
+                         nullptr);
 
-  // Setup lazy compilation
+                           
   asyncFn->setLazyClosureAlias(lazyClosureAlias);
 
   auto *body = ESTree::getBlockStatement(functionNode);
@@ -479,16 +631,22 @@ Function *ESTreeIRGen::genAsyncFunction(
   {
     FunctionContext asyncFnContext{this, asyncFn, functionNode->getSemInfo()};
 
-    // Build the inner generator. This must be done in the outerFnContext
-    // since it's lexically considered a child function.
+                                                                         
+                                                        
+                                                                     
+                                                                             
+                                                                          
+    const auto savedClassKind = functionNode->loweredClassFunctionKind;
+    functionNode->loweredClassFunctionKind = ESTree::LoweredClassFunctionKind::None;
     auto *gen = genGeneratorFunction(
         genAnonymousLabelName(originalName.isValid() ? originalName.str() : ""),
         lazyClosureAlias,
         functionNode);
+    functionNode->loweredClassFunctionKind = savedClassKind;
 
-    // The outer async function need not emit code for parameters.
-    // It would simply delegate `arguments` object down to inner generator.
-    // This avoid emitting code e.g. destructuring parameters twice.
+                                                                  
+                                                                           
+                                                                    
     emitFunctionPreamble(Builder.createBasicBlock(asyncFn));
     initCaptureStateInES5Function();
     emitTopLevelDeclarations(
@@ -515,29 +673,47 @@ Function *ESTreeIRGen::genAsyncFunction(
 }
 
 void ESTreeIRGen::initCaptureStateInES5Function() {
-  // Capture "this", "new.target" and "arguments" if there are inner arrows.
-  if (!curFunction()->getSemInfo()->containsArrowFunctions)
+                                                                            
+                                               
+  if (curFunction()->function->getDefinitionKind() ==
+      Function::DefinitionKind::ES6Arrow)
     return;
 
-  // "this".
+                                                                            
+  const bool derived = curFunction()->function->getDefinitionKind() ==
+      Function::DefinitionKind::ES6DerivedConstructor;
+  if (!derived && !curFunction()->getSemInfo()->containsArrowFunctions)
+    return;
+
+            
   curFunction()->capturedThis = Builder.createVariable(
       currentIRScopeDesc_,
       Variable::DeclKind::Var,
       genAnonymousLabelName("this"));
+  if (derived)
+    curFunction()->derivedThis = curFunction()->capturedThis;
   emitStore(
-      Builder.getFunction()->getThisParameter(),
-      curFunction()->capturedThis,
-      true);
+      derived ? static_cast<Value *>(Builder.getLiteralUndefined())
+              : static_cast<Value *>(Builder.getFunction()->getThisParameter()),
+      curFunction()->capturedThis, true);
 
-  // "new.target".
-  curFunction()->capturedNewTarget = Builder.createVariable(
-      currentIRScopeDesc_,
-      Variable::DeclKind::Var,
-      genAnonymousLabelName("new.target"));
-  emitStore(
-      Builder.createGetNewTargetInst(), curFunction()->capturedNewTarget, true);
+                                                                     
+                                                                     
+                                                                         
+                                                                             
+  if (curFunction()->function->getDefinitionKind() == Function::DefinitionKind::ES6Method ||
+      curFunction()->function->getDefinitionKind() == Function::DefinitionKind::ES6AsyncGenerator) {
+    curFunction()->capturedNewTarget = Builder.getLiteralUndefined();
+  } else {
+    curFunction()->capturedNewTarget = Builder.createVariable(
+        currentIRScopeDesc_,
+        Variable::DeclKind::Var,
+        genAnonymousLabelName("new.target"));
+    emitStore(
+        Builder.createGetNewTargetInst(), curFunction()->capturedNewTarget, true);
+  }
 
-  // "arguments".
+                 
   if (curFunction()->getSemInfo()->containsArrowFunctionsUsingArguments) {
     curFunction()->capturedArguments = Builder.createVariable(
         currentIRScopeDesc_,
@@ -562,20 +738,20 @@ void ESTreeIRGen::emitFunctionPreamble(BasicBlock *entry) {
   } else {
     Builder.setInsertionPoint(&realEntry->front());
   }
-  // Create the function scope.
+                               
   currentIRScope_ =
       Builder.createCreateScopeInst(newFunc->getFunctionScopeDesc());
 
-  // Start pumping instructions into the entry basic block.
+                                                           
   Builder.setInsertionBlock(entry);
   Builder.setCurrentSourceLevelScope(newFunc->getFunctionScopeDesc());
 
-  // Always insert a CreateArgumentsInst. We will delete it later if it is
-  // unused.
+                                                                          
+            
   curFunction()->createArgumentsInst = Builder.createCreateArgumentsInst();
 
-  // Always create the "this" parameter. It needs to be created before we
-  // initialized the ES5 capture state.
+                                                                         
+                                       
   Builder.createThisParameter(newFunc);
 }
 
@@ -583,55 +759,55 @@ void ESTreeIRGen::emitTopLevelDeclarations(
     ESTree::FunctionLikeNode *funcNode,
     ESTree::Node *body,
     DoEmitParameters doEmitParameters) {
-  // There is a lot happening in this function w.r.t. function scopes, but that
-  // can be summarizes as follows:
-  //
-  //    topLevelScope = Scope();                                #1
-  //    currentScope = topLevelScope
-  //
-  //    if !isStrict and hasParamExpressions:
-  //        paramExpressionScope = InnerScope(currentScope)
-  //        currentScope = paramExpressionScope                 #2
-  //
-  //    << emit parameter expressions >>
-  //
-  //    if hasParamExpressions:
-  //       varScope = InnerScope(currentScope)
-  //       currentScope = varScope                              #3
-  //
-  //    << emit var declarations >>
-  //
-  //    if !isStrict:
-  //       lexicalScope = InnerScope(currentScope)              #4
-  //       currentScope = lexicalScope
-  //
-  //    << emit lexical declarations >>
-  //
-  // Thus at the end of this method, currentIRScopeDesc_ (i.e., currentScope
-  // above) should be
-  //
-  // 1. !isStrict and !hasParamExpressions:
-  //        currentIRScopeDesc_ == lexicalScope
-  //        lexicalScope.parent == topLevelScope
-  //        paramExpressionScope == null
-  //        varScope == null
-  // 2. !isStrict and hasParamExpressions:
-  //        currentIRScopeDesc_ == lexicalScope
-  //        lexicalScope.parent == varScope
-  //        varScope.parent == paramExpressionScope
-  //        paramExpressionScope.parent == topLevelScope
-  // 3. isStrict and !hasParamExpressions:
-  //        currentIRScopeDesc_ == topLevelScope
-  //        paramExpressionScope == null
-  //        varScope == null
-  //        lexicalScope == null
-  // 4. isStrict and hasParamExpressions:
-  //        currentIRScopeDesc_ == varScope
-  //        varScope.parent == topLevelScope
-  //        paramExpressionScope == null
-  //        lexicalScope == null
-  //
-  // The following variables are used to assert those conditions.
+                                                                               
+                                  
+    
+                                                                  
+                                    
+    
+                                             
+                                                           
+                                                                  
+    
+                                        
+    
+                               
+                                              
+                                                                  
+    
+                                   
+    
+                     
+                                                                  
+                                      
+    
+                                       
+    
+                                                                            
+                     
+    
+                                           
+                                               
+                                                
+                                        
+                            
+                                          
+                                               
+                                           
+                                                   
+                                                        
+                                          
+                                                
+                                        
+                            
+                                
+                                         
+                                           
+                                            
+                                        
+                                
+    
+                                                                 
   ScopeDesc *topLevelScope = currentIRScopeDesc_;
   ScopeDesc *paramExpressionScope{};
   ScopeDesc *varScope{};
@@ -639,8 +815,8 @@ void ESTreeIRGen::emitTopLevelDeclarations(
 
   if (!Mod->getContext().getCodeGenerationSettings().enableBlockScoping) {
     if (doEmitParameters == DoEmitParameters::YesMultiScopes) {
-      // Block scoping is disabled, so there's no point in emitting separate
-      // scopes.
+                                                                            
+                
       doEmitParameters = DoEmitParameters::Yes;
     }
   }
@@ -656,8 +832,8 @@ void ESTreeIRGen::emitTopLevelDeclarations(
   }
 
   if (doEmitParameters != DoEmitParameters::No) {
-    // Create function parameters, register them in the scope, and initialize
-    // them with their income values.
+                                                                             
+                                     
     emitParameters(funcNode, hasParamExpressions);
   } else {
     curFunction()->function->setExpectedParamCountIncludingThis(
@@ -667,8 +843,8 @@ void ESTreeIRGen::emitTopLevelDeclarations(
   auto *semInfo = curFunction()->getSemInfo();
   if (doEmitParameters != DoEmitParameters::YesMultiScopes ||
       !hasParamExpressions) {
-    // Create variable declarations for each of the hoisted variables and
-    // functions. Initialize them to undefined.
+                                                                         
+                                               
     for (const sem::FunctionInfo::VarDecl &decl : semInfo->varScoped) {
       createNewBinding(
           currentIRScopeDesc_,
@@ -705,7 +881,7 @@ void ESTreeIRGen::emitTopLevelDeclarations(
     }
   }
 
-  // Now that scope creation is completed, ensure that the expectations hold:
+                                                                             
   if (doEmitParameters == DoEmitParameters::YesMultiScopes) {
     (void)topLevelScope;
     (void)paramExpressionScope;
@@ -713,13 +889,13 @@ void ESTreeIRGen::emitTopLevelDeclarations(
     (void)lexicalScope;
     if (!ESTree::isStrict(funcNode->strictness)) {
       if (!hasParamExpressions) {
-        // 1. !isStrict and !hasParamExpressions:
+                                                 
         assert(currentIRScopeDesc_ == lexicalScope);
         assert(lexicalScope->getParent() == topLevelScope);
         assert(paramExpressionScope == nullptr);
         assert(varScope == nullptr);
       } else {
-        // 2. !isStrict and hasParamExpressions:
+                                                
         assert(currentIRScopeDesc_ == lexicalScope);
         assert(lexicalScope->getParent() == varScope);
         assert(varScope->getParent() == paramExpressionScope);
@@ -727,13 +903,13 @@ void ESTreeIRGen::emitTopLevelDeclarations(
       }
     } else {
       if (!hasParamExpressions) {
-        // 3. isStrict and !hasParamExpressions:
+                                                
         assert(currentIRScopeDesc_ == topLevelScope);
         assert(paramExpressionScope == nullptr);
         assert(varScope == nullptr);
         assert(lexicalScope == nullptr);
       } else {
-        // 4. isStrict and hasParamExpressions:
+                                               
         assert(currentIRScopeDesc_ == varScope);
         assert(varScope->getParent() == topLevelScope);
         assert(paramExpressionScope == nullptr);
@@ -742,22 +918,22 @@ void ESTreeIRGen::emitTopLevelDeclarations(
     }
   }
 
-  // Now create variable declarations for each scoped variable/function in body.
-  // let/const bindings are initialized to empty, and functions to undefined.
+                                                                                
+                                                                             
   createScopeBindings(currentIRScopeDesc_, body);
 
-  // Generate the code for import declarations before generating the rest of the
-  // body.
+                                                                                
+          
   for (ESTree::ImportDeclarationNode *importDecl : semInfo->imports) {
     genImportDeclaration(importDecl);
   }
 
-  // Generate all closures declared in body. Any hoisted
-  // functions from inner scopes have already been declared.
+                                                        
+                                                            
   genFunctionDeclarations(body);
 
-  // Pre-hoists all functions that are defined within body (but not in
-  // BlockStatments in it).
+                                                                      
+                           
   hoistCreateFunctions(body);
 }
 
@@ -788,13 +964,13 @@ void ESTreeIRGen::createScopeBindings(
       if (Mod->getContext().getCodeGenerationSettings().enableBlockScoping) {
         if (decl.kind != VarDecl::Kind::Var && scopeDesc->isGlobalScope() &&
             llvh::isa<ESTree::ProgramNode>(containingNode)) {
-          // The newly created Variable is a const/let declaration, so the
-          // running program must check whether it is a valid name. For example,
-          //
-          // let undefined;
-          //
-          // is an invalid global let declaration because undefined is a
-          // restricted global name.
+                                                                          
+                                                                                
+            
+                           
+            
+                                                                        
+                                    
           IRBuilder::ScopedLocationChange slc(
               Builder, decl.identifier->getSourceRange().Start);
           Builder.createThrowIfHasRestrictedGlobalPropertyInst(
@@ -813,7 +989,7 @@ void ESTreeIRGen::createNewBinding(
     Value *init) {
   Identifier name = getNameFieldFromID(id);
   auto res = declareVariableOrGlobalProperty(scopeDesc, kind, name);
-  // If this is not a frame variable or it was already declared, skip.
+                                                                      
   auto *var = llvh::dyn_cast<Variable>(res.first);
   if (!needsInitializer || !var || !res.second)
     return;
@@ -823,7 +999,7 @@ void ESTreeIRGen::createNewBinding(
                               : (Literal *)Builder.getLiteralUndefined();
   }
 
-  // Otherwise, initialize it to undefined or empty, depending on TDZ.
+                                                                      
   Builder.createStoreFrameInst(init, var, currentIRScope_);
 }
 
@@ -835,13 +1011,13 @@ void ESTreeIRGen::emitParameters(
   LLVM_DEBUG(llvh::dbgs() << "IRGen function parameters.\n");
 
   if (!Mod->getContext().getCodeGenerationSettings().enableBlockScoping) {
-    // Disable parameter TDZ if block scoping support is disabled.
+                                                                  
     hasParamExpressions = false;
   }
 
   llvh::SmallVector<Variable *, 4> tdzParams;
 
-  // Create a variable for every parameter.
+                                           
   Value *empty = Builder.getLiteralEmpty();
   Variable::DeclKind paramKind =
       hasParamExpressions ? Variable::DeclKind::Let : Variable::DeclKind::Var;
@@ -851,15 +1027,15 @@ void ESTreeIRGen::emitParameters(
     auto *paramStorage = Builder.createVariable(
         newFunc->getFunctionScopeDesc(), paramKind, paramName);
     if (hasParamExpressions) {
-      // funcNode has parameter expressions, thus the parameters are first
-      // copied to tdz variables which need to be initialized to empty.
+                                                                          
+                                                                       
       Builder.createStoreFrameInst(empty, paramStorage, currentIRScope_);
 
-      // Also keep track of all created Variables to copy them into regular Var
-      // declarations.
+                                                                               
+                      
       tdzParams.push_back(paramStorage);
     }
-    // Register the storage for the parameter.
+                                              
     nameTable_.insert(paramName, paramStorage);
   }
 
@@ -877,7 +1053,7 @@ void ESTreeIRGen::emitParameters(
       break;
     }
 
-    // Unpack the optional initialization.
+                                          
     if (auto *assign = llvh::dyn_cast<ESTree::AssignmentPatternNode>(param)) {
       param = assign->_left;
       init = assign->_right;
@@ -893,8 +1069,8 @@ void ESTreeIRGen::emitParameters(
             emitOptionalInitialization(formalParam, init, formalParamName));
   }
 
-  // Now copy the TDZ parameters to Var declarations. This improves codegen by
-  // removing tdz checks when accessing the parameters.
+                                                                              
+                                                       
   assert(
       (tdzParams.empty() || hasParamExpressions) &&
       "funcNode does not have param expressions, so it doesn't"
@@ -915,11 +1091,13 @@ void ESTreeIRGen::emitParameters(
 
 uint32_t ESTreeIRGen::countExpectedArgumentsIncludingThis(
     ESTree::FunctionLikeNode *funcNode) {
-  // Start at 1 to account for "this".
+                                      
   uint32_t count = 1;
   for (auto &param : ESTree::getParams(funcNode)) {
-    if (llvh::isa<ESTree::AssignmentPatternNode>(param)) {
-      // Found an initializer, stop counting expected arguments.
+    if (llvh::isa<ESTree::AssignmentPatternNode>(param) ||
+        llvh::isa<ESTree::RestElementNode>(param)) {
+                                                                          
+                                                                              
       break;
     }
     ++count;
@@ -932,10 +1110,17 @@ void ESTreeIRGen::emitFunctionEpilogue(Value *returnValue) {
     Builder.setLocation(
         SourceErrorManager::convertEndToLocation(
             Builder.getFunction()->getSourceRange()));
+    if (curFunction()->function->getDefinitionKind() ==
+        Function::DefinitionKind::ES6DerivedConstructor) {
+      assert(curFunction()->derivedThis);
+      returnValue = genBuiltinCall(BuiltinMethod::HermesBuiltin_derivedConstructorReturn,
+          {Builder.createLoadFrameInst(curFunction()->derivedThis, currentIRScope_),
+           returnValue});
+    }
     Builder.createReturnInst(returnValue);
   }
 
-  // Delete CreateArgumentsInst if it is unused.
+                                                
   if (!curFunction()->createArgumentsInst->hasUsers())
     curFunction()->createArgumentsInst->eraseFromParent();
 
@@ -952,8 +1137,8 @@ void ESTreeIRGen::genDummyFunction(Function *dummy) {
   builder.createReturnInst(builder.getLiteralUndefined());
 }
 
-/// Generate a function which immediately throws the specified SyntaxError
-/// message.
+                                                                          
+            
 Function *ESTreeIRGen::genSyntaxErrorFunction(
     Module *M,
     ScopeDesc *scopeDesc,
@@ -981,5 +1166,5 @@ Function *ESTreeIRGen::genSyntaxErrorFunction(
   return function;
 }
 
-} // namespace irgen
-} // namespace hermes
+}                   
+}                    

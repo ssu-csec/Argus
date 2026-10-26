@@ -22,72 +22,72 @@ class raw_ostream;
 
 namespace sys {
 
-/// A time point on the system clock. This is provided for two reasons:
-/// - to insulate us agains subtle differences in behavoir to differences in
-///   system clock precision (which is implementation-defined and differs between
-///   platforms).
-/// - to shorten the type name
-/// The default precision is nanoseconds. If need a specific precision specify
-/// it explicitly. If unsure, use the default. If you need a time point on a
-/// clock other than the system_clock, use std::chrono directly.
+                                                                       
+                                                                            
+                                                                                 
+                 
+                              
+                                                                              
+                                                                            
+                                                                
 template <typename D = std::chrono::nanoseconds>
 using TimePoint = std::chrono::time_point<std::chrono::system_clock, D>;
 
-/// Convert a TimePoint to std::time_t
+                                      
 LLVM_ATTRIBUTE_ALWAYS_INLINE inline std::time_t toTimeT(TimePoint<> TP) {
   using namespace std::chrono;
   return system_clock::to_time_t(
       time_point_cast<system_clock::time_point::duration>(TP));
 }
 
-/// Convert a std::time_t to a TimePoint
+                                        
 LLVM_ATTRIBUTE_ALWAYS_INLINE inline TimePoint<std::chrono::seconds>
 toTimePoint(std::time_t T) {
   using namespace std::chrono;
   return time_point_cast<seconds>(system_clock::from_time_t(T));
 }
 
-} // namespace sys
+}                 
 
 raw_ostream &operator<<(raw_ostream &OS, sys::TimePoint<> TP);
 
-/// Format provider for TimePoint<>
-///
-/// The options string is a strftime format string, with extensions:
-///   - %L is millis: 000-999
-///   - %f is micros: 000000-999999
-///   - %N is nanos: 000000000 - 999999999
-///
-/// If no options are given, the default format is "%Y-%m-%d %H:%M:%S.%N".
+                                   
+   
+                                                                    
+                             
+                                   
+                                          
+   
+                                                                          
 template <>
 struct format_provider<sys::TimePoint<>> {
   static void format(const sys::TimePoint<> &TP, llvh::raw_ostream &OS,
                      StringRef Style);
 };
 
-/// Implementation of format_provider<T> for duration types.
-///
-/// The options string of a duration  type has the grammar:
-///
-///   duration_options  ::= [unit][show_unit [number_options]]
-///   unit              ::= `h`|`m`|`s`|`ms|`us`|`ns`
-///   show_unit         ::= `+` | `-`
-///   number_options    ::= options string for a integral or floating point type
-///
-///   Examples
-///   =================================
-///   |  options  | Input | Output    |
-///   =================================
-///   | ""        | 1s    | 1 s       |
-///   | "ms"      | 1s    | 1000 ms   |
-///   | "ms-"     | 1s    | 1000      |
-///   | "ms-n"    | 1s    | 1,000     |
-///   | ""        | 1.0s  | 1.00 s    |
-///   =================================
-///
-///  If the unit of the duration type is not one of the units specified above,
-///  it is still possible to format it, provided you explicitly request a
-///  display unit or you request that the unit is not displayed.
+                                                            
+   
+                                                           
+   
+                                                              
+                                                     
+                                     
+                                                                                
+   
+              
+                                       
+                                       
+                                       
+                                       
+                                       
+                                       
+                                       
+                                       
+                                       
+   
+                                                                              
+                                                                         
+                                                                
 
 namespace detail {
 template <typename Period> struct unit { static const char value[]; };
@@ -99,7 +99,7 @@ template <> struct unit<std::ratio<1>> { static const char value[]; };
 template <> struct unit<std::milli> { static const char value[]; };
 template <> struct unit<std::micro> { static const char value[]; };
 template <> struct unit<std::nano> { static const char value[]; };
-} // namespace detail
+}                    
 
 template <typename Rep, typename Period>
 struct format_provider<std::chrono::duration<Rep, Period>> {
@@ -159,6 +159,6 @@ public:
   }
 };
 
-} // namespace llvh
+}                  
 
-#endif // LLVM_SUPPORT_CHRONO_H
+#endif                         

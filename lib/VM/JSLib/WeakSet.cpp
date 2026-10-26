@@ -59,7 +59,7 @@ Handle<JSObject> createWeakSetConstructor(Runtime &runtime) {
       0,
       CellKind::JSWeakSetKind);
 
-  // ES6.0 23.4.3.1
+                   
   defineProperty(
       runtime,
       weakSetPrototype,
@@ -110,7 +110,7 @@ weakSetConstructor(void *, Runtime &runtime, NativeArgs args) {
       return ExecutionStatus::EXCEPTION;
     }
     if (!*nextRes) {
-      // Done with iteration.
+                             
       return selfHandle.getHermesValue();
     }
     auto nextValueRes = JSObject::getNamed_RJS(
@@ -185,5 +185,5 @@ weakSetPrototypeHas(void *, Runtime &runtime, NativeArgs args) {
   return HermesValue::encodeBoolValue(JSWeakSet::hasValue(M, runtime, key));
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

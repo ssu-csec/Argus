@@ -38,14 +38,14 @@
 namespace hermes {
 namespace vm {
 
-/// ID assigned to each function the profiler encounters.
+                                                         
 using ProfilerID = uint32_t;
 
 constexpr ProfilerID NO_PROFILER_ID = UINT32_MAX;
 
-/// Metadata for a function that the profiler has seen.
-/// Getting the function offset from functionID is very expensive,
-/// thus we store the ID to calculate the offset at symbol dump time.
+                                                       
+                                                                  
+                                                                     
 struct ProfilerFunctionInfo {
   ProfilerID profilerId;
   std::string functionName;
@@ -62,17 +62,17 @@ struct ProfilerFunctionInfo {
         bytecode(std::move(bc)) {}
 };
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 #endif
 
 #if defined(HERMESVM_PROFILER_JSFUNCTION)
 #include <x86intrin.h>
 namespace hermes {
 namespace vm {
-/// Structure to capture the event of either entering a function or
-/// exiting a function. Currently we only cover normal functions,
-/// and exclude native and bound functions.
+                                                                   
+                                                                 
+                                           
 struct ProfilerFunctionEvent {
   ProfilerID functionID;
   uint64_t timeStamp;
@@ -100,8 +100,8 @@ struct ProfilerFunctionEvent {
     runtime.functionEvents.emplace_back(id, __rdtsc(), o, false); \
   } while (false)
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
 #else
 
@@ -111,7 +111,7 @@ struct ProfilerFunctionEvent {
 
 #endif
 
-// Profile frequency and duration of native calls.
+                                                  
 #ifdef HERMESVM_PROFILER_NATIVECALL
 
 #if defined(__i386__) || defined(__x86_64__)
@@ -121,6 +121,6 @@ struct ProfilerFunctionEvent {
 #define HERMESVM_RDTSC() 0
 #endif
 
-#endif // HERMESVM_PROFILER_NATIVECALL
+#endif                                
 
-#endif // HERMES_VM_PROFILER_H
+#endif                        

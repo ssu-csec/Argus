@@ -13,9 +13,9 @@
 namespace hermes {
 namespace vm {
 
-/// A fixed size GCCell used to store a single immutable double. This is used by
-/// SmallHermesValue to store numbers that cannot be represented as small
-/// integers.
+                                                                                
+                                                                         
+             
 class BoxedDouble final : public GCCell {
   friend void BoxedDoubleBuildMeta(const GCCell *cell, Metadata::Builder &mb);
 
@@ -42,7 +42,7 @@ class BoxedDouble final : public GCCell {
   }
 };
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMES_VM_BOXEDDOUBLE_H
+#endif                           

@@ -22,7 +22,7 @@
 
 namespace llvh {
 class raw_ostream;
-} // namespace llvh
+}                  
 
 namespace hermes {
 struct RegExpTableEntry;
@@ -37,26 +37,26 @@ class BytecodeSerializer {
   friend void visitBytecodeSegmentsInOrder<BytecodeSerializer>(
       BytecodeSerializer &);
 
-  /// Output Stream
+                   
   raw_ostream &os_;
-  // Module being serialized.
+                             
   BytecodeModule *bytecodeModule_;
-  /// Options controlling bytecode generation.
+                                              
   BytecodeGenerationOptions options_;
-  /// Current output offset.
+                            
   size_t loc_{0};
-  /// Wheather we are doing a layout run.
+                                         
   bool isLayout_{true};
-  /// Total file length in bytes.
+                                 
   uint32_t fileLength_{0};
-  /// Offset of the debug info tables.
+                                      
   uint32_t debugInfoOffset_{0};
-  /// Count of overflow string entries, computed during layout phase.
+                                                                     
   uint32_t overflowStringEntryCount_{0};
-  /// Hash of everything written in non-layout mode so far.
+                                                           
   llvh::SHA1 outputHasher_;
 
-  /// Each subsection of a function's `info' section is aligned thusly.
+                                                                       
   static constexpr uint32_t INFO_ALIGNMENT = 4;
 
   template <typename T>
@@ -76,9 +76,9 @@ class BytecodeSerializer {
     return writeBinaryArray(ArrayRef<T>{&structure, 1});
   }
 
-  /// Padding the binary according to the \p alignment.
+                                                       
   void pad(unsigned alignment) {
-    // Support alignment as many as 8 bytes.
+                                            
     assert(
         alignment > 0 && alignment <= 8 &&
         ((alignment & (alignment - 1)) == 0));
@@ -136,7 +136,7 @@ class BytecodeSerializer {
   void serialize(BytecodeModule &BM, const SHA1 &sourceHash);
 };
 
-} // namespace hbc
-} // namespace hermes
+}                 
+}                    
 
-#endif // HERMES_BCGEN_HBC_BYTECODESTREAM_H
+#endif                                     

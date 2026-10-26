@@ -82,7 +82,7 @@ ExecutionStatus ArrayStorageBase<HVType>::reallocateToLarger(
 
   auto *newSelf = newSelfHandle.get();
 
-  // Copy the existing data.
+                            
   auto *self = selfHandle.get();
   size_type copySize = std::min(self->size() - fromFirst, toLast - toFirst);
 
@@ -92,14 +92,14 @@ ExecutionStatus ArrayStorageBase<HVType>::reallocateToLarger(
     GCHVType::uninitialized_copy(from, from + copySize, to, runtime.getHeap());
   }
 
-  // Initialize the elements before the first copied element.
+                                                             
   GCHVType::uninitialized_fill(
       newSelf->data(),
       newSelf->data() + toFirst,
       HVType::encodeEmptyValue(),
       runtime.getHeap());
 
-  // Initialize the elements after the last copied element and toLast.
+                                                                      
   if (toFirst + copySize < toLast) {
     GCHVType::uninitialized_fill(
         newSelf->data() + toFirst + copySize,
@@ -110,7 +110,7 @@ ExecutionStatus ArrayStorageBase<HVType>::reallocateToLarger(
 
   newSelf->size_.store(toLast, std::memory_order_release);
 
-  // Update the handle.
+                       
   selfHandle = newSelfHandle.get();
 
   return ExecutionStatus::RETURNED;
@@ -124,25 +124,25 @@ void ArrayStorageBase<HVType>::resizeWithinCapacity(
   assert(
       newSize <= self->capacity() &&
       "newSize must be <= capacity in resizeWithinCapacity()");
-  // If enlarging, clear the new elements.
+                                          
   const auto sz = self->size();
   if (newSize > sz) {
-    // Treat the memory as uninitialized when growing.
-    // This applies even in the case where the length has been decreased and
-    // increased again. When the length is decreased, it executes a write
-    // barrier to mark all of the values between the new length and the old
-    // length as unreachable. Since the GC will then be aware of those values,
-    // it doesn't matter if we overwrite them here again.
+                                                      
+                                                                            
+                                                                         
+                                                                           
+                                                                              
+                                                         
     GCHVType::uninitialized_fill(
         self->data() + sz,
         self->data() + newSize,
         HVType::encodeEmptyValue(),
         gc);
   } else if (newSize < sz) {
-    // Execute write barriers on elements about to be conceptually changed to
-    // null.
-    // This also means if an array is refilled, it can treat the memory here
-    // as uninitialized safely.
+                                                                             
+            
+                                                                            
+                               
     GCHVType::rangeUnreachableWriteBarrier(
         self->data() + newSize, self->data() + sz, gc);
   }
@@ -160,12 +160,12 @@ ExecutionStatus ArrayStorageBase<HVType>::shift(
   assert(toFirst <= toLast && "First must be before last");
   assert(fromFirst <= selfHandle->size() && "fromFirst must be before size");
 
-  // If we don't need to expand the capacity.
+                                             
   if (toLast <= selfHandle->capacity()) {
     auto *self = selfHandle.get();
     size_type copySize = std::min(self->size() - fromFirst, toLast - toFirst);
 
-    // Copy the values to their final destination.
+                                                  
     if (fromFirst > toFirst) {
       GCHVType::copy(
           self->data() + fromFirst,
@@ -173,8 +173,8 @@ ExecutionStatus ArrayStorageBase<HVType>::shift(
           self->data() + toFirst,
           runtime.getHeap());
     } else if (fromFirst < toFirst) {
-      // Copying to the right, need to copy backwards to avoid overwriting what
-      // is being copied.
+                                                                               
+                         
       GCHVType::copy_backward(
           self->data() + fromFirst,
           self->data() + fromFirst + copySize,
@@ -182,14 +182,14 @@ ExecutionStatus ArrayStorageBase<HVType>::shift(
           runtime.getHeap());
     }
 
-    // Initialize the elements which were emptied in front.
+                                                           
     GCHVType::fill(
         self->data(),
         self->data() + toFirst,
         HVType::encodeEmptyValue(),
         runtime.getHeap());
 
-    // Initialize the elements between the last copied element and toLast.
+                                                                          
     if (toFirst + copySize < toLast) {
       GCHVType::uninitialized_fill(
           self->data() + toFirst + copySize,
@@ -198,7 +198,7 @@ ExecutionStatus ArrayStorageBase<HVType>::shift(
           runtime.getHeap());
     }
     if (toLast < self->size()) {
-      // Some elements are becoming unreachable, let the GC know.
+                                                                 
       GCHVType::rangeUnreachableWriteBarrier(
           self->data() + toLast,
           self->data() + self->size(),
@@ -208,7 +208,7 @@ ExecutionStatus ArrayStorageBase<HVType>::shift(
     return ExecutionStatus::RETURNED;
   }
 
-  // Calculate the new capacity.
+                                
   size_type capacity = selfHandle->capacity();
   if (capacity < maxElements() / 2)
     capacity = std::max(capacity * 2, toLast);
@@ -226,7 +226,7 @@ ExecutionStatus ArrayStorageBase<HVType>::throwExcessiveCapacityError(
   assert(
       capacity > maxElements() &&
       "Shouldn't call this without first checking that capacity is big");
-  // Record the fact that this error occurred.
+                                              
   HERMES_EXTRA_DEBUG(runtime.getCrashManager().setCustomData(
       "Hermes_ArrayStorage_overflow", "1"));
   return runtime.raiseRangeError(
@@ -258,5 +258,5 @@ gcheapsize_t ArrayStorageBase<HVType>::_trimSizeCallback(const GCCell *cell) {
 template class ArrayStorageBase<HermesValue>;
 template class ArrayStorageBase<SmallHermesValue>;
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

@@ -12,8 +12,8 @@
 #include "llvh/ADT/StringRef.h"
 
 namespace hermes {
-/// Creates unique strings that the front-end may use to generate internal IDs.
-/// These IDs are inaccessible from the JS source code.
+                                                                               
+                                                       
 class InternalIdentifierMaker {
   InternalIdentifierMaker(const InternalIdentifierMaker &) = delete;
   void operator=(const InternalIdentifierMaker &) = delete;
@@ -22,8 +22,8 @@ class InternalIdentifierMaker {
   explicit InternalIdentifierMaker(StringTable &stringTable)
       : stringTable_(stringTable) {}
 
-  /// \return The next internal ID. \p hint is used to make the generated
-  /// identifier's use clearer in the IR.
+                                                                         
+                                         
   Identifier next(llvh::StringRef hint);
 
  private:
@@ -31,6 +31,6 @@ class InternalIdentifierMaker {
   size_t counter_{};
 };
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_SUPPORT_INTERNALIDENTIFIERMAKER_H
+#endif                                            

@@ -5,21 +5,21 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-/*
- * This file exposes a C API for use by Rust. It cannot actually be used from C
- * as is, because the function declarations themselves require C++ types.
- * Addressing that would require non-trivial effort, which for now we have
- * chosen not to do, given that we don't have a use case for C, just Rust. For
- * that reason we are not exposing a header file - there is no possible
- * consumer for that file.
- */
+  
+                                                                               
+                                                                         
+                                                                          
+                                                                              
+                                                                       
+                          
+   
 
 #include "hermes/Parser/FlowHelpers.h"
 #include "hermes/Parser/JSParser.h"
 #include "hermes/Support/SimpleDiagHandler.h"
 #include "llvh/ADT/StringRef.h"
 
-// As explained above, we don't have a header with prototypes for this file.
+                                                                            
 #if defined(__GNUC__) && defined(__clang__)
 #pragma clang diagnostic ignored "-Wmissing-prototypes"
 #elif defined(__GNUC__)
@@ -29,11 +29,11 @@
 using namespace hermes;
 using namespace hermes::ESTree;
 
-// While we return almost all attributes unmodified by value, that doesn't work
-// for NodeList (since it is the head of a circular list) and we need to return
-// a pointer to it.
-// So some templating to adjust the return type of the getter depending on the
-// type of the AST attribute.
+                                                                               
+                                                                               
+                   
+                                                                              
+                             
 namespace {
 template <class T>
 struct ReturnType {
@@ -50,12 +50,12 @@ struct ReturnType<NodeList> {
     return &x;
   }
 };
-} // namespace
+}             
 
 #define ESTREE_FIRST(NAME, ...)
 #define ESTREE_NODE_0_ARGS(NAME, ...)
 
-// NOTE: -fomit-frame-pointer helps here
+                                        
 
 #define ESTREE_NODE_1_ARGS(NAME, BASE, ARG0TY, ARG0NM, ARG0OPT)     \
   extern "C" ReturnType<ARG0TY>::Type hermes_get_##NAME##_##ARG0NM( \
@@ -401,37 +401,37 @@ struct ReturnType<NodeList> {
 namespace {
 
 enum class ParserDialect : uint8_t {
-  /// Good old JS.
+                  
   JavaScript,
-  /// Parse all Flow type syntax.
+                                 
   Flow,
-  /// Parse all unambiguous Flow type syntax. Syntax that can be intepreted as
-  /// either Flow types or standard JavaScript is parsed as if it were standard
-  /// JavaScript.
-  ///
-  /// For example, `foo<T>(x)` is parsed as if it were standard JavaScript
-  /// containing two comparisons, even though it could otherwise be interpreted
-  /// as a call expression with Flow type arguments.
+                                                                              
+                                                                               
+                 
+     
+                                                                          
+                                                                               
+                                                    
   FlowUnambiguous,
-  /// Look for the '@flow' pragma in the first comment in the JS file.
-  /// If it exists, then parse all Flow type syntax, otherwise only parse
-  /// Flow type syntax according to the FlowUnambiguous mode.
+                                                                      
+                                                                         
+                                                             
   FlowDetect,
-  /// Parse TypeScript.
+                       
   TypeScript,
 };
 
-/// Flags controlling the behavior of the parser.
+                                                 
 struct ParserFlags {
-  /// Start parsing in strict mode.
+                                   
   bool strictMode = false;
-  /// Enable JSX parsing.
+                         
   bool enableJSX = false;
-  /// Dialect control.
+                      
   ParserDialect dialect = ParserDialect::JavaScript;
-  /// Store doc-comment block at the top of the file.
+                                                     
   bool storeDocBlock = false;
-  /// Store all comments
+                        
   bool storeComments = false;
 };
 
@@ -468,38 +468,38 @@ inline DataRef toDataRef(const T &ref) {
   return {ref.data(), ref.size()};
 }
 
-/// A coordinate in the input file identified by a 1-based line number and a
-/// 0-based byte offset within that line.
+                                                                            
+                                         
 struct Coord {
-  /// 1-based.
+              
   unsigned line = 0;
-  /// 0-based offset from start of line.
+                                        
   unsigned offset = 0;
 
   Coord() = default;
   Coord(int lineNo, int offset) : line(lineNo), offset(offset) {}
 };
 
-/// Result from looking for a line in the input buffer. Contains the 1-based
-/// line number and a reference to the line itself in the buffer.
+                                                                            
+                                                                 
 struct LineCoord {
-  /// 1-based line number.
+                          
   unsigned lineNo = 0;
-  /// Reference to the line itself, including the EOL, if present.
+                                                                  
   DataRef lineRef;
 };
 
-/// A temporary struct describing an error message, returned to Rust.
+                                                                     
 struct DiagMessage {
-  /// Location.
+               
   SMLoc loc{};
-  /// Source coordinate.
+                        
   Coord coord{};
-  /// What kind of message.
+                           
   DiagKind diagKind = DiagKind::Error;
-  /// Error message.
+                    
   llvh::StringRef message{};
-  /// Contents of the error line.
+                                 
   llvh::StringRef lineContents{};
 
   DiagMessage() = default;
@@ -517,27 +517,27 @@ enum class MagicCommentKind : uint32_t {
   SourceMappingUrl = 1,
 };
 
-/// This object contains the entire parser state.
+                                                 
 struct ParserContext {
-  /// Parser context with allocators, string table, etc.
+                                                        
   Context context_{};
-  /// Source buffer id, generated by SourceErrorManager.
+                                                        
   unsigned bufId_ = ~0u;
-  /// Original error messages. We need them because they provide storage for
-  /// the strings.
+                                                                            
+                  
   std::deque<llvh::SMDiagnostic> ourMessages_{};
-  /// Messages converted to the external layout.
+                                                
   std::vector<DiagMessage> convertedMessages_{};
 
-  /// Index of the first error.
+                               
   llvh::Optional<size_t> firstError_;
-  /// AST.
+          
   ESTree::ProgramNode *ast_ = nullptr;
 
-  /// Doc block at the top of the file.
+                                       
   std::string docBlock_{};
 
-  /// Comments
+              
   std::vector<parser::StoredComment> comments_{};
 
   explicit ParserContext() {
@@ -577,9 +577,9 @@ struct ParserContext {
   }
 };
 
-} // namespace
+}             
 
-/// source is the zero terminated input. source[len-1] must be \0.
+                                                                  
 extern "C" ParserContext *
 hermes_parser_parse(ParserFlags flags, const char *source, size_t len) {
   std::unique_ptr<ParserContext> parserCtx(new ParserContext());
@@ -640,7 +640,7 @@ hermes_parser_parse(ParserFlags flags, const char *source, size_t len) {
 
   if (!parserCtx->firstError_) {
     if (!ast) {
-      // Just in case.
+                      
       parserCtx->addError("Internal error");
     } else {
       parser.registerMagicURLs();
@@ -657,7 +657,7 @@ extern "C" void hermes_parser_free(ParserContext *parserCtx) {
   delete parserCtx;
 }
 
-/// \return the index of the first error or -1 if no errors.
+                                                            
 extern "C" ssize_t hermes_parser_get_first_error(
     const ParserContext *parserCtx) {
   return parserCtx->firstError_ ? (int)*parserCtx->firstError_ : -1;
@@ -686,9 +686,9 @@ hermes_parser_find_location(ParserContext *parserCtx, SMLoc loc, Coord *res) {
   return true;
 }
 
-/// Return the line surrounding the specified location \p loc. This method
-/// allows the caller to calculate the location column taking UTF-8 into
-/// consideration and to perform its own location caching.
+                                                                          
+                                                                        
+                                                          
 extern "C" bool hermes_parser_find_line(
     const ParserContext *parserCtx,
     SMLoc loc,
@@ -703,9 +703,9 @@ extern "C" bool hermes_parser_find_line(
   return true;
 }
 
-/// Return a reference to the specified (1-based) line.
-/// If the line is greater than the last line in the buffer, an empty
-/// reference is returned.
+                                                       
+                                                                     
+                          
 extern "C" DataRef hermes_parser_get_line_ref(
     const ParserContext *parserCtx,
     unsigned line) {
@@ -713,14 +713,14 @@ extern "C" DataRef hermes_parser_get_line_ref(
       parserCtx->getBufferId(), line));
 }
 
-/// Note that we guarantee that the result is valid UTF-8 because we only
-/// return it if there were no parse errors.
+                                                                         
+                                            
 extern "C" DataRef hermes_parser_get_magic_comment(
     const ParserContext *parserCtx,
     MagicCommentKind kind) {
-  // Make sure that we have successfully parsed the input. (The magic comments
-  // could be set even if we didn't, but in that case are not guaranteed to be
-  // value utf-8).
+                                                                              
+                                                                              
+                  
   if (!parserCtx->haveBufferId() || !parserCtx->ast_)
     return {nullptr, 0};
 
@@ -743,14 +743,14 @@ extern "C" DataRef hermes_get_node_name(ESTree::Node *n) {
   return toDataRef(n->getNodeName());
 }
 
-/// \return the doc block for the file if storeDocBlock was provided at
-/// parse time.
+                                                                       
+               
 extern "C" DataRef hermes_parser_get_doc_block(ParserContext *parserCtx) {
   return toDataRef(parserCtx->docBlock_);
 }
 
-/// \return all comments for the file if storeComments was provided at
-/// parse time.
+                                                                      
+               
 extern "C" DataRef hermes_parser_get_comments(ParserContext *parserCtx) {
   return toDataRef(parserCtx->comments_);
 }

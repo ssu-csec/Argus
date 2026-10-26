@@ -20,7 +20,7 @@
 
 namespace llvh {
 
-/// Represents a location in source code.
+                                         
 class SMLoc {
   const char *Ptr = nullptr;
 
@@ -41,11 +41,11 @@ public:
   }
 };
 
-/// Represents a range in source code.
-///
-/// SMRange is implemented using a half-open range, as is the convention in C++.
-/// In the string "abc", the range [1,3) represents the substring "bc", and the
-/// range [2,2) represents an empty range between the characters "b" and "c".
+                                      
+   
+                                                                                
+                                                                               
+                                                                             
 class SMRange {
 public:
   SMLoc Start, End;
@@ -60,6 +60,6 @@ public:
   bool isValid() const { return Start.isValid(); }
 };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_SUPPORT_SMLOC_H
+#endif                        

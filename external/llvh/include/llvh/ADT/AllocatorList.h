@@ -23,15 +23,15 @@
 
 namespace llvh {
 
-/// A linked-list with a custom, local allocator.
-///
-/// Expose a std::list-like interface that owns and uses a custom LLVM-style
-/// allocator (e.g., BumpPtrAllocator), leveraging \a simple_ilist for the
-/// implementation details.
-///
-/// Because this list owns the allocator, calling \a splice() with a different
-/// list isn't generally safe.  As such, \a splice has been left out of the
-/// interface entirely.
+                                                 
+   
+                                                                            
+                                                                          
+                           
+   
+                                                                              
+                                                                           
+                       
 template <class T, class AllocatorT> class AllocatorList : AllocatorT {
   struct Node : ilist_node<Node> {
     Node(Node &&) = delete;
@@ -146,7 +146,7 @@ public:
   }
 
   AllocatorList &operator=(AllocatorList &&X) {
-    clear(); // Dispose of current nodes explicitly.
+    clear();                                        
     List = std::move(X.List);
     getAlloc() = std::move(X.getAlloc());
     return *this;
@@ -225,9 +225,9 @@ public:
     emplace(begin(), std::forward<Ts>(Vs)...);
   }
 
-  /// Reset the underlying allocator.
-  ///
-  /// \pre \c empty()
+                                     
+     
+                     
   void resetAlloc() {
     assert(empty() && "Cannot reset allocator if not empty");
     getAlloc().Reset();
@@ -236,6 +236,6 @@ public:
 
 template <class T> using BumpPtrList = AllocatorList<T, BumpPtrAllocator>;
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_ADT_ALLOCATORLIST_H
+#endif                            

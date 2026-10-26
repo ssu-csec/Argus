@@ -23,8 +23,8 @@ using namespace hermes;
 STATISTIC(NumUnreachableBlock, "Number of unreachable blocks eliminated");
 STATISTIC(NumSB, "Number of static branches simplified");
 
-/// \returns true if the control-flow edge between \p src to \p dest crosses
-/// a catch region.
+                                                                            
+                   
 static bool isCrossCatchRegionBranch(BasicBlock *src, BasicBlock *dest) {
   auto kind = dest->front().getKind();
   if (kind == ValueKind::TryStartInstKind ||
@@ -33,7 +33,7 @@ static bool isCrossCatchRegionBranch(BasicBlock *src, BasicBlock *dest) {
   return false;
 }
 
-/// \returns true if the block \b BB is an input to a PHI node.
+                                                               
 static bool isUsedInPhiNode(BasicBlock *BB) {
   for (auto use : BB->getUsers())
     if (llvh::isa<PhiInst>(use))
@@ -43,15 +43,15 @@ static bool isUsedInPhiNode(BasicBlock *BB) {
 }
 
 static void removeEntryFromPhi(BasicBlock *BB, BasicBlock *edge) {
-  // For all PHI nodes in block:
+                                
   for (auto &it : *BB) {
     auto *P = llvh::dyn_cast<PhiInst>(&it);
     if (!P)
       continue;
-    // For each Phi entry:
+                          
     for (int i = 0, e = P->getNumEntries(); i < e; i++) {
       auto E = P->getEntry(i);
-      // Remove the incoming edge.
+                                  
       if (E.second == edge) {
         P->removeEntry(i);
         break;
@@ -60,8 +60,8 @@ static void removeEntryFromPhi(BasicBlock *BB, BasicBlock *edge) {
   }
 }
 
-/// Delete the conditional branch and create a new direct branch to the
-/// destination block \p dest.
+                                                                       
+                              
 static void replaceCondBranchWithDirectBranch(
     CondBranchInst *CB,
     BasicBlock *dest) {
@@ -80,18 +80,18 @@ static void replaceCondBranchWithDirectBranch(
   CB->eraseFromParent();
 }
 
-/// Try to remove a branch used by phi nodes.
+                                             
 static bool attemptBranchRemovalFromPhiNodes(BasicBlock *BB) {
-  // Only handle blocks that are a single, unconditional branch.
+                                                                
   if (BB->getTerminator() != &*(BB->begin()) ||
       BB->getTerminator()->getKind() != ValueKind::BranchInstKind) {
     return false;
   }
 
-  // Find our parents and also ensure that there aren't
-  // any instructions we can't handle.
+                                                       
+                                      
   llvh::SmallPtrSet<BasicBlock *, 8> blockParents;
-  // Keep unique parents by the original order, which is deterministic.
+                                                                       
   llvh::SmallVector<BasicBlock *, 8> orderedParents;
   for (const auto *user : BB->getUsers()) {
     switch (user->getKind()) {
@@ -100,20 +100,20 @@ static bool attemptBranchRemovalFromPhiNodes(BasicBlock *BB) {
       case ValueKind::SwitchInstKind:
       case ValueKind::GetPNamesInstKind:
       case ValueKind::GetNextPNameInstKind:
-        // This is an instruction where the branch argument is a simple
-        // jump target that can be substituted for any other branch.
+                                                                       
+                                                                    
         if (blockParents.count(user->getParent()) == 0) {
           orderedParents.push_back(user->getParent());
         }
         blockParents.insert(user->getParent());
         break;
       case ValueKind::PhiInstKind:
-        // The branch argument is not a jump target, but we know how
-        // to rewrite them.
+                                                                    
+                           
         break;
       default:
-        // This is some other instruction where we don't know whether we can
-        // unconditionally substitute another branch. Bail for safety.
+                                                                            
+                                                                      
         return false;
     }
   }
@@ -124,12 +124,12 @@ static bool attemptBranchRemovalFromPhiNodes(BasicBlock *BB) {
 
   BasicBlock *phiBlock = nullptr;
 
-  // Verify that we'll be able to rewrite all relevant Phi nodes.
+                                                                 
   for (auto *user : BB->getUsers()) {
     if (auto *phi = llvh::dyn_cast<PhiInst>(user)) {
       if (phiBlock && phi->getParent() != phiBlock) {
-        // We have PhiInsts in multiple blocks referencing BB, but BB is a
-        // single static branch. This is invalid, but the bug is elsewhere.
+                                                                          
+                                                                           
         llvm_unreachable(
             "Different BBs use Phi for BB with single static jump");
       }
@@ -140,7 +140,7 @@ static bool attemptBranchRemovalFromPhiNodes(BasicBlock *BB) {
         auto entry = phi->getEntry(i);
         if (entry.second == BB) {
           if (ourValue) {
-            // The incoming phi node is invalid. The problem is not here.
+                                                                         
             llvm_unreachable("Phi node has multiple entries for a branch.");
           }
           ourValue = entry.first;
@@ -154,20 +154,20 @@ static bool attemptBranchRemovalFromPhiNodes(BasicBlock *BB) {
       for (unsigned int i = 0; i < phi->getNumEntries(); i++) {
         auto entry = phi->getEntry(i);
         if (blockParents.count(entry.second)) {
-          // We have a PhiInst referencing our block BB and its parent, e.g.
-          // %BB0:
-          // CondBranchInst %1, %BB1, %BB2
-          // %BB1:
-          // BranchInst %BB2
-          // %BB2:
-          // PhiInst ??, %BB0, ??, %BB1
+                                                                            
+                  
+                                          
+                  
+                            
+                  
+                                       
           if (entry.first == ourValue) {
-            // Fortunately, the two values are equal, so we can rewrite to:
-            // PhiInst ??, %BB0
+                                                                           
+                               
           } else {
-            // Unfortunately, the value is different in each case,
-            // which naively would have led to an invalid rewrite like:
-            // PhiInst %1, %BB0, %2, %BB0
+                                                                  
+                                                                       
+                                         
             return false;
           }
         }
@@ -178,7 +178,7 @@ static bool attemptBranchRemovalFromPhiNodes(BasicBlock *BB) {
     llvm_unreachable("We shouldn't be in this function if there are no Phis.");
   }
 
-  // This branch is removable. Start by rewriting the Phi nodes.
+                                                                
   for (auto *user : BB->getUsers()) {
     if (auto *phi = llvh::dyn_cast<PhiInst>(user)) {
       Value *ourValue = nullptr;
@@ -199,22 +199,22 @@ static bool attemptBranchRemovalFromPhiNodes(BasicBlock *BB) {
         }
       }
 
-      // Add parents back in sorted order to avoid any non-determinism
+                                                                      
       for (BasicBlock *parent : orderedParents) {
         phi->addEntry(ourValue, parent);
       }
     }
   }
-  // We verified earlier that all uses are branches and phis, so now that
-  // we've rewritten the phis, we can have all branches jump there directly.
+                                                                         
+                                                                            
   BB->replaceAllUsesWith(phiBlock);
   BB->eraseFromParent();
   return true;
 }
 
-/// Perform a strict quality check on two literals. Literals are uniqued by
-/// type, so we can just compare pointers, except for numbers, where we need to
-/// perform a numeric comparison to ensure that NaNs and -0 are handled.
+                                                                           
+                                                                               
+                                                                        
 static bool literalStrictEquality(Literal *L1, Literal *L2) {
   if (llvh::isa<LiteralNumber>(L1) && llvh::isa<LiteralNumber>(L2)) {
     return llvh::cast<LiteralNumber>(L1)->getValue() ==
@@ -223,8 +223,8 @@ static bool literalStrictEquality(Literal *L1, Literal *L2) {
   return L1 == L2;
 }
 
-/// Remove switch targets that are known to be unreachable via the switch
-/// due to \p SI having a literal operand.
+                                                                         
+                                          
 static bool simplifySwitchInst(SwitchInst *SI) {
   auto *thisBlock = SI->getParent();
   IRBuilder builder(thisBlock->getParent());
@@ -233,7 +233,7 @@ static bool simplifySwitchInst(SwitchInst *SI) {
   Value *input = SI->getInputValue();
   auto *litInput = llvh::dyn_cast<Literal>(input);
 
-  // If input of switch is not literal, nothing can be done.
+                                                            
   if (!litInput) {
     return false;
   }
@@ -243,14 +243,14 @@ static bool simplifySwitchInst(SwitchInst *SI) {
   for (unsigned i = 0, e = SI->getNumCasePair(); i < e; i++) {
     auto switchCase = SI->getCasePair(i);
 
-    // Look for a case which matches input.
+                                           
     if (literalStrictEquality(switchCase.first, litInput)) {
       destination = switchCase.second;
       break;
     }
   }
 
-  // Rewrite all phi nodes that no longer have incoming arrows from this block.
+                                                                               
   for (unsigned i = 0, e = SI->getNumSuccessors(); i < e; i++) {
     auto *successor = SI->getSuccessor(i);
     if (successor == destination)
@@ -264,18 +264,18 @@ static bool simplifySwitchInst(SwitchInst *SI) {
   return true;
 }
 
-/// Get rid of trampolines and merge basic blocks that are split by static
-/// non-conditional branches.
+                                                                          
+                             
 static bool optimizeStaticBranches(Function *F) {
   bool changed = false;
   IRBuilder builder(F);
 
-  // Remove conditional branches with a constant condition.
+                                                           
   for (auto &it : *F) {
     BasicBlock *BB = &it;
 
-    // Handle SwitchInst, which can have a static branch and allow us to remove
-    // multiple arms.
+                                                                               
+                     
     if (auto *switchInst = llvh::dyn_cast<SwitchInst>(BB->getTerminator())) {
       changed |= simplifySwitchInst(switchInst);
       continue;
@@ -288,8 +288,8 @@ static bool optimizeStaticBranches(Function *F) {
     BasicBlock *trueDest = cbr->getTrueDest();
     BasicBlock *falseDest = cbr->getFalseDest();
 
-    // If both sides of the branch point to the same block then just jump to it
-    // directly.
+                                                                               
+                
     if (trueDest == falseDest) {
       replaceCondBranchWithDirectBranch(cbr, trueDest);
       changed = true;
@@ -297,8 +297,8 @@ static bool optimizeStaticBranches(Function *F) {
       continue;
     }
 
-    // If the condition is optimized to a literal bool then replace the branch
-    // with a non-conditional branch.
+                                                                              
+                                     
     auto *cond = cbr->getCondition();
     BasicBlock *dest = nullptr;
 
@@ -316,11 +316,11 @@ static bool optimizeStaticBranches(Function *F) {
       changed = true;
       continue;
     }
-  } // for all blocks.
+  }                   
 
-  // Check if a basic block is a simple trampoline (empty non-conditional branch
-  // to another basic block) and get rid of it. Replace all uses of the current
-  // block with the destination of this block.
+                                                                                
+                                                                               
+                                              
   for (auto &it : *F) {
     BasicBlock *BB = &it;
     auto *br = llvh::dyn_cast<BranchInst>(BB->getTerminator());
@@ -329,29 +329,29 @@ static bool optimizeStaticBranches(Function *F) {
 
     BasicBlock *dest = br->getBranchDest();
 
-    // Don't try to optimize infinite loops or unreachable blocks.
+                                                                  
     if (dest == BB)
       continue;
 
-    // Don't handle edges that go across any catch region.
+                                                          
     if (isCrossCatchRegionBranch(BB, dest))
       continue;
 
-    // Handle branches used in phi nodes specially.
+                                                   
     if (isUsedInPhiNode(BB)) {
       if (attemptBranchRemovalFromPhiNodes(BB)) {
         ++NumSB;
         changed = true;
-        break; // Iterator invalidated.
+        break;                         
       }
       continue;
     }
 
-    // Check if the terminator is the only instruction in the block.
+                                                                    
     bool isSingleInstr = (&*BB->begin() == br);
 
-    // If the first and only instruction is a static branch, and it does not
-    // cross a catch boundary then redirect all predecessors to the destination.
+                                                                            
+                                                                                
     if (isSingleInstr && !pred_empty(BB)) {
       BB->replaceAllUsesWith(dest);
       ++NumSB;
@@ -360,42 +360,42 @@ static bool optimizeStaticBranches(Function *F) {
       continue;
     }
 
-    // If the source block is not empty then try to slurp the destination block
-    // and eliminate it altogether.
+                                                                               
+                                   
     if (pred_count(dest) == 1 && dest != BB) {
-      // Slurp the instructions from the destination block one by one.
+                                                                      
       while (dest->begin() != dest->end()) {
         dest->begin()->moveBefore(br);
       }
 
-      // Now that we moved all of the instructions from the destination block we
-      // can delete the original terminator and delete the destination block.
+                                                                                
+                                                                             
       dest->replaceAllUsesWith(BB);
       br->eraseFromParent();
       dest->eraseFromParent();
       ++NumSB;
       changed = true;
 
-      // We are invalidating the iterator here. Stop the scan and continue
-      // afresh in the next iteration.
+                                                                          
+                                      
       break;
     }
-  } // for all blocks.
+  }                   
 
   return changed;
 }
 
-/// Process the deletion of the basic block, and erase it.
+                                                          
 static void deleteBasicBlock(BasicBlock *B) {
-  // Remove all uses of this basic block.
+                                         
 
-  // Copy the uses of the block aside because removing the users invalidates the
-  // iterator.
+                                                                                
+              
   Value::UseListTy users(B->getUsers().begin(), B->getUsers().end());
 
-  // Remove the block from all Phi instructions referring to it. Note that
-  // reachable blocks could end up with Phi instructions referring to
-  // unreachable blocks.
+                                                                          
+                                                                     
+                        
   for (auto *I : users) {
     if (auto *Phi = llvh::dyn_cast<PhiInst>(I)) {
       Phi->removeEntry(B);
@@ -403,24 +403,24 @@ static void deleteBasicBlock(BasicBlock *B) {
     }
   }
 
-  // There may still be uses of the block from other unreachable blocks.
+                                                                        
   B->replaceAllUsesWith(nullptr);
-  // Erase this basic block.
+                            
   B->eraseFromParent();
 }
 
-/// Remove all the unreachable basic blocks.
+                                            
 static bool removeUnreachedBasicBlocks(Function *F) {
   bool changed = false;
 
-  // Visit all reachable blocks.
+                                
   llvh::SmallPtrSet<BasicBlock *, 16> visited;
   llvh::SmallVector<BasicBlock *, 32> workList;
 
   workList.push_back(&*F->begin());
   while (!workList.empty()) {
     auto *BB = workList.pop_back_val();
-    // Already visited?
+                       
     if (!visited.insert(BB).second)
       continue;
 
@@ -428,7 +428,7 @@ static bool removeUnreachedBasicBlocks(Function *F) {
       workList.push_back(succ);
   }
 
-  // Delete all blocks that weren't visited.
+                                            
   for (auto it = F->begin(), e = F->end(); it != e;) {
     auto *BB = &*it++;
     if (!visited.count(BB)) {
@@ -445,8 +445,8 @@ bool SimplifyCFG::runOnFunction(hermes::Function *F) {
   bool changed = false;
 
   bool iterChanged = false;
-  // Keep iterating over deleting unreachable code and removing trampolines as
-  // long as we are making progress.
+                                                                              
+                                    
   do {
     iterChanged = optimizeStaticBranches(F) || removeUnreachedBasicBlocks(F);
     changed |= iterChanged;

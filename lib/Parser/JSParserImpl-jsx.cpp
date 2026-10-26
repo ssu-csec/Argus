@@ -29,13 +29,13 @@ Optional<ESTree::Node *> JSParserImpl::parseJSX() {
   return parseJSXElement(start);
 }
 
-/// \return true if the opening and closing tag names match, which is needed
-/// to define a JSXElement.
+                                                                            
+                           
 static bool tagNamesMatch(
     ESTree::JSXOpeningElementNode *opening,
     ESTree::JSXClosingElementNode *closing) {
-  // Loop over member expressions or namespace names, stopping when both
-  // `name1` and `name2` are the same JSXIdentifier or when they mismatch.
+                                                                        
+                                                                          
   ESTree::Node *name1 = opening->_name;
   ESTree::Node *name2 = closing->_name;
   for (;;) {
@@ -46,7 +46,7 @@ static bool tagNamesMatch(
       return false;
     } else if (auto *name1NS = dyn_cast<ESTree::JSXNamespacedNameNode>(name1)) {
       if (auto *name2NS = dyn_cast<ESTree::JSXNamespacedNameNode>(name2)) {
-        // ESTree spec dictates that both namespace and name are JSXIdentifier.
+                                                                               
         auto *name1NSID = cast<ESTree::JSXIdentifierNode>(name1NS->_namespace);
         auto *name1ID = cast<ESTree::JSXIdentifierNode>(name1NS->_name);
         auto *name2NSID = cast<ESTree::JSXIdentifierNode>(name2NS->_namespace);
@@ -63,8 +63,8 @@ static bool tagNamesMatch(
         if (name1ID->_name != name2ID->_name) {
           return false;
         }
-        // Both names are JSXMemberExpression with matching property names.
-        // Compare the object names.
+                                                                           
+                                    
         name1 = name1ME->_object;
         name2 = name2ME->_object;
         continue;
@@ -87,14 +87,14 @@ Optional<ESTree::Node *> JSParserImpl::parseJSXElement(SMLoc start) {
   }
   ESTree::JSXOpeningElementNode *opening = *optOpening;
 
-  // Parse JSXChildren.
+                       
   ESTree::NodeList children{};
 
   auto optClosing = parseJSXChildren(children);
   if (!optClosing)
     return None;
 
-  // Check that the closing is not a fragment and that the name matches.
+                                                                        
   if (ESTree::JSXClosingElementNode *closing =
           dyn_cast<ESTree::JSXClosingElementNode>(*optClosing)) {
     if (!tagNamesMatch(opening, closing)) {
@@ -153,10 +153,10 @@ Optional<ESTree::JSXOpeningElementNode *> JSParserImpl::parseJSXOpeningElement(
     return None;
 
   if (selfClosing && jsxDepth_ <= 1) {
-    // Done with JSX for now, return to standard JS mode.
+                                                         
     advance();
   } else {
-    // Still in JSX, children after this element.
+                                                 
     lexer_.advanceInJSXChild();
   }
 
@@ -169,22 +169,22 @@ Optional<ESTree::JSXOpeningElementNode *> JSParserImpl::parseJSXOpeningElement(
 
 Optional<ESTree::Node *> JSParserImpl::parseJSXFragment(SMLoc start) {
   assert(check(TokenKind::greater));
-  // JSXFragment:
-  // < > JSXChildren[opt] < / >
-  //   ^
+                 
+                               
+        
   llvh::SaveAndRestore<uint32_t> saveDepth(jsxDepth_, jsxDepth_ + 1);
   ESTree::Node *opening =
       setLocation(start, tok_, new (context_) ESTree::JSXOpeningFragmentNode());
   lexer_.advanceInJSXChild();
 
-  // Parse JSXChildren.
+                       
   ESTree::NodeList children{};
 
   auto optClosing = parseJSXChildren(children);
   if (!optClosing)
     return None;
 
-  // Check that the closing is a fragment.
+                                          
   if (!isa<ESTree::JSXClosingFragmentNode>(*optClosing)) {
     error((*optClosing)->getSourceRange(), "Closing tag must be a fragment");
     lexer_.getSourceMgr().note(
@@ -201,36 +201,36 @@ Optional<ESTree::Node *> JSParserImpl::parseJSXFragment(SMLoc start) {
 
 Optional<ESTree::Node *> JSParserImpl::parseJSXChildren(
     ESTree::NodeList &children) {
-  // Keep looping until we encounter a closing element or a JSXClosingFragment.
+                                                                               
   for (;;) {
     if (check(TokenKind::less)) {
-      // JSXElement or closing tag.
+                                   
       SMLoc start = advance(JSLexer::GrammarContext::AllowJSXIdentifier).Start;
       if (check(TokenKind::slash)) {
-        // < /
-        //   ^
-        // Start of a JSXClosingElement or JSXClosingFragment.
+              
+              
+                                                              
         auto optClosing = parseJSXClosing(start);
         if (!optClosing)
           return None;
         return *optClosing;
       }
-      // Using a JSXFragment as a child node appears to be disallowed by the
-      // spec, but code frequently uses this pattern and all parsers appear to
-      // support it.
+                                                                            
+                                                                              
+                    
       auto optElem = check(TokenKind::greater) ? parseJSXFragment(start)
                                                : parseJSXElement(start);
       if (!optElem)
         return None;
       children.push_back(**optElem);
     } else if (check(TokenKind::l_brace)) {
-      // { JSXChildExpression[opt] }
-      // ^
+                                    
+          
       SMRange startRange = advance();
       SMLoc start = startRange.Start;
       if (check(TokenKind::r_brace)) {
-        // { }
-        //   ^
+              
+              
         SMRange endRange = tok_->getSourceRange();
         children.push_back(*setLocation(
             start,
@@ -240,8 +240,8 @@ Optional<ESTree::Node *> JSParserImpl::parseJSXChildren(
                 endRange.Start,
                 new (context_) ESTree::JSXEmptyExpressionNode()))));
       } else {
-        // { JSXChildExpression }
-        //   ^
+                                 
+              
         auto optChildExpr = parseJSXChildExpression(start);
         if (!optChildExpr)
           return None;
@@ -255,7 +255,7 @@ Optional<ESTree::Node *> JSParserImpl::parseJSXChildren(
       }
       lexer_.advanceInJSXChild();
     } else {
-      /// JSXText handled by the lexer.
+                                       
       if (!need(TokenKind::jsx_text, "in JSX child expression", nullptr, {}))
         return None;
       children.push_back(*setLocation(
@@ -289,8 +289,8 @@ Optional<ESTree::Node *> JSParserImpl::parseJSXSpreadAttribute() {
   assert(check(TokenKind::l_brace));
   SMLoc start = advance().Start;
 
-  // { ... AssignmentExpression }
-  //   ^
+                                 
+        
 
   if (!eat(
           TokenKind::dotdotdot,
@@ -333,9 +333,9 @@ Optional<ESTree::Node *> JSParserImpl::parseJSXAttribute() {
         new (context_) ESTree::JSXAttributeNode(*optName, nullptr));
   }
 
-  // JSXAttributeInitializer:
-  // = JSXAttributeValue
-  //   ^
+                             
+                        
+        
   ESTree::Node *value = nullptr;
   if (check(TokenKind::string_literal)) {
     UniqueString *raw = lexer_.getStringLiteral(tok_->inputStr());
@@ -346,8 +346,8 @@ Optional<ESTree::Node *> JSParserImpl::parseJSXAttribute() {
             ESTree::JSXStringLiteralNode(tok_->getStringLiteral(), raw));
     advance(JSLexer::GrammarContext::AllowJSXIdentifier);
   } else {
-    // { AssignmentExpression }
-    // ^
+                               
+        
     if (!need(
             TokenKind::l_brace,
             "in JSX attribute",
@@ -391,7 +391,7 @@ Optional<ESTree::Node *> JSParserImpl::parseJSXClosing(SMLoc start) {
     if (jsxDepth_ > 1) {
       lexer_.advanceInJSXChild();
     } else {
-      // Done with JSX, advance normally.
+                                         
       advance();
     }
     return setLocation(
@@ -413,7 +413,7 @@ Optional<ESTree::Node *> JSParserImpl::parseJSXClosing(SMLoc start) {
   if (jsxDepth_ > 1) {
     lexer_.advanceInJSXChild();
   } else {
-    // Done with JSX, advance normally.
+                                       
     advance();
   }
 
@@ -437,9 +437,9 @@ Optional<ESTree::Node *> JSParserImpl::parseJSXElementName(
   advance(JSLexer::GrammarContext::AllowJSXIdentifier);
 
   if (check(TokenKind::colon)) {
-    // JSXNamespacedName:
-    // JSXIdentifier : JSXIdentifier
-    // ^
+                         
+                                    
+        
     advance(JSLexer::GrammarContext::AllowJSXIdentifier);
     if (!check(TokenKind::identifier) && !tok_->isResWord()) {
       errorExpected(
@@ -463,9 +463,9 @@ Optional<ESTree::Node *> JSParserImpl::parseJSXElementName(
   }
 
   while (check(TokenKind::period)) {
-    // JSXNamespacedName:
-    // JSXMemberExpression . JSXIdentifier
-    // ^
+                         
+                                          
+        
     advance(JSLexer::GrammarContext::AllowJSXIdentifier);
     if (!check(TokenKind::identifier) && !tok_->isResWord()) {
       errorExpected(
@@ -499,6 +499,6 @@ Optional<ESTree::Node *> JSParserImpl::parseJSXElementName(
 
 #endif
 
-} // namespace detail
-} // namespace parser
-} // namespace hermes
+}                    
+}                    
+}                    

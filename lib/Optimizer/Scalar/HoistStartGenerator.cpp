@@ -16,7 +16,7 @@ using namespace hermes;
 bool HoistStartGenerator::runOnFunction(Function *F) {
   auto *innerFn = llvh::dyn_cast<GeneratorInnerFunction>(F);
   if (!innerFn) {
-    // StartGenerator is only in GeneratorInnerFunction.
+                                                        
     return false;
   }
 
@@ -24,8 +24,8 @@ bool HoistStartGenerator::runOnFunction(Function *F) {
     for (Instruction &inst : bb) {
       if (auto *startGen = llvh::dyn_cast<StartGeneratorInst>(&inst)) {
         startGen->moveBefore(&*F->front().begin());
-        // GeneratorInnerFunction may only have one StartGeneratorInst,
-        // so we are done.
+                                                                       
+                          
         return true;
       }
     }

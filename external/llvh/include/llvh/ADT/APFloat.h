@@ -41,113 +41,113 @@ class raw_ostream;
 
 template <typename T> class SmallVectorImpl;
 
-/// Enum that represents what fraction of the LSB truncated bits of an fp number
-/// represent.
-///
-/// This essentially combines the roles of guard and sticky bits.
-enum lostFraction { // Example of truncated bits:
-  lfExactlyZero,    // 000000
-  lfLessThanHalf,   // 0xxxxx  x's not all zero
-  lfExactlyHalf,    // 100000
-  lfMoreThanHalf    // 1xxxxx  x's not all zero
+                                                                                
+              
+   
+                                                                 
+enum lostFraction {                              
+  lfExactlyZero,             
+  lfLessThanHalf,                              
+  lfExactlyHalf,             
+  lfMoreThanHalf                               
 };
 
-/// A self-contained host- and target-independent arbitrary-precision
-/// floating-point software implementation.
-///
-/// APFloat uses bignum integer arithmetic as provided by static functions in
-/// the APInt class.  The library will work with bignum integers whose parts are
-/// any unsigned type at least 16 bits wide, but 64 bits is recommended.
-///
-/// Written for clarity rather than speed, in particular with a view to use in
-/// the front-end of a cross compiler so that target arithmetic can be correctly
-/// performed on the host.  Performance should nonetheless be reasonable,
-/// particularly for its intended use.  It may be useful as a base
-/// implementation for a run-time library during development of a faster
-/// target-specific one.
-///
-/// All 5 rounding modes in the IEEE-754R draft are handled correctly for all
-/// implemented operations.  Currently implemented operations are add, subtract,
-/// multiply, divide, fused-multiply-add, conversion-to-float,
-/// conversion-to-integer and conversion-from-integer.  New rounding modes
-/// (e.g. away from zero) can be added with three or four lines of code.
-///
-/// Four formats are built-in: IEEE single precision, double precision,
-/// quadruple precision, and x87 80-bit extended double (when operating with
-/// full extended precision).  Adding a new format that obeys IEEE semantics
-/// only requires adding two lines of code: a declaration and definition of the
-/// format.
-///
-/// All operations return the status of that operation as an exception bit-mask,
-/// so multiple operations can be done consecutively with their results or-ed
-/// together.  The returned status can be useful for compiler diagnostics; e.g.,
-/// inexact, underflow and overflow can be easily diagnosed on constant folding,
-/// and compiler optimizers can determine what exceptions would be raised by
-/// folding operations and optimize, or perhaps not optimize, accordingly.
-///
-/// At present, underflow tininess is detected after rounding; it should be
-/// straight forward to add support for the before-rounding case too.
-///
-/// The library reads hexadecimal floating point numbers as per C99, and
-/// correctly rounds if necessary according to the specified rounding mode.
-/// Syntax is required to have been validated by the caller.  It also converts
-/// floating point numbers to hexadecimal text as per the C99 %a and %A
-/// conversions.  The output precision (or alternatively the natural minimal
-/// precision) can be specified; if the requested precision is less than the
-/// natural precision the output is correctly rounded for the specified rounding
-/// mode.
-///
-/// It also reads decimal floating point numbers and correctly rounds according
-/// to the specified rounding mode.
-///
-/// Conversion to decimal text is not currently implemented.
-///
-/// Non-zero finite numbers are represented internally as a sign bit, a 16-bit
-/// signed exponent, and the significand as an array of integer parts.  After
-/// normalization of a number of precision P the exponent is within the range of
-/// the format, and if the number is not denormal the P-th bit of the
-/// significand is set as an explicit integer bit.  For denormals the most
-/// significant bit is shifted right so that the exponent is maintained at the
-/// format's minimum, so that the smallest denormal has just the least
-/// significant bit of the significand set.  The sign of zeroes and infinities
-/// is significant; the exponent and significand of such numbers is not stored,
-/// but has a known implicit (deterministic) value: 0 for the significands, 0
-/// for zero exponent, all 1 bits for infinity exponent.  For NaNs the sign and
-/// significand are deterministic, although not really meaningful, and preserved
-/// in non-conversion operations.  The exponent is implicitly all 1 bits.
-///
-/// APFloat does not provide any exception handling beyond default exception
-/// handling. We represent Signaling NaNs via IEEE-754R 2008 6.2.1 should clause
-/// by encoding Signaling NaNs with the first bit of its trailing significand as
-/// 0.
-///
-/// TODO
-/// ====
-///
-/// Some features that may or may not be worth adding:
-///
-/// Binary to decimal conversion (hard).
-///
-/// Optional ability to detect underflow tininess before rounding.
-///
-/// New formats: x87 in single and double precision mode (IEEE apart from
-/// extended exponent range) (hard).
-///
-/// New operations: sqrt, IEEE remainder, C90 fmod, nexttoward.
-///
+                                                                     
+                                           
+   
+                                                                             
+                                                                                
+                                                                        
+   
+                                                                              
+                                                                                
+                                                                         
+                                                                  
+                                                                        
+                        
+   
+                                                                             
+                                                                                
+                                                              
+                                                                          
+                                                                        
+   
+                                                                       
+                                                                            
+                                                                            
+                                                                               
+           
+   
+                                                                                
+                                                                             
+                                                                                
+                                                                                
+                                                                            
+                                                                          
+   
+                                                                           
+                                                                     
+   
+                                                                        
+                                                                           
+                                                                              
+                                                                       
+                                                                            
+                                                                            
+                                                                                
+         
+   
+                                                                               
+                                   
+   
+                                                            
+   
+                                                                              
+                                                                             
+                                                                                
+                                                                     
+                                                                          
+                                                                              
+                                                                      
+                                                                              
+                                                                               
+                                                                             
+                                                                               
+                                                                                
+                                                                         
+   
+                                                                            
+                                                                                
+                                                                                
+      
+   
+        
+        
+   
+                                                      
+   
+                                        
+   
+                                                                  
+   
+                                                                         
+                                    
+   
+                                                               
+   
 
-// This is the common type definitions shared by APFloat and its internal
-// implementation classes. This struct should not define any non-static data
-// members.
+                                                                         
+                                                                            
+           
 struct APFloatBase {
   typedef APInt::WordType integerPart;
   static const unsigned integerPartWidth = APInt::APINT_BITS_PER_WORD;
 
-  /// A signed type to represent a floating point numbers unbiased exponent.
+                                                                            
   typedef signed short ExponentType;
 
-  /// \name Floating Point Semantics.
-  /// @{
+                                     
+        
 
   static const fltSemantics &IEEEhalf() LLVM_READNONE;
   static const fltSemantics &IEEEsingle() LLVM_READNONE;
@@ -156,13 +156,13 @@ struct APFloatBase {
   static const fltSemantics &PPCDoubleDouble() LLVM_READNONE;
   static const fltSemantics &x87DoubleExtended() LLVM_READNONE;
 
-  /// A Pseudo fltsemantic used to construct APFloats that cannot conflict with
-  /// anything real.
+                                                                               
+                    
   static const fltSemantics &Bogus() LLVM_READNONE;
 
-  /// @}
+        
 
-  /// IEEE-754R 5.11: Floating Point Comparison Relations.
+                                                          
   enum cmpResult {
     cmpLessThan,
     cmpEqual,
@@ -170,7 +170,7 @@ struct APFloatBase {
     cmpUnordered
   };
 
-  /// IEEE-754R 4.3: Rounding-direction attributes.
+                                                   
   enum roundingMode {
     rmNearestTiesToEven,
     rmTowardPositive,
@@ -179,9 +179,9 @@ struct APFloatBase {
     rmNearestTiesToAway
   };
 
-  /// IEEE-754R 7: Default exception handling.
-  ///
-  /// opUnderflow or opOverflow are always returned or-ed with opInexact.
+                                              
+     
+                                                                         
   enum opStatus {
     opOK = 0x00,
     opInvalidOp = 0x01,
@@ -191,7 +191,7 @@ struct APFloatBase {
     opInexact = 0x10
   };
 
-  /// Category of internally-represented number.
+                                                
   enum fltCategory {
     fcInfinity,
     fcNaN,
@@ -199,12 +199,12 @@ struct APFloatBase {
     fcZero
   };
 
-  /// Convenience enum used to construct an uninitialized APFloat.
+                                                                  
   enum uninitializedTag {
     uninitialized
   };
 
-  /// Enumeration of \c ilogb error results.
+                                            
   enum IlogbErrorKinds {
     IEK_Zero = INT_MIN + 1,
     IEK_NaN = INT_MIN,
@@ -216,8 +216,8 @@ struct APFloatBase {
   static ExponentType semanticsMaxExponent(const fltSemantics &);
   static unsigned int semanticsSizeInBits(const fltSemantics &);
 
-  /// Returns the size of the floating point number (in bits) in the given
-  /// semantics.
+                                                                          
+                
   static unsigned getSizeInBits(const fltSemantics &Sem);
 };
 
@@ -225,10 +225,10 @@ namespace detail {
 
 class IEEEFloat final : public APFloatBase {
 public:
-  /// \name Constructors
-  /// @{
+                        
+        
 
-  IEEEFloat(const fltSemantics &); // Default construct to 0.0
+  IEEEFloat(const fltSemantics &);                            
   IEEEFloat(const fltSemantics &, integerPart);
   IEEEFloat(const fltSemantics &, uninitializedTag);
   IEEEFloat(const fltSemantics &, const APInt &);
@@ -238,43 +238,43 @@ public:
   IEEEFloat(IEEEFloat &&);
   ~IEEEFloat();
 
-  /// @}
+        
 
-  /// Returns whether this instance allocated memory.
+                                                     
   bool needsCleanup() const { return partCount() > 1; }
 
-  /// \name Convenience "constructors"
-  /// @{
+                                      
+        
 
-  /// @}
+        
 
-  /// \name Arithmetic
-  /// @{
+                      
+        
 
   opStatus add(const IEEEFloat &, roundingMode);
   opStatus subtract(const IEEEFloat &, roundingMode);
   opStatus multiply(const IEEEFloat &, roundingMode);
   opStatus divide(const IEEEFloat &, roundingMode);
-  /// IEEE remainder.
+                     
   opStatus remainder(const IEEEFloat &);
-  /// C fmod, or llvm frem.
+                           
   opStatus mod(const IEEEFloat &);
   opStatus fusedMultiplyAdd(const IEEEFloat &, const IEEEFloat &, roundingMode);
   opStatus roundToIntegral(roundingMode);
-  /// IEEE-754R 5.3.1: nextUp/nextDown.
+                                       
   opStatus next(bool nextDown);
 
-  /// @}
+        
 
-  /// \name Sign operations.
-  /// @{
+                            
+        
 
   void changeSign();
 
-  /// @}
+        
 
-  /// \name Conversions
-  /// @{
+                       
+        
 
   opStatus convert(const fltSemantics &, roundingMode, bool *);
   opStatus convertToInteger(MutableArrayRef<integerPart>, unsigned int, bool,
@@ -289,67 +289,67 @@ public:
   double convertToDouble() const;
   float convertToFloat() const;
 
-  /// @}
+        
 
-  /// The definition of equality is not straightforward for floating point, so
-  /// we won't use operator==.  Use one of the following, or write whatever it
-  /// is you really mean.
+                                                                              
+                                                                              
+                         
   bool operator==(const IEEEFloat &) const = delete;
 
-  /// IEEE comparison with another floating point number (NaNs compare
-  /// unordered, 0==-0).
+                                                                      
+                        
   cmpResult compare(const IEEEFloat &) const;
 
-  /// Bitwise comparison for equality (QNaNs compare equal, 0!=-0).
+                                                                   
   bool bitwiseIsEqual(const IEEEFloat &) const;
 
-  /// Write out a hexadecimal representation of the floating point value to DST,
-  /// which must be of sufficient size, in the C99 form [-]0xh.hhhhp[+-]d.
-  /// Return the number of characters written, excluding the terminating NUL.
+                                                                                
+                                                                          
+                                                                             
   unsigned int convertToHexString(char *dst, unsigned int hexDigits,
                                   bool upperCase, roundingMode) const;
 
-  /// \name IEEE-754R 5.7.2 General operations.
-  /// @{
+                                               
+        
 
-  /// IEEE-754R isSignMinus: Returns true if and only if the current value is
-  /// negative.
-  ///
-  /// This applies to zeros and NaNs as well.
+                                                                             
+               
+     
+                                             
   bool isNegative() const { return sign; }
 
-  /// IEEE-754R isNormal: Returns true if and only if the current value is normal.
-  ///
-  /// This implies that the current value of the float is not zero, subnormal,
-  /// infinite, or NaN following the definition of normality from IEEE-754R.
+                                                                                  
+     
+                                                                              
+                                                                            
   bool isNormal() const { return !isDenormal() && isFiniteNonZero(); }
 
-  /// Returns true if and only if the current value is zero, subnormal, or
-  /// normal.
-  ///
-  /// This means that the value is not infinite or NaN.
+                                                                          
+             
+     
+                                                       
   bool isFinite() const { return !isNaN() && !isInfinity(); }
 
-  /// Returns true if and only if the float is plus or minus zero.
+                                                                  
   bool isZero() const { return category == fcZero; }
 
-  /// IEEE-754R isSubnormal(): Returns true if and only if the float is a
-  /// denormal.
+                                                                         
+               
   bool isDenormal() const;
 
-  /// IEEE-754R isInfinite(): Returns true if and only if the float is infinity.
+                                                                                
   bool isInfinity() const { return category == fcInfinity; }
 
-  /// Returns true if and only if the float is a quiet or signaling NaN.
+                                                                        
   bool isNaN() const { return category == fcNaN; }
 
-  /// Returns true if and only if the float is a signaling NaN.
+                                                               
   bool isSignaling() const;
 
-  /// @}
+        
 
-  /// \name Simple Queries
-  /// @{
+                          
+        
 
   fltCategory getCategory() const { return category; }
   const fltSemantics &getSemantics() const { return *semantics; }
@@ -358,84 +358,84 @@ public:
   bool isPosZero() const { return isZero() && !isNegative(); }
   bool isNegZero() const { return isZero() && isNegative(); }
 
-  /// Returns true if and only if the number has the smallest possible non-zero
-  /// magnitude in the current semantics.
+                                                                               
+                                         
   bool isSmallest() const;
 
-  /// Returns true if and only if the number has the largest possible finite
-  /// magnitude in the current semantics.
+                                                                            
+                                         
   bool isLargest() const;
 
-  /// Returns true if and only if the number is an exact integer.
+                                                                 
   bool isInteger() const;
 
-  /// @}
+        
 
   IEEEFloat &operator=(const IEEEFloat &);
   IEEEFloat &operator=(IEEEFloat &&);
 
-  /// Overload to compute a hash code for an APFloat value.
-  ///
-  /// Note that the use of hash codes for floating point values is in general
-  /// frought with peril. Equality is hard to define for these values. For
-  /// example, should negative and positive zero hash to different codes? Are
-  /// they equal or not? This hash value implementation specifically
-  /// emphasizes producing different codes for different inputs in order to
-  /// be used in canonicalization and memoization. As such, equality is
-  /// bitwiseIsEqual, and 0 != -0.
+                                                           
+     
+                                                                             
+                                                                          
+                                                                             
+                                                                    
+                                                                           
+                                                                       
+                                  
   friend hash_code hash_value(const IEEEFloat &Arg);
 
-  /// Converts this value into a decimal string.
-  ///
-  /// \param FormatPrecision The maximum number of digits of
-  ///   precision to output.  If there are fewer digits available,
-  ///   zero padding will not be used unless the value is
-  ///   integral and small enough to be expressed in
-  ///   FormatPrecision digits.  0 means to use the natural
-  ///   precision of the number.
-  /// \param FormatMaxPadding The maximum number of zeros to
-  ///   consider inserting before falling back to scientific
-  ///   notation.  0 means to always use scientific notation.
-  ///
-  /// \param TruncateZero Indicate whether to remove the trailing zero in
-  ///   fraction part or not. Also setting this parameter to false forcing
-  ///   producing of output more similar to default printf behavior.
-  ///   Specifically the lower e is used as exponent delimiter and exponent
-  ///   always contains no less than two digits.
-  ///
-  /// Number       Precision    MaxPadding      Result
-  /// ------       ---------    ----------      ------
-  /// 1.01E+4              5             2       10100
-  /// 1.01E+4              4             2       1.01E+4
-  /// 1.01E+4              5             1       1.01E+4
-  /// 1.01E-2              5             2       0.0101
-  /// 1.01E-2              4             2       0.0101
-  /// 1.01E-2              4             1       1.01E-2
+                                                
+     
+                                                            
+                                                                  
+                                                         
+                                                    
+                                                           
+                                
+                                                            
+                                                            
+                                                             
+     
+                                                                         
+                                                                          
+                                                                    
+                                                                           
+                                                
+     
+                                                      
+                                                      
+                                                      
+                                                        
+                                                        
+                                                       
+                                                       
+                                                        
   void toString(SmallVectorImpl<char> &Str, unsigned FormatPrecision = 0,
                 unsigned FormatMaxPadding = 3, bool TruncateZero = true) const;
 
-  /// If this value has an exact multiplicative inverse, store it in inv and
-  /// return true.
+                                                                            
+                  
   bool getExactInverse(APFloat *inv) const;
 
-  /// Returns the exponent of the internal representation of the APFloat.
-  ///
-  /// Because the radix of APFloat is 2, this is equivalent to floor(log2(x)).
-  /// For special APFloat values, this returns special error codes:
-  ///
-  ///   NaN -> \c IEK_NaN
-  ///   0   -> \c IEK_Zero
-  ///   Inf -> \c IEK_Inf
-  ///
+                                                                         
+     
+                                                                              
+                                                                   
+     
+                         
+                          
+                         
+     
   friend int ilogb(const IEEEFloat &Arg);
 
-  /// Returns: X * 2^Exp for integral exponents.
+                                                
   friend IEEEFloat scalbn(IEEEFloat X, int Exp, roundingMode);
 
   friend IEEEFloat frexp(const IEEEFloat &X, int &Exp, roundingMode);
 
-  /// \name Special value setters.
-  /// @{
+                                  
+        
 
   void makeLargest(bool Neg = false);
   void makeSmallest(bool Neg = false);
@@ -445,28 +445,28 @@ public:
   void makeZero(bool Neg = false);
   void makeQuiet();
 
-  /// Returns the smallest (by magnitude) normalized finite number in the given
-  /// semantics.
-  ///
-  /// \param Negative - True iff the number should be negative
+                                                                               
+                
+     
+                                                              
   void makeSmallestNormalized(bool Negative = false);
 
-  /// @}
+        
 
   cmpResult compareAbsoluteValue(const IEEEFloat &) const;
 
 private:
-  /// \name Simple Queries
-  /// @{
+                          
+        
 
   integerPart *significandParts();
   const integerPart *significandParts() const;
   unsigned int partCount() const;
 
-  /// @}
+        
 
-  /// \name Significand operations.
-  /// @{
+                                   
+        
 
   integerPart addSignificand(const IEEEFloat &);
   integerPart subtractSignificand(const IEEEFloat &, integerPart);
@@ -480,25 +480,25 @@ private:
   unsigned int significandLSB() const;
   unsigned int significandMSB() const;
   void zeroSignificand();
-  /// Return true if the significand excluding the integral bit is all ones.
+                                                                            
   bool isSignificandAllOnes() const;
-  /// Return true if the significand excluding the integral bit is all zeros.
+                                                                             
   bool isSignificandAllZeros() const;
 
-  /// @}
+        
 
-  /// \name Arithmetic on special values.
-  /// @{
+                                         
+        
 
   opStatus addOrSubtractSpecials(const IEEEFloat &, bool subtract);
   opStatus divideSpecials(const IEEEFloat &);
   opStatus multiplySpecials(const IEEEFloat &);
   opStatus modSpecials(const IEEEFloat &);
 
-  /// @}
+        
 
-  /// \name Miscellany
-  /// @{
+                      
+        
 
   bool convertFromStringSpecials(StringRef str);
   opStatus normalize(roundingMode, lostFraction);
@@ -517,7 +517,7 @@ private:
   opStatus roundSignificandWithExponent(const integerPart *, unsigned int, int,
                                         roundingMode);
 
-  /// @}
+        
 
   APInt convertHalfAPFloatToAPInt() const;
   APInt convertFloatAPFloatToAPInt() const;
@@ -537,28 +537,28 @@ private:
   void copySignificand(const IEEEFloat &);
   void freeSignificand();
 
-  /// Note: this must be the first data member.
-  /// The semantics that this value obeys.
+                                               
+                                          
   const fltSemantics *semantics;
 
-  /// A binary fraction with an explicit integer bit.
-  ///
-  /// The significand must be at least one bit wider than the target precision.
+                                                     
+     
+                                                                               
   union Significand {
     integerPart part;
     integerPart *parts;
   } significand;
 
-  /// The signed unbiased exponent of the value.
+                                                
   ExponentType exponent;
 
-  /// What kind of floating point number this is.
-  ///
-  /// Only 2 bits are required, but VisualStudio incorrectly sign extends it.
-  /// Using the extra bit keeps it from failing under VisualStudio.
+                                                 
+     
+                                                                             
+                                                                   
   fltCategory category : 3;
 
-  /// Sign bit of the number.
+                             
   unsigned int sign : 1;
 };
 
@@ -567,12 +567,12 @@ int ilogb(const IEEEFloat &Arg);
 IEEEFloat scalbn(IEEEFloat X, int Exp, IEEEFloat::roundingMode);
 IEEEFloat frexp(const IEEEFloat &Val, int &Exp, IEEEFloat::roundingMode RM);
 
-// This mode implements more precise float in terms of two APFloats.
-// The interface and layout is designed for arbitray underlying semantics,
-// though currently only PPCDoubleDouble semantics are supported, whose
-// corresponding underlying semantics are IEEEdouble.
+                                                                    
+                                                                          
+                                                                       
+                                                     
 class DoubleAPFloat final : public APFloatBase {
-  // Note: this must be the first data member.
+                                              
   const fltSemantics *Semantics;
   std::unique_ptr<APFloat[]> Floats;
 
@@ -667,10 +667,10 @@ public:
 
 hash_code hash_value(const DoubleAPFloat &Arg);
 
-} // End detail namespace
+}                        
 
-// This is a interface class that is currently forwarding functionalities from
-// detail::IEEEFloat.
+                                                                              
+                     
 class APFloat : public APFloatBase {
   typedef detail::IEEEFloat IEEEFloat;
   typedef detail::DoubleAPFloat DoubleAPFloat;
@@ -811,9 +811,9 @@ class APFloat : public APFloatBase {
     APFLOAT_DISPATCH_ON_SEMANTICS(makeSmallestNormalized(Neg));
   }
 
-  // FIXME: This is due to clang 3.3 (or older version) always checks for the
-  // default constructor in an array aggregate initialization, even if no
-  // elements in the array is default initialized.
+                                                                             
+                                                                         
+                                                  
   APFloat() : U(IEEEdouble()) {
     llvm_unreachable("This is a workaround for old clang.");
   }
@@ -836,7 +836,7 @@ public:
   APFloat(const fltSemantics &Semantics) : U(Semantics) {}
   APFloat(const fltSemantics &Semantics, StringRef S);
   APFloat(const fltSemantics &Semantics, integerPart I) : U(Semantics, I) {}
-  // TODO: Remove this constructor. This isn't faster than the first one.
+                                                                         
   APFloat(const fltSemantics &Semantics, uninitializedTag)
       : U(Semantics, uninitialized) {}
   APFloat(const fltSemantics &Semantics, const APInt &I) : U(Semantics, I) {}
@@ -849,29 +849,29 @@ public:
 
   bool needsCleanup() const { APFLOAT_DISPATCH_ON_SEMANTICS(needsCleanup()); }
 
-  /// Factory for Positive and Negative Zero.
-  ///
-  /// \param Negative True iff the number should be negative.
+                                             
+     
+                                                             
   static APFloat getZero(const fltSemantics &Sem, bool Negative = false) {
     APFloat Val(Sem, uninitialized);
     Val.makeZero(Negative);
     return Val;
   }
 
-  /// Factory for Positive and Negative Infinity.
-  ///
-  /// \param Negative True iff the number should be negative.
+                                                 
+     
+                                                             
   static APFloat getInf(const fltSemantics &Sem, bool Negative = false) {
     APFloat Val(Sem, uninitialized);
     Val.makeInf(Negative);
     return Val;
   }
 
-  /// Factory for NaN values.
-  ///
-  /// \param Negative - True iff the NaN generated should be negative.
-  /// \param type - The unspecified fill bits for creating the NaN, 0 by
-  /// default.  The value is truncated as necessary.
+                             
+     
+                                                                      
+                                                                        
+                                                    
   static APFloat getNaN(const fltSemantics &Sem, bool Negative = false,
                         unsigned type = 0) {
     if (type) {
@@ -882,7 +882,7 @@ public:
     }
   }
 
-  /// Factory for QNaN values.
+                              
   static APFloat getQNaN(const fltSemantics &Sem, bool Negative = false,
                          const APInt *payload = nullptr) {
     APFloat Val(Sem, uninitialized);
@@ -890,7 +890,7 @@ public:
     return Val;
   }
 
-  /// Factory for SNaN values.
+                              
   static APFloat getSNaN(const fltSemantics &Sem, bool Negative = false,
                          const APInt *payload = nullptr) {
     APFloat Val(Sem, uninitialized);
@@ -898,29 +898,29 @@ public:
     return Val;
   }
 
-  /// Returns the largest finite number in the given semantics.
-  ///
-  /// \param Negative - True iff the number should be negative
+                                                               
+     
+                                                              
   static APFloat getLargest(const fltSemantics &Sem, bool Negative = false) {
     APFloat Val(Sem, uninitialized);
     Val.makeLargest(Negative);
     return Val;
   }
 
-  /// Returns the smallest (by magnitude) finite number in the given semantics.
-  /// Might be denormalized, which implies a relative loss of precision.
-  ///
-  /// \param Negative - True iff the number should be negative
+                                                                               
+                                                                        
+     
+                                                              
   static APFloat getSmallest(const fltSemantics &Sem, bool Negative = false) {
     APFloat Val(Sem, uninitialized);
     Val.makeSmallest(Negative);
     return Val;
   }
 
-  /// Returns the smallest (by magnitude) normalized finite number in the given
-  /// semantics.
-  ///
-  /// \param Negative - True iff the number should be negative
+                                                                               
+                
+     
+                                                              
   static APFloat getSmallestNormalized(const fltSemantics &Sem,
                                        bool Negative = false) {
     APFloat Val(Sem, uninitialized);
@@ -928,14 +928,14 @@ public:
     return Val;
   }
 
-  /// Returns a float which is bitcasted from an all one value int.
-  ///
-  /// \param BitWidth - Select float type
-  /// \param isIEEE   - If 128 bit number, select between PPC and IEEE
+                                                                   
+     
+                                         
+                                                                      
   static APFloat getAllOnesValue(unsigned BitWidth, bool isIEEE = false);
 
-  /// Used to insert APFloat objects, or objects that contain APFloat objects,
-  /// into FoldingSets.
+                                                                              
+                       
   void Profile(FoldingSetNodeID &NID) const;
 
   opStatus add(const APFloat &RHS, roundingMode RM) {
@@ -1009,38 +1009,38 @@ public:
     APFLOAT_DISPATCH_ON_SEMANTICS(roundToIntegral(RM));
   }
 
-  // TODO: bool parameters are not readable and a source of bugs.
-  // Do something.
+                                                                 
+                  
   opStatus next(bool nextDown) {
     APFLOAT_DISPATCH_ON_SEMANTICS(next(nextDown));
   }
 
-  /// Add two APFloats, rounding ties to the nearest even.
-  /// No error checking.
+                                                          
+                        
   APFloat operator+(const APFloat &RHS) const {
     APFloat Result(*this);
     (void)Result.add(RHS, rmNearestTiesToEven);
     return Result;
   }
 
-  /// Subtract two APFloats, rounding ties to the nearest even.
-  /// No error checking.
+                                                               
+                        
   APFloat operator-(const APFloat &RHS) const {
     APFloat Result(*this);
     (void)Result.subtract(RHS, rmNearestTiesToEven);
     return Result;
   }
 
-  /// Multiply two APFloats, rounding ties to the nearest even.
-  /// No error checking.
+                                                               
+                        
   APFloat operator*(const APFloat &RHS) const {
     APFloat Result(*this);
     (void)Result.multiply(RHS, rmNearestTiesToEven);
     return Result;
   }
 
-  /// Divide the first APFloat by the second, rounding ties to the nearest even.
-  /// No error checking.
+                                                                                
+                        
   APFloat operator/(const APFloat &RHS) const {
     APFloat Result(*this);
     (void)Result.divide(RHS, rmNearestTiesToEven);
@@ -1057,8 +1057,8 @@ public:
       changeSign();
   }
 
-  /// A static helper to produce a copy of an APFloat value with its sign
-  /// copied from some other APFloat.
+                                                                         
+                                     
   static APFloat copySign(APFloat Value, const APFloat &Sign) {
     Value.copySign(Sign);
     return Value;
@@ -1119,14 +1119,14 @@ public:
     llvm_unreachable("Unexpected semantics");
   }
 
-  /// We don't rely on operator== working on double values, as
-  /// it returns true for things that are clearly not equal, like -0.0 and 0.0.
-  /// As such, this method can be used to do an exact bit-for-bit comparison of
-  /// two floating point values.
-  ///
-  /// We leave the version with the double argument here because it's just so
-  /// convenient to write "2.0" and the like.  Without this function we'd
-  /// have to duplicate its logic everywhere it's called.
+                                                              
+                                                                               
+                                                                               
+                                
+     
+                                                                             
+                                                                         
+                                                         
   bool isExactlyValue(double V) const {
     bool ignored;
     APFloat Tmp(V);
@@ -1185,10 +1185,10 @@ public:
   friend DoubleAPFloat;
 };
 
-/// See friend declarations above.
-///
-/// These additional declarations are required in order to compile LLVM with IBM
-/// xlC compiler.
+                                  
+   
+                                                                                
+                 
 hash_code hash_value(const APFloat &Arg);
 inline APFloat scalbn(APFloat X, int Exp, APFloat::roundingMode RM) {
   if (APFloat::usesLayout<detail::IEEEFloat>(X.getSemantics()))
@@ -1198,10 +1198,10 @@ inline APFloat scalbn(APFloat X, int Exp, APFloat::roundingMode RM) {
   llvm_unreachable("Unexpected semantics");
 }
 
-/// Equivalent of C standard library function.
-///
-/// While the C standard says Exp is an unspecified value for infinity and nan,
-/// this returns INT_MAX for infinities, and INT_MIN for NaNs.
+                                              
+   
+                                                                               
+                                                              
 inline APFloat frexp(const APFloat &X, int &Exp, APFloat::roundingMode RM) {
   if (APFloat::usesLayout<detail::IEEEFloat>(X.getSemantics()))
     return APFloat(frexp(X.U.IEEE, Exp, RM), X.getSemantics());
@@ -1209,20 +1209,20 @@ inline APFloat frexp(const APFloat &X, int &Exp, APFloat::roundingMode RM) {
     return APFloat(frexp(X.U.Double, Exp, RM), X.getSemantics());
   llvm_unreachable("Unexpected semantics");
 }
-/// Returns the absolute value of the argument.
+                                               
 inline APFloat abs(APFloat X) {
   X.clearSign();
   return X;
 }
 
-/// Returns the negated value of the argument.
+                                              
 inline APFloat neg(APFloat X) {
   X.changeSign();
   return X;
 }
 
-/// Implements IEEE minNum semantics. Returns the smaller of the 2 arguments if
-/// both are not NaN. If either argument is a NaN, returns the other argument.
+                                                                               
+                                                                              
 LLVM_READONLY
 inline APFloat minnum(const APFloat &A, const APFloat &B) {
   if (A.isNaN())
@@ -1232,8 +1232,8 @@ inline APFloat minnum(const APFloat &A, const APFloat &B) {
   return (B.compare(A) == APFloat::cmpLessThan) ? B : A;
 }
 
-/// Implements IEEE maxNum semantics. Returns the larger of the 2 arguments if
-/// both are not NaN. If either argument is a NaN, returns the other argument.
+                                                                              
+                                                                              
 LLVM_READONLY
 inline APFloat maxnum(const APFloat &A, const APFloat &B) {
   if (A.isNaN())
@@ -1243,7 +1243,7 @@ inline APFloat maxnum(const APFloat &A, const APFloat &B) {
   return (A.compare(B) == APFloat::cmpLessThan) ? B : A;
 }
 
-} // namespace llvh
+}                  
 
 #undef APFLOAT_DISPATCH_ON_SEMANTICS
-#endif // LLVM_ADT_APFLOAT_H
+#endif                      

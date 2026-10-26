@@ -100,28 +100,28 @@ protected:
 };
 }
 
-/// Implementation of format_provider<T> for integral arithmetic types.
-///
-/// The options string of an integral type has the grammar:
-///
-///   integer_options   :: [style][digits]
-///   style             :: <see table below>
-///   digits            :: <non-negative integer> 0-99
-///
-///   ==========================================================================
-///   |  style  |     Meaning          |      Example     | Digits Meaning     |
-///   --------------------------------------------------------------------------
-///   |         |                      |  Input |  Output |                    |
-///   ==========================================================================
-///   |   x-    | Hex no prefix, lower |   42   |    2a   | Minimum # digits   |
-///   |   X-    | Hex no prefix, upper |   42   |    2A   | Minimum # digits   |
-///   | x+ / x  | Hex + prefix, lower  |   42   |   0x2a  | Minimum # digits   |
-///   | X+ / X  | Hex + prefix, upper  |   42   |   0x2A  | Minimum # digits   |
-///   | N / n   | Digit grouped number | 123456 | 123,456 | Ignored            |
-///   | D / d   | Integer              | 100000 | 100000  | Ignored            |
-///   | (empty) | Same as D / d        |        |         |                    |
-///   ==========================================================================
-///
+                                                                       
+   
+                                                           
+   
+                                          
+                                            
+                                                      
+   
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+   
 
 template <typename T>
 struct format_provider<
@@ -150,28 +150,28 @@ public:
   }
 };
 
-/// Implementation of format_provider<T> for integral pointer types.
-///
-/// The options string of a pointer type has the grammar:
-///
-///   pointer_options   :: [style][precision]
-///   style             :: <see table below>
-///   digits            :: <non-negative integer> 0-sizeof(void*)
-///
-///   ==========================================================================
-///   |   S     |     Meaning          |                Example                |
-///   --------------------------------------------------------------------------
-///   |         |                      |       Input       |      Output       |
-///   ==========================================================================
-///   |   x-    | Hex no prefix, lower |    0xDEADBEEF     |     deadbeef      |
-///   |   X-    | Hex no prefix, upper |    0xDEADBEEF     |     DEADBEEF      |
-///   | x+ / x  | Hex + prefix, lower  |    0xDEADBEEF     |    0xdeadbeef     |
-///   | X+ / X  | Hex + prefix, upper  |    0xDEADBEEF     |    0xDEADBEEF     |
-///   | (empty) | Same as X+ / X       |                   |                   |
-///   ==========================================================================
-///
-/// The default precision is the number of nibbles in a machine word, and in all
-/// cases indicates the minimum number of nibbles to print.
+                                                                    
+   
+                                                         
+   
+                                             
+                                            
+                                                                 
+   
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+                                                                                
+   
+                                                                                
+                                                           
 template <typename T>
 struct format_provider<
     T, typename std::enable_if<detail::use_pointer_formatter<T>::value>::type>
@@ -186,16 +186,16 @@ public:
   }
 };
 
-/// Implementation of format_provider<T> for c-style strings and string
-/// objects such as std::string and llvh::StringRef.
-///
-/// The options string of a string type has the grammar:
-///
-///   string_options :: [length]
-///
-/// where `length` is an optional integer specifying the maximum number of
-/// characters in the string to print.  If `length` is omitted, the string is
-/// printed up to the null terminator.
+                                                                       
+                                                    
+   
+                                                        
+   
+                                
+   
+                                                                          
+                                                                             
+                                      
 
 template <typename T>
 struct format_provider<
@@ -210,9 +210,9 @@ struct format_provider<
   }
 };
 
-/// Implementation of format_provider<T> for llvh::Twine.
-///
-/// This follows the same rules as the string formatter.
+                                                         
+   
+                                                        
 
 template <> struct format_provider<Twine> {
   static void format(const Twine &V, llvh::raw_ostream &Stream,
@@ -221,15 +221,15 @@ template <> struct format_provider<Twine> {
   }
 };
 
-/// Implementation of format_provider<T> for characters.
-///
-/// The options string of a character type has the grammar:
-///
-///   char_options :: (empty) | [integer_options]
-///
-/// If `char_options` is empty, the character is displayed as an ASCII
-/// character.  Otherwise, it is treated as an integer options string.
-///
+                                                        
+   
+                                                           
+   
+                                                 
+   
+                                                                      
+                                                                      
+   
 template <typename T>
 struct format_provider<
     T, typename std::enable_if<detail::use_char_formatter<T>::value>::type> {
@@ -244,22 +244,22 @@ struct format_provider<
   }
 };
 
-/// Implementation of format_provider<T> for type `bool`
-///
-/// The options string of a boolean type has the grammar:
-///
-///   bool_options :: "" | "Y" | "y" | "D" | "d" | "T" | "t"
-///
-///   ==================================
-///   |    C    |     Meaning          |
-///   ==================================
-///   |    Y    |       YES / NO       |
-///   |    y    |       yes / no       |
-///   |  D / d  |    Integer 0 or 1    |
-///   |    T    |     TRUE / FALSE     |
-///   |    t    |     true / false     |
-///   | (empty) |   Equivalent to 't'  |
-///   ==================================
+                                                        
+   
+                                                         
+   
+                                                            
+   
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        
 template <> struct format_provider<bool> {
   static void format(const bool &B, llvh::raw_ostream &Stream,
                      StringRef Style) {
@@ -273,28 +273,28 @@ template <> struct format_provider<bool> {
   }
 };
 
-/// Implementation of format_provider<T> for floating point types.
-///
-/// The options string of a floating point type has the format:
-///
-///   float_options   :: [style][precision]
-///   style           :: <see table below>
-///   precision       :: <non-negative integer> 0-99
-///
-///   =====================================================
-///   |  style  |     Meaning          |      Example     |
-///   -----------------------------------------------------
-///   |         |                      |  Input |  Output |
-///   =====================================================
-///   | P / p   | Percentage           |  0.05  |  5.00%  |
-///   | F / f   | Fixed point          |   1.0  |  1.00   |
-///   |   E     | Exponential with E   | 100000 | 1.0E+05 |
-///   |   e     | Exponential with e   | 100000 | 1.0e+05 |
-///   | (empty) | Same as F / f        |        |         |
-///   =====================================================
-///
-/// The default precision is 6 for exponential (E / e) and 2 for everything
-/// else.
+                                                                  
+   
+                                                               
+   
+                                           
+                                          
+                                                    
+   
+                                                           
+                                                           
+                                                           
+                                                           
+                                                           
+                                                           
+                                                           
+                                                           
+                                                           
+                                                           
+                                                           
+   
+                                                                           
+         
 
 template <typename T>
 struct format_provider<
@@ -331,28 +331,28 @@ struct range_item_has_provider
           bool, !uses_missing_provider<IterValue<IterT>>::value> {};
 }
 
-/// Implementation of format_provider<T> for ranges.
-///
-/// This will print an arbitrary range as a delimited sequence of items.
-///
-/// The options string of a range type has the grammar:
-///
-///   range_style       ::= [separator] [element_style]
-///   separator         ::= "$" delimeted_expr
-///   element_style     ::= "@" delimeted_expr
-///   delimeted_expr    ::= "[" expr "]" | "(" expr ")" | "<" expr ">"
-///   expr              ::= <any string not containing delimeter>
-///
-/// where the separator expression is the string to insert between consecutive
-/// items in the range and the argument expression is the Style specification to
-/// be used when formatting the underlying type.  The default separator if
-/// unspecified is ' ' (space).  The syntax of the argument expression follows
-/// whatever grammar is dictated by the format provider or format adapter used
-/// to format the value type.
-///
-/// Note that attempting to format an `iterator_range<T>` where no format
-/// provider can be found for T will result in a compile error.
-///
+                                                    
+   
+                                                                        
+   
+                                                       
+   
+                                                       
+                                              
+                                              
+                                                                      
+                                                                 
+   
+                                                                              
+                                                                                
+                                                                          
+                                                                              
+                                                                              
+                             
+   
+                                                                         
+                                                               
+   
 
 template <typename IterT> class format_provider<llvh::iterator_range<IterT>> {
   using value = typename std::iterator_traits<IterT>::value_type;

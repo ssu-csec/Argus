@@ -29,9 +29,9 @@
 
 namespace llvh {
 
-//===----------------------------------------------------------------------===//
-// Immutable AVL-Tree Definition.
-//===----------------------------------------------------------------------===//
+                                                                                
+                                 
+                                                                                
 
 template <typename ImutInfo> class ImutAVLFactory;
 template <typename ImutInfo> class ImutIntervalAVLFactory;
@@ -51,27 +51,27 @@ public:
   friend class ImutIntervalAVLFactory<ImutInfo>;
   friend class ImutAVLTreeGenericIterator<ImutInfo>;
 
-  //===----------------------------------------------------===//
-  // Public Interface.
-  //===----------------------------------------------------===//
+                                                                
+                      
+                                                                
 
-  /// Return a pointer to the left subtree.  This value
-  ///  is NULL if there is no left subtree.
+                                                       
+                                           
   ImutAVLTree *getLeft() const { return left; }
 
-  /// Return a pointer to the right subtree.  This value is
-  ///  NULL if there is no right subtree.
+                                                           
+                                         
   ImutAVLTree *getRight() const { return right; }
 
-  /// getHeight - Returns the height of the tree.  A tree with no subtrees
-  ///  has a height of 1.
+                                                                          
+                         
   unsigned getHeight() const { return height; }
 
-  /// getValue - Returns the data value associated with the tree node.
+                                                                      
   const value_type& getValue() const { return value; }
 
-  /// find - Finds the subtree associated with the specified key value.
-  ///  This method returns NULL if no matching subtree is found.
+                                                                       
+                                                                
   ImutAVLTree* find(key_type_ref K) {
     ImutAVLTree *T = this;
     while (T) {
@@ -86,8 +86,8 @@ public:
     return nullptr;
   }
 
-  /// getMaxElement - Find the subtree associated with the highest ranged
-  ///  key value.
+                                                                         
+                 
   ImutAVLTree* getMaxElement() {
     ImutAVLTree *T = this;
     ImutAVLTree *Right = T->getRight();
@@ -95,8 +95,8 @@ public:
     return T;
   }
 
-  /// size - Returns the number of nodes in the tree, which includes
-  ///  both leaves and non-leaf nodes.
+                                                                    
+                                      
   unsigned size() const {
     unsigned n = 1;
     if (const ImutAVLTree* L = getLeft())
@@ -106,22 +106,22 @@ public:
     return n;
   }
 
-  /// begin - Returns an iterator that iterates over the nodes of the tree
-  ///  in an inorder traversal.  The returned iterator thus refers to the
-  ///  the tree node with the minimum data element.
+                                                                          
+                                                                         
+                                                   
   iterator begin() const { return iterator(this); }
 
-  /// end - Returns an iterator for the tree that denotes the end of an
-  ///  inorder traversal.
+                                                                       
+                         
   iterator end() const { return iterator(); }
 
   bool isElementEqual(value_type_ref V) const {
-    // Compare the keys.
+                        
     if (!ImutInfo::isEqual(ImutInfo::KeyOfValue(getValue()),
                            ImutInfo::KeyOfValue(V)))
       return false;
 
-    // Also compare the data values.
+                                    
     if (!ImutInfo::isDataEqual(ImutInfo::DataOfValue(getValue()),
                                ImutInfo::DataOfValue(V)))
       return false;
@@ -133,9 +133,9 @@ public:
     return isElementEqual(RHS->getValue());
   }
 
-  /// isEqual - Compares two trees for structural equality and returns true
-  ///   if they are equal.  This worst case performance of this operation is
-  //    linear in the sizes of the trees.
+                                                                           
+                                                                            
+                                         
   bool isEqual(const ImutAVLTree& RHS) const {
     if (&RHS == this)
       return true;
@@ -160,18 +160,18 @@ public:
     return LItr == LEnd && RItr == REnd;
   }
 
-  /// isNotEqual - Compares two trees for structural inequality.  Performance
-  ///  is the same is isEqual.
+                                                                             
+                              
   bool isNotEqual(const ImutAVLTree& RHS) const { return !isEqual(RHS); }
 
-  /// contains - Returns true if this tree contains a subtree (node) that
-  ///  has an data element that matches the specified key.  Complexity
-  ///  is logarithmic in the size of the tree.
+                                                                         
+                                                                      
+                                              
   bool contains(key_type_ref K) { return (bool) find(K); }
 
-  /// foreach - A member template the accepts invokes operator() on a functor
-  ///  object (specifed by Callback) for every node/subtree in the tree.
-  ///  Nodes are visited using an inorder traversal.
+                                                                             
+                                                                        
+                                                    
   template <typename Callback>
   void foreach(Callback& C) {
     if (ImutAVLTree* L = getLeft())
@@ -183,12 +183,12 @@ public:
       R->foreach(C);
   }
 
-  /// validateTree - A utility method that checks that the balancing and
-  ///  ordering invariants of the tree are satisifed.  It is a recursive
-  ///  method that returns the height of the tree, which is then consumed
-  ///  by the enclosing validateTree call.  External callers should ignore the
-  ///  return value.  An invalid tree will cause an assertion to fire in
-  ///  a debug build.
+                                                                        
+                                                                        
+                                                                         
+                                                                              
+                                                                        
+                     
   unsigned validateTree() const {
     unsigned HL = getLeft() ? getLeft()->validateTree() : 0;
     unsigned HR = getRight() ? getRight()->validateTree() : 0;
@@ -215,9 +215,9 @@ public:
     return getHeight();
   }
 
-  //===----------------------------------------------------===//
-  // Internal values.
-  //===----------------------------------------------------===//
+                                                                
+                     
+                                                                
 
 private:
   Factory *factory;
@@ -235,13 +235,13 @@ private:
   uint32_t digest = 0;
   uint32_t refCount = 0;
 
-  //===----------------------------------------------------===//
-  // Internal methods (node manipulation; used by Factory).
-  //===----------------------------------------------------===//
+                                                                
+                                                           
+                                                                
 
 private:
-  /// ImutAVLTree - Internal constructor that is only called by
-  ///   ImutAVLFactory.
+                                                               
+                       
   ImutAVLTree(Factory *f, ImutAVLTree* l, ImutAVLTree* r, value_type_ref v,
               unsigned height)
     : factory(f), left(l), right(r), height(height), IsMutable(true),
@@ -251,44 +251,44 @@ private:
     if (right) right->retain();
   }
 
-  /// isMutable - Returns true if the left and right subtree references
-  ///  (as well as height) can be changed.  If this method returns false,
-  ///  the tree is truly immutable.  Trees returned from an ImutAVLFactory
-  ///  object should always have this method return true.  Further, if this
-  ///  method returns false for an instance of ImutAVLTree, all subtrees
-  ///  will also have this method return false.  The converse is not true.
+                                                                       
+                                                                         
+                                                                          
+                                                                           
+                                                                        
+                                                                          
   bool isMutable() const { return IsMutable; }
 
-  /// hasCachedDigest - Returns true if the digest for this tree is cached.
-  ///  This can only be true if the tree is immutable.
+                                                                           
+                                                      
   bool hasCachedDigest() const { return IsDigestCached; }
 
-  //===----------------------------------------------------===//
-  // Mutating operations.  A tree root can be manipulated as
-  // long as its reference has not "escaped" from internal
-  // methods of a factory object (see below).  When a tree
-  // pointer is externally viewable by client code, the
-  // internal "mutable bit" is cleared to mark the tree
-  // immutable.  Note that a tree that still has its mutable
-  // bit set may have children (subtrees) that are themselves
-  // immutable.
-  //===----------------------------------------------------===//
+                                                                
+                                                            
+                                                          
+                                                          
+                                                       
+                                                       
+                                                            
+                                                             
+               
+                                                                
 
-  /// markImmutable - Clears the mutable flag for a tree.  After this happens,
-  ///   it is an error to call setLeft(), setRight(), and setHeight().
+                                                                              
+                                                                      
   void markImmutable() {
     assert(isMutable() && "Mutable flag already removed.");
     IsMutable = false;
   }
 
-  /// markedCachedDigest - Clears the NoCachedDigest flag for a tree.
+                                                                     
   void markedCachedDigest() {
     assert(!hasCachedDigest() && "NoCachedDigest flag already removed.");
     IsDigestCached = true;
   }
 
-  /// setHeight - Changes the height of the tree.  Used internally by
-  ///  ImutAVLFactory.
+                                                                     
+                      
   void setHeight(unsigned h) {
     assert(isMutable() && "Only a mutable tree can have its height changed.");
     height = h;
@@ -301,7 +301,7 @@ private:
     if (L)
       digest += L->computeDigest();
 
-    // Compute digest of stored data.
+                                     
     FoldingSetNodeID ID;
     ImutInfo::Profile(ID,V);
     digest += ID.ComputeHash();
@@ -313,8 +313,8 @@ private:
   }
 
   uint32_t computeDigest() {
-    // Check the lowest bit to determine if digest has actually been
-    // pre-computed.
+                                                                    
+                    
     if (hasCachedDigest())
       return digest;
 
@@ -324,9 +324,9 @@ private:
     return X;
   }
 
-  //===----------------------------------------------------===//
-  // Reference count operations.
-  //===----------------------------------------------------===//
+                                                                
+                                
+                                                                
 
 public:
   void retain() { ++refCount; }
@@ -352,16 +352,16 @@ public:
         factory->Cache[factory->maskCacheIndex(computeDigest())] = next;
     }
 
-    // We need to clear the mutability bit in case we are
-    // destroying the node as part of a sweep in ImutAVLFactory::recoverNodes().
+                                                         
+                                                                                
     IsMutable = false;
     factory->freeNodes.push_back(this);
   }
 };
 
-//===----------------------------------------------------------------------===//
-// Immutable AVL-Tree Factory class.
-//===----------------------------------------------------------------------===//
+                                                                                
+                                    
+                                                                                
 
 template <typename ImutInfo >
 class ImutAVLFactory {
@@ -385,9 +385,9 @@ class ImutAVLFactory {
     return *reinterpret_cast<BumpPtrAllocator*>(Allocator & ~0x1);
   }
 
-  //===--------------------------------------------------===//
-  // Public interface.
-  //===--------------------------------------------------===//
+                                                              
+                      
+                                                              
 
 public:
   ImutAVLFactory()
@@ -417,12 +417,12 @@ public:
   TreeTy* getEmptyTree() const { return nullptr; }
 
 protected:
-  //===--------------------------------------------------===//
-  // A bunch of quick helper functions used for reasoning
-  // about the properties of trees and their children.
-  // These have succinct names so that the balancing code
-  // is as terse (and readable) as possible.
-  //===--------------------------------------------------===//
+                                                              
+                                                         
+                                                      
+                                                         
+                                            
+                                                              
 
   bool            isEmpty(TreeTy* T) const { return !T; }
   unsigned        getHeight(TreeTy* T) const { return T ? T->getHeight() : 0; }
@@ -430,7 +430,7 @@ protected:
   TreeTy*         getRight(TreeTy* T) const { return T->getRight(); }
   value_type_ref  getValue(TreeTy* T) const { return T->value; }
 
-  // Make sure the index is not the Tombstone or Entry key of the DenseMap.
+                                                                           
   static unsigned maskCacheIndex(unsigned I) { return (I & ~0x02); }
 
   unsigned incrementHeight(TreeTy* L, TreeTy* R) const {
@@ -450,15 +450,15 @@ protected:
     return true;
   }
 
-  //===--------------------------------------------------===//
-  // "createNode" is used to generate new tree roots that link
-  // to other trees.  The functon may also simply move links
-  // in an existing root if that root is still marked mutable.
-  // This is necessary because otherwise our balancing code
-  // would leak memory as it would create nodes that are
-  // then discarded later before the finished tree is
-  // returned to the caller.
-  //===--------------------------------------------------===//
+                                                              
+                                                              
+                                                            
+                                                              
+                                                           
+                                                        
+                                                     
+                            
+                                                              
 
   TreeTy* createNode(TreeTy* L, value_type_ref V, TreeTy* R) {
     BumpPtrAllocator& A = getAllocator();
@@ -489,8 +489,8 @@ protected:
     createdNodes.clear();
   }
 
-  /// balanceTree - Used by add_internal and remove_internal to
-  ///  balance a newly created tree.
+                                                               
+                                    
   TreeTy* balanceTree(TreeTy* L, value_type_ref V, TreeTy* R) {
     unsigned hl = getHeight(L);
     unsigned hr = getHeight(R);
@@ -532,9 +532,9 @@ protected:
     return createNode(L,V,R);
   }
 
-  /// add_internal - Creates a new tree that includes the specified
-  ///  data and the data from the original tree.  If the original tree
-  ///  already contained the data item, the original tree is returned.
+                                                                   
+                                                                      
+                                                                      
   TreeTy* add_internal(value_type_ref V, TreeTy* T) {
     if (isEmpty(T))
       return createNode(T, V, T);
@@ -551,10 +551,10 @@ protected:
       return balanceTree(getLeft(T), getValue(T), add_internal(V, getRight(T)));
   }
 
-  /// remove_internal - Creates a new tree that includes all the data
-  ///  from the original tree except the specified data.  If the
-  ///  specified data did not exist in the original tree, the original
-  ///  tree is returned.
+                                                                     
+                                                                
+                                                                      
+                        
   TreeTy* remove_internal(key_type_ref K, TreeTy* T) {
     if (isEmpty(T))
       return T;
@@ -594,8 +594,8 @@ protected:
                        getValue(T), getRight(T));
   }
 
-  /// markImmutable - Clears the mutable bits of a root and all of its
-  ///  descendants.
+                                                                      
+                   
   void markImmutable(TreeTy* T) {
     if (!T || !T->isMutable())
       return;
@@ -612,21 +612,21 @@ public:
     if (TNew->IsCanonicalized)
       return TNew;
 
-    // Search the hashtable for another tree with the same digest, and
-    // if find a collision compare those trees by their contents.
+                                                                      
+                                                                 
     unsigned digest = TNew->computeDigest();
     TreeTy *&entry = Cache[maskCacheIndex(digest)];
     do {
       if (!entry)
         break;
       for (TreeTy *T = entry ; T != nullptr; T = T->next) {
-        // Compare the Contents('T') with Contents('TNew')
+                                                          
         typename TreeTy::iterator TI = T->begin(), TE = T->end();
         if (!compareTreeWithSection(TNew, TI, TE))
           continue;
         if (TI != TE)
-          continue; // T has more contents than TNew.
-        // Trees did match!  Return 'T'.
+          continue;                                  
+                                        
         if (TNew->refCount == 0)
           TNew->destroy();
         return T;
@@ -642,9 +642,9 @@ public:
   }
 };
 
-//===----------------------------------------------------------------------===//
-// Immutable AVL-Tree Iterators.
-//===----------------------------------------------------------------------===//
+                                                                                
+                                
+                                                                                
 
 template <typename ImutInfo> class ImutAVLTreeGenericIterator {
   SmallVector<uintptr_t,20> stack;
@@ -743,7 +743,7 @@ public:
         stack.pop_back();
         break;
       case VisitedLeft:
-        stack.back() &= ~Flags; // Set state to "VisitedNone."
+        stack.back() &= ~Flags;                               
         if (TreeTy* L = Current->getLeft())
           stack.push_back(reinterpret_cast<uintptr_t>(L) | VisitedRight);
         break;
@@ -776,7 +776,7 @@ public:
 
   ImutAVLTreeInOrderIterator(const TreeTy* Root) : InternalItr(Root) {
     if (Root)
-      ++*this; // Advance to first element.
+      ++*this;                             
   }
 
   ImutAVLTreeInOrderIterator() : InternalItr() {}
@@ -817,8 +817,8 @@ public:
   }
 };
 
-/// Generic iterator that wraps a T::TreeTy::iterator and exposes
-/// iterator::getValue() on dereference.
+                                                                 
+                                        
 template <typename T>
 struct ImutAVLValueIterator
     : iterator_adaptor_base<
@@ -835,13 +835,13 @@ struct ImutAVLValueIterator
   }
 };
 
-//===----------------------------------------------------------------------===//
-// Trait classes for Profile information.
-//===----------------------------------------------------------------------===//
+                                                                                
+                                         
+                                                                                
 
-/// Generic profile template.  The default behavior is to invoke the
-/// profile method of an object.  Specializations for primitive integers
-/// and generic handling of pointers is done below.
+                                                                    
+                                                                        
+                                                   
 template <typename T>
 struct ImutProfileInfo {
   using value_type = const T;
@@ -852,7 +852,7 @@ struct ImutProfileInfo {
   }
 };
 
-/// Profile traits for integers.
+                                
 template <typename T>
 struct ImutProfileInteger {
   using value_type = const T;
@@ -879,7 +879,7 @@ PROFILE_INTEGER_INFO(unsigned long long)
 
 #undef PROFILE_INTEGER_INFO
 
-/// Profile traits for booleans.
+                                
 template <>
 struct ImutProfileInfo<bool> {
   using value_type = const bool;
@@ -890,8 +890,8 @@ struct ImutProfileInfo<bool> {
   }
 };
 
-/// Generic profile trait for pointer types.  We treat pointers as
-/// references to unique objects.
+                                                                  
+                                 
 template <typename T>
 struct ImutProfileInfo<T*> {
   using value_type = const T*;
@@ -902,16 +902,16 @@ struct ImutProfileInfo<T*> {
   }
 };
 
-//===----------------------------------------------------------------------===//
-// Trait classes that contain element comparison operators and type
-//  definitions used by ImutAVLTree, ImmutableSet, and ImmutableMap.  These
-//  inherit from the profile traits (ImutProfileInfo) to include operations
-//  for element profiling.
-//===----------------------------------------------------------------------===//
+                                                                                
+                                                                   
+                                                                           
+                                                                           
+                          
+                                                                                
 
-/// ImutContainerInfo - Generic definition of comparison operations for
-///   elements of immutable containers that defaults to using
-///   std::equal_to<> and std::less<> to perform comparison of elements.
+                                                                       
+                                                             
+                                                                        
 template <typename T>
 struct ImutContainerInfo : public ImutProfileInfo<T> {
   using value_type = typename ImutProfileInfo<T>::value_type;
@@ -935,9 +935,9 @@ struct ImutContainerInfo : public ImutProfileInfo<T> {
   static bool isDataEqual(data_type_ref, data_type_ref) { return true; }
 };
 
-/// ImutContainerInfo - Specialization for pointer values to treat pointers
-///  as references to unique objects.  Pointers are thus compared by
-///  their addresses.
+                                                                           
+                                                                    
+                     
 template <typename T>
 struct ImutContainerInfo<T*> : public ImutProfileInfo<T*> {
   using value_type = typename ImutProfileInfo<T*>::value_type;
@@ -957,9 +957,9 @@ struct ImutContainerInfo<T*> : public ImutProfileInfo<T*> {
   static bool isDataEqual(data_type_ref, data_type_ref) { return true; }
 };
 
-//===----------------------------------------------------------------------===//
-// Immutable Set
-//===----------------------------------------------------------------------===//
+                                                                                
+                
+                                                                                
 
 template <typename ValT, typename ValInfo = ImutContainerInfo<ValT>>
 class ImmutableSet {
@@ -972,10 +972,10 @@ private:
   TreeTy *Root;
 
 public:
-  /// Constructs a set from a pointer to a tree root.  In general one
-  /// should use a Factory object to create sets instead of directly
-  /// invoking the constructor, but there are cases where make this
-  /// constructor public is useful.
+                                                                     
+                                                                    
+                                                                   
+                                   
   explicit ImmutableSet(TreeTy* R) : Root(R) {
     if (Root) { Root->retain(); }
   }
@@ -1011,30 +1011,30 @@ public:
     Factory(const Factory& RHS) = delete;
     void operator=(const Factory& RHS) = delete;
 
-    /// getEmptySet - Returns an immutable set that contains no elements.
+                                                                         
     ImmutableSet getEmptySet() {
       return ImmutableSet(F.getEmptyTree());
     }
 
-    /// add - Creates a new immutable set that contains all of the values
-    ///  of the original set with the addition of the specified value.  If
-    ///  the original set already included the value, then the original set is
-    ///  returned and no memory is allocated.  The time and space complexity
-    ///  of this operation is logarithmic in the size of the original set.
-    ///  The memory allocated to represent the set is released when the
-    ///  factory object that created the set is destroyed.
+                                                                         
+                                                                          
+                                                                              
+                                                                            
+                                                                          
+                                                                       
+                                                          
     LLVM_NODISCARD ImmutableSet add(ImmutableSet Old, value_type_ref V) {
       TreeTy *NewT = F.add(Old.Root, V);
       return ImmutableSet(Canonicalize ? F.getCanonicalTree(NewT) : NewT);
     }
 
-    /// remove - Creates a new immutable set that contains all of the values
-    ///  of the original set with the exception of the specified value.  If
-    ///  the original set did not contain the value, the original set is
-    ///  returned and no memory is allocated.  The time and space complexity
-    ///  of this operation is logarithmic in the size of the original set.
-    ///  The memory allocated to represent the set is released when the
-    ///  factory object that created the set is destroyed.
+                                                                            
+                                                                           
+                                                                        
+                                                                            
+                                                                          
+                                                                       
+                                                          
     LLVM_NODISCARD ImmutableSet remove(ImmutableSet Old, value_type_ref V) {
       TreeTy *NewT = F.remove(Old.Root, V);
       return ImmutableSet(Canonicalize ? F.getCanonicalTree(NewT) : NewT);
@@ -1049,7 +1049,7 @@ public:
 
   friend class Factory;
 
-  /// Returns true if the set contains the specified value.
+                                                           
   bool contains(value_type_ref V) const {
     return Root ? Root->contains(V) : false;
   }
@@ -1071,11 +1071,11 @@ public:
     return Root;
   }
 
-  /// isEmpty - Return true if the set contains no elements.
+                                                            
   bool isEmpty() const { return !Root; }
 
-  /// isSingleton - Return true if the set contains exactly one element.
-  ///   This method runs in constant time.
+                                                                        
+                                          
   bool isSingleton() const { return getHeight() == 1; }
 
   template <typename Callback>
@@ -1084,18 +1084,18 @@ public:
   template <typename Callback>
   void foreach() { if (Root) { Callback C; Root->foreach(C); } }
 
-  //===--------------------------------------------------===//
-  // Iterators.
-  //===--------------------------------------------------===//
+                                                              
+               
+                                                              
 
   using iterator = ImutAVLValueIterator<ImmutableSet>;
 
   iterator begin() const { return iterator(Root); }
   iterator end() const { return iterator(); }
 
-  //===--------------------------------------------------===//
-  // Utility methods.
-  //===--------------------------------------------------===//
+                                                              
+                     
+                                                              
 
   unsigned getHeight() const { return Root ? Root->getHeight() : 0; }
 
@@ -1105,14 +1105,14 @@ public:
 
   void Profile(FoldingSetNodeID &ID) const { return Profile(ID, *this); }
 
-  //===--------------------------------------------------===//
-  // For testing.
-  //===--------------------------------------------------===//
+                                                              
+                 
+                                                              
 
   void validateTree() const { if (Root) Root->validateTree(); }
 };
 
-// NOTE: This may some day replace the current ImmutableSet.
+                                                            
 template <typename ValT, typename ValInfo = ImutContainerInfo<ValT>>
 class ImmutableSetRef {
 public:
@@ -1126,10 +1126,10 @@ private:
   FactoryTy *Factory;
 
 public:
-  /// Constructs a set from a pointer to a tree root.  In general one
-  /// should use a Factory object to create sets instead of directly
-  /// invoking the constructor, but there are cases where make this
-  /// constructor public is useful.
+                                                                     
+                                                                    
+                                                                   
+                                   
   explicit ImmutableSetRef(TreeTy* R, FactoryTy *F)
     : Root(R),
       Factory(F) {
@@ -1168,7 +1168,7 @@ public:
     return ImmutableSetRef(Factory->remove(Root, V), Factory);
   }
 
-  /// Returns true if the set contains the specified value.
+                                                           
   bool contains(value_type_ref V) const {
     return Root ? Root->contains(V) : false;
   }
@@ -1190,25 +1190,25 @@ public:
     return Root && RHS.Root ? Root->isNotEqual(*RHS.Root) : Root != RHS.Root;
   }
 
-  /// isEmpty - Return true if the set contains no elements.
+                                                            
   bool isEmpty() const { return !Root; }
 
-  /// isSingleton - Return true if the set contains exactly one element.
-  ///   This method runs in constant time.
+                                                                        
+                                          
   bool isSingleton() const { return getHeight() == 1; }
 
-  //===--------------------------------------------------===//
-  // Iterators.
-  //===--------------------------------------------------===//
+                                                              
+               
+                                                              
 
   using iterator = ImutAVLValueIterator<ImmutableSetRef>;
 
   iterator begin() const { return iterator(Root); }
   iterator end() const { return iterator(); }
 
-  //===--------------------------------------------------===//
-  // Utility methods.
-  //===--------------------------------------------------===//
+                                                              
+                     
+                                                              
 
   unsigned getHeight() const { return Root ? Root->getHeight() : 0; }
 
@@ -1218,13 +1218,13 @@ public:
 
   void Profile(FoldingSetNodeID &ID) const { return Profile(ID, *this); }
 
-  //===--------------------------------------------------===//
-  // For testing.
-  //===--------------------------------------------------===//
+                                                              
+                 
+                                                              
 
   void validateTree() const { if (Root) Root->validateTree(); }
 };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_ADT_IMMUTABLESET_H
+#endif                           

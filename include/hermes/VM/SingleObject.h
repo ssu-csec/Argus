@@ -13,7 +13,7 @@
 namespace hermes {
 namespace vm {
 
-/// JavaScript single object, include Math and JSON.
+                                                    
 template <CellKind kind>
 class SingleObject final : public JSObject {
  public:
@@ -27,7 +27,7 @@ class SingleObject final : public JSObject {
     return cell->getKind() == kind;
   }
 
-  /// Create a SingleObject.
+                            
   static CallResult<HermesValue> create(
       Runtime &runtime,
       Handle<JSObject> parentHandle) {
@@ -66,7 +66,7 @@ const ObjectVTable SingleObject<kind>::vt = {
 using JSMath = SingleObject<CellKind::JSMathKind>;
 using JSJSON = SingleObject<CellKind::JSJSONKind>;
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMES_VM_SINGLEOBJECT_H
+#endif                            

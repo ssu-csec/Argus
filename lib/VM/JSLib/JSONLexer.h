@@ -39,17 +39,17 @@ enum class JSONTokenKind {
   None
 };
 
-/// Encapsulates the information contained in the current token.
-/// We only ever create one of these, but it is cleaner to keep the data
-/// in a separate class.
+                                                                
+                                                                        
+                        
 class JSONToken {
   JSONTokenKind kind_{JSONTokenKind::None};
   double numberValue_{};
-  // A string token can be represented as either a StringPrimitive or SymbolID.
+                                                                               
   MutableHandle<StringPrimitive> stringValue_;
   MutableHandle<SymbolID> symbolValue_;
 
-  /// The starting character of this token.
+                                           
   char16_t firstChar_{};
 
   JSONToken(const JSONToken &) = delete;
@@ -124,7 +124,7 @@ class JSONLexer {
   JSONLexer(Runtime &runtime, UTF16Stream &&stream)
       : curCharPtr_(std::move(stream)), runtime_(runtime), token_(runtime) {}
 
-  /// \return the current token.
+                                
   const JSONToken *getCurToken() const {
     assert(
         token_.getKind() != JSONTokenKind::None &&
@@ -132,31 +132,31 @@ class JSONLexer {
     return &token_;
   }
 
-  /// Scan the next token, and store it in token_.
-  /// \return Exception if error occurs.
-  /// All whitespace is skipped before the new token.
+                                                  
+                                        
+                                                     
   LLVM_NODISCARD ExecutionStatus advance();
 
-  /// Same as advance, except if a string is encountered, it will parse it into
-  /// the current token's symbol field.
+                                                                               
+                                       
   LLVM_NODISCARD ExecutionStatus advanceStrAsSymbol();
 
-  /// Raise a JSON parse exception with message \p msg.
-  /// token_ will also be invalidated.
+                                                       
+                                      
   LLVM_NODISCARD ExecutionStatus error(const TwineChar16 &msg) {
     token_.invalidate();
     return runtime_.raiseSyntaxError(
         TwineChar16("JSON Parse error: ").concat(msg));
   }
 
-  /// Report a JSON parse exception with message \p msg,
-  /// at the character \p ch.
+                                                        
+                             
   LLVM_NODISCARD ExecutionStatus
   errorWithChar(const TwineChar16 &msg, char16_t ch) {
     return error(msg.concat(UTF16Ref(&ch, 1)));
   }
 
-  /// Raise a JSON parse unexpected character error.
+                                                    
   LLVM_NODISCARD ExecutionStatus errorUnexpectedChar() {
     if (token_.getKind() == JSONTokenKind::Eof) {
       return error("Unexpected end of input");
@@ -166,28 +166,28 @@ class JSONLexer {
   }
 
  private:
-  /// Advance the lexer by a single token. The parameter forKey determines how
-  /// strings are stored in the lexer.
+                                                                              
+                                      
   LLVM_NODISCARD ExecutionStatus advanceHelper(bool forKey);
 
-  /// Parse a JSONNumber.
+                         
   LLVM_NODISCARD ExecutionStatus scanNumber();
 
-  /// Parse a JSONString. If ForKey is std::true_type, then the string will be
-  /// parsed into a symbol. If ForKey is std::false_type, the scanned string
-  /// will be turned into a new StringPrimitive.
+                                                                              
+                                                                            
+                                                
   template <typename ForKey>
   LLVM_NODISCARD ExecutionStatus scanString();
 
-  /// Parse a reserved keyword.
+                               
   LLVM_NODISCARD ExecutionStatus scanWord(const char *word, JSONTokenKind kind);
 
-  /// Parse a unicode code point and \return the char16 value.
-  /// On error, \return llvh::None.
+                                                              
+                                   
   CallResult<char16_t> consumeUnicode();
 };
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMES_PARSER_JSONLEXER_H
+#endif                             

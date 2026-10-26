@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//===----------------------------------------------------------------------===//
-/// \file
-/// ES5.1 15.12 Populate the JSON object.
-//===----------------------------------------------------------------------===//
+                                                                                
+         
+                                         
+                                                                                
 #include "JSLibInternal.h"
 #include "hermes/VM/JSLib/RuntimeJSONUtils.h"
 #include "hermes/VM/SingleObject.h"
@@ -72,5 +72,5 @@ jsonStringify(void *, Runtime &runtime, NativeArgs args) {
       args.getArgHandle(2));
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

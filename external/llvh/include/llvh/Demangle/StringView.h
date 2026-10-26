@@ -39,9 +39,9 @@ public:
 
   size_t find(char C, size_t From = 0) const {
     size_t FindBegin = std::min(From, size());
-    // Avoid calling memchr with nullptr.
+                                         
     if (FindBegin < size()) {
-      // Just forward to memchr, which is faster than a hand-rolled loop.
+                                                                         
       if (const void *P = ::memchr(First + FindBegin, C, size() - FindBegin))
         return static_cast<const char *>(P) - First;
     }

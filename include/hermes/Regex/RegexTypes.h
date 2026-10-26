@@ -28,22 +28,22 @@ struct UnicodeRangePoolRef;
 namespace regex {
 namespace constants {
 
-// MatchFlagType
+                
 
 enum MatchFlagType {
-  /// Default match options.
+                            
   matchDefault = 0,
 
-  /// ^ anchors should not treat the input start as a line start.
+                                                                 
   matchNotBeginningOfLine = 1 << 0,
 
-  /// $ anchors should not treat the input end as a line end.
+                                                             
   matchNotEndOfLine = 1 << 1,
 
-  /// Hint that the input is composed entirely of ASCII characters.
+                                                                   
   matchInputAllAscii = 1 << 2,
 
-  /// Do not search for a match past the search start location.
+                                                               
   matchOnlyAtStart = 1 << 3,
 };
 
@@ -79,59 +79,59 @@ inline MatchFlagType &operator^=(MatchFlagType &x, MatchFlagType y) {
 }
 
 enum class ErrorType {
-  /// No error occurred.
+                        
   None,
 
-  /// An escaped value would overflow: /\xFFFFFFFFFFF/
+                                                      
   EscapeOverflow,
 
-  /// incomplete escape: new RegExp("\\")
+                                         
   EscapeIncomplete,
 
-  /// Invalid escape: new RegExp("\\123", "u")
+                                              
   EscapeInvalid,
 
-  /// Mismatched [ and ].
+                         
   UnbalancedBracket,
 
-  /// Mismatched ( and ).
+                         
   UnbalancedParenthesis,
 
-  /// Braces have valid syntax, but the range is invalid, such as {5,3}.
+                                                                        
   BraceRange,
 
-  /// Invalid character range, such as [b-a].
+                                             
   CharacterRange,
 
-  /// A lone { or } was found.
+                              
   InvalidQuantifierBracket,
 
-  /// One of *?+{ was not preceded by a valid regular expression.
+                                                                 
   InvalidRepeat,
 
-  /// The pattern exceeded internal limits, such as capture group or loop count.
+                                                                                
   PatternExceedsParseLimits,
 
-  /// The flags supplied were either invalid or contained repetition.
+                                                                     
   InvalidFlags,
 
-  /// The name for a capture group is invalid e.g. 1id
+                                                      
   InvalidCaptureGroupName,
 
-  /// Duplicate capture group name.
+                                   
   DuplicateCaptureGroupName,
 
-  /// Syntactically invalid named backreference.
+                                                
   InvalidNamedReference,
 
-  /// Reference to nonexistent capture group.
+                                             
   NonexistentNamedCaptureReference,
 
-  /// Invalid Unicode property name or value
+                                            
   InvalidPropertyName,
 };
 
-/// \return an error message for the given \p error.
+                                                    
 inline const char *messageForError(ErrorType error) {
   switch (error) {
     case ErrorType::EscapeOverflow:
@@ -173,55 +173,55 @@ inline const char *messageForError(ErrorType error) {
   return nullptr;
 }
 
-/// Maximum number of supported capture groups.
-/// This is therefore also the maximum valid backreference.
+                                               
+                                                           
 constexpr uint16_t kMaxCaptureGroupCount = 65535;
 
-/// Maximum number of supported loops.
+                                      
 constexpr uint16_t kMaxLoopCount = 65535;
 
-} // namespace constants
+}                       
 
-/// After compiling a regex, there are certain properties we can test for that
-/// enable us to quickly rule out matches. We refer to these as
-/// MatchConstraints: they constrain the strings that may match the regex.
+                                                                              
+                                                               
+                                                                          
 enum MatchConstraintFlags : uint8_t {
-  /// If set, ASCII strings can never match because we require at least one
-  /// non-ASCII character.
+                                                                           
+                          
   MatchConstraintNonASCII = 1 << 0,
 
-  /// If set, the regex can only match at the beginning of the input string, due
-  /// to ^ anchors.
+                                                                                
+                   
   MatchConstraintAnchoredAtStart = 1 << 1,
 
-  /// If set, the regex cannot possibly match an empty string, e.g. /a/
+                                                                       
   MatchConstraintNonEmpty = 1 << 2,
 };
 
-/// \return whether a code point \p cp is ASCII.
+                                                
 inline bool isASCII(uint32_t c) {
   return c <= 127;
 }
 
-// Type wrapping up a character class, like \d or \S.
+                                                     
 struct CharacterClass {
   enum Type : uint8_t {
-    Digits = 1 << 0, // \d \D
-    Spaces = 1 << 1, // \s \S
-    Words = 1 << 2, // \w \W
+    Digits = 1 << 0,         
+    Spaces = 1 << 1,         
+    Words = 1 << 2,         
   } type_;
 
-  // Whether the class is inverted (\D instead of \d).
+                                                      
   bool inverted_;
 
   CharacterClass(Type type, bool invert) : type_(type), inverted_(invert) {}
 };
 
-// Type wrapping up a Unicode codepoint range array.
+                                                    
 struct CharacterClassCodepointRanges {
   llvh::ArrayRef<UnicodeRangePoolRef> rangeArray;
 
-  // Whether the class is inverted (\P instead of \p).
+                                                      
   bool inverted_;
 
   CharacterClassCodepointRanges(
@@ -230,11 +230,11 @@ struct CharacterClassCodepointRanges {
       : rangeArray(rangeArray), inverted_(inverted) {}
 };
 
-// Struct representing flags which may be used when constructing the RegExp
+                                                                           
 class SyntaxFlags {
  private:
-  // Note these are encoded into bytecode files, so changing their values is a
-  // breaking change.
+                                                                              
+                     
   enum : uint8_t {
     ICASE = 1 << 0,
     GLOBAL = 1 << 1,
@@ -246,9 +246,9 @@ class SyntaxFlags {
   };
 
  public:
-  // Note: Preserving the order here and ensuring it lines up with the order of
-  // the offsets above makes the generated assembly more efficient.
-  // Specifically, it makes the conversion to/from a byte almost free.
+                                                                               
+                                                                   
+                                                                      
   uint8_t ignoreCase : 1;
   uint8_t global : 1;
   uint8_t multiline : 1;
@@ -257,8 +257,8 @@ class SyntaxFlags {
   uint8_t sticky : 1;
   uint8_t hasIndices : 1;
 
-  /// \return a byte representing the flags. Bits are set based on the offsets
-  /// specified above. This is used for serialising the flags to bytecode.
+                                                                              
+                                                                          
   uint8_t toByte() const {
     uint8_t ret = 0;
     if (global)
@@ -278,9 +278,9 @@ class SyntaxFlags {
     return ret;
   }
 
-  /// \return a SyntaxFlags struct generated from the given byte. Bit offsets
-  /// are specified above. This is used for deserialising the flags from
-  /// bytecode.
+                                                                             
+                                                                        
+               
   static SyntaxFlags fromByte(uint8_t byte) {
     SyntaxFlags ret = {};
     if (byte & GLOBAL)
@@ -300,11 +300,11 @@ class SyntaxFlags {
     return ret;
   }
 
-  /// \return a string representing the flags
-  /// The characters are returned in the order given in ES2022 22.2.5.4
-  /// (specifically hasIndices, global, ignoreCase, multiline, dotAll, unicode,
-  /// sticky) Note this may differ in order from the string passed in
-  /// construction
+                                             
+                                                                       
+                                                                               
+                                                                     
+                  
   llvh::SmallString<7> toString() const {
     llvh::SmallString<7> result;
     if (hasIndices)
@@ -324,12 +324,12 @@ class SyntaxFlags {
     return result;
   }
 
-  /// Given a flags string \p str, generate the corresponding SyntaxFlags
-  /// \return the flags if the string is valid, an empty optional otherwise
-  /// See ES 5.1 15.10.4.1 for description of the validation
+                                                                         
+                                                                           
+                                                            
   static llvh::Optional<SyntaxFlags> fromString(
       const llvh::ArrayRef<char16_t> flags) {
-    // A flags string may contain i,m,g, in any order, but at most once each
+                                                                            
     auto error = llvh::NoneType::None;
     SyntaxFlags ret = {};
     for (auto c : flags) {
@@ -376,6 +376,6 @@ class SyntaxFlags {
     return ret;
   }
 };
-} // namespace regex
-} // namespace hermes
-#endif // HERMES_REGEX_TYPES_H
+}                   
+}                    
+#endif                        

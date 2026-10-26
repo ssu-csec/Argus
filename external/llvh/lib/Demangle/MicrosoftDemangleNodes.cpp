@@ -24,7 +24,7 @@ using namespace ms_demangle;
     OS << Desc;                                                                \
     break;
 
-// Writes a space if the last token does not end with a punctuation.
+                                                                    
 static void outputSpaceIfNecessary(OutputStream &OS) {
   if (OS.empty())
     return;
@@ -442,8 +442,8 @@ void ThunkSignatureNode::outputPost(OutputStream &OS, OutputFlags Flags) const {
 
 void PointerTypeNode::outputPre(OutputStream &OS, OutputFlags Flags) const {
   if (Pointee->kind() == NodeKind::FunctionSignature) {
-    // If this is a pointer to a function, don't output the calling convention.
-    // It needs to go inside the parentheses.
+                                                                               
+                                             
     const FunctionSignatureNode *Sig =
         static_cast<const FunctionSignatureNode *>(Pointee);
     Sig->outputPre(OS, OF_NoCallingConvention);

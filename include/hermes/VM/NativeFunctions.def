@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// Updated January 28, 2022
+                           
 #define NATIVE_FUNCTION_VERSION_VALUE 12
 
 #ifndef NATIVE_FUNCTION
@@ -159,7 +159,7 @@ NATIVE_FUNCTION(hermesBuiltinGetTemplateObject)
 
 #ifdef HERMESVM_EXCEPTION_ON_OOM
 NATIVE_FUNCTION(hermesInternalGetCallStack)
-#endif // HERMESVM_EXCEPTION_ON_OOM
+#endif                             
 
 NATIVE_FUNCTION(hermesInternalDetachArrayBuffer)
 NATIVE_FUNCTION(hermesInternalGetEpilogues)
@@ -187,7 +187,7 @@ NATIVE_FUNCTION(hermesInternalFuzzilli)
 #ifdef HERMES_ENABLE_DEBUGGER
 NATIVE_FUNCTION(isDebuggerAttached)
 NATIVE_FUNCTION(shouldPauseOnThrow)
-#endif // HERMES_ENABLE_DEBUGGER
+#endif                          
 
 NATIVE_FUNCTION(isFinite)
 NATIVE_FUNCTION(isNaN)
@@ -414,9 +414,9 @@ NATIVE_FUNCTION(instrumentReturnNth)
 #include "hermes/FrontEndDefs/NativeErrorTypes.def"
 #undef ALL_ERROR_TYPE
 
-// NativeConstructor
+                    
 
-// Creator functions
+                    
 NATIVE_CONSTRUCTOR(NativeConstructor::creatorFunction<JSObject>)
 NATIVE_CONSTRUCTOR(NativeConstructor::creatorFunction<JSFunction>)
 NATIVE_CONSTRUCTOR(NativeConstructor::creatorFunction<JSArray>)
@@ -445,9 +445,9 @@ NATIVE_CONSTRUCTOR(NativeConstructor::creatorFunction<JSAsyncFunction>)
 #undef TYPED_ARRAY
 
 #ifdef HERMES_ENABLE_INTL
-// TODO T65916424: Consider how we can move these somewhere more modular.
-// I would prefer these be in the ::hermes::intl namespace, but the current
-// macros make that difficult.
+                                                                         
+                                                                           
+                              
 NATIVE_FUNCTION(intlCollatorCompare)
 NATIVE_FUNCTION(intlCollatorConstructor)
 NATIVE_FUNCTION(intlCollatorSupportedLocalesOf)

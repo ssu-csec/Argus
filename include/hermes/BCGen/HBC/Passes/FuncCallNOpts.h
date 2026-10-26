@@ -13,7 +13,7 @@
 
 namespace hermes {
 
-/// Detect Calls with small argument counts, and replace them with HBCCallN.
+                                                                            
 class FuncCallNOpts : public FunctionPass {
  public:
   explicit FuncCallNOpts() : hermes::FunctionPass("FuncCallNOpts") {}
@@ -22,6 +22,6 @@ class FuncCallNOpts : public FunctionPass {
   bool runOnFunction(Function *F) override;
 };
 
-} // namespace hermes
+}                    
 
 #endif

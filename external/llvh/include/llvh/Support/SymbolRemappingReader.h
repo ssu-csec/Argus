@@ -91,35 +91,35 @@ private:
   std::string Message;
 };
 
-/// Reader for symbol remapping files.
-///
-/// Remaps the symbol names in profile data to match those in the program
-/// according to a set of rules specified in a given file.
+                                      
+   
+                                                                         
+                                                          
 class SymbolRemappingReader {
 public:
-  /// Read remappings from the given buffer, which must live as long as
-  /// the remapper.
+                                                                       
+                   
   Error read(MemoryBuffer &B);
 
-  /// A Key represents an equivalence class of symbol names.
+                                                            
   using Key = uintptr_t;
 
-  /// Construct a key for the given symbol, or return an existing one if an
-  /// equivalent name has already been inserted. The symbol name must live
-  /// as long as the remapper.
-  ///
-  /// The result will be Key() if the name cannot be remapped (typically
-  /// because it is not a valid mangled name).
+                                                                           
+                                                                          
+                              
+     
+                                                                        
+                                              
   Key insert(StringRef FunctionName) {
     return Canonicalizer.canonicalize(FunctionName);
   }
 
-  /// Map the given symbol name into the key for the corresponding equivalence
-  /// class.
-  ///
-  /// The result will typically be Key() if no equivalent symbol has been
-  /// inserted, but this is not guaranteed: a Key different from all keys ever
-  /// returned by \c insert may be returned instead.
+                                                                              
+            
+     
+                                                                         
+                                                                              
+                                                    
   Key lookup(StringRef FunctionName) {
     return Canonicalizer.lookup(FunctionName);
   }
@@ -128,6 +128,6 @@ private:
   ItaniumManglingCanonicalizer Canonicalizer;
 };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_SUPPORT_SYMBOLREMAPPINGREADER_H
+#endif                                        

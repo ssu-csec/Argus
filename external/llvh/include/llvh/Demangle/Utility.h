@@ -20,14 +20,14 @@
 #include <iterator>
 #include <limits>
 
-// Stream that AST nodes write their string representation into after the AST
-// has been parsed.
+                                                                             
+                   
 class OutputStream {
   char *Buffer;
   size_t CurrentPosition;
   size_t BufferCapacity;
 
-  // Ensure there is at least n more positions in buffer.
+                                                         
   void grow(size_t N) {
     if (N + CurrentPosition >= BufferCapacity) {
       BufferCapacity *= 2;
@@ -40,7 +40,7 @@ class OutputStream {
   }
 
   void writeUnsigned(uint64_t N, bool isNeg = false) {
-    // Handle special case...
+                             
     if (N == 0) {
       *this << '0';
       return;
@@ -54,7 +54,7 @@ class OutputStream {
       N /= 10;
     }
 
-    // Add negative sign...
+                           
     if (isNeg)
       *--TempPtr = '-';
     this->operator<<(StringView(TempPtr, std::end(Temp)));
@@ -70,8 +70,8 @@ public:
     BufferCapacity = BufferCapacity_;
   }
 
-  /// If a ParameterPackExpansion (or similar type) is encountered, the offset
-  /// into the pack that we're currently printing.
+                                                                              
+                                                  
   unsigned CurrentPackIndex = std::numeric_limits<unsigned>::max();
   unsigned CurrentPackMax = std::numeric_limits<unsigned>::max();
 

@@ -37,7 +37,7 @@ inline void GCPointerBase::set(PointerBase &base, GCCell *ptr, GC &gc) {
   assert(
       (!ptr || gc.validPointer(ptr)) &&
       "Cannot set a GCPointer to an invalid pointer");
-  // Write barrier must happen before the write.
+                                                
   gc.writeBarrier(this, ptr);
   setNoBarrier(CompressedPointer::encode(ptr, base));
 }
@@ -45,7 +45,7 @@ inline void GCPointerBase::set(PointerBase &base, GCCell *ptr, GC &gc) {
 inline void GCPointerBase::setNonNull(PointerBase &base, GCCell *ptr, GC &gc) {
   assert(
       gc.validPointer(ptr) && "Cannot set a GCPointer to an invalid pointer");
-  // Write barrier must happen before the write.
+                                                
   gc.writeBarrier(this, ptr);
   setNoBarrier(CompressedPointer::encodeNonNull(ptr, base));
 }
@@ -55,7 +55,7 @@ GCPointerBase::set(PointerBase &base, CompressedPointer ptr, GC &gc) {
   assert(
       (!ptr || gc.validPointer(ptr.get(base))) &&
       "Cannot set a GCPointer to an invalid pointer");
-  // Write barrier must happen before the write.
+                                                
   gc.writeBarrier(this, ptr.get(base));
   setNoBarrier(ptr);
 }
@@ -65,7 +65,7 @@ inline void GCPointerBase::setNull(GC &gc) {
   setNoBarrier(CompressedPointer(nullptr));
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMES_VM_GCPOINTER_INL_H
+#endif                             

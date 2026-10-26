@@ -48,7 +48,7 @@
 #include <algorithm>
 #include <string>
 #if defined(HAVE_BACKTRACE) && ENABLE_BACKTRACES
-# include BACKTRACE_HEADER         // For backtrace().
+# include BACKTRACE_HEADER                            
 #endif
 #if HAVE_SIGNAL_H
 #include <signal.h>
@@ -66,10 +66,10 @@
 #include <link.h>
 #endif
 #ifdef HAVE__UNWIND_BACKTRACE
-// FIXME: We should be able to use <unwind.h> for any target that has an
-// _Unwind_Backtrace function, but on FreeBSD the configure test passes
-// despite the function not existing, and on Android, <unwind.h> conflicts
-// with <link.h>.
+                                                                        
+                                                                       
+                                                                          
+                 
 #ifdef __GLIBC__
 #include <unwind.h>
 #else
@@ -79,28 +79,28 @@
 
 using namespace llvh;
 
-static RETSIGTYPE SignalHandler(int Sig);  // defined below.
+static RETSIGTYPE SignalHandler(int Sig);                   
 
-/// The function to call if ctrl-c is pressed.
+                                              
 using InterruptFunctionType = void (*)();
 static std::atomic<InterruptFunctionType> InterruptFunction =
     ATOMIC_VAR_INIT(nullptr);
 
 namespace {
-/// Signal-safe removal of files.
-/// Inserting and erasing from the list isn't signal-safe, but removal of files
-/// themselves is signal-safe. Memory is freed when the head is freed, deletion
-/// is therefore not signal-safe either.
+                                 
+                                                                               
+                                                                               
+                                        
 class FileToRemoveList {
   std::atomic<char *> Filename = ATOMIC_VAR_INIT(nullptr);
   std::atomic<FileToRemoveList *> Next = ATOMIC_VAR_INIT(nullptr);
 
   FileToRemoveList() = default;
-  // Not signal-safe.
+                     
   FileToRemoveList(const std::string &str) : Filename(strdup(str.c_str())) {}
 
 public:
-  // Not signal-safe.
+                     
   ~FileToRemoveList() {
     if (FileToRemoveList *N = Next.exchange(nullptr))
       delete N;
@@ -108,10 +108,10 @@ public:
       free(F);
   }
 
-  // Not signal-safe.
+                     
   static void insert(std::atomic<FileToRemoveList *> &Head,
                      const std::string &Filename) {
-    // Insert the new file at the end of the list.
+                                                  
     FileToRemoveList *NewHead = new FileToRemoveList(Filename);
     std::atomic<FileToRemoveList *> *InsertionPoint = &Head;
     FileToRemoveList *OldHead = nullptr;
@@ -121,11 +121,11 @@ public:
     }
   }
 
-  // Not signal-safe.
+                     
   static void erase(std::atomic<FileToRemoveList *> &Head,
                     const std::string &Filename) {
-    // Use a lock to avoid concurrent erase: the comparison would access
-    // free'd memory.
+                                                                        
+                     
     static ManagedStatic<sys::SmartMutex<true>> Lock;
     sys::SmartScopedLock<true> Writer(*Lock);
 
@@ -134,85 +134,85 @@ public:
       if (char *OldFilename = Current->Filename.load()) {
         if (OldFilename != Filename)
           continue;
-        // Leave an empty filename.
+                                   
         OldFilename = Current->Filename.exchange(nullptr);
-        // The filename might have become null between the time we
-        // compared it and we exchanged it.
+                                                                  
+                                           
         if (OldFilename)
           free(OldFilename);
       }
     }
   }
 
-  // Signal-safe.
+                 
   static void removeAllFiles(std::atomic<FileToRemoveList *> &Head) {
-    // If cleanup were to occur while we're removing files we'd have a bad time.
-    // Make sure we're OK by preventing cleanup from doing anything while we're
-    // removing files. If cleanup races with us and we win we'll have a leak,
-    // but we won't crash.
+                                                                                
+                                                                               
+                                                                             
+                          
     FileToRemoveList *OldHead = Head.exchange(nullptr);
 
     for (FileToRemoveList *currentFile = OldHead; currentFile;
          currentFile = currentFile->Next.load()) {
-      // If erasing was occuring while we're trying to remove files we'd look
-      // at free'd data. Take away the path and put it back when done.
+                                                                             
+                                                                      
       if (char *path = currentFile->Filename.exchange(nullptr)) {
-        // Get the status so we can determine if it's a file or directory. If we
-        // can't stat the file, ignore it.
+                                                                                
+                                          
         struct stat buf;
         if (stat(path, &buf) != 0)
           continue;
 
-        // If this is not a regular file, ignore it. We want to prevent removal
-        // of special files like /dev/null, even if the compiler is being run
-        // with the super-user permissions.
+                                                                               
+                                                                             
+                                           
         if (!S_ISREG(buf.st_mode))
           continue;
 
-        // Otherwise, remove the file. We ignore any errors here as there is
-        // nothing else we can do.
+                                                                            
+                                  
         unlink(path);
 
-        // We're done removing the file, erasing can safely proceed.
+                                                                    
         currentFile->Filename.exchange(path);
       }
     }
 
-    // We're done removing files, cleanup can safely proceed.
+                                                             
     Head.exchange(OldHead);
   }
 };
 static std::atomic<FileToRemoveList *> FilesToRemove = ATOMIC_VAR_INIT(nullptr);
 
-/// Provide the interrupt function to clean up FilesToRemove if it is populated.
-/// We use a nullable static function pointer for this to allow the linker to
-/// strip the file removal code if RemoveFileOnSignal is never called.
+                                                                                
+                                                                             
+                                                                      
 static std::atomic<InterruptFunctionType> FilesToRemoveInterruptFunc = ATOMIC_VAR_INIT(nullptr);
 
-/// Clean up the list in a signal-friendly manner.
-/// Recall that signals can fire during llvm_shutdown. If this occurs we should
-/// either clean something up or nothing at all, but we shouldn't crash!
+                                                  
+                                                                               
+                                                                        
 struct FilesToRemoveCleanup {
-  // Not signal-safe.
+                     
   ~FilesToRemoveCleanup() {
     FileToRemoveList *Head = FilesToRemove.exchange(nullptr);
     if (Head)
       delete Head;
   }
 };
-} // namespace
+}             
 
 static StringRef Argv0;
 
-// Signals that represent requested termination. There's no bug or failure, or
-// if there is, it's not our direct responsibility. For whatever reason, our
-// continued execution is no longer desirable.
+                                                                              
+                                                                            
+                                              
 static const int IntSigs[] = {
   SIGHUP, SIGINT, SIGPIPE, SIGTERM, SIGUSR1, SIGUSR2
 };
 
-// Signals that represent that we have a bug, and our prompt termination has
-// been ordered.
+                                                                            
+                
 static const int KillSigs[] = {
   SIGILL, SIGTRAP, SIGABRT, SIGFPE, SIGBUS, SIGSEGV, SIGQUIT
 #ifdef SIGSYS
@@ -236,20 +236,20 @@ static struct {
 } RegisteredSignalInfo[array_lengthof(IntSigs) + array_lengthof(KillSigs)];
 
 #if defined(HAVE_SIGALTSTACK)
-// Hold onto both the old and new alternate signal stack so that it's not
-// reported as a leak. We don't make any attempt to remove our alt signal
-// stack if we remove our signal handlers; that can't be done reliably if
-// someone else is also trying to do the same thing.
+                                                                         
+                                                                         
+                                                                         
+                                                    
 static stack_t OldAltStack;
 LLVM_ATTRIBUTE_USED static void* NewAltStackPointer;
 
 static void CreateSigAltStack() {
   const size_t AltStackSize = MINSIGSTKSZ + 64 * 1024;
 
-  // If we're executing on the alternate stack, or we already have an alternate
-  // signal stack that we're happy with, there's nothing for us to do. Don't
-  // reduce the size, some other part of the process might need a larger stack
-  // than we do.
+                                                                               
+                                                                            
+                                                                              
+                
   if (sigaltstack(nullptr, &OldAltStack) != 0 ||
       OldAltStack.ss_flags & SS_ONSTACK ||
       (OldAltStack.ss_sp && OldAltStack.ss_size >= AltStackSize))
@@ -257,7 +257,7 @@ static void CreateSigAltStack() {
 
   stack_t AltStack = {};
   AltStack.ss_sp = static_cast<char *>(safe_malloc(AltStackSize));
-  NewAltStackPointer = AltStack.ss_sp; // Save to avoid reporting a leak.
+  NewAltStackPointer = AltStack.ss_sp;                                   
   AltStack.ss_size = AltStackSize;
   if (sigaltstack(&AltStack, &OldAltStack) != 0)
     free(AltStack.ss_sp);
@@ -266,19 +266,19 @@ static void CreateSigAltStack() {
 static void CreateSigAltStack() {}
 #endif
 
-static void RegisterHandlers() { // Not signal-safe.
-  // The mutex prevents other threads from registering handlers while we're
-  // doing it. We also have to protect the handlers and their count because
-  // a signal handler could fire while we're registeting handlers.
+static void RegisterHandlers() {                    
+                                                                           
+                                                                           
+                                                                  
   static ManagedStatic<sys::SmartMutex<true>> SignalHandlerRegistrationMutex;
   sys::SmartScopedLock<true> Guard(*SignalHandlerRegistrationMutex);
 
-  // If the handlers are already registered, we're done.
+                                                        
   if (NumRegisteredSignals.load() != 0)
     return;
 
-  // Create an alternate stack for signal handling. This is necessary for us to
-  // be able to reliably handle signals due to stack overflow.
+                                                                               
+                                                              
   CreateSigAltStack();
 
   auto registerHandler = [&](int Signal) {
@@ -292,7 +292,7 @@ static void RegisterHandlers() { // Not signal-safe.
     NewHandler.sa_flags = SA_NODEFER | SA_RESETHAND | SA_ONSTACK;
     sigemptyset(&NewHandler.sa_mask);
 
-    // Install the new handler, save the old one in RegisteredSignalInfo.
+                                                                         
     sigaction(Signal, &NewHandler, &RegisteredSignalInfo[Index].SA);
     RegisteredSignalInfo[Index].SigNo = Signal;
     ++NumRegisteredSignals;
@@ -305,7 +305,7 @@ static void RegisterHandlers() { // Not signal-safe.
 }
 
 static void UnregisterHandlers() {
-  // Restore all of the signal handlers to how they were before we showed up.
+                                                                             
   for (unsigned i = 0, e = NumRegisteredSignals.load(); i != e; ++i) {
     sigaction(RegisteredSignalInfo[i].SigNo,
               &RegisteredSignalInfo[i].SA, nullptr);
@@ -313,20 +313,20 @@ static void UnregisterHandlers() {
   }
 }
 
-/// Process the FilesToRemove list.
+                                   
 static void RemoveFilesToRemove() {
   FileToRemoveList::removeAllFiles(FilesToRemove);
 }
 
-// The signal handler that runs.
+                                
 static RETSIGTYPE SignalHandler(int Sig) {
-  // Restore the signal behavior to default, so that the program actually
-  // crashes when we return and the signal reissues.  This also ensures that if
-  // we crash in our signal handler that the program will terminate immediately
-  // instead of recursing in the signal handler.
+                                                                         
+                                                                               
+                                                                               
+                                                
   UnregisterHandlers();
 
-  // Unmask all potentially blocked kill signals.
+                                                 
   sigset_t SigMask;
   sigfillset(&SigMask);
   sigprocmask(SIG_UNBLOCK, &SigMask, nullptr);
@@ -340,19 +340,19 @@ static RETSIGTYPE SignalHandler(int Sig) {
       if (auto OldInterruptFunction = InterruptFunction.exchange(nullptr))
         return OldInterruptFunction();
 
-      raise(Sig);   // Execute the default handler.
+      raise(Sig);                                  
       return;
    }
   }
 
-  // Otherwise if it is a fault (like SEGV) run any handler.
+                                                            
   llvh::sys::RunSignalHandlers();
 
 #ifdef __s390__
-  // On S/390, certain signals are delivered with PSW Address pointing to
-  // *after* the faulting instruction.  Simply returning from the signal
-  // handler would continue execution after that point, instead of
-  // re-raising the signal.  Raise the signal manually in those cases.
+                                                                         
+                                                                        
+                                                                  
+                                                                      
   if (Sig == SIGILL || Sig == SIGFPE || Sig == SIGTRAP)
     raise(Sig);
 #endif
@@ -368,10 +368,10 @@ void llvh::sys::SetInterruptFunction(void (*IF)()) {
   RegisterHandlers();
 }
 
-// The public API
+                 
 bool llvh::sys::RemoveFileOnSignal(StringRef Filename,
                                    std::string* ErrMsg) {
-  // Ensure that cleanup will occur as soon as one file is added.
+                                                                 
   static ManagedStatic<FilesToRemoveCleanup> FilesToRemoveCleanup;
   *FilesToRemoveCleanup;
   FilesToRemoveInterruptFunc = RemoveFilesToRemove;
@@ -380,16 +380,16 @@ bool llvh::sys::RemoveFileOnSignal(StringRef Filename,
   return false;
 }
 
-// The public API
+                 
 void llvh::sys::DontRemoveFileOnSignal(StringRef Filename) {
   FileToRemoveList::erase(FilesToRemove, Filename.str());
 }
 
-/// Add a function to be called when a signal is delivered to the process. The
-/// handler can have a cookie passed to it to identify what instance of the
-/// handler it is.
+                                                                              
+                                                                           
+                  
 void llvh::sys::AddSignalHandler(sys::SignalHandlerCallback FnPtr,
-                                 void *Cookie) { // Signal-safe.
+                                 void *Cookie) {                
   insertSignalHandler(FnPtr, Cookie);
   RegisterHandlers();
 }
@@ -429,8 +429,8 @@ static int dl_iterate_phdr_cb(dl_phdr_info *info, size_t size, void *arg) {
   return 0;
 }
 
-/// If this is an ELF platform, we can find all loaded modules and their virtual
-/// addresses with dl_iterate_phdr.
+                                                                                
+                                   
 static bool findModulesAndOffsets(void **StackTrace, int Depth,
                                   const char **Modules, intptr_t *Offsets,
                                   const char *MainExecutableName,
@@ -441,26 +441,26 @@ static bool findModulesAndOffsets(void **StackTrace, int Depth,
   return true;
 }
 #else
-/// This platform does not have dl_iterate_phdr, so we do not yet know how to
-/// find all loaded DSOs.
+                                                                             
+                         
 static bool findModulesAndOffsets(void **StackTrace, int Depth,
                                   const char **Modules, intptr_t *Offsets,
                                   const char *MainExecutableName,
                                   StringSaver &StrPool) {
   return false;
 }
-#endif // defined(HAVE_BACKTRACE) && ENABLE_BACKTRACES && ...
+#endif                                                       
 
 #if ENABLE_BACKTRACES && defined(HAVE__UNWIND_BACKTRACE)
 static int unwindBacktrace(void **StackTrace, int MaxEntries) {
   if (MaxEntries < 0)
     return 0;
 
-  // Skip the first frame ('unwindBacktrace' itself).
+                                                     
   int Entries = -1;
 
   auto HandleFrame = [&](_Unwind_Context *Context) -> _Unwind_Reason_Code {
-    // Apparently we need to detect reaching the end of the stack ourselves.
+                                                                            
     void *IP = (void *)_Unwind_GetIP(Context);
     if (!IP)
       return _URC_END_OF_STACK;
@@ -483,22 +483,22 @@ static int unwindBacktrace(void **StackTrace, int MaxEntries) {
 }
 #endif
 
-// In the case of a program crash or fault, print out a stack trace so that the
-// user has an indication of why and where we died.
-//
-// On glibc systems we have the 'backtrace' function, which works nicely, but
-// doesn't demangle symbols.
+                                                                               
+                                                   
+  
+                                                                             
+                            
 void llvh::sys::PrintStackTrace(raw_ostream &OS) {
 #if ENABLE_BACKTRACES
   static void *StackTrace[256];
   int depth = 0;
 #if defined(HAVE_BACKTRACE)
-  // Use backtrace() to output a backtrace on Linux systems with glibc.
+                                                                       
   if (!depth)
     depth = backtrace(StackTrace, static_cast<int>(array_lengthof(StackTrace)));
 #endif
 #if defined(HAVE__UNWIND_BACKTRACE)
-  // Try _Unwind_Backtrace() if backtrace() failed.
+                                                   
   if (!depth)
     depth = unwindBacktrace(StackTrace,
                         static_cast<int>(array_lengthof(StackTrace)));
@@ -543,9 +543,9 @@ void llvh::sys::PrintStackTrace(raw_ostream &OS) {
       else    OS << d;
       free(d);
 
-      // FIXME: When we move to C++11, use %t length modifier. It's not in
-      // C++03 and causes gcc to issue warnings. Losing the upper 32 bits of
-      // the stack offset for a stack dump isn't likely to cause any problems.
+                                                                          
+                                                                            
+                                                                              
       OS << format(" + %u",(unsigned)((char*)StackTrace[i]-
                                       (char*)dlinfo.dli_saddr));
     }
@@ -563,8 +563,8 @@ static void PrintStackTraceSignalHandler(void *) {
 
 void llvh::sys::DisableSystemDialogsOnCrash() {}
 
-/// When an error signal (such as SIGABRT or SIGSEGV) is delivered to the
-/// process, print a stack trace and then exit.
+                                                                         
+                                               
 void llvh::sys::PrintStackTraceOnErrorSignal(StringRef Argv0,
                                              bool DisableCrashReporting) {
   ::Argv0 = Argv0;
@@ -572,7 +572,7 @@ void llvh::sys::PrintStackTraceOnErrorSignal(StringRef Argv0,
   AddSignalHandler(PrintStackTraceSignalHandler, nullptr);
 
 #if defined(__APPLE__) && ENABLE_CRASH_OVERRIDES
-  // Environment variable to disable any kind of crash dialog.
+                                                              
   if (DisableCrashReporting || getenv("LLVM_DISABLE_CRASH_REPORT")) {
     mach_port_t self = mach_task_self();
 

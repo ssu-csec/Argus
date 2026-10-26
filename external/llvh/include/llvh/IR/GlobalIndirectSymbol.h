@@ -35,15 +35,15 @@ public:
   GlobalIndirectSymbol(const GlobalIndirectSymbol &) = delete;
   GlobalIndirectSymbol &operator=(const GlobalIndirectSymbol &) = delete;
 
-  // allocate space for exactly one operand
+                                           
   void *operator new(size_t s) {
     return User::operator new(s, 1);
   }
 
-  /// Provide fast operand accessors
+                                    
   DECLARE_TRANSPARENT_OPERAND_ACCESSORS(Constant);
 
-  /// These methods set and retrieve indirect symbol.
+                                                     
   void setIndirectSymbol(Constant *Symbol) {
     setOperand(0, Symbol);
   }
@@ -74,7 +74,7 @@ public:
                                    ->getBaseObject(DL, Offset));
   }
 
-  // Methods for support type inquiry through isa, cast, and dyn_cast:
+                                                                      
   static bool classof(const Value *V) {
     return V->getValueID() == Value::GlobalAliasVal ||
            V->getValueID() == Value::GlobalIFuncVal;
@@ -88,6 +88,6 @@ struct OperandTraits<GlobalIndirectSymbol> :
 
 DEFINE_TRANSPARENT_OPERAND_ACCESSORS(GlobalIndirectSymbol, Constant)
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_IR_GLOBALINDIRECTSYMBOL_H
+#endif                                  

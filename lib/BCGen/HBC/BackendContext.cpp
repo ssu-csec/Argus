@@ -20,5 +20,5 @@ BackendContext &BackendContext::get(Context &ctx) {
   return *ctx.getHBCBackendContext();
 };
 
-} // namespace hbc
-} // namespace hermes
+}                 
+}                    

@@ -29,8 +29,8 @@ namespace detail {
 
 struct DenseSetEmpty {};
 
-// Use the empty base class trick so we can create a DenseMap where the buckets
-// contain only a single item.
+                                                                               
+                              
 template <typename KeyT> class DenseSetPair : public DenseSetEmpty {
   KeyT key;
 
@@ -41,15 +41,15 @@ public:
   const DenseSetEmpty &getSecond() const { return *this; }
 };
 
-/// Base class for DenseSet and DenseSmallSet.
-///
-/// MapTy should be either
-///
-///   DenseMap<ValueT, detail::DenseSetEmpty, ValueInfoT,
-///            detail::DenseSetPair<ValueT>>
-///
-/// or the equivalent SmallDenseMap type.  ValueInfoT must implement the
-/// DenseMapInfo "concept".
+                                              
+   
+                          
+   
+                                                         
+                                            
+   
+                                                                        
+                           
 template <typename ValueT, typename MapTy, typename ValueInfoT>
 class DenseSetImpl {
   static_assert(sizeof(typename MapTy::value_type) == sizeof(ValueT),
@@ -75,19 +75,19 @@ public:
   size_type size() const { return TheMap.size(); }
   size_t getMemorySize() const { return TheMap.getMemorySize(); }
 
-  /// Grow the DenseSet so that it has at least Size buckets. Will not shrink
-  /// the Size of the set.
+                                                                             
+                          
   void resize(size_t Size) { TheMap.resize(Size); }
 
-  /// Grow the DenseSet so that it can contain at least \p NumEntries items
-  /// before resizing again.
+                                                                           
+                            
   void reserve(size_t Size) { TheMap.reserve(Size); }
 
   void clear() {
     TheMap.clear();
   }
 
-  /// Return 1 if the specified key is in the set, 0 otherwise.
+                                                               
   size_type count(const_arg_type_t<ValueT> V) const {
     return TheMap.count(V);
   }
@@ -98,7 +98,7 @@ public:
 
   void swap(DenseSetImpl &RHS) { TheMap.swap(RHS.TheMap); }
 
-  // Iterators.
+               
 
   class ConstIterator;
 
@@ -167,11 +167,11 @@ public:
     return ConstIterator(TheMap.find(V));
   }
 
-  /// Alternative version of find() which allows a different, and possibly less
-  /// expensive, key type.
-  /// The DenseMapInfo is responsible for supplying methods
-  /// getHashValue(LookupKeyT) and isEqual(LookupKeyT, KeyT) for each key type
-  /// used.
+                                                                               
+                          
+                                                           
+                                                                              
+           
   template <class LookupKeyT>
   iterator find_as(const LookupKeyT &Val) {
     return Iterator(TheMap.find_as(Val));
@@ -194,8 +194,8 @@ public:
     return TheMap.try_emplace(std::move(V), Empty);
   }
 
-  /// Alternative version of insert that uses a different (and possibly less
-  /// expensive) key type.
+                                                                            
+                          
   template <typename LookupKeyT>
   std::pair<iterator, bool> insert_as(const ValueT &V,
                                       const LookupKeyT &LookupKey) {
@@ -206,7 +206,7 @@ public:
     return TheMap.insert_as({std::move(V), detail::DenseSetEmpty()}, LookupKey);
   }
 
-  // Range insertion of values.
+                               
   template<typename InputIt>
   void insert(InputIt I, InputIt E) {
     for (; I != E; ++I)
@@ -214,9 +214,9 @@ public:
   }
 };
 
-} // end namespace detail
+}                        
 
-/// Implements a dense probed hash-table based set.
+                                                   
 template <typename ValueT, typename ValueInfoT = DenseMapInfo<ValueT>>
 class DenseSet : public detail::DenseSetImpl<
                      ValueT, DenseMap<ValueT, detail::DenseSetEmpty, ValueInfoT,
@@ -232,8 +232,8 @@ public:
   using BaseT::BaseT;
 };
 
-/// Implements a dense probed hash-table based set with some number of buckets
-/// stored inline.
+                                                                              
+                  
 template <typename ValueT, unsigned InlineBuckets = 4,
           typename ValueInfoT = DenseMapInfo<ValueT>>
 class SmallDenseSet
@@ -250,6 +250,6 @@ public:
   using BaseT::BaseT;
 };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_ADT_DENSESET_H
+#endif                       

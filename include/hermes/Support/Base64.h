@@ -13,15 +13,15 @@
 
 namespace hermes {
 
-/// Decode a plain old style Base64 \p input (e.g. data URL).
-/// \return the decoded value, or None if a value could not be decoded.
+                                                             
+                                                                       
 llvh::Optional<std::string> base64Decode(llvh::StringRef input);
 
-/// Decode a data URL that is specifically in the base64 encoding and with
-/// the media type application/json.
-/// \return the decoded value, or None if the \p url could not be decoded.
+                                                                          
+                                    
+                                                                          
 llvh::Optional<std::string> parseJSONBase64DataURL(llvh::StringRef url);
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_BASE64_H
+#endif                   

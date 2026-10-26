@@ -20,7 +20,7 @@
 
 #include "llvh/Support/DataTypes.h"
 
-// Windows will at times define MemoryFence.
+                                            
 #ifdef MemoryFence
 #undef MemoryFence
 #endif

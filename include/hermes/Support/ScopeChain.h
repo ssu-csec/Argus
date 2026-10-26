@@ -13,18 +13,18 @@
 #include <vector>
 
 namespace hermes {
-/// A ScopeChainItem represents variables available in a scope.
+                                                               
 struct ScopeChainItem {
-  /// List of variables in this function.
+                                         
   std::vector<llvh::StringRef> variables;
 };
-/// A ScopeChain is a sequence of nested ScopeChainItems, from innermost to
-/// outermost scopes.
+                                                                           
+                     
 struct ScopeChain {
-  /// Scopes on the stack. Innermost (direct parent) is 0.
+                                                          
   std::vector<ScopeChainItem> scopes;
 };
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_SUPPORT_SCOPECHAIN_H
+#endif                               

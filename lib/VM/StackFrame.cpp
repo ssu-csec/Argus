@@ -52,5 +52,5 @@ void dumpStackFrame(StackFramePtr frame) {
   dumpStackFrame(frame, llvh::errs());
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

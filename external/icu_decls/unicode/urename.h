@@ -21,37 +21,37 @@
 #ifndef URENAME_H
 #define URENAME_H
 
-/* U_DISABLE_RENAMING can be defined in the following ways:
- *   - when running configure, e.g.
- *        runConfigureICU Linux --disable-renaming
- *   - by changing the default setting of U_DISABLE_RENAMING in uconfig.h
- */
+                                                           
+                                   
+                                                  
+                                                                         
+   
 
 #include "unicode/uconfig.h"
 
 #if !U_DISABLE_RENAMING
 
-/* We need the U_ICU_ENTRY_POINT_RENAME definition. There's a default one in unicode/uvernum.h we can use, but we will give
-   the platform a chance to define it first.
-   Normally (if utypes.h or umachine.h was included first) this will not be necessary as it will already be defined.
- */
+                                                                                                                           
+                                            
+                                                                                                                    
+   
 
 #ifndef U_ICU_ENTRY_POINT_RENAME
 #include "unicode/umachine.h"
 #endif
 
-/* If we still don't have U_ICU_ENTRY_POINT_RENAME use the default. */
+                                                                      
 #ifndef U_ICU_ENTRY_POINT_RENAME
 #include "unicode/uvernum.h"
 #endif
 
-/* Error out before the following defines cause very strange and unexpected code breakage */
+                                                                                            
 #ifndef U_ICU_ENTRY_POINT_RENAME
 #error U_ICU_ENTRY_POINT_RENAME is not defined - cannot continue. Consider defining U_DISABLE_RENAMING if renaming should not be used.
 #endif
 
 
-/* C exports renaming data */
+                             
 
 #define T_CString_int64ToString U_ICU_ENTRY_POINT_RENAME(T_CString_int64ToString)
 #define T_CString_integerToString U_ICU_ENTRY_POINT_RENAME(T_CString_integerToString)

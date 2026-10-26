@@ -26,7 +26,7 @@ Optional<ESTree::Node *> JSParserImpl::parseTypeAnnotationTS(
   ESTree::Node *result = nullptr;
 
   if (check(TokenKind::identifier)) {
-    // Need to check if this is a predicate, which requires backtracking.
+                                                                         
     JSLexer::SavePoint savePoint{&lexer_};
     ESTree::Node *id = setLocation(
         tok_,
@@ -90,7 +90,7 @@ Optional<ESTree::Node *> JSParserImpl::parseTypeAnnotationTS(
   }
 
   if (checkAndEat(TokenKind::rw_extends, JSLexer::GrammarContext::Type)) {
-    // Parse a conditional type.
+                                
     auto optCheck = parseTypeAnnotationTS();
     if (!optCheck)
       return None;
@@ -142,7 +142,7 @@ Optional<ESTree::Node *> JSParserImpl::parseTSUnionType() {
     return None;
 
   if (!check(TokenKind::pipe)) {
-    // Done with the union, move on.
+                                    
     return *optFirst;
   }
 
@@ -171,7 +171,7 @@ Optional<ESTree::Node *> JSParserImpl::parseTSIntersectionType() {
     return None;
 
   if (!check(TokenKind::amp)) {
-    // Done with the union, move on.
+                                    
     return *optFirst;
   }
 
@@ -225,14 +225,14 @@ Optional<ESTree::Node *> JSParserImpl::parseTSFunctionOrParenthesizedType(
     ESTree::Node *typeParams,
     IsConstructorType isConstructorType) {
   assert(check(TokenKind::l_paren));
-  // This is either
-  // ( Type )
-  // ^
-  // or
-  // ( ParamList ) => Type
-  // ^
-  // so we use a similar approach to arrow function parameters by keeping track
-  // and reparsing in certain cases.
+                   
+             
+      
+       
+                          
+      
+                                                                               
+                                    
   advance(JSLexer::GrammarContext::Type);
 
   bool isFunction = typeParams != nullptr;
@@ -254,7 +254,7 @@ Optional<ESTree::Node *> JSParserImpl::parseTSFunctionOrParenthesizedType(
           thisStart,
           getPrevTokenEndLoc(),
           new (context_) ESTree::IdentifierNode(
-              thisIdent_, *typeAnnotation, /* optional */ false)));
+              thisIdent_, *typeAnnotation,                false)));
       checkAndEat(TokenKind::comma, JSLexer::GrammarContext::Type);
     } else if (optNext.hasValue() && *optNext == TokenKind::question) {
       error(tok_->getSourceRange(), "'this' constraint may not be optional");
@@ -266,7 +266,7 @@ Optional<ESTree::Node *> JSParserImpl::parseTSFunctionOrParenthesizedType(
       checkAndEat(TokenKind::dotdotdot, JSLexer::GrammarContext::Type)) {
     isFunction = true;
     hasRest = true;
-    // Must be parameters, and this must be the last one.
+                                                         
     auto optName = parseTSFunctionTypeParam();
     if (!optName)
       return None;
@@ -281,11 +281,11 @@ Optional<ESTree::Node *> JSParserImpl::parseTSFunctionOrParenthesizedType(
     type = *optType;
   } else if (check(TokenKind::r_paren)) {
     isFunction = true;
-    // ( )
-    //   ^
-    // No parameters, but this must be an empty param list.
+          
+          
+                                                           
   } else {
-    // Not sure yet whether this is a param or simply a type.
+                                                             
     auto optParam = parseTSFunctionTypeParam();
     if (!optParam)
       return None;
@@ -294,7 +294,7 @@ Optional<ESTree::Node *> JSParserImpl::parseTSFunctionOrParenthesizedType(
       if (param &&
           (param->_accessibility || param->_export || param->_readonly ||
            param->_static)) {
-        // Must be a param.
+                           
         isFunction = true;
       }
       params.push_back(*param);
@@ -305,7 +305,7 @@ Optional<ESTree::Node *> JSParserImpl::parseTSFunctionOrParenthesizedType(
           ? ident->_typeAnnotation
           : reparseIdentifierAsTSTypeAnnotation(ident);
       if (ident->_typeAnnotation || ident->_optional) {
-        // Must be a param.
+                           
         isFunction = true;
       }
     } else {
@@ -314,8 +314,8 @@ Optional<ESTree::Node *> JSParserImpl::parseTSFunctionOrParenthesizedType(
     }
   }
 
-  // If isFunction was already forced by something previously then we
-  // have no choice but to attempt to parse as a function type annotation.
+                                                                     
+                                                                          
   if ((isFunction || allowAnonFunctionType_) &&
       checkAndEat(TokenKind::comma, JSLexer::GrammarContext::Type)) {
     isFunction = true;
@@ -426,7 +426,7 @@ Optional<ESTree::Node *> JSParserImpl::parseTSFunctionTypeParam() {
 
   while (checkN(
       TokenKind::identifier, TokenKind::rw_static, TokenKind::rw_export)) {
-    // Check if this is a modifier.
+                                   
     if (!staticNode && checkN(TokenKind::rw_static, staticIdent_)) {
       advance(JSLexer::GrammarContext::Type);
       if (checkN(
@@ -490,7 +490,7 @@ Optional<ESTree::Node *> JSParserImpl::parseTSFunctionTypeParam() {
       }
     }
 
-    // Not a modifier.
+                      
     break;
   }
 
@@ -871,7 +871,7 @@ Optional<ESTree::Node *> JSParserImpl::parseTSPostfixType() {
 
   ESTree::Node *result = *optPrimary;
 
-  // Parse any [] after the primary type.
+                                         
   while (!lexer_.isNewLineBeforeCurrentToken() &&
          checkAndEat(TokenKind::l_square, JSLexer::GrammarContext::Type)) {
     if (check(TokenKind::r_square)) {
@@ -1247,14 +1247,14 @@ Optional<ESTree::Node *> JSParserImpl::parseTSObjectTypeMember() {
   bool optional = false;
   bool computed = false;
 
-  // TODO: Parse modifiers.
+                           
   bool readonly = false;
   bool isStatic = false;
   bool isExport = false;
 
   ESTree::Node *key = nullptr;
 
-  // TODO: Parse initializer.
+                             
   ESTree::Node *init = nullptr;
 
   if (checkAndEat(TokenKind::l_square, JSLexer::GrammarContext::Type)) {
@@ -1263,7 +1263,7 @@ Optional<ESTree::Node *> JSParserImpl::parseTSObjectTypeMember() {
     if (check(TokenKind::identifier)) {
       auto optNext = lexer_.lookahead1(llvh::None);
       if (optNext.hasValue() && *optNext == TokenKind::colon) {
-        // Unambiguously an index signature.
+                                            
         return parseTSIndexSignature(start);
       }
     }
@@ -1432,6 +1432,6 @@ ESTree::Node *JSParserImpl::reparseIdentifierAsTSTypeAnnotation(
 
 #endif
 
-} // namespace detail
-} // namespace parser
-} // namespace hermes
+}                    
+}                    
+}                    

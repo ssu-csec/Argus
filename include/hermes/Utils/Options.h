@@ -26,40 +26,40 @@ enum OutputFormatKind {
   Execute,
 };
 
-/// Options controlling the type of output to generate.
+                                                       
 struct BytecodeGenerationOptions {
-  /// The format of the output.
+                               
   OutputFormatKind format = Execute;
 
-  /// Whether optimizations are enabled.
+                                        
   bool optimizationEnabled = false;
 
-  /// Whether to strip the debug info in the bytecode binary.
+                                                             
   bool stripDebugInfoSection = false;
 
-  /// Whether to print the disassembled bytecode in a more human readable
-  /// format.
+                                                                         
+             
   bool prettyDisassemble = true;
 
-  /// Whether to enable basic block profiling or not.
+                                                     
   bool basicBlockProfiling = false;
 
-  /// Whether static builtins are enabled.
+                                          
   bool staticBuiltinsEnabled = false;
 
-  /// Whether the IR should be verified.
+                                        
   bool verifyIR = false;
 
-  /// Strip all function names to reduce string table size.
+                                                           
   bool stripFunctionNames = false;
 
-  /// Add this much garbage after each function body (relative to its size).
+                                                                            
   unsigned padFunctionBodiesPercent = 0;
 
-  /// Strip the source map URL.
+                               
   bool stripSourceMappingURL = false;
 
-  /* implicit */ BytecodeGenerationOptions(OutputFormatKind format)
+                 BytecodeGenerationOptions(OutputFormatKind format)
       : format(format) {}
 
   static BytecodeGenerationOptions defaults() {
@@ -67,6 +67,6 @@ struct BytecodeGenerationOptions {
   }
 };
 
-} // namespace hermes
+}                    
 
 #endif

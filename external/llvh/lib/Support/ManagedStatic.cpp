@@ -44,7 +44,7 @@ void ManagedStaticBase::RegisterManagedStatic(void *(*Creator)(),
       Ptr.store(Tmp, std::memory_order_release);
       DeleterFn = Deleter;
 
-      // Add to list of managed statics.
+                                        
       Next = StaticList;
       StaticList = this;
     }
@@ -54,7 +54,7 @@ void ManagedStaticBase::RegisterManagedStatic(void *(*Creator)(),
     Ptr = Creator();
     DeleterFn = Deleter;
 
-    // Add to list of managed statics.
+                                      
     Next = StaticList;
     StaticList = this;
   }
@@ -64,19 +64,19 @@ void ManagedStaticBase::destroy() const {
   assert(DeleterFn && "ManagedStatic not initialized correctly!");
   assert(StaticList == this &&
          "Not destroyed in reverse order of construction?");
-  // Unlink from list.
+                      
   StaticList = Next;
   Next = nullptr;
 
-  // Destroy memory.
+                    
   DeleterFn(Ptr);
 
-  // Cleanup.
+             
   Ptr = nullptr;
   DeleterFn = nullptr;
 }
 
-/// llvm_shutdown - Deallocate and destroy all ManagedStatic variables.
+                                                                       
 void llvh::llvm_shutdown() {
   MutexGuard Lock(*getManagedStaticMutex());
 

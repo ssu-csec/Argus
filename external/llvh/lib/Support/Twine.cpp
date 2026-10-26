@@ -16,16 +16,16 @@
 using namespace llvh;
 
 std::string Twine::str() const {
-  // If we're storing only a std::string, just return it.
+                                                         
   if (LHSKind == StdStringKind && RHSKind == EmptyKind)
     return *LHS.stdString;
 
-  // If we're storing a formatv_object, we can avoid an extra copy by formatting
-  // it immediately and returning the result.
+                                                                                
+                                             
   if (LHSKind == FormatvObjectKind && RHSKind == EmptyKind)
     return LHS.formatvObject->str();
 
-  // Otherwise, flatten and copy the contents first.
+                                                    
   SmallString<256> Vec;
   return toStringRef(Vec).str();
 }
@@ -39,7 +39,7 @@ StringRef Twine::toNullTerminatedStringRef(SmallVectorImpl<char> &Out) const {
   if (isUnary()) {
     switch (getLHSKind()) {
     case CStringKind:
-      // Already null terminated, yay!
+                                      
       return StringRef(LHS.cString);
     case StdStringKind: {
       const std::string *str = LHS.stdString;

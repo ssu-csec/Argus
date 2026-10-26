@@ -29,7 +29,7 @@
 
 #if defined(_WINDOWS)
 #include <windows.h>
-// Must be included after windows.h
+                                   
 #include <mmsystem.h>
 #include "llvh/ADT/ScopeExit.h"
 #endif
@@ -49,8 +49,8 @@ void Sampler::registerRuntime(SamplingProfiler *profiler) {
 void Sampler::unregisterRuntime(SamplingProfiler *profiler) {
   std::lock_guard<std::mutex> lockGuard(profilerLock_);
   bool succeed = profilers_.erase(profiler);
-  // TODO: should we allow recursive style
-  // register/register -> unregister/unregister call?
+                                          
+                                                     
   assert(succeed && "How can runtime not registered yet?");
   (void)succeed;
   platformUnregisterRuntime(profiler);
@@ -69,26 +69,26 @@ bool Sampler::sampleStacks() {
 
 bool Sampler::sampleStack(SamplingProfiler *localProfiler) {
   if (localProfiler->suspendCount_ > 0) {
-    // Sampling profiler is suspended. Copy pre-captured stack instead without
-    // interrupting the VM thread.
+                                                                              
+                                  
     if (localProfiler->preSuspendStackDepth_ > 0) {
       sampleStorage_ = localProfiler->preSuspendStackStorage_;
       sampledStackDepth_ = localProfiler->preSuspendStackDepth_;
     } else {
-      // This suspension didn't record a stack trace. For example, a GC (like
-      // mallocGC) did not record JS stack.
-      // TODO: fix this for all cases.
+                                                                             
+                                           
+                                      
       sampledStackDepth_ = 0;
     }
   } else {
-    // Ensure there are no allocations in the signal handler by keeping ample
-    // reserved space.
+                                                                             
+                      
     localProfiler->domains_.reserve(
         localProfiler->domains_.size() + SamplingProfiler::kMaxStackDepth);
     size_t domainCapacityBefore = localProfiler->domains_.capacity();
     (void)domainCapacityBefore;
 
-    // Ditto for native functions.
+                                  
     localProfiler->nativeFunctions_.reserve(
         localProfiler->nativeFunctions_.size() +
         SamplingProfiler::kMaxStackDepth);
@@ -127,8 +127,8 @@ void Sampler::walkRuntimeStack(SamplingProfiler *profiler) {
       "Shouldn't interrupt the VM thread when the sampling profiler is "
       "suspended.");
 
-  // Sampling stack will touch GC objects(like closure) so only do so if heap
-  // is valid.
+                                                                             
+              
   auto &curThreadRuntime = profiler->runtime_;
   assert(
       !curThreadRuntime.getHeap().inGC() &&
@@ -143,18 +143,18 @@ void Sampler::timerLoop(double meanHzFreq) {
 
   std::random_device rd{};
   std::mt19937 gen{rd()};
-  // The amount of time that is spent sleeping comes from a normal distribution,
-  // to avoid the case where the timer thread samples a stack at a predictable
-  // period.
+                                                                                
+                                                                              
+            
   double interval = 1.0 / meanHzFreq;
   std::normal_distribution<> distribution{interval, interval / 2};
   std::unique_lock<std::mutex> uniqueLock(profilerLock_);
 
 #if defined(_WINDOWS)
-  // By default, timer resolution is approximately 64Hz on Windows, so if the
-  // meanHzFreq parameter is greater than 64, sampling will occur at a lower
-  // frequency than desired. Setting the period to 1 is the minimum useful
-  // value, resulting in timer resolution of roughly 1 millsecond.
+                                                                             
+                                                                            
+                                                                          
+                                                                  
   timeBeginPeriod(1);
   auto restorePeriod = llvh::make_scope_exit([] { timeEndPeriod(1); });
 #endif
@@ -185,7 +185,7 @@ bool Sampler::enable(double meanHzFreq) {
     return false;
   }
   enabled_ = true;
-  // Start timer thread.
+                        
   timerThread_ = std::thread(&Sampler::timerLoop, this, meanHzFreq);
   return true;
 }
@@ -194,26 +194,26 @@ bool Sampler::disable() {
   {
     std::lock_guard<std::mutex> lockGuard(profilerLock_);
     if (!enabled_) {
-      // Already disabled.
+                          
       return true;
     }
     if (!platformDisable()) {
       return false;
     }
-    // Telling timer thread to exit.
+                                    
     enabled_ = false;
   }
-  // Notify the timer thread that it has been disabled.
+                                                       
   enabledCondVar_.notify_all();
-  // Wait for timer thread to exit. This avoids the timer thread reading from
-  // memory that is freed after a main thread exits. This is outside the lock
-  // on profilerLock_ since the timer thread needs to acquire that lock.
+                                                                             
+                                                                             
+                                                                        
   timerThread_.join();
   return true;
 }
 
-} // namespace sampling_profiler
-} // namespace vm
-} // namespace hermes
+}                               
+}                
+}                    
 
-#endif // HERMESVM_SAMPLING_PROFILER_AVAILABLE
+#endif                                        

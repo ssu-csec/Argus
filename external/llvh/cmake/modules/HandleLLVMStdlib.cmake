@@ -1,5 +1,5 @@
-# This CMake module is responsible for setting the standard library to libc++
-# if the user has requested it.
+                                                                             
+                               
 
 include(DetermineGCCCompatible)
 

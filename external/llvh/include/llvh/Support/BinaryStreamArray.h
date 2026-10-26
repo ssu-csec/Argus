@@ -17,70 +17,70 @@
 #include <cassert>
 #include <cstdint>
 
-/// Lightweight arrays that are backed by an arbitrary BinaryStream.  This file
-/// provides two different array implementations.
-///
-///     VarStreamArray - Arrays of variable length records.  The user specifies
-///       an Extractor type that can extract a record from a given offset and
-///       return the number of bytes consumed by the record.
-///
-///     FixedStreamArray - Arrays of fixed length records.  This is similar in
-///       spirit to ArrayRef<T>, but since it is backed by a BinaryStream, the
-///       elements of the array need not be laid out in contiguous memory.
+                                                                               
+                                                 
+   
+                                                                               
+                                                                             
+                                                            
+   
+                                                                              
+                                                                              
+                                                                          
 namespace llvh {
 
-/// VarStreamArrayExtractor is intended to be specialized to provide customized
-/// extraction logic.  On input it receives a BinaryStreamRef pointing to the
-/// beginning of the next record, but where the length of the record is not yet
-/// known.  Upon completion, it should return an appropriate Error instance if
-/// a record could not be extracted, or if one could be extracted it should
-/// return success and set Len to the number of bytes this record occupied in
-/// the underlying stream, and it should fill out the fields of the value type
-/// Item appropriately to represent the current record.
-///
-/// You can specialize this template for your own custom value types to avoid
-/// having to specify a second template argument to VarStreamArray (documented
-/// below).
+                                                                               
+                                                                             
+                                                                               
+                                                                              
+                                                                           
+                                                                             
+                                                                              
+                                                       
+   
+                                                                             
+                                                                              
+           
 template <typename T> struct VarStreamArrayExtractor {
-  // Method intentionally deleted.  You must provide an explicit specialization
-  // with the following method implemented.
+                                                                               
+                                           
   Error operator()(BinaryStreamRef Stream, uint32_t &Len,
                    T &Item) const = delete;
 };
 
-/// VarStreamArray represents an array of variable length records backed by a
-/// stream.  This could be a contiguous sequence of bytes in memory, it could
-/// be a file on disk, or it could be a PDB stream where bytes are stored as
-/// discontiguous blocks in a file.  Usually it is desirable to treat arrays
-/// as contiguous blocks of memory, but doing so with large PDB files, for
-/// example, could mean allocating huge amounts of memory just to allow
-/// re-ordering of stream data to be contiguous before iterating over it.  By
-/// abstracting this out, we need not duplicate this memory, and we can
-/// iterate over arrays in arbitrarily formatted streams.  Elements are parsed
-/// lazily on iteration, so there is no upfront cost associated with building
-/// or copying a VarStreamArray, no matter how large it may be.
-///
-/// You create a VarStreamArray by specifying a ValueType and an Extractor type.
-/// If you do not specify an Extractor type, you are expected to specialize
-/// VarStreamArrayExtractor<T> for your ValueType.
-///
-/// By default an Extractor is default constructed in the class, but in some
-/// cases you might find it useful for an Extractor to maintain state across
-/// extractions.  In this case you can provide your own Extractor through a
-/// secondary constructor.  The following examples show various ways of
-/// creating a VarStreamArray.
-///
-///       // Will use VarStreamArrayExtractor<MyType> as the extractor.
-///       VarStreamArray<MyType> MyTypeArray;
-///
-///       // Will use a default-constructed MyExtractor as the extractor.
-///       VarStreamArray<MyType, MyExtractor> MyTypeArray2;
-///
-///       // Will use the specific instance of MyExtractor provided.
-///       // MyExtractor need not be default-constructible in this case.
-///       MyExtractor E(SomeContext);
-///       VarStreamArray<MyType, MyExtractor> MyTypeArray3(E);
-///
+                                                                             
+                                                                             
+                                                                            
+                                                                            
+                                                                          
+                                                                       
+                                                                             
+                                                                       
+                                                                              
+                                                                             
+                                                               
+   
+                                                                                
+                                                                           
+                                                  
+   
+                                                                            
+                                                                            
+                                                                           
+                                                                       
+                              
+   
+                                                                       
+                                             
+   
+                                                                         
+                                                           
+   
+                                                                    
+                                                                        
+                                     
+                                                              
+   
 
 template <typename ValueType, typename Extractor> class VarStreamArrayIterator;
 
@@ -111,10 +111,10 @@ public:
 
   bool empty() const { return Stream.getLength() == 0; }
 
-  /// given an offset into the array's underlying stream, return an
-  /// iterator to the record at that offset.  This is considered unsafe
-  /// since the behavior is undefined if \p Offset does not refer to the
-  /// beginning of a valid record.
+                                                                   
+                                                                       
+                                                                        
+                                  
   Iterator at(uint32_t Offset) const {
     return Iterator(*this, E, Offset, nullptr);
   }
@@ -163,16 +163,16 @@ public:
 
   bool operator==(const IterType &R) const {
     if (Array && R.Array) {
-      // Both have a valid array, make sure they're same.
+                                                         
       assert(Array == R.Array);
       return IterRef == R.IterRef;
     }
 
-    // Both iterators are at the end.
+                                     
     if (!Array && !R.Array)
       return true;
 
-    // One is not at the end and one is.
+                                        
     return false;
   }
 
@@ -188,22 +188,22 @@ public:
 
   IterType &operator+=(unsigned N) {
     for (unsigned I = 0; I < N; ++I) {
-      // We are done with the current record, discard it so that we are
-      // positioned at the next record.
+                                                                       
+                                       
       AbsOffset += ThisLen;
       IterRef = IterRef.drop_front(ThisLen);
       if (IterRef.getLength() == 0) {
-        // There is nothing after the current record, we must make this an end
-        // iterator.
+                                                                              
+                    
         moveToEnd();
       } else {
-        // There is some data after the current record.
+                                                       
         auto EC = Extract(IterRef, ThisLen, ThisValue);
         if (EC) {
           consumeError(std::move(EC));
           markError();
         } else if (ThisLen == 0) {
-          // An empty record? Make this an end iterator.
+                                                        
           moveToEnd();
         }
       }
@@ -238,11 +238,11 @@ private:
 
 template <typename T> class FixedStreamArrayIterator;
 
-/// FixedStreamArray is similar to VarStreamArray, except with each record
-/// having a fixed-length.  As with VarStreamArray, there is no upfront
-/// cost associated with building or copying a FixedStreamArray, as the
-/// memory for each element is not read from the backing stream until that
-/// element is iterated.
+                                                                          
+                                                                       
+                                                                       
+                                                                          
+                        
 template <typename T> class FixedStreamArray {
   friend class FixedStreamArrayIterator<T>;
 
@@ -270,8 +270,8 @@ public:
     ArrayRef<uint8_t> Data;
     if (auto EC = Stream.readBytes(Off, sizeof(T), Data)) {
       assert(false && "Unexpected failure reading from stream");
-      // This should never happen since we asserted that the stream length was
-      // an exact multiple of the element size.
+                                                                              
+                                               
       consumeError(std::move(EC));
     }
     assert(llvh::alignmentAdjustment(Data.data(), alignof(T)) == 0);
@@ -353,6 +353,6 @@ private:
   uint32_t Index;
 };
 
-} // namespace llvh
+}                  
 
-#endif // LLVM_SUPPORT_BINARYSTREAMARRAY_H
+#endif                                    

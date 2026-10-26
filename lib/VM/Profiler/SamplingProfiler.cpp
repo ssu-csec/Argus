@@ -33,7 +33,7 @@ namespace hermes {
 namespace vm {
 
 void SamplingProfiler::registerDomain(Domain *domain) {
-  // If domain is not already registered, add it to the list.
+                                                             
   auto it = std::find(domains_.begin(), domains_.end(), domain);
   if (it == domains_.end())
     domains_.push_back(domain);
@@ -41,7 +41,7 @@ void SamplingProfiler::registerDomain(Domain *domain) {
 
 SamplingProfiler::NativeFunctionFrameInfo
 SamplingProfiler::registerNativeFunction(NativeFunction *nativeFunction) {
-  // If nativeFunction is not already registered, add it to the list.
+                                                                     
   auto it = std::find(
       nativeFunctions_.begin(), nativeFunctions_.end(), nativeFunction);
   if (it != nativeFunctions_.end()) {
@@ -76,13 +76,13 @@ uint32_t SamplingProfiler::walkRuntimeStack(
     uint32_t startIndex) {
   unsigned count = startIndex;
 
-  // TODO: capture leaf frame IP.
+                                 
   const Inst *ip = nullptr;
   for (ConstStackFramePtr frame : runtime_.getStackFrames()) {
-    // Whether we successfully captured a stack frame or not.
+                                                             
     bool capturedFrame = true;
     auto &frameStorage = sampleStorage.stack[count];
-    // Check if it is pure JS frame.
+                                    
     auto *calleeCodeBlock = frame.getCalleeCodeBlock(runtime_);
     if (calleeCodeBlock != nullptr) {
       frameStorage.kind = StackFrame::FrameKind::JSFunction;
@@ -92,8 +92,8 @@ uint32_t SamplingProfiler::walkRuntimeStack(
       auto *module = calleeCodeBlock->getRuntimeModule();
       assert(module != nullptr && "Cannot fetch runtimeModule for code block");
       frameStorage.jsFrame.module = module;
-      // Don't execute a read or write barrier here because this is a signal
-      // handler.
+                                                                            
+                 
       if (inLoom != InLoom::Yes)
         registerDomain(module->getDomainForSamplingProfiler(runtime_));
     } else if (
@@ -109,11 +109,11 @@ uint32_t SamplingProfiler::walkRuntimeStack(
             nativeFunction->getFunctionPtr();
       }
     } else {
-      // TODO: handle BoundFunction.
+                                    
       capturedFrame = false;
     }
 
-    // Update ip to caller for next iteration.
+                                              
     ip = frame.getSavedIP();
     if (capturedFrame) {
       ++count;
@@ -151,8 +151,8 @@ void SamplingProfiler::dumpSampledStack(llvh::raw_ostream &OS) {
     uint64_t timeStamp = sample.timeStamp.time_since_epoch().count();
     OS << "[" << i << "]: tid[" << sample.tid << "], ts[" << timeStamp << "] ";
 
-    // Leaf frame is in sample[0] so dump it backward to
-    // get root => leaf represenation.
+                                                        
+                                      
     for (auto iter = sample.stack.rbegin(); iter != sample.stack.rend();
          ++iter) {
       const StackFrame &frame = *iter;
@@ -229,7 +229,7 @@ bool SamplingProfiler::disable() {
 
 void SamplingProfiler::clear() {
   sampledStacks_.clear();
-  // Release all strong roots.
+                              
   domains_.clear();
   nativeFunctions_.clear();
 }
@@ -237,21 +237,21 @@ void SamplingProfiler::clear() {
 void SamplingProfiler::suspend(
     SuspendFrameInfo::Kind reason,
     llvh::StringRef gcSuspendDetails) {
-  // Need to check whether the profiler is enabled without holding the
-  // runtimeDataLock_. Otherwise, we'd have a lock inversion.
+                                                                      
+                                                             
   bool enabled = sampling_profiler::Sampler::get()->enabled();
 
   std::lock_guard<std::mutex> lk(runtimeDataLock_);
   if (++suspendCount_ > 1) {
-    // If there are multiple nested suspend calls use a default "multiple" frame
-    // kind for the suspend entry in the call stack.
+                                                                                
+                                                    
     reason = SuspendFrameInfo::Kind::Multiple;
   } else if (reason == SuspendFrameInfo::Kind::GC && gcSuspendDetails.empty()) {
-    // If no GC reason was provided, use a default "suspend" value.
+                                                                   
     gcSuspendDetails = "suspend";
   }
 
-  // Only record the stack trace for the first suspend() call.
+                                                              
   if (LLVM_UNLIKELY(enabled && suspendCount_ == 1)) {
     recordPreSuspendStack(reason, gcSuspendDetails);
   }
@@ -279,7 +279,7 @@ void SamplingProfiler::recordPreSuspendStack(
   leafFrame.kind = StackFrame::FrameKind::SuspendFrame;
   leafFrame.suspendFrame = suspendExtraInfo;
 
-  // Leaf frame slot has been used, filling from index 1.
+                                                         
   preSuspendStackDepth_ =
       walkRuntimeStack(preSuspendStackStorage_, InLoom::No, 1);
 }
@@ -308,7 +308,7 @@ bool operator==(
   }
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMESVM_SAMPLING_PROFILER_AVAILABLE
+#endif                                        

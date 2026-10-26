@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//===----------------------------------------------------------------------===//
-/// \file
-/// <algorithm> style algorithms.
-//===----------------------------------------------------------------------===//
+                                                                                
+         
+                                 
+                                                                                
 
 #ifndef HERMES_SUPPORT_ALGORITHMS_H
 #define HERMES_SUPPORT_ALGORITHMS_H
@@ -20,10 +20,10 @@
 
 namespace hermes {
 
-/// Variants of std::uninitialized_copy and std::uninitialized_copy_n that
-/// properly fall to std::copy (and thereby memmove) for trivial types. This
-/// works around naive implementations of std::uninitialized_copy as seen in
-/// some STL versions.
+                                                                          
+                                                                            
+                                                                            
+                      
 template <class InputIt, class ForwardIt>
 ForwardIt uninitializedCopy(InputIt start, InputIt end, ForwardIt dst) {
   using SrcType = typename std::iterator_traits<InputIt>::value_type;
@@ -42,6 +42,6 @@ ForwardIt uninitializedCopyN(InputIt src, Size count, ForwardIt dst) {
   return std::uninitialized_copy_n(src, count, dst);
 }
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_SUPPORT_ALGORITHMS_H
+#endif                               

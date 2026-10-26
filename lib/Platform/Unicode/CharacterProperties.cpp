@@ -27,7 +27,7 @@ struct UnicodeRangeComp {
     return s < p.first;
   }
 };
-} // namespace
+}             
 
 template <typename UnicodeRangeTable>
 inline bool lookup(const UnicodeRangeTable &table, const uint32_t cp) {
@@ -36,20 +36,20 @@ inline bool lookup(const UnicodeRangeTable &table, const uint32_t cp) {
 }
 
 bool isUnicodeOnlyLetter(uint32_t cp) {
-  // "any character in the Unicode categories “Uppercase letter (Lu)”,
-  // “Lowercase letter (Ll)”, “Titlecase letter (Lt)”, “Modifier letter (Lm)”,
-  // “Other letter (Lo)”, or “Letter number (Nl)”".
-  // ASCII characters are not "UnicodeOnly" and so we return false.
+                                                                      
+                                                                              
+                                                   
+                                                                   
   if (cp <= 0x7F)
     return false;
 
   return lookup(UNICODE_LETTERS, cp);
 }
 
-// Special cased due to small number of separate values.
+                                                        
 bool isUnicodeOnlySpace(uint32_t cp) {
-  // "Other category “Zs”: Any other Unicode “space separator”"
-  // Exclude ASCII.
+                                                               
+                   
   if (cp <= 0x7F)
     return false;
 
@@ -77,20 +77,20 @@ bool isUnicodeOnlySpace(uint32_t cp) {
 }
 
 bool isUnicodeCombiningMark(uint32_t cp) {
-  // "any character in the Unicode categories “Non-spacing mark (Mn)” or
-  // “Combining spacing mark (Mc)”"
+                                                                        
+                                   
   return lookup(UNICODE_COMBINING_MARK, cp);
 }
 
 bool isUnicodeDigit(uint32_t cp) {
-  // "any character in the Unicode category “Decimal number (Nd)”"
-  // 0-9 is the common case.
+                                                                  
+                            
   return (cp >= '0' && cp <= '9') || lookup(UNICODE_DIGIT, cp);
 };
 
 bool isUnicodeConnectorPunctuation(uint32_t cp) {
-  // "any character in the Unicode category “Connector punctuation (Pc)"
-  // _ is the common case.
+                                                                        
+                          
   return cp == '_' || lookup(UNICODE_CONNECTOR_PUNCTUATION, cp);
 }
 
@@ -99,7 +99,7 @@ static uint32_t applyTransform(const UnicodeTransformRange &r, uint32_t cp) {
       r.start <= cp && cp < r.start + r.count &&
       "range does not contain this cp");
   assert(cp <= INT32_MAX && "cp is too big");
-  // Check if our code point has a mod of 0.
+                                            
   if ((cp - r.start) % r.modulo == 0) {
     int32_t cps = static_cast<int32_t>(cp) + r.delta;
     assert(cps >= 0 && "delta underflowed");
@@ -108,39 +108,39 @@ static uint32_t applyTransform(const UnicodeTransformRange &r, uint32_t cp) {
   return cp;
 }
 
-// Predicate used to enable binary search on UnicodeTransformRange.
-// Here we return true if the last element of the range is < cp, so <= is
-// correct.
+                                                                   
+                                                                         
+           
 static bool operator<(const UnicodeTransformRange &m, uint32_t cp) {
   return m.start + m.count <= cp;
 }
 
-/// Find all code points which canonicalize to a value in \p range, and add them
-/// to \p receiver. This is a slow linear search across all ranges.
+                                                                                
+                                                                   
 static void addPrecanonicalCharacters(
     CodePointRange range,
     CodePointSet *receiver,
     bool unicode) {
   if (range.length == 0)
     return;
-  // TODO: if range is ASCII and unicode is not set, we can stop the search
-  // after the ASCII part as nothing outside ASCII can canonicalize to an ASCII
-  // character.
+                                                                           
+                                                                               
+               
   const auto start =
       unicode ? std::begin(UNICODE_FOLDS) : std::begin(LEGACY_CANONS);
   const auto end = unicode ? std::end(UNICODE_FOLDS) : std::end(LEGACY_CANONS);
   for (auto iter = start; iter != end; ++iter) {
     const UnicodeTransformRange &transform = *iter;
-    // Get the range of transformed-from and transformed-to characters.
+                                                                       
     CodePointRange fromRange{transform.start, transform.count};
     CodePointRange toRange = fromRange;
     toRange.first += transform.delta;
 
-    // See if some character in our range will be transformed-to.
+                                                                 
     if (!range.overlaps(toRange))
       continue;
 
-    // Looks like it. Add everything.
+                                     
     for (uint32_t cp = fromRange.first; cp < fromRange.end(); cp++) {
       uint32_t tcp = applyTransform(transform, cp);
       if (tcp != cp && range.first <= tcp && tcp < range.end()) {
@@ -150,13 +150,13 @@ static void addPrecanonicalCharacters(
   }
 }
 
-/// For each code point in \p range, canonicalize it and add the canonicalized
-/// values to \p receiver.
+                                                                              
+                          
 static void
 canonicalizeRange(CodePointRange range, CodePointSet *receiver, bool unicode) {
   assert(range.length > 0 && "Range should never be empty");
 
-  /// Find the first transform that contains or starts after our range.
+                                                                       
   const auto start =
       unicode ? std::begin(UNICODE_FOLDS) : std::begin(LEGACY_CANONS);
   const auto end = unicode ? std::end(UNICODE_FOLDS) : std::end(LEGACY_CANONS);
@@ -168,24 +168,24 @@ canonicalizeRange(CodePointRange range, CodePointSet *receiver, bool unicode) {
     uint32_t transformEnd = transform->start + transform->count;
     assert(transformEnd > curcp && "transform should end after our current cp");
     if (transform->start > curcp) {
-      // Our transform started after the current value, so skip to the
-      // transform.
+                                                                      
+                   
       curcp = transform->start;
     } else {
-      // Apply this transform for the code points that are in the transform and
-      // also in our range.
+                                                                               
+                           
       for (; curcp < transformEnd && curcp < endcp; curcp++) {
         receiver->add(applyTransform(*transform, curcp));
       }
-      // We have now exhausted this transform; go to the next one.
+                                                                  
       ++transform;
     }
   }
 }
 
 CodePointSet makeCanonicallyEquivalent(const CodePointSet &set, bool unicode) {
-  // Canonicalize all characters in the set, and then find all characters which
-  // canonicalize to some element in the set.
+                                                                               
+                                             
   CodePointSet canonicalized = set;
   for (const auto &range : set.ranges()) {
     canonicalizeRange(range, &canonicalized, unicode);
@@ -206,15 +206,15 @@ uint32_t canonicalize(uint32_t cp, bool unicode) {
   if (where != end && where->start <= cp && cp < where->start + where->count) {
     return applyTransform(*where, cp);
   } else {
-    // No transform for this character, so it canonicalizes to itself.
+                                                                      
     return cp;
   }
 }
 
 #ifdef HERMES_ENABLE_UNICODE_REGEXP_PROPERTY_ESCAPES
 
-/// Find a matching entry (such as \p NameMapEntry or \p RangeMapEntry) by
-/// matching a string \p name against the entry's \p name field.
+                                                                          
+                                                                
 template <class T>
 static const T *findMapEntry(
     const llvh::ArrayRef<T> &arrayRef,
@@ -242,8 +242,8 @@ llvh::ArrayRef<UnicodeRangePoolRef> unicodePropertyRanges(
   llvh::ArrayRef<RangeMapEntry> rangeMap;
 
   if (propertyValue.empty()) {
-    // There was no property value, this is either a binary property or a value
-    // from General_Category, as per `LoneUnicodePropertyNameOrValue`.
+                                                                               
+                                                                      
     if ((canonicalNameEntry = findMapEntry(
              llvh::ArrayRef(canonicalPropertyNameMap_BinaryProperty),
              propertyName))) {
@@ -254,7 +254,7 @@ llvh::ArrayRef<UnicodeRangePoolRef> unicodePropertyRanges(
       rangeMap = unicodePropertyRangeMap_GeneralCategory;
     }
   } else {
-    // There was a property value, assume the name is a category.
+                                                                 
     if ((propertyName == "General_Category" || propertyName == "gc") &&
         (canonicalNameEntry = findMapEntry(
              llvh::ArrayRef(canonicalPropertyNameMap_GeneralCategory),
@@ -267,8 +267,8 @@ llvh::ArrayRef<UnicodeRangePoolRef> unicodePropertyRanges(
       rangeMap = unicodePropertyRangeMap_Script;
     } else if (
         (propertyName == "Script_Extensions" || propertyName == "scx") &&
-        // Since Script_Extensions is a superset of Script, they share
-        // a name map.
+                                                                      
+                      
         (canonicalNameEntry = findMapEntry(
              llvh::ArrayRef(canonicalPropertyNameMap_Script), propertyValue))) {
       rangeMap = unicodePropertyRangeMap_ScriptExtensions;
@@ -281,7 +281,7 @@ llvh::ArrayRef<UnicodeRangePoolRef> unicodePropertyRanges(
     return llvh::ArrayRef<UnicodeRangePoolRef>();
   }
 
-  // Look up the range arrays for the property.
+                                               
   auto rangeMapEntry = findMapEntry(
       rangeMap,
       UNICODE_DATA_STRING_POOL.substr(
@@ -310,8 +310,8 @@ void addRangeArrayPoolToBracket(
         receiver->add(CodePointRange{last, range.first - last});
         last = range.second + 1;
       }
-      // Only add the final range if there's room at the end of the valid
-      // unicode space.
+                                                                         
+                       
       if (last < UNICODE_MAX_VALUE)
         receiver->add(CodePointRange{last, UNICODE_MAX_VALUE - last});
     } else {
@@ -338,4 +338,4 @@ void addRangeArrayPoolToBracket(
 
 #endif
 
-} // namespace hermes
+}                    

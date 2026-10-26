@@ -16,14 +16,14 @@ namespace vm {
 
 class CodeBlock;
 
-/// Contains some information on the interpreter at some point in time.
-/// Passed between calls to the interpreter to help with stepping.
+                                                                       
+                                                                  
 struct InterpreterState {
-  /// The executing code block.
+                               
   CodeBlock *codeBlock{nullptr};
 
-  /// The offset from the start of the code block of the next instruction to
-  /// execute.
+                                                                            
+              
   uint32_t offset{0};
 
   InterpreterState() {}
@@ -41,7 +41,7 @@ struct InterpreterState {
     return !(*this == other);
   }
 };
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
 #endif

@@ -41,5 +41,5 @@ void GCExecTrace::emit(::hermes::JSONEmitter &json) const {
 }
 #endif
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

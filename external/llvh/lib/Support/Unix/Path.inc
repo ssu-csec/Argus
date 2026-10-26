@@ -11,10 +11,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-//===----------------------------------------------------------------------===//
-//=== WARNING: Implementation here must contain only generic UNIX code that
-//===          is guaranteed to work on *all* UNIX variants.
-//===----------------------------------------------------------------------===//
+                                                                                
+                                                                           
+                                                            
+                                                                                
 
 #include "Unix.h"
 #include <limits.h>
@@ -40,13 +40,13 @@
 #include <sys/attr.h>
 #endif
 
-// Both stdio.h and cstdio are included via different paths and
-// stdcxx's cstdio doesn't include stdio.h, so it doesn't #undef the macros
-// either.
+                                                               
+                                                                           
+          
 #undef ferror
 #undef feof
 
-// For GNU Hurd
+               
 #if defined(__GNU__) && !defined(PATH_MAX)
 # define PATH_MAX 4096
 #endif
@@ -119,14 +119,14 @@ getprogpath(char ret[PATH_MAX], const char *bin)
 {
   char *pv, *s, *t;
 
-  /* First approach: absolute path. */
+                                      
   if (bin[0] == '/') {
     if (test_dir(ret, "/", bin) == 0)
       return ret;
     return nullptr;
   }
 
-  /* Second approach: relative path. */
+                                       
   if (strchr(bin, '/')) {
     char cwd[PATH_MAX];
     if (!getcwd(cwd, PATH_MAX))
@@ -136,7 +136,7 @@ getprogpath(char ret[PATH_MAX], const char *bin)
     return nullptr;
   }
 
-  /* Third approach: $PATH */
+                             
   if ((pv = getenv("PATH")) == nullptr)
     return nullptr;
   s = pv = strdup(pv);
@@ -151,15 +151,15 @@ getprogpath(char ret[PATH_MAX], const char *bin)
   free(pv);
   return nullptr;
 }
-#endif // __FreeBSD__ || __NetBSD__ || __FreeBSD_kernel__
+#endif                                                   
 
-/// GetMainExecutable - Return the path to the main executable, given the
-/// value of argv[0] from program startup.
+                                                                         
+                                          
 std::string getMainExecutable(const char *argv0, void *MainAddr) {
 #if defined(__APPLE__)
-  // On OS X the executable path is saved to the stack by dyld. Reading it
-  // from there is much faster than calling dladdr, especially for large
-  // binaries with symbols.
+                                                                          
+                                                                        
+                           
   char exe_path[MAXPATHLEN];
   uint32_t size = sizeof(exe_path);
   if (_NSGetExecutablePath(exe_path, &size) == 0) {
@@ -178,24 +178,24 @@ std::string getMainExecutable(const char *argv0, void *MainAddr) {
   char exe_path[MAXPATHLEN];
   StringRef aPath("/proc/self/exe");
   if (sys::fs::exists(aPath)) {
-      // /proc is not always mounted under Linux (chroot for example).
+                                                                      
       ssize_t len = readlink(aPath.str().c_str(), exe_path, sizeof(exe_path));
       if (len >= 0)
           return std::string(exe_path, len);
   } else {
-      // Fall back to the classical detection.
+                                              
       if (getprogpath(exe_path, argv0))
         return exe_path;
   }
 #elif defined(HAVE_DLFCN_H) && defined(HAVE_DLADDR)
-  // Use dladdr to get executable path if available.
+                                                    
   Dl_info DLInfo;
   int err = dladdr(MainAddr, &DLInfo);
   if (err == 0)
     return "";
 
-  // If the filename is a symlink, we need to resolve and return the location of
-  // the actual executable.
+                                                                                
+                           
   char link_path[MAXPATHLEN];
   if (realpath(DLInfo.dli_fname, link_path))
     return link_path;
@@ -249,16 +249,16 @@ std::error_code current_path(SmallVectorImpl<char> &result) {
 #ifdef MAXPATHLEN
   result.reserve(MAXPATHLEN);
 #else
-// For GNU Hurd
+               
   result.reserve(1024);
 #endif
 
   while (true) {
     if (::getcwd(result.data(), result.capacity()) == nullptr) {
-      // See if there was a real error.
+                                       
       if (errno != ENOMEM)
         return std::error_code(errno, std::generic_category());
-      // Otherwise there just wasn't enough space.
+                                                  
       result.reserve(result.capacity() * 2);
     } else
       break;
@@ -291,10 +291,10 @@ std::error_code create_directory(const Twine &path, bool IgnoreExisting,
   return std::error_code();
 }
 
-// Note that we are using symbolic link because hard links are not supported by
-// all filesystems (SMB doesn't).
+                                                                               
+                                 
 std::error_code create_link(const Twine &to, const Twine &from) {
-  // Get arguments.
+                   
   SmallString<128> from_storage;
   SmallString<128> to_storage;
   StringRef f = from.toNullTerminatedStringRef(from_storage);
@@ -307,7 +307,7 @@ std::error_code create_link(const Twine &to, const Twine &from) {
 }
 
 std::error_code create_hard_link(const Twine &to, const Twine &from) {
-  // Get arguments.
+                   
   SmallString<128> from_storage;
   SmallString<128> to_storage;
   StringRef f = from.toNullTerminatedStringRef(from_storage);
@@ -330,11 +330,11 @@ std::error_code remove(const Twine &path, bool IgnoreNonExisting) {
     return std::error_code();
   }
 
-  // Note: this check catches strange situations. In all cases, LLVM should
-  // only be involved in the creation and deletion of regular files.  This
-  // check ensures that what we're trying to erase is a regular file. It
-  // effectively prevents LLVM from erasing things like /dev/null, any block
-  // special file, or other things that aren't "regular" files.
+                                                                           
+                                                                          
+                                                                        
+                                                                            
+                                                               
   if (!S_ISREG(buf.st_mode) && !S_ISDIR(buf.st_mode) && !S_ISLNK(buf.st_mode))
     return make_error_code(errc::operation_not_permitted);
 
@@ -366,18 +366,18 @@ static bool is_local_impl(struct STATVFS &Vfs) {
     return true;
   }
 #elif defined(__CYGWIN__)
-  // Cygwin doesn't expose this information; would need to use Win32 API.
+                                                                         
   return false;
 #elif defined(__Fuchsia__)
-  // Fuchsia doesn't yet support remote filesystem mounts.
+                                                          
   return true;
 #elif defined(__HAIKU__)
-  // Haiku doesn't expose this information.
+                                           
   return false;
 #elif defined(__sun)
-  // statvfs::f_basetype contains a null-terminated FSType name of the mounted target
+                                                                                     
   StringRef fstype(Vfs.f_basetype);
-  // NFS is the only non-local fstype??
+                                       
   return !fstype.equals("nfs");
 #elif defined(__EMSCRIPTEN__)
   return false;
@@ -405,7 +405,7 @@ std::error_code is_local(int FD, bool &Result) {
 }
 
 std::error_code rename(const Twine &from, const Twine &to) {
-  // Get arguments.
+                   
   SmallString<128> from_storage;
   SmallString<128> to_storage;
   StringRef f = from.toNullTerminatedStringRef(from_storage);
@@ -419,15 +419,15 @@ std::error_code rename(const Twine &from, const Twine &to) {
 
 std::error_code resize_file(int FD, uint64_t Size) {
 #if defined(HAVE_POSIX_FALLOCATE)
-  // If we have posix_fallocate use it. Unlike ftruncate it always allocates
-  // space, so we get an error if the disk is full.
+                                                                            
+                                                   
   if (int Err = ::posix_fallocate(FD, 0, Size)) {
     if (Err != EINVAL && Err != EOPNOTSUPP)
       return std::error_code(Err, std::generic_category());
   }
 #endif
-  // Use ftruncate as a fallback. It may or may not allocate space. At least on
-  // OS X with HFS+ it does.
+                                                                               
+                            
   if (::ftruncate(FD, Size) == -1)
     return std::error_code(errno, std::generic_category());
 
@@ -441,7 +441,7 @@ static int convertAccessMode(AccessMode Mode) {
   case AccessMode::Write:
     return W_OK;
   case AccessMode::Execute:
-    return R_OK | X_OK; // scripts also need R_OK.
+    return R_OK | X_OK;                           
   }
   llvm_unreachable("invalid enum");
 }
@@ -454,7 +454,7 @@ std::error_code access(const Twine &Path, AccessMode Mode) {
     return std::error_code(errno, std::generic_category());
 
   if (Mode == AccessMode::Execute) {
-    // Don't say that directories are executable.
+                                                 
     struct stat buf;
     if (0 != stat(P.begin(), &buf))
       return errc::permission_denied;
@@ -496,26 +496,26 @@ static void expandTildeExpr(SmallVectorImpl<char> &Path) {
   StringRef Remainder = PathStr.substr(Expr.size() + 1);
   SmallString<128> Storage;
   if (Expr.empty()) {
-    // This is just ~/..., resolve it to the current user's home dir.
+                                                                     
     if (!path::home_directory(Storage)) {
-      // For some reason we couldn't get the home directory.  Just exit.
+                                                                        
       return;
     }
 
-    // Overwrite the first character and insert the rest.
+                                                         
     Path[0] = Storage[0];
     Path.insert(Path.begin() + 1, Storage.begin() + 1, Storage.end());
     return;
   }
 
-  // This is a string of the form ~username/, look up this user's entry in the
-  // password database.
+                                                                              
+                       
   struct passwd *Entry = nullptr;
   std::string User = Expr.str();
   Entry = ::getpwnam(User.c_str());
 
   if (!Entry) {
-    // Unable to look up the entry, just return back the original path.
+                                                                       
     return;
   }
 
@@ -619,15 +619,15 @@ std::error_code mapped_file_region::init(int FD, uint64_t Offset,
   int flags = (Mode == readwrite) ? MAP_SHARED : MAP_PRIVATE;
   int prot = (Mode == readonly) ? PROT_READ : (PROT_READ | PROT_WRITE);
 #if defined(__APPLE__)
-  //----------------------------------------------------------------------
-  // Newer versions of MacOSX have a flag that will allow us to read from
-  // binaries whose code signature is invalid without crashing by using
-  // the MAP_RESILIENT_CODESIGN flag. Also if a file from removable media
-  // is mapped we can avoid crashing and return zeroes to any pages we try
-  // to read if the media becomes unavailable by using the
-  // MAP_RESILIENT_MEDIA flag.  These flags are only usable when mapping
-  // with PROT_READ, so take care not to specify them otherwise.
-  //----------------------------------------------------------------------
+                                                                          
+                                                                         
+                                                                       
+                                                                         
+                                                                          
+                                                          
+                                                                        
+                                                                
+                                                                          
   if (Mode == readonly) {
 #if defined(MAP_RESILIENT_CODESIGN)
     flags |= MAP_RESILIENT_CODESIGN;
@@ -636,7 +636,7 @@ std::error_code mapped_file_region::init(int FD, uint64_t Offset,
     flags |= MAP_RESILIENT_MEDIA;
 #endif
   }
-#endif // #if defined (__APPLE__)
+#endif                           
 
   Mapping = ::mmap(nullptr, Size, prot, flags, FD, Offset);
   if (Mapping == MAP_FAILED)
@@ -686,7 +686,7 @@ std::error_code detail::directory_iterator_construct(detail::DirIterState &it,
     return std::error_code(errno, std::generic_category());
 
   it.IterationHandle = reinterpret_cast<intptr_t>(directory);
-  // Add something for replace_filename to replace.
+                                                   
   path::append(path_null, ".");
   it.CurrentEntry = directory_entry(path_null.str(), follow_symlinks);
   return directory_iterator_increment(it);
@@ -701,12 +701,12 @@ std::error_code detail::directory_iterator_destruct(detail::DirIterState &it) {
 }
 
 static file_type direntType(dirent* Entry) {
-  // Most platforms provide the file type in the dirent: Linux/BSD/Mac.
-  // The DTTOIF macro lets us reuse our status -> type conversion.
+                                                                       
+                                                                  
 #if defined(_DIRENT_HAVE_D_TYPE) && defined(DTTOIF)
   return typeForMode(DTTOIF(Entry->d_type));
 #else
-  // Other platforms such as Solaris require a stat() to get the type.
+                                                                      
   return file_type::type_unknown;
 #endif
 }
@@ -737,8 +737,8 @@ ErrorOr<basic_file_status> directory_entry::status() const {
 
 #if !defined(F_GETPATH)
 static bool hasProcSelfFD() {
-  // If we have a /proc filesystem mounted, we can quickly establish the
-  // real name of the file with readlink
+                                                                        
+                                        
   static const bool Result = (::access("/proc/self/fd", R_OK) == 0);
   return Result;
 }
@@ -754,21 +754,21 @@ static int nativeOpenFlags(CreationDisposition Disp, OpenFlags Flags,
   else if (Access == (FA_Read | FA_Write))
     Result |= O_RDWR;
 
-  // This is for compatibility with old code that assumed F_Append implied
-  // would open an existing file.  See Windows/Path.inc for a longer comment.
+                                                                          
+                                                                             
   if (Flags & F_Append)
     Disp = CD_OpenAlways;
 
   if (Disp == CD_CreateNew) {
-    Result |= O_CREAT; // Create if it doesn't exist.
-    Result |= O_EXCL;  // Fail if it does.
+    Result |= O_CREAT;                               
+    Result |= O_EXCL;                     
   } else if (Disp == CD_CreateAlways) {
-    Result |= O_CREAT; // Create if it doesn't exist.
-    Result |= O_TRUNC; // Truncate if it does.
+    Result |= O_CREAT;                               
+    Result |= O_TRUNC;                        
   } else if (Disp == CD_OpenAlways) {
-    Result |= O_CREAT; // Create if it doesn't exist.
+    Result |= O_CREAT;                               
   } else if (Disp == CD_OpenExisting) {
-    // Nothing special, just don't add O_CREAT and we get these semantics.
+                                                                          
   }
 
   if (Flags & F_Append)
@@ -789,8 +789,8 @@ std::error_code openFile(const Twine &Name, int &ResultFD,
 
   SmallString<128> Storage;
   StringRef P = Name.toNullTerminatedStringRef(Storage);
-  // Call ::open in a lambda to avoid overload resolution in RetryAfterSignal
-  // when open is overloaded, such as in Bionic.
+                                                                             
+                                                
   auto Open = [&]() { return ::open(P.begin(), OpenFlags, Mode); };
   if ((ResultFD = sys::RetryAfterSignal(-1, Open)) < 0)
     return std::error_code(errno, std::generic_category());
@@ -823,13 +823,13 @@ std::error_code openFileForRead(const Twine &Name, int &ResultFD,
   if (EC)
     return EC;
 
-  // Attempt to get the real name of the file, if the user asked
+                                                                
   if(!RealPath)
     return std::error_code();
   RealPath->clear();
 #if defined(F_GETPATH)
-  // When F_GETPATH is availble, it is the quickest way to get
-  // the real path name.
+                                                              
+                        
   char Buffer[MAXPATHLEN];
   if (::fcntl(ResultFD, F_GETPATH, Buffer) != -1)
     RealPath->append(Buffer, Buffer + strlen(Buffer));
@@ -845,7 +845,7 @@ std::error_code openFileForRead(const Twine &Name, int &ResultFD,
     SmallString<128> Storage;
     StringRef P = Name.toNullTerminatedStringRef(Storage);
 
-    // Use ::realpath to get the real path name
+                                               
     if (::realpath(P.begin(), Buffer) != nullptr)
       RealPath->append(Buffer, Buffer + strlen(Buffer));
   }
@@ -928,7 +928,7 @@ std::error_code real_path(const Twine &path, SmallVectorImpl<char> &dest,
   return std::error_code();
 }
 
-} // end namespace fs
+}                    
 
 namespace path {
 
@@ -949,8 +949,8 @@ bool home_directory(SmallVectorImpl<char> &result) {
 
 static bool getDarwinConfDir(bool TempDir, SmallVectorImpl<char> &Result) {
   #if defined(_CS_DARWIN_USER_TEMP_DIR) && defined(_CS_DARWIN_USER_CACHE_DIR)
-  // On Darwin, use DARWIN_USER_TEMP_DIR or DARWIN_USER_CACHE_DIR.
-  // macros defined in <unistd.h> on darwin >= 9
+                                                                  
+                                                
   int ConfName = TempDir ? _CS_DARWIN_USER_TEMP_DIR
                          : _CS_DARWIN_USER_CACHE_DIR;
   size_t ConfLen = confstr(ConfName, nullptr, 0);
@@ -973,8 +973,8 @@ static bool getDarwinConfDir(bool TempDir, SmallVectorImpl<char> &Result) {
 }
 
 static const char *getEnvTempDir() {
-  // Check whether the temporary directory is specified by an environment
-  // variable.
+                                                                         
+              
   const char *EnvironmentVariables[] = {"TMPDIR", "TMP", "TEMP", "TEMPDIR"};
   for (const char *Env : EnvironmentVariables) {
     if (const char *Dir = std::getenv(Env))
@@ -999,7 +999,7 @@ void system_temp_directory(bool ErasedOnReboot, SmallVectorImpl<char> &Result) {
   Result.clear();
 
   if (ErasedOnReboot) {
-    // There is no env variable for the cache directory.
+                                                        
     if (const char *RequestedDir = getEnvTempDir()) {
       Result.append(RequestedDir, RequestedDir + strlen(RequestedDir));
       return;
@@ -1013,7 +1013,7 @@ void system_temp_directory(bool ErasedOnReboot, SmallVectorImpl<char> &Result) {
   Result.append(RequestedDir, RequestedDir + strlen(RequestedDir));
 }
 
-} // end namespace path
+}                      
 
-} // end namespace sys
-} // end namespace llvh
+}                     
+}                      

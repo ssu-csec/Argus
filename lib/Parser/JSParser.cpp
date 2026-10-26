@@ -32,14 +32,14 @@ void JSParser::setStrictMode(bool mode) {
   return impl_->setStrictMode(mode);
 }
 
-/// \return the source URL from the magic comment, or an empty string if there
-/// was no magic comment.
+                                                                              
+                         
 llvh::StringRef JSParser::getSourceURL() const {
   return impl_->getLexer().getSourceURL();
 }
 
-/// \return the source mapping URL from the magic comment, or an empty string
-/// if there was no magic comment.
+                                                                             
+                                  
 llvh::StringRef JSParser::getSourceMappingURL() const {
   return impl_->getLexer().getSourceMappingURL();
 }
@@ -105,5 +105,5 @@ llvh::Optional<ESTree::NodePtr> JSParser::parseLazyFunction(
     SMLoc start) {
   return impl_->parseLazyFunction(kind, paramYield, paramAwait, start);
 }
-} // namespace parser
-} // namespace hermes
+}                    
+}                    

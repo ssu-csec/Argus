@@ -5,39 +5,39 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-///===----------------------------------------------------------------------===
-/// \file
-/// Define Hermes builtin functions.
-///
-/// All builtin functions in Hermes are registered in a vector of `Callable *`
-/// in the runtime with an index as its builtin method id.
-///
-/// There are 3 kinds of builtins in Hermes:
-/// 1. (Public Native) Builtins: those are global objects and methods of JSLib
-///   implemented natively which the compiler can assume have not been
-///   overwritten and can be treated as builtins under the "static builtin"
-///   optimizations (`-fstatic-builtins` flag).
-///
-/// 2. Private (Native) Builtins: those are native functions meant to be only
-///   called internally by the compiler to help with implementing JS features
-///   without introducing extra opcodes. They are notationally written as
-///   `HermesBuiltin_name`.
-///
-/// 3. (Private) JS Builtins: those are JS functions returned from the result of
-///   executing internal bytecode. They are also there to help with implementing
-///   JS features.
-///
-/// At this moment,
-/// Native builtins are invoked via `CallBuiltin` instruction.
-/// JS builtins are invoked via `GetBuiltinClosure` followed by a `Call`.
-///
-/// We might separate them in the future.
-///
-/// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-/// IMPORTANT: DO NOT FORGET TO INCREASE THE BYTECODE FILE FORMAT VERSION IF
-/// YOU MODIFY THIS FILE.
-/// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-///===----------------------------------------------------------------------===
+                                                                               
+         
+                                    
+   
+                                                                              
+                                                          
+   
+                                            
+                                                                              
+                                                                      
+                                                                           
+                                               
+   
+                                                                             
+                                                                             
+                                                                         
+                           
+   
+                                                                                
+                                                                                
+                  
+   
+                   
+                                                              
+                                                                         
+   
+                                         
+   
+                                                                            
+                                                                            
+                         
+                                                                            
+                                                                               
 
 #ifndef BUILTIN_OBJECT
 #define BUILTIN_OBJECT(object)
@@ -59,14 +59,14 @@
 #endif
 
 BUILTIN_OBJECT(Array)
-// BUILTIN_METHOD(Array, from)
+                              
 BUILTIN_METHOD(Array, isArray)
 
 BUILTIN_METHOD(Date, UTC)
 BUILTIN_METHOD(Date, parse)
 
-// BUILTIN_OBJECT(HermesInternal)
-// BUILTIN_METHOD(HermesInternal, getEpilogues)
+                                 
+                                               
 
 BUILTIN_OBJECT(JSON)
 BUILTIN_METHOD(JSON, parse)
@@ -94,25 +94,25 @@ BUILTIN_METHOD(Math, sqrt)
 BUILTIN_METHOD(Math, tan)
 BUILTIN_METHOD(Math, trunc)
 
-// BUILTIN_OBJECT(Number)
-// BUILTIN_METHOD(Number, isNaN)
+                         
+                                
 
 BUILTIN_OBJECT(Object)
 BUILTIN_METHOD(Object, create)
 BUILTIN_METHOD(Object, defineProperties)
 BUILTIN_METHOD(Object, defineProperty)
-// BUILTIN_METHOD(Object, entries)
+                                  
 BUILTIN_METHOD(Object, freeze)
 BUILTIN_METHOD(Object, getOwnPropertyDescriptor)
 BUILTIN_METHOD(Object, getOwnPropertyNames)
-// BUILTIN_METHOD(Object, getOwnPropertySymbols)
+                                                
 BUILTIN_METHOD(Object, getPrototypeOf)
 BUILTIN_METHOD(Object, isExtensible)
 BUILTIN_METHOD(Object, isFrozen)
 BUILTIN_METHOD(Object, keys)
 BUILTIN_METHOD(Object, seal)
-// BUILTIN_METHOD(Object, setPrototypeOf)
-// BUILTIN_METHOD(Object, values)
+                                         
+                                 
 
 BUILTIN_OBJECT(String)
 BUILTIN_METHOD(String, fromCharCode)
@@ -133,9 +133,45 @@ PRIVATE_BUILTIN(exportAll)
 PRIVATE_BUILTIN(exponentiationOperator)
 PRIVATE_BUILTIN(initRegexNamedGroups)
 PRIVATE_BUILTIN(getOriginalNativeErrorConstructor)
+PRIVATE_BUILTIN(privateNameCreate)
+PRIVATE_BUILTIN(privateFieldInit)
+PRIVATE_BUILTIN(privateFieldGet)
+PRIVATE_BUILTIN(privateFieldSet)
+PRIVATE_BUILTIN(initBaseClass)
+PRIVATE_BUILTIN(classHeritagePrototype)
+PRIVATE_BUILTIN(initDerivedClass)
+PRIVATE_BUILTIN(getSuperConstructor)
+PRIVATE_BUILTIN(assertDerivedThis)
+PRIVATE_BUILTIN(assertDerivedUninitialized)
+PRIVATE_BUILTIN(derivedConstructorReturn)
+PRIVATE_BUILTIN(constructWithNewTarget)
+PRIVATE_BUILTIN(defineInstanceClassMethod)
+PRIVATE_BUILTIN(classElementKey)
+PRIVATE_BUILTIN(namePublicFieldFunction)
+PRIVATE_BUILTIN(definePublicClassField)
+PRIVATE_BUILTIN(definePublicInstanceClassField)
+PRIVATE_BUILTIN(defineStaticClassMethod)
+PRIVATE_BUILTIN(defineInstanceClassGetter)
+PRIVATE_BUILTIN(defineInstanceClassSetter)
+PRIVATE_BUILTIN(defineStaticClassGetter)
+PRIVATE_BUILTIN(defineStaticClassSetter)
+PRIVATE_BUILTIN(superPropertyGet)
 
 JS_BUILTIN(spawnAsync)
 MARK_FIRST_JS_BUILTIN(spawnAsync)
+JS_BUILTIN(asyncIterator)
+JS_BUILTIN(asyncIteratorNext)
+JS_BUILTIN(asyncIteratorClose)
+JS_BUILTIN(asyncGeneratorWrap)
+JS_BUILTIN(asyncGeneratorStart)
+JS_BUILTIN(asyncGeneratorAwait)
+JS_BUILTIN(asyncGeneratorDelegate)
+JS_BUILTIN(asyncGeneratorNext)
+JS_BUILTIN(asyncGeneratorReturn)
+JS_BUILTIN(asyncGeneratorThrow)
+
+
+JS_BUILTIN(dynamicModuleGraph)
 
 #undef BUILTIN_OBJECT
 #undef BUILTIN_METHOD

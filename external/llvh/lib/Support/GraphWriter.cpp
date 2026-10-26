@@ -38,19 +38,19 @@ std::string llvh::DOT::EscapeString(const std::string &Label) {
   for (unsigned i = 0; i != Str.length(); ++i)
   switch (Str[i]) {
     case '\n':
-      Str.insert(Str.begin()+i, '\\');  // Escape character...
+      Str.insert(Str.begin()+i, '\\');                        
       ++i;
       Str[i] = 'n';
       break;
     case '\t':
-      Str.insert(Str.begin()+i, ' ');  // Convert to two spaces
+      Str.insert(Str.begin()+i, ' ');                          
       ++i;
       Str[i] = ' ';
       break;
     case '\\':
       if (i+1 != Str.length())
         switch (Str[i+1]) {
-          case 'l': continue; // don't disturb \l
+          case 'l': continue;                    
           case '|': case '{': case '}':
             Str.erase(Str.begin()+i); continue;
           default: break;
@@ -59,15 +59,15 @@ std::string llvh::DOT::EscapeString(const std::string &Label) {
     case '{': case '}':
     case '<': case '>':
     case '|': case '"':
-      Str.insert(Str.begin()+i, '\\');  // Escape character...
-      ++i;  // don't infinite loop
+      Str.insert(Str.begin()+i, '\\');                        
+      ++i;                        
       break;
   }
   return Str;
 }
 
-/// Get a color string for this node number. Simply round-robin selects
-/// from a reasonable number of colors.
+                                                                       
+                                       
 StringRef llvh::DOT::getColorString(unsigned ColorNumber) {
   static const int NumColors = 20;
   static const char* Colors[NumColors] = {
@@ -90,7 +90,7 @@ std::string llvh::createGraphFilename(const Twine &Name, int &FD) {
   return Filename.str();
 }
 
-// Execute the graph viewer. Return true if there were errors.
+                                                              
 static bool ExecGraphViewer(StringRef ExecPath, std::vector<StringRef> &args,
                             StringRef Filename, bool wait,
                             std::string &ErrMsg) {
@@ -128,7 +128,7 @@ struct GraphSession {
   }
 };
 
-} // end anonymous namespace
+}                           
 
 static const char *getProgramName(GraphProgram::Name program) {
   switch (program) {
@@ -175,7 +175,7 @@ bool llvh::DisplayGraph(StringRef FilenameRef, bool wait,
       return false;
   }
 
-  // Graphviz
+             
   if (S.TryFindProgram("Graphviz", ViewerPath)) {
     std::vector<StringRef> args;
     args.push_back(ViewerPath);
@@ -185,7 +185,7 @@ bool llvh::DisplayGraph(StringRef FilenameRef, bool wait,
     return ExecGraphViewer(ViewerPath, args, Filename, wait, ErrMsg);
   }
 
-  // xdot
+         
   if (S.TryFindProgram("xdot|xdot.py", ViewerPath)) {
     std::vector<StringRef> args;
     args.push_back(ViewerPath);
@@ -220,7 +220,7 @@ bool llvh::DisplayGraph(StringRef FilenameRef, bool wait,
   }
 #endif
 
-  // PostScript or PDF graph generator + PostScript/PDF viewer
+                                                              
   std::string GeneratorPath;
   if (Viewer &&
       (S.TryFindProgram(getProgramName(program), GeneratorPath) ||
@@ -245,8 +245,8 @@ bool llvh::DisplayGraph(StringRef FilenameRef, bool wait,
     if (ExecGraphViewer(GeneratorPath, args, Filename, true, ErrMsg))
       return true;
 
-    // The lifetime of StartArg must include the call of ExecGraphViewer
-    // because the args are passed as vector of char*.
+                                                                        
+                                                      
     std::string StartArg;
 
     args.clear();
@@ -279,13 +279,13 @@ bool llvh::DisplayGraph(StringRef FilenameRef, bool wait,
     return ExecGraphViewer(ViewerPath, args, OutputFilename, wait, ErrMsg);
   }
 
-  // dotty
+          
   if (S.TryFindProgram("dotty", ViewerPath)) {
     std::vector<StringRef> args;
     args.push_back(ViewerPath);
     args.push_back(Filename);
 
-// Dotty spawns another app and doesn't wait until it returns
+                                                             
 #ifdef _WIN32
     wait = false;
 #endif

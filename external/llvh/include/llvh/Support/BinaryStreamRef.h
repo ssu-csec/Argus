@@ -21,7 +21,7 @@
 
 namespace llvh {
 
-/// Common stuff for mutable and immutable StreamRefs.
+                                                      
 template <class RefType, class StreamType> class BinaryStreamRefBase {
 protected:
   BinaryStreamRefBase() = default;
@@ -56,9 +56,9 @@ public:
     return BorrowedImpl ? (BorrowedImpl->getLength() - ViewOffset) : 0;
   }
 
-  /// Return a new BinaryStreamRef with the first \p N elements removed.  If
-  /// this BinaryStreamRef is length-tracking, then the resulting one will be
-  /// too.
+                                                                            
+                                                                             
+          
   RefType drop_front(uint32_t N) const {
     if (!BorrowedImpl)
       return RefType();
@@ -74,9 +74,9 @@ public:
     return Result;
   }
 
-  /// Return a new BinaryStreamRef with the last \p N elements removed.  If
-  /// this BinaryStreamRef is length-tracking and \p N is greater than 0, then
-  /// this BinaryStreamRef will no longer length-track.
+                                                                           
+                                                                              
+                                                       
   RefType drop_back(uint32_t N) const {
     if (!BorrowedImpl)
       return RefType();
@@ -87,8 +87,8 @@ public:
     if (N == 0)
       return Result;
 
-    // Since we're dropping non-zero bytes from the end, stop length-tracking
-    // by setting the length of the resulting StreamRef to an explicit value.
+                                                                             
+                                                                             
     if (!Result.Length.hasValue())
       Result.Length = getLength();
 
@@ -96,26 +96,26 @@ public:
     return Result;
   }
 
-  /// Return a new BinaryStreamRef with only the first \p N elements remaining.
+                                                                               
   RefType keep_front(uint32_t N) const {
     assert(N <= getLength());
     return drop_back(getLength() - N);
   }
 
-  /// Return a new BinaryStreamRef with only the last \p N elements remaining.
+                                                                              
   RefType keep_back(uint32_t N) const {
     assert(N <= getLength());
     return drop_front(getLength() - N);
   }
 
-  /// Return a new BinaryStreamRef with the first and last \p N elements
-  /// removed.
+                                                                        
+              
   RefType drop_symmetric(uint32_t N) const {
     return drop_front(N).drop_back(N);
   }
 
-  /// Return a new BinaryStreamRef with the first \p Offset elements removed,
-  /// and retaining exactly \p Len elements.
+                                                                             
+                                            
   RefType slice(uint32_t Offset, uint32_t Len) const {
     return drop_front(Offset).keep_front(Len);
   }
@@ -147,13 +147,13 @@ protected:
   Optional<uint32_t> Length;
 };
 
-/// BinaryStreamRef is to BinaryStream what ArrayRef is to an Array.  It
-/// provides copy-semantics and read only access to a "window" of the underlying
-/// BinaryStream. Note that BinaryStreamRef is *not* a BinaryStream.  That is to
-/// say, it does not inherit and override the methods of BinaryStream.  In
-/// general, you should not pass around pointers or references to BinaryStreams
-/// and use inheritance to achieve polymorphism.  Instead, you should pass
-/// around BinaryStreamRefs by value and achieve polymorphism that way.
+                                                                        
+                                                                                
+                                                                                
+                                                                          
+                                                                               
+                                                                          
+                                                                       
 class BinaryStreamRef
     : public BinaryStreamRefBase<BinaryStreamRef, BinaryStream> {
   friend BinaryStreamRefBase<BinaryStreamRef, BinaryStream>;
@@ -176,31 +176,31 @@ public:
   BinaryStreamRef(BinaryStreamRef &&Other) = default;
   BinaryStreamRef &operator=(BinaryStreamRef &&Other) = default;
 
-  // Use BinaryStreamRef.slice() instead.
+                                         
   BinaryStreamRef(BinaryStreamRef &S, uint32_t Offset,
                   uint32_t Length) = delete;
 
-  /// Given an Offset into this StreamRef and a Size, return a reference to a
-  /// buffer owned by the stream.
-  ///
-  /// \returns a success error code if the entire range of data is within the
-  /// bounds of this BinaryStreamRef's view and the implementation could read
-  /// the data, and an appropriate error code otherwise.
+                                                                             
+                                 
+     
+                                                                             
+                                                                             
+                                                        
   Error readBytes(uint32_t Offset, uint32_t Size,
                   ArrayRef<uint8_t> &Buffer) const;
 
-  /// Given an Offset into this BinaryStreamRef, return a reference to the
-  /// largest buffer the stream could support without necessitating a copy.
-  ///
-  /// \returns a success error code if implementation could read the data,
-  /// and an appropriate error code otherwise.
+                                                                          
+                                                                           
+     
+                                                                          
+                                              
   Error readLongestContiguousChunk(uint32_t Offset,
                                    ArrayRef<uint8_t> &Buffer) const;
 };
 
 struct BinarySubstreamRef {
-  uint32_t Offset;            // Offset in the parent stream
-  BinaryStreamRef StreamData; // Stream Data
+  uint32_t Offset;                                          
+  BinaryStreamRef StreamData;               
 
   BinarySubstreamRef slice(uint32_t Off, uint32_t Size) const {
     BinaryStreamRef SubSub = StreamData.slice(Off, Size);
@@ -251,25 +251,25 @@ public:
   WritableBinaryStreamRef(WritableBinaryStreamRef &&Other) = default;
   WritableBinaryStreamRef &operator=(WritableBinaryStreamRef &&Other) = default;
 
-  // Use WritableBinaryStreamRef.slice() instead.
+                                                 
   WritableBinaryStreamRef(WritableBinaryStreamRef &S, uint32_t Offset,
                           uint32_t Length) = delete;
 
-  /// Given an Offset into this WritableBinaryStreamRef and some input data,
-  /// writes the data to the underlying stream.
-  ///
-  /// \returns a success error code if the data could fit within the underlying
-  /// stream at the specified location and the implementation could write the
-  /// data, and an appropriate error code otherwise.
+                                                                            
+                                               
+     
+                                                                               
+                                                                             
+                                                    
   Error writeBytes(uint32_t Offset, ArrayRef<uint8_t> Data) const;
 
-  /// Conver this WritableBinaryStreamRef to a read-only BinaryStreamRef.
+                                                                         
   operator BinaryStreamRef() const;
 
-  /// For buffered streams, commits changes to the backing store.
+                                                                 
   Error commit();
 };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_SUPPORT_BINARYSTREAMREF_H
+#endif                                  

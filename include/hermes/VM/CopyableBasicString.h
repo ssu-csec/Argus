@@ -8,11 +8,11 @@
 #ifndef HERMES_VM_COPYABLEBASICSTRING_H
 #define HERMES_VM_COPYABLEBASICSTRING_H
 
-//===----------------------------------------------------------------------===//
-// This file contains definitions that make std::basic_string<> safe to memcpy()
-// by the GC. It is very VM-specific and doesn't have any usage outside. It
-// basically legitimizes a hack that we should eventually work to remove.
-//===----------------------------------------------------------------------===//
+                                                                                
+                                                                                
+                                                                           
+                                                                         
+                                                                                
 
 #include <cassert>
 #include <string>
@@ -20,73 +20,73 @@
 namespace hermes {
 namespace vm {
 
-// _ITERATOR_DEBUG_LEVEL enables checked iterators in Microsoft STL,
-// which makes std::basic_string non-byte-copyable.
-// HERMESVM_API_TRACE_ANDROID_REPLAY means that we're trying to simulate
-// Android behavior on desktop linux; sizeof(std::basic_string<char>) is
-// 8 bytes in an optimized 64-bit build on device, but 32 on desktop.
-// So we use a pointer, which happens to be of the same size.  If
-// the size were different, say 16 bytes on android, we would add
-// a padding field to the CopyableBasicString class, under the
-// HERMESVM_API_TRACE_ANDROID_REPLAY preprocessor variable.
+                                                                    
+                                                   
+                                                                        
+                                                                        
+                                                                     
+                                                                 
+                                                                 
+                                                              
+                                                           
 #if !_ITERATOR_DEBUG_LEVEL && !defined(HERMESVM_API_TRACE_ANDROID_REPLAY)
 
-/// Strings whose length is smaller than this should never be stored in a
-/// CopyableBasicString. This is to protect against a small string optimization
-/// which may use interior pointers, which would break when memcpy'd by the GC.
-/// Additionally, storing strings that are too small in a CopyableBasicString
-/// may be too costly, since it involves malloc() allocations and overhead from
-/// the object itself.
+                                                                         
+                                                                               
+                                                                               
+                                                                             
+                                                                               
+                      
 static constexpr size_t COPYABLE_BASIC_STRING_MIN_LENGTH = 128;
 
-/// The Hermes GC uses byte copy to move GC cells. After a cell is copied, the
-/// old cell is no longer valid. This type provides the ability to store
-/// std::basic_string in GC cells, which is ordinarily not possible because
-/// arbitrary C++ objects cannot be safely copied with memcpy(). Whether an
-/// object is safe to memcpy() depends on its precise implementation.
-///
-/// Depending on the implementation of std::basic_string, this type is either an
-/// alias of \c std::basic_string, if std::basic_string is safe to mempcy for
-/// lengths at least \c COPYABLE_BASIC_STRING_MIN_LENGTH, or a re-implementation
-/// of a subset of the std::basic_string interface that is safe to copy.
-///
-/// The restriction for minimal length is needed to avoid small string
-/// optimizations that may contain interior pointers, and also to avoid using
-/// the native heap for strings that are too small (malloc() is expensive
-/// compared to a GC allocation).
+                                                                              
+                                                                        
+                                                                           
+                                                                           
+                                                                     
+   
+                                                                                
+                                                                             
+                                                                                
+                                                                        
+   
+                                                                      
+                                                                             
+                                                                         
+                                 
 template <typename T>
 using CopyableBasicString = std::basic_string<T>;
 
 #else
 
-/// Strings whose length is smaller than this should never be stored in a
-/// CopyableBasicString. In other build configurations this is used to protect
-/// against a small string optimization which may use interior pointers, which
-/// would break when memcpy'd by the GC.
-/// Additionally, storing strings that are too small in a CopyableBasicString
-/// may be too costly, since it involves malloc() allocations and overhead from
-/// the object itself.
+                                                                         
+                                                                              
+                                                                              
+                                        
+                                                                             
+                                                                               
+                      
 static constexpr size_t COPYABLE_BASIC_STRING_MIN_LENGTH =
     sizeof(std::u16string) * 2;
 
-/// The Hermes GC uses byte copy to move GC cells. After a cell is copied, the
-/// old cell is no longer valid. This type provides the ability to store
-/// std::basic_string in GC cells, which is ordinarily not possible because
-/// arbitrary C++ objects cannot be safely copied with memcpy(). Whether an
-/// object is safe to memcpy() depends on its precise implementation.
-///
-/// Depending on the implementation of std::basic_string, this type is either an
-/// alias of \c std::basic_string, if std::basic_string is safe to mempcy for
-/// lengths at least \c COPYABLE_BASIC_STRING_MIN_LENGTH, or a re-implementation
-/// of a subset of the std::basic_string interface that is safe to copy.
-///
-/// The restriction for minimal length is needed to avoid small string
-/// optimizations that may contain interior pointers, and also to avoid using
-/// the native heap for strings that are too small (malloc() is expensive
-/// compared to a GC allocation).
-///
-/// This specific class is a re-implementation that simply wraps a separately
-/// allocated std::basic_string, which itself is not copied.
+                                                                              
+                                                                        
+                                                                           
+                                                                           
+                                                                     
+   
+                                                                                
+                                                                             
+                                                                                
+                                                                        
+   
+                                                                      
+                                                                             
+                                                                         
+                                 
+   
+                                                                             
+                                                            
 template <typename T>
 class CopyableBasicString {
  public:
@@ -139,29 +139,29 @@ class CopyableBasicString {
   }
 
  private:
-  /// Convenience getter of the underlying string, propagating constness.
+                                                                         
   std::basic_string<T> &get() {
     assert(str_ && "accessing moved from string");
     return *str_;
   }
-  /// Convenience getter of the underlying string, propagating constness.
+                                                                         
   const std::basic_string<T> &get() const {
     assert(str_ && "accessing moved from string");
     return *const_cast<const std::basic_string<T> *>(str_);
   }
 
  private:
-  /// The wrapped basic_string. Created on construction and deleted on
-  /// destruction, unless it has been moved out.
-  /// Moves simply copy the pointer and clear it in the source object. That
-  /// could be viewed as a slight departure from the functionality of
-  /// std::basic_string, but moved-from objects should not be used.
+                                                                      
+                                                
+                                                                           
+                                                                     
+                                                                   
   std::basic_string<T> *str_;
 };
 
 #endif
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMES_VM_COPYABLEBASICSTRING_H
+#endif                                   

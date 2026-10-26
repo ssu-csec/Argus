@@ -17,16 +17,16 @@ template <typename T>
 inline HermesDataRef makeHermesDataRef(const T &ref) {
   return {ref.data(), ref.size()};
 }
-} // namespace
+}             
 
 struct HermesSourceMap {
   std::string error_;
   std::unique_ptr<SourceMap> sourceMap_;
 
-  /// Temporary storage for source path.
+                                        
   std::string pathBuf_;
 
-  /// Temporary storage for the returned location.
+                                                  
   HermesSourceMapLocation locationBuf_;
 
   explicit HermesSourceMap(std::string &&error) : error_(std::move(error)) {}
@@ -45,7 +45,7 @@ extern "C" HermesSourceMap *hermes_source_map_parse(
   SimpleDiagHandlerRAII handler(sm);
 
   auto sourceMap = SourceMapParser::parse(llvh::StringRef(source, len - 1), sm);
-  // Defensive programming.
+                           
   if (!sourceMap && !handler.haveErrors())
     sm.error(SMLoc{}, "internal error");
 

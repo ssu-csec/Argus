@@ -31,74 +31,74 @@
 
 namespace llvh {
 
-/// Use delete by default for iplist and ilist.
-///
-/// Specialize this to get different behaviour for ownership-related API.  (If
-/// you really want ownership semantics, consider using std::list or building
-/// something like \a BumpPtrList.)
-///
-/// \see ilist_noalloc_traits
+                                               
+   
+                                                                              
+                                                                             
+                                   
+   
+                             
 template <typename NodeTy> struct ilist_alloc_traits {
   static void deleteNode(NodeTy *V) { delete V; }
 };
 
-/// Custom traits to do nothing on deletion.
-///
-/// Specialize ilist_alloc_traits to inherit from this to disable the
-/// non-intrusive deletion in iplist (which implies ownership).
-///
-/// If you want purely intrusive semantics with no callbacks, consider using \a
-/// simple_ilist instead.
-///
-/// \code
-/// template <>
-/// struct ilist_alloc_traits<MyType> : ilist_noalloc_traits<MyType> {};
-/// \endcode
+                                            
+   
+                                                                     
+                                                               
+   
+                                                                               
+                         
+   
+         
+               
+                                                                        
+            
 template <typename NodeTy> struct ilist_noalloc_traits {
   static void deleteNode(NodeTy *V) {}
 };
 
-/// Callbacks do nothing by default in iplist and ilist.
-///
-/// Specialize this for to use callbacks for when nodes change their list
-/// membership.
+                                                        
+   
+                                                                         
+               
 template <typename NodeTy> struct ilist_callback_traits {
   void addNodeToList(NodeTy *) {}
   void removeNodeFromList(NodeTy *) {}
 
-  /// Callback before transferring nodes to this list.
-  ///
-  /// \pre \c this!=&OldList
+                                                      
+     
+                            
   template <class Iterator>
-  void transferNodesFromList(ilist_callback_traits &OldList, Iterator /*first*/,
-                             Iterator /*last*/) {
+  void transferNodesFromList(ilist_callback_traits &OldList, Iterator          ,
+                             Iterator         ) {
     (void)OldList;
   }
 };
 
-/// A fragment for template traits for intrusive list that provides default
-/// node related operations.
-///
-/// TODO: Remove this layer of indirection.  It's not necessary.
+                                                                           
+                            
+   
+                                                                
 template <typename NodeTy>
 struct ilist_node_traits : ilist_alloc_traits<NodeTy>,
                            ilist_callback_traits<NodeTy> {};
 
-/// Template traits for intrusive list.
-///
-/// Customize callbacks and allocation semantics.
+                                       
+   
+                                                 
 template <typename NodeTy>
 struct ilist_traits : public ilist_node_traits<NodeTy> {};
 
-/// Const traits should never be instantiated.
+                                              
 template <typename Ty> struct ilist_traits<const Ty> {};
 
 namespace ilist_detail {
 
 template <class T> T &make();
 
-/// Type trait to check for a traits class that has a getNext member (as a
-/// canary for any of the ilist_nextprev_traits API).
+                                                                          
+                                                     
 template <class TraitsT, class NodeT> struct HasGetNext {
   typedef char Yes[1];
   typedef char No[2];
@@ -112,8 +112,8 @@ public:
   static const bool value = sizeof(test<TraitsT>(nullptr)) == sizeof(Yes);
 };
 
-/// Type trait to check for a traits class that has a createSentinel member (as
-/// a canary for any of the ilist_sentinel_traits API).
+                                                                               
+                                                       
 template <class TraitsT> struct HasCreateSentinel {
   typedef char Yes[1];
   typedef char No[2];
@@ -126,9 +126,9 @@ public:
   static const bool value = sizeof(test<TraitsT>(nullptr)) == sizeof(Yes);
 };
 
-/// Type trait to check for a traits class that has a createNode member.
-/// Allocation should be managed in a wrapper class, instead of in
-/// ilist_traits.
+                                                                        
+                                                                  
+                 
 template <class TraitsT, class NodeT> struct HasCreateNode {
   typedef char Yes[1];
   typedef char No[2];
@@ -148,22 +148,22 @@ template <class TraitsT, class NodeT> struct HasObsoleteCustomization {
                             HasCreateNode<TraitsT, NodeT>::value;
 };
 
-} // end namespace ilist_detail
+}                              
 
-//===----------------------------------------------------------------------===//
-//
-/// A wrapper around an intrusive list with callbacks and non-intrusive
-/// ownership.
-///
-/// This wraps a purely intrusive list (like simple_ilist) with a configurable
-/// traits class.  The traits can implement callbacks and customize the
-/// ownership semantics.
-///
-/// This is a subset of ilist functionality that can safely be used on nodes of
-/// polymorphic types, i.e. a heterogeneous list with a common base class that
-/// holds the next/prev pointers.  The only state of the list itself is an
-/// ilist_sentinel, which holds pointers to the first and last nodes in the
-/// list.
+                                                                                
+  
+                                                                       
+              
+   
+                                                                              
+                                                                       
+                        
+   
+                                                                               
+                                                                              
+                                                                          
+                                                                           
+         
 template <class IntrusiveListT, class TraitsT>
 class iplist_impl : public TraitsT, IntrusiveListT {
   typedef IntrusiveListT base_list_type;
@@ -183,9 +183,9 @@ public:
       typename base_list_type::const_reverse_iterator const_reverse_iterator;
 
 private:
-  // TODO: Drop this assertion and the transitive type traits anytime after
-  // v4.0 is branched (i.e,. keep them for one release to help out-of-tree code
-  // update).
+                                                                           
+                                                                               
+             
   static_assert(
       !ilist_detail::HasObsoleteCustomization<TraitsT, value_type>::value,
       "ilist customization points have changed!");
@@ -209,7 +209,7 @@ public:
 
   ~iplist_impl() { clear(); }
 
-  // Miscellaneous inspection routines.
+                                       
   size_type max_size() const { return size_type(-1); }
 
   using base_list_type::begin;
@@ -226,7 +226,7 @@ public:
   }
 
   iterator insert(iterator where, pointer New) {
-    this->addNodeToList(New); // Notify traits that we added a node...
+    this->addNodeToList(New);                                         
     return base_list_type::insert(where, *New);
   }
 
@@ -241,7 +241,7 @@ public:
       return insert(++where, New);
   }
 
-  /// Clone another list.
+                         
   template <class Cloner> void cloneFrom(const iplist_impl &L2, Cloner clone) {
     clear();
     for (const_reference V : L2)
@@ -250,7 +250,7 @@ public:
 
   pointer remove(iterator &IT) {
     pointer Node = &*IT++;
-    this->removeNodeFromList(Node); // Notify traits that we removed a node...
+    this->removeNodeFromList(Node);                                           
     base_list_type::remove(*Node);
     return Node;
   }
@@ -263,7 +263,7 @@ public:
   pointer remove(pointer IT) { return remove(iterator(IT)); }
   pointer remove(reference IT) { return remove(iterator(IT)); }
 
-  // erase - remove a node from the controlled sequence... and delete it.
+                                                                         
   iterator erase(iterator where) {
     this->deleteNode(remove(where));
     return where;
@@ -272,31 +272,31 @@ public:
   iterator erase(pointer IT) { return erase(iterator(IT)); }
   iterator erase(reference IT) { return erase(iterator(IT)); }
 
-  /// Remove all nodes from the list like clear(), but do not call
-  /// removeNodeFromList() or deleteNode().
-  ///
-  /// This should only be used immediately before freeing nodes in bulk to
-  /// avoid traversing the list and bringing all the nodes into cache.
+                                                                  
+                                           
+     
+                                                                          
+                                                                      
   void clearAndLeakNodesUnsafely() { base_list_type::clear(); }
 
 private:
-  // transfer - The heart of the splice function.  Move linked list nodes from
-  // [first, last) into position.
-  //
+                                                                              
+                                 
+    
   void transfer(iterator position, iplist_impl &L2, iterator first, iterator last) {
     if (position == last)
       return;
 
-    if (this != &L2) // Notify traits we moved the nodes...
+    if (this != &L2)                                       
       this->transferNodesFromList(L2, first, last);
 
     base_list_type::splice(position, L2, first, last);
   }
 
 public:
-  //===----------------------------------------------------------------------===
-  // Functionality derived from other functions defined above...
-  //
+                                                                                
+                                                                
+    
 
   using base_list_type::size;
 
@@ -308,7 +308,7 @@ public:
 
   void clear() { erase(begin(), end()); }
 
-  // Front and back inserters...
+                                
   void push_front(pointer val) { insert(begin(), val); }
   void push_back(pointer val) { insert(end(), val); }
   void pop_front() {
@@ -320,19 +320,19 @@ public:
     iterator t = end(); erase(--t);
   }
 
-  // Special forms of insert...
+                               
   template<class InIt> void insert(iterator where, InIt first, InIt last) {
     for (; first != last; ++first) insert(where, *first);
   }
 
-  // Splice members - defined in terms of transfer...
+                                                     
   void splice(iterator where, iplist_impl &L2) {
     if (!L2.empty())
       transfer(where, L2, L2.begin(), L2.end());
   }
   void splice(iterator where, iplist_impl &L2, iterator first) {
     iterator last = first; ++last;
-    if (where == first || where == last) return; // No change
+    if (where == first || where == last) return;             
     transfer(where, L2, first, last);
   }
   void splice(iterator where, iplist_impl &L2, iterator first, iterator last) {
@@ -356,36 +356,36 @@ public:
 
   using base_list_type::sort;
 
-  /// Get the previous node, or \c nullptr for the list head.
+                                                             
   pointer getPrevNode(reference N) const {
     auto I = N.getIterator();
     if (I == begin())
       return nullptr;
     return &*std::prev(I);
   }
-  /// Get the previous node, or \c nullptr for the list head.
+                                                             
   const_pointer getPrevNode(const_reference N) const {
     return getPrevNode(const_cast<reference >(N));
   }
 
-  /// Get the next node, or \c nullptr for the list tail.
+                                                         
   pointer getNextNode(reference N) const {
     auto Next = std::next(N.getIterator());
     if (Next == end())
       return nullptr;
     return &*Next;
   }
-  /// Get the next node, or \c nullptr for the list tail.
+                                                         
   const_pointer getNextNode(const_reference N) const {
     return getNextNode(const_cast<reference >(N));
   }
 };
 
-/// An intrusive list with ownership and callbacks specified/controlled by
-/// ilist_traits, only with API safe for polymorphic types.
-///
-/// The \p Options parameters are the same as those for \a simple_ilist.  See
-/// there for a description of what's available.
+                                                                          
+                                                           
+   
+                                                                             
+                                                
 template <class T, class... Options>
 class iplist
     : public iplist_impl<simple_ilist<T, Options...>, ilist_traits<T>> {
@@ -406,16 +406,16 @@ public:
 
 template <class T, class... Options> using ilist = iplist<T, Options...>;
 
-} // end namespace llvh
+}                      
 
 namespace std {
 
-  // Ensure that swap uses the fast list swap...
+                                                
   template<class Ty>
   void swap(llvh::iplist<Ty> &Left, llvh::iplist<Ty> &Right) {
     Left.swap(Right);
   }
 
-} // end namespace std
+}                     
 
-#endif // LLVM_ADT_ILIST_H
+#endif                    

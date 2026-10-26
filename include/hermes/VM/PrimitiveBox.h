@@ -14,14 +14,14 @@
 namespace hermes {
 namespace vm {
 
-/// String object.
+                  
 class JSString final : public JSObject {
  public:
   using Super = JSObject;
 
   friend void JSStringBuildMeta(const GCCell *, Metadata::Builder &);
 
-  // We need one more slot for the length property.
+                                                   
   static const PropStorage::size_type NAMED_PROPERTY_SLOTS =
       Super::NAMED_PROPERTY_SLOTS + 1;
   static const ObjectVTable vt;
@@ -47,13 +47,13 @@ class JSString final : public JSObject {
         prototype);
   }
 
-  /// Set the [[PrimitiveValue]] internal property from a string.
+                                                                 
   static void setPrimitiveString(
       Handle<JSString> selfHandle,
       Runtime &runtime,
       Handle<StringPrimitive> string);
 
-  /// Return the [[PrimitiveValue]] internal property as a string.
+                                                                  
   static StringPrimitive *getPrimitiveString(
       const JSString *self,
       Runtime &runtime) {
@@ -72,48 +72,48 @@ class JSString final : public JSObject {
   }
 
  protected:
-  /// Check whether property with index \p index exists in indexed storage and
-  /// \return true if it does.
+                                                                              
+                              
   static bool
   _haveOwnIndexedImpl(JSObject *self, Runtime &runtime, uint32_t index);
 
-  /// Check whether property with index \p index exists in indexed storage and
-  /// extract its \c PropertyFlags (if necessary checking whether the object is
-  /// frozen or sealed).
-  /// \return PropertyFlags if the property exists.
+                                                                              
+                                                                               
+                        
+                                                   
   static OptValue<PropertyFlags> _getOwnIndexedPropertyFlagsImpl(
       JSObject *self,
       Runtime &runtime,
       uint32_t index);
 
-  /// \return the range of indexes (end-exclusive) in the array.
+                                                                
   static std::pair<uint32_t, uint32_t> _getOwnIndexedRangeImpl(
       JSObject *selfObj,
       Runtime &runtime);
 
-  /// Obtain an element from the "indexed storage" of this object. The storage
-  /// itself is implementation dependent.
-  /// \return the value of the element or "empty" if there is no such element.
+                                                                              
+                                         
+                                                                              
   static HermesValue _getOwnIndexedImpl(
       PseudoHandle<JSObject> self,
       Runtime &runtime,
       uint32_t index);
 
-  /// Set an element in the "indexed storage" of this object. Depending on the
-  /// semantics of the "indexed storage" the storage capacity may need to be
-  /// expanded (e.g. affecting Array.length), or the write may simply be ignored
-  /// (in the case of typed arrays).
-  /// \return true if the write succeeded, or false if it was ignored.
+                                                                              
+                                                                            
+                                                                                
+                                    
+                                                                      
   static CallResult<bool> _setOwnIndexedImpl(
       Handle<JSObject> selfHandle,
       Runtime &runtime,
       uint32_t index,
       Handle<> value);
 
-  /// Delete an element in the "indexed storage".
-  /// \return 'true' if the element was successfully deleted, or if it was
-  ///     outside of the storage range. 'false' if this storage doesn't support
-  ///     "holes"/deletion (e.g. typed arrays).
+                                                 
+                                                                          
+                                                                               
+                                               
   static bool _deleteOwnIndexedImpl(
       Handle<JSObject> selfHandle,
       Runtime &runtime,
@@ -123,8 +123,8 @@ class JSString final : public JSObject {
   GCPointer<StringPrimitive> primitiveValue_;
 };
 
-/// StringIterator object.
-/// See ES6 21.1.5.3 for Properties of String Iterator Instances.
+                          
+                                                                 
 class JSStringIterator : public JSObject {
   using Super = JSObject;
 
@@ -146,7 +146,7 @@ class JSStringIterator : public JSObject {
       Runtime &runtime,
       Handle<StringPrimitive> string);
 
-  /// Iterate to the next element and return.
+                                             
   static CallResult<HermesValue> nextElement(
       Handle<JSStringIterator> self,
       Runtime &runtime);
@@ -160,20 +160,20 @@ class JSStringIterator : public JSObject {
         iteratedString_(runtime, *iteratedString, runtime.getHeap()) {}
 
  private:
-  /// [[IteratedString]]
-  /// This is null if iteration has been completed.
+                        
+                                                   
   GCPointer<StringPrimitive> iteratedString_;
 
-  /// [[StringIteratorNextIndex]]
+                                 
   uint32_t nextIndex_{0};
 };
 
-/// BigInt object.
-/// N.B.: users can create boxed bigints with
-///   let o = new Object(1n),
-/// but not with the BigInt constructor, i.e.,
-///   let o = new BigInt(1)
-/// as BigInt() is not a constructor.
+                  
+                                             
+                             
+                                              
+                           
+                                     
 class JSBigInt final : public JSObject {
  public:
   using Super = JSObject;
@@ -208,7 +208,7 @@ class JSBigInt final : public JSObject {
         runtime, runtime.makeHandle(bigIntRes->getBigInt()), prototype);
   }
 
-  /// Return the [[PrimitiveValue]] internal property as a bigint.
+                                                                  
   static BigIntPrimitive *getPrimitiveBigInt(
       const JSBigInt *self,
       Runtime &runtime) {
@@ -227,7 +227,7 @@ class JSBigInt final : public JSObject {
   GCPointer<BigIntPrimitive> primitiveValue_;
 };
 
-/// Number object.
+                  
 class JSNumber final : public JSObject {
  public:
   static const ObjectVTable vt;
@@ -267,7 +267,7 @@ class JSNumber final : public JSObject {
   double primitiveValue_;
 };
 
-/// Boolean object.
+                   
 class JSBoolean final : public JSObject {
  public:
   static const ObjectVTable vt;
@@ -307,7 +307,7 @@ class JSBoolean final : public JSObject {
   bool primitiveValue_;
 };
 
-/// Symbol object.
+                  
 class JSSymbol final : public JSObject {
   friend void JSSymbolBuildMeta(const GCCell *cell, Metadata::Builder &mb);
 
@@ -330,7 +330,7 @@ class JSSymbol final : public JSObject {
     return create(runtime, SymbolID{}, prototype);
   }
 
-  /// Return the [[PrimitiveValue]] internal property as a SymbolID.
+                                                                    
   PseudoHandle<SymbolID> getPrimitiveSymbol() const {
     return PseudoHandle<SymbolID>::create(primitiveValue_);
   }
@@ -346,7 +346,7 @@ class JSSymbol final : public JSObject {
   const GCSymbolID primitiveValue_;
 };
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMES_VM_PRIMITIVEBOX_H
+#endif                            

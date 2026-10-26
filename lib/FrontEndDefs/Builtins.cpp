@@ -25,4 +25,4 @@ const char *getBuiltinMethodName(int method) {
   return builtinName[method];
 }
 
-} // namespace hermes
+}                    

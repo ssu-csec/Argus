@@ -19,36 +19,36 @@
 #include <cstddef>
 #include <cstdint>
 
-// Gets offset of specified member in specified type.
+                                                     
 #ifndef offsetof
 #define offsetof(TYPE, MEMBER) ((size_t)&((TYPE*)0)->MEMBER)
-#endif // offsetof
+#endif            
 
-// Creates enumeration entries used for packing bits into integers. Enumeration
-// entries include bit shift amount, bit width, and bit mask.
+                                                                               
+                                                             
 #ifndef AMDHSA_BITS_ENUM_ENTRY
 #define AMDHSA_BITS_ENUM_ENTRY(NAME, SHIFT, WIDTH) \
   NAME ## _SHIFT = (SHIFT),                        \
   NAME ## _WIDTH = (WIDTH),                        \
   NAME = (((1 << (WIDTH)) - 1) << (SHIFT))
-#endif // AMDHSA_BITS_ENUM_ENTRY
+#endif                          
 
-// Gets bits for specified bit mask from specified source.
+                                                          
 #ifndef AMDHSA_BITS_GET
 #define AMDHSA_BITS_GET(SRC, MSK) ((SRC & MSK) >> MSK ## _SHIFT)
-#endif // AMDHSA_BITS_GET
+#endif                   
 
-// Sets bits for specified bit mask in specified destination.
+                                                             
 #ifndef AMDHSA_BITS_SET
 #define AMDHSA_BITS_SET(DST, MSK, VAL)  \
   DST &= ~MSK;                          \
   DST |= ((VAL << MSK ## _SHIFT) & MSK)
-#endif // AMDHSA_BITS_SET
+#endif                   
 
 namespace llvh {
 namespace amdhsa {
 
-// Floating point rounding modes. Must match hardware definition.
+                                                                 
 enum : uint8_t {
   FLOAT_ROUND_MODE_NEAR_EVEN = 0,
   FLOAT_ROUND_MODE_PLUS_INFINITY = 1,
@@ -56,7 +56,7 @@ enum : uint8_t {
   FLOAT_ROUND_MODE_ZERO = 3,
 };
 
-// Floating point denorm modes. Must match hardware definition.
+                                                               
 enum : uint8_t {
   FLOAT_DENORM_MODE_FLUSH_SRC_DST = 0,
   FLOAT_DENORM_MODE_FLUSH_DST = 1,
@@ -64,7 +64,7 @@ enum : uint8_t {
   FLOAT_DENORM_MODE_FLUSH_NONE = 3,
 };
 
-// System VGPR workitem IDs. Must match hardware definition.
+                                                            
 enum : uint8_t {
   SYSTEM_VGPR_WORKITEM_ID_X = 0,
   SYSTEM_VGPR_WORKITEM_ID_X_Y = 1,
@@ -72,7 +72,7 @@ enum : uint8_t {
   SYSTEM_VGPR_WORKITEM_ID_UNDEFINED = 3,
 };
 
-// Compute program resource register 1. Must match hardware definition.
+                                                                       
 #define COMPUTE_PGM_RSRC1(NAME, SHIFT, WIDTH) \
   AMDHSA_BITS_ENUM_ENTRY(COMPUTE_PGM_RSRC1_ ## NAME, SHIFT, WIDTH)
 enum : int32_t {
@@ -89,12 +89,12 @@ enum : int32_t {
   COMPUTE_PGM_RSRC1(ENABLE_IEEE_MODE, 23, 1),
   COMPUTE_PGM_RSRC1(BULKY, 24, 1),
   COMPUTE_PGM_RSRC1(CDBG_USER, 25, 1),
-  COMPUTE_PGM_RSRC1(FP16_OVFL, 26, 1), // GFX9+
+  COMPUTE_PGM_RSRC1(FP16_OVFL, 26, 1),         
   COMPUTE_PGM_RSRC1(RESERVED0, 27, 5),
 };
 #undef COMPUTE_PGM_RSRC1
 
-// Compute program resource register 2. Must match hardware definition.
+                                                                       
 #define COMPUTE_PGM_RSRC2(NAME, SHIFT, WIDTH) \
   AMDHSA_BITS_ENUM_ENTRY(COMPUTE_PGM_RSRC2_ ## NAME, SHIFT, WIDTH)
 enum : int32_t {
@@ -120,7 +120,7 @@ enum : int32_t {
 };
 #undef COMPUTE_PGM_RSRC2
 
-// Kernel code properties. Must be kept backwards compatible.
+                                                             
 #define KERNEL_CODE_PROPERTY(NAME, SHIFT, WIDTH) \
   AMDHSA_BITS_ENUM_ENTRY(KERNEL_CODE_PROPERTY_ ## NAME, SHIFT, WIDTH)
 enum : int32_t {
@@ -135,7 +135,7 @@ enum : int32_t {
 };
 #undef KERNEL_CODE_PROPERTY
 
-// Kernel descriptor. Must be kept backwards compatible.
+                                                        
 struct kernel_descriptor_t {
   uint32_t group_segment_fixed_size;
   uint32_t private_segment_fixed_size;
@@ -179,7 +179,7 @@ static_assert(
     offsetof(kernel_descriptor_t, reserved2) == 58,
     "invalid offset for reserved2");
 
-} // end namespace amdhsa
-} // end namespace llvh
+}                        
+}                      
 
-#endif // LLVM_SUPPORT_AMDHSAKERNELDESCRIPTOR_H
+#endif                                         

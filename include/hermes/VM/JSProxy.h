@@ -15,38 +15,38 @@ namespace vm {
 
 namespace detail {
 
-/// A Proxy is, fundamentally, a target (the thing the Proxy wraps),
-/// and the traps (which are stored as properties on the handler).
-/// These are taken directly from the Proxy constructor or
-/// Proxy.revocable factory function.  This is a separate class
-/// because it is a member of JSProxy and JSCallableProxy.
+                                                                    
+                                                                  
+                                                          
+                                                               
+                                                          
 struct ProxySlots {
   GCPointer<JSObject> target;
   GCPointer<JSObject> handler;
 };
 
-// These methods are not part of the public API, but are used by
-// JSCallableProxy.
+                                                                
+                   
 
 detail::ProxySlots &slots(JSObject *selfHandle);
 
 CallResult<Handle<Callable>>
 findTrap(Handle<JSObject> selfHandle, Runtime &runtime, Predefined::Str name);
 
-} // namespace detail
+}                    
 
-/// JSProxy implements all the behavior for proxies except for [[Call]]
-/// and [[Construct]], which are implemented by JSCallableProxy.
-/// JSCallableProxy acts like a JSProxy and a NativeFunction, but we
-/// don't want to use multiple inheritance.  So, JSCallableProxy
-/// extends NativeFunction (because the VM expects objects which can be
-/// called to impelement Callable), not JSProxy, and instead JSProxy
-/// and JSCallableProxy both include ProxySlots as a member.  In order
-/// to provide the functionality shared by JSProxy and JSCallableProxy,
-/// the ES9 9.5.x methods here take a Handle<JSObject> instead of a
-/// Handle<JSProxy>, and dynamically check if it's a JSProxy or
-/// JSCallableProxy.  The caller uses a flag which is set on both,
-/// instead of calling isa twice.
+                                                                       
+                                                                
+                                                                    
+                                                                
+                                                                       
+                                                                    
+                                                                      
+                                                                       
+                                                                   
+                                                               
+                                                                  
+                                 
 class JSProxy : public JSObject {
  public:
   friend void JSProxyBuildMeta(const GCCell *cell, Metadata::Builder &mb);
@@ -65,7 +65,7 @@ class JSProxy : public JSObject {
 
   static PseudoHandle<JSProxy> create(
       Runtime &runtime,
-      Handle<JSObject> /* prototype */) {
+      Handle<JSObject>                ) {
     return create(runtime);
   }
 
@@ -83,13 +83,13 @@ class JSProxy : public JSObject {
     return createPseudoHandle(detail::slots(proxy).handler.get(base));
   }
 
-  /// Proxy.create checks if the proxy is revoked, which is defined by
-  /// the spec as having a null handler.
+                                                                      
+                                        
   static bool isRevoked(JSObject *proxy, PointerBase &base) {
     return !getHandler(proxy, base);
   }
 
-  // ES9 9.5 Proxy internal methods
+                                   
 
   static CallResult<PseudoHandle<JSObject>> getPrototypeOf(
       Handle<JSObject> selfHandle,
@@ -166,10 +166,10 @@ class JSProxy : public JSObject {
       Runtime &runtime,
       Handle<> nameValHandle);
 
-  // If okflags.getIncludeNonEnumerable() is not true, this call needs to
-  // call getOwnProperty traps in order to discover if each property is
-  // enumerable.  Thus, unlike most JSProxy functions, this function can
-  // call multiple traps.
+                                                                         
+                                                                       
+                                                                        
+                         
   static CallResult<PseudoHandle<JSArray>> ownPropertyKeys(
       Handle<JSObject> selfHandle,
       Runtime &runtime,
@@ -183,7 +183,7 @@ class JSProxy : public JSObject {
   detail::ProxySlots slots_;
 };
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMES_VM_JSPROXY_H
+#endif                       

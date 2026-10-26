@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//===----------------------------------------------------------------------===//
-/// \file
-/// ES5.1 15.9 Initialize the Date constructor.
-//===----------------------------------------------------------------------===//
+                                                                                
+         
+                                               
+                                                                                
 
 #include "JSLibInternal.h"
 
@@ -25,28 +25,28 @@
 namespace hermes {
 namespace vm {
 
-//===----------------------------------------------------------------------===//
-/// Date.
+                                                                                
+         
 
 namespace {
 struct ToStringOptions {
-  /// Converts a time \p t that has been adjusted by \p tza from UTC,
-  /// and appends the resultant string into \p buf.
-  /// \param t the local time since Jan 1 1970 UTC.
-  /// \param tza the offset from UTC that \p t has been adjusted by.
-  /// \param buf[out] the buffer into which to output the result string.
+                                                                     
+                                                   
+                                                   
+                                                                    
+                                                                        
   void (*toStringFn)(double t, double tza, llvh::SmallVectorImpl<char> &buf);
   bool isUTC;
-  /// Throw if the internal value of this Date is not finite.
+                                                             
   bool throwOnError;
 };
 
 struct ToLocaleStringOptions {
-  /// Converts a time \p t that has been adjusted by \p tza from UTC,
-  /// and appends the resultant string into \p buf.
-  /// \param t the local time since Jan 1 1970 UTC.
-  /// \param locale the locale to convert in (the current locale).
-  /// \param buf[out] the buffer into which to output the result string.
+                                                                     
+                                                   
+                                                   
+                                                                  
+                                                                        
   void (*toStringFn)(double t, llvh::SmallVectorImpl<char16_t> &buf);
 };
 
@@ -66,7 +66,7 @@ struct GetterOptions {
   Field field;
   bool isUTC;
 };
-} // namespace
+}             
 
 enum class ToStringKind {
   DatetimeToString,
@@ -116,7 +116,7 @@ Handle<JSObject> createDateConstructor(Runtime &runtime) {
       7,
       CellKind::JSDateKind);
 
-  // Date.prototype.xxx() methods.
+                                  
   defineMethod(
       runtime,
       datePrototype,
@@ -354,7 +354,7 @@ Handle<JSObject> createDateConstructor(Runtime &runtime) {
       1,
       dpf);
 
-  // Date.xxx() methods.
+                        
   defineMethod(
       runtime,
       cons,
@@ -380,19 +380,19 @@ Handle<JSObject> createDateConstructor(Runtime &runtime) {
   return cons;
 }
 
-/// Takes \p args in UTC time of the form:
-/// (year, month, [, date [, hours [, minutes [, seconds [, ms]]]]])
-/// and returns the unclipped time in milliseconds since Jan 1 1970 UTC.
+                                          
+                                                                    
+                                                                        
 static CallResult<double> makeTimeFromArgs_RJS(
     Runtime &runtime,
     NativeArgs args) {
   const double nan = std::numeric_limits<double>::quiet_NaN();
   auto argCount = args.getArgCount();
 
-  // General case: read all fields in and compute timestamp.
+                                                            
   enum fieldname { y, m, dt, h, min, s, milli, yr, FIELD_COUNT };
 
-  // Initialize to default fields and update them in loop if necessary.
+                                                                       
   double fields[FIELD_COUNT] = {nan, nan, 1, 0, 0, 0, 0};
 
   for (size_t i = 0; i < std::min(7u, argCount); ++i) {
@@ -404,7 +404,7 @@ static CallResult<double> makeTimeFromArgs_RJS(
     fields[i] = res->getNumber();
   }
 
-  // Years between 0 and 99 are treated as offsets from 1900.
+                                                             
   double yint = std::trunc(fields[y]);
   if (!std::isnan(fields[y]) && 0 <= yint && yint <= 99) {
     fields[yr] = 1900 + yint;
@@ -424,15 +424,15 @@ dateConstructor_RJS(void *, Runtime &runtime, NativeArgs args) {
     double finalDate;
 
     if (argCount == 0) {
-      // No arguments, just set it to the current time.
+                                                       
       finalDate = curTime();
     } else if (argCount == 1) {
       if (auto *dateArg = dyn_vmcast<JSDate>(args.getArg(0))) {
-        // No handle needed here because we just retrieve a double.
+                                                                   
         NoAllocScope noAlloc(runtime);
         finalDate = dateArg->getPrimitiveValue();
       } else {
-        // Parse the argument if it's a string, else just convert to number.
+                                                                            
         auto res =
             toPrimitive_RJS(runtime, args.getArgHandle(0), PreferredType::NONE);
         if (res == ExecutionStatus::EXCEPTION) {
@@ -441,7 +441,7 @@ dateConstructor_RJS(void *, Runtime &runtime, NativeArgs args) {
         auto v = runtime.makeHandle(res.getValue());
 
         if (v->isString()) {
-          // Call the String -> Date parsing function.
+                                                      
           finalDate = timeClip(parseDate(
               StringPrimitive::createStringView(
                   runtime, Handle<StringPrimitive>::vmcast(v)),
@@ -455,15 +455,15 @@ dateConstructor_RJS(void *, Runtime &runtime, NativeArgs args) {
         }
       }
     } else {
-      // General case: read all fields in and compute timestamp.
+                                                                
       CallResult<double> cr{0};
       cr = makeTimeFromArgs_RJS(runtime, args);
       if (cr == ExecutionStatus::EXCEPTION) {
         return ExecutionStatus::EXCEPTION;
       }
-      // makeTimeFromArgs interprets arguments as UTC.
-      // We want them as local time, so pretend that they are,
-      // and call utcTime to get the final UTC value we want to store.
+                                                      
+                                                              
+                                                                      
       finalDate = timeClip(
           utcTime(*cr, runtime.getJSLibStorage()->localTimeOffsetCache));
     }
@@ -491,8 +491,8 @@ dateParse_RJS(void *, Runtime &runtime, NativeArgs args) {
 }
 
 CallResult<HermesValue> dateUTC_RJS(void *, Runtime &runtime, NativeArgs args) {
-  // With less than 2 arguments, this is implementation-dependent behavior.
-  // We define the behavior that test262 expects here.
+                                                                           
+                                                      
   if (args.getArgCount() == 0) {
     return HermesValue::encodeNaNValue();
   }
@@ -540,7 +540,7 @@ datePrototypeToStringHelper(void *ctx, Runtime &runtime, NativeArgs args) {
     if (opts->throwOnError) {
       return runtime.raiseRangeError("Date value out of bounds");
     }
-    // "Invalid Date" in non-finite or NaN cases.
+                                                 
     return HermesValue::encodeStringValue(
         runtime.getPredefinedString(Predefined::InvalidDate));
   }
@@ -573,7 +573,7 @@ CallResult<HermesValue> datePrototypeToLocaleStringHelper(
           (size_t)ToLocaleStringKind::NumKinds &&
       "toLocaleStringFunctions has wrong number of elements");
   return toLocaleStringFunctions[(uint64_t)ctx](
-      /* unused */ ctx, runtime, args);
+                   ctx, runtime, args);
 #else
   static ToLocaleStringOptions toLocaleStringOptions[] = {
       {datetimeToLocaleString},
@@ -592,7 +592,7 @@ CallResult<HermesValue> datePrototypeToLocaleStringHelper(
   }
   double t = date->getPrimitiveValue();
   if (!std::isfinite(t)) {
-    // "Invalid Date" in non-finite or NaN cases.
+                                                 
     return HermesValue::encodeStringValue(
         runtime.getPredefinedString(Predefined::InvalidDate));
   }
@@ -650,7 +650,7 @@ datePrototypeGetterHelper(void *ctx, Runtime &runtime, NativeArgs args) {
     return HermesValue::encodeNaNValue();
   }
 
-  // Store the original value of t to be used in offset calculations.
+                                                                     
   double utc = t;
   if (!opts->isUTC) {
     t = localTime(t, runtime.getJSLibStorage()->localTimeOffsetCache);
@@ -692,7 +692,7 @@ datePrototypeGetterHelper(void *ctx, Runtime &runtime, NativeArgs args) {
   return HermesValue::encodeUntrustedNumberValue(result);
 }
 
-/// Set the [[PrimitiveValue]] to the given time.
+                                                 
 CallResult<HermesValue>
 datePrototypeSetTime_RJS(void *ctx, Runtime &runtime, NativeArgs args) {
   auto self = args.dyncastThis<JSDate>();
@@ -709,7 +709,7 @@ datePrototypeSetTime_RJS(void *ctx, Runtime &runtime, NativeArgs args) {
   return HermesValue::encodeUntrustedNumberValue(t);
 }
 
-/// Set the milliseconds as provided and return the new time value.
+                                                                   
 CallResult<HermesValue>
 datePrototypeSetMilliseconds_RJS(void *ctx, Runtime &runtime, NativeArgs args) {
   bool isUTC = static_cast<bool>(ctx);
@@ -736,8 +736,8 @@ datePrototypeSetMilliseconds_RJS(void *ctx, Runtime &runtime, NativeArgs args) {
   return HermesValue::encodeUntrustedNumberValue(utcT);
 }
 
-/// Takes 2 arguments: seconds, milliseconds.
-/// Set the seconds, optionally milliseconds, and return the new time.
+                                             
+                                                                      
 CallResult<HermesValue>
 datePrototypeSetSeconds_RJS(void *ctx, Runtime &runtime, NativeArgs args) {
   bool isUTC = static_cast<bool>(ctx);
@@ -775,8 +775,8 @@ datePrototypeSetSeconds_RJS(void *ctx, Runtime &runtime, NativeArgs args) {
   return HermesValue::encodeUntrustedNumberValue(utcT);
 }
 
-/// Takes 3 arguments: minutes, seconds, milliseconds.
-/// Set the minutes, optionally seconds and milliseconds, return time.
+                                                      
+                                                                      
 CallResult<HermesValue>
 datePrototypeSetMinutes_RJS(void *ctx, Runtime &runtime, NativeArgs args) {
   bool isUTC = static_cast<bool>(ctx);
@@ -823,8 +823,8 @@ datePrototypeSetMinutes_RJS(void *ctx, Runtime &runtime, NativeArgs args) {
   return HermesValue::encodeUntrustedNumberValue(utcT);
 }
 
-/// Takes 4 arguments: hours, minutes, seconds, milliseconds.
-/// Set the hours, optionally minutes, seconds, and milliseconds, return time.
+                                                             
+                                                                              
 CallResult<HermesValue>
 datePrototypeSetHours_RJS(void *ctx, Runtime &runtime, NativeArgs args) {
   bool isUTC = static_cast<bool>(ctx);
@@ -881,7 +881,7 @@ datePrototypeSetHours_RJS(void *ctx, Runtime &runtime, NativeArgs args) {
   return HermesValue::encodeUntrustedNumberValue(utcT);
 }
 
-/// Set the date of the month and return the new time.
+                                                      
 CallResult<HermesValue>
 datePrototypeSetDate_RJS(void *ctx, Runtime &runtime, NativeArgs args) {
   bool isUTC = static_cast<bool>(ctx);
@@ -908,8 +908,8 @@ datePrototypeSetDate_RJS(void *ctx, Runtime &runtime, NativeArgs args) {
   return HermesValue::encodeUntrustedNumberValue(utcT);
 }
 
-/// Takes 2 arguments: month and date.
-/// Set the month, optionally the date of the month, return the time.
+                                      
+                                                                     
 CallResult<HermesValue>
 datePrototypeSetMonth_RJS(void *ctx, Runtime &runtime, NativeArgs args) {
   bool isUTC = static_cast<bool>(ctx);
@@ -945,8 +945,8 @@ datePrototypeSetMonth_RJS(void *ctx, Runtime &runtime, NativeArgs args) {
   return HermesValue::encodeUntrustedNumberValue(utcT);
 }
 
-/// Takes 3 arguments: full year, month and date.
-/// Set the full year, optionally the month and date, return the time.
+                                                 
+                                                                      
 CallResult<HermesValue>
 datePrototypeSetFullYear_RJS(void *ctx, Runtime &runtime, NativeArgs args) {
   bool isUTC = static_cast<bool>(ctx);
@@ -995,9 +995,9 @@ datePrototypeSetFullYear_RJS(void *ctx, Runtime &runtime, NativeArgs args) {
   return HermesValue::encodeUntrustedNumberValue(utcT);
 }
 
-/// Takes one argument: the partial (or full) year.
-/// Per spec, adds 1900 if the year is between 0 and 99.
-/// Sets the year to the new year and returns the time.
+                                                   
+                                                        
+                                                       
 CallResult<HermesValue>
 datePrototypeSetYear_RJS(void *ctx, Runtime &runtime, NativeArgs args) {
   auto self = args.dyncastThis<JSDate>();
@@ -1095,5 +1095,5 @@ datePrototypeSymbolToPrimitive(void *, Runtime &runtime, NativeArgs args) {
   return ordinaryToPrimitive(O, runtime, tryFirst);
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

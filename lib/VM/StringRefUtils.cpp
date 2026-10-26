@@ -28,15 +28,15 @@ llvh::raw_ostream &operator<<(llvh::raw_ostream &OS, ASCIIRef asciiRef) {
   return OS << llvh::StringRef(asciiRef.data(), asciiRef.size());
 }
 
-/// Print the given UTF-16. We just assume UTF-8 output to avoid the increased
-/// binary size of supporting multiple encodings.
+                                                                              
+                                                 
 llvh::raw_ostream &operator<<(llvh::raw_ostream &OS, UTF16Ref u16ref) {
-  // Note this assumes that the desired output encoding is UTF-8, which may
-  // not be a valid assumption if outputting to a tty.
+                                                                           
+                                                      
   std::string narrowStr;
   convertUTF16ToUTF8WithReplacements(narrowStr, u16ref);
   return OS << narrowStr;
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

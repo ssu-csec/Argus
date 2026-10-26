@@ -20,12 +20,12 @@ namespace cl {
 using llvh::cl::Option;
 using llvh::cl::parser;
 
-// Define a custom parser for large integers. LLVM does not support parsing
-// large ints.
+                                                                           
+              
 struct RandomSeedParser : public parser<int64_t> {
   RandomSeedParser(Option &O) : parser<int64_t>(O) {}
 
-  // parse - Return true on error.
+                                  
   bool parse(
       cl::Option &O,
       llvh::StringRef ArgName,
@@ -33,6 +33,6 @@ struct RandomSeedParser : public parser<int64_t> {
       int64_t &Val);
 };
 
-} // namespace cl
+}                
 
-#endif // HERMES_CONSOLEHOST_MEMORYSIZEPARSER_H
+#endif                                         

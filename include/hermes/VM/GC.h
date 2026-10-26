@@ -19,4 +19,4 @@
 #error "Unsupported HermesVM GCKIND" #HERMESVM_GCKIND
 #endif
 
-#endif // HERMES_VM_GC_H
+#endif                  

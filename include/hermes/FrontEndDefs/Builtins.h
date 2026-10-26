@@ -30,22 +30,22 @@ enum Enum : unsigned char {
 };
 #pragma clang diagnostic pop
 
-} // namespace BuiltinMethod
+}                           
 
 static_assert(BuiltinMethod::_count <= 256, "More than 256 builtin methods");
 
-/// Return a string representation of the builtin method name.
+                                                              
 const char *getBuiltinMethodName(int method);
 
-/// Return whether a builtin method is a Native builtin.
-/// Otherwise, it is a JS builtin (as of the only two cases today).
-/// This is more efficient than consulting the GCKind. It only need to perform
-/// a simple comparison between the method index and the JS section offset.
+                                                        
+                                                                   
+                                                                              
+                                                                           
 inline bool isNativeBuiltin(unsigned method) {
   assert(method < BuiltinMethod::_count && "out of bound BuiltinMethod index");
   return method < BuiltinMethod::_firstJS;
 };
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_BCGEN_HBC_BUILTINS_H
+#endif                               

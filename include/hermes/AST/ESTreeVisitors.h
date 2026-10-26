@@ -36,7 +36,7 @@ struct TreeTrait {
   }
 };
 
-} // namespace ESTree
-} // namespace hermes
+}                    
+}                    
 
 #endif

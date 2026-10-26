@@ -23,7 +23,7 @@ namespace vm {
 
 namespace {
 
-/// \return timestamp as time since epoch in microseconds.
+                                                          
 static uint64_t convertTimestampToMicroseconds(
     SamplingProfiler::TimeStampType timeStamp) {
   return std::chrono::duration_cast<std::chrono::microseconds>(
@@ -45,10 +45,10 @@ static OptValue<hbc::DebugSourceLocation> getFunctionDefinitionSourceLocation(
   const hbc::DebugOffsets *debugOffsets = bcProvider->getDebugOffsets(funcId);
   if (debugOffsets &&
       debugOffsets->sourceLocations != hbc::DebugOffsets::NO_OFFSET) {
-    // 0-offset is specified to get the location of the function definition, the
-    // start of it.
+                                                                                
+                   
     return bcProvider->getDebugInfo()->getLocationForAddress(
-        debugOffsets->sourceLocations, 0 /* opcodeOffset */);
+        debugOffsets->sourceLocations, 0                   );
   }
   return llvh::None;
 }
@@ -71,26 +71,26 @@ formatSuspendFrameKind(SamplingProfiler::SuspendFrameInfo::Kind kind) {
 }
 
 class ProfileGenerator {
-  /// NativeFunctionFrameInfo is an alias for size_t, unique identifier for
-  /// native function during sampling.
+                                                                           
+                                      
   using NativeFunctionNameCache = llvh::
       DenseMap<SamplingProfiler::NativeFunctionFrameInfo, std::string_view>;
 
-  /// Composite key: there is no global identifier on RuntimeModule that can be
-  /// used. The second argument is function identifier, not globally unique,
-  /// only unique for functions inside single RuntimeModule.
+                                                                               
+                                                                            
+                                                            
   using JSFunctionFrameDetailsKey = std::pair<RuntimeModule *, uint32_t>;
   using JSFunctionFrameDetailsCacheValue = std::tuple<
-      std::string_view, // Function name.
-      std::optional<std::string_view>, // Source script URL.
+      std::string_view,                  
+      std::optional<std::string_view>,                      
       OptValue<hbc::DebugSourceLocation>>;
   using JSFunctionFrameDetailsCache = llvh::
       DenseMap<JSFunctionFrameDetailsKey, JSFunctionFrameDetailsCacheValue>;
 
-  /// Cache for source script URLs. The key is llvh::StringRef, the value is the
-  /// std::string_view that points to the raw std::string inside stringStorage_,
-  /// which guarantees the validity of the view as long as the storage is not
-  /// deallocated.
+                                                                                
+                                                                                
+                                                                             
+                  
   using SourceScriptURLCache =
       llvh::DenseMap<llvh::StringRef, std::string_view>;
 
@@ -103,7 +103,7 @@ class ProfileGenerator {
   ProfileGenerator(const ProfileGenerator &) = delete;
   ProfileGenerator &operator=(const ProfileGenerator &) = delete;
 
-  /// Emit Profile in a single struct.
+                                      
   fhsp::Profile generate() {
     stringStorage_ = std::make_unique<std::deque<std::string>>();
 
@@ -126,9 +126,9 @@ class ProfileGenerator {
   }
 
  private:
-  /// Process single internal stack frame.
-  /// \return public ProfileSampleCallStackFrame instance, which can be used in
-  /// Profile.
+                                          
+                                                                               
+              
   fhsp::ProfileSampleCallStackFrame processStackFrame(
       const SamplingProfiler::StackFrame &frame) {
     switch (frame.kind) {
@@ -154,8 +154,8 @@ class ProfileGenerator {
         std::optional<uint32_t> columnNumber = std::nullopt;
 
         if (sourceLocOpt.hasValue()) {
-          // hbc::DebugSourceLocation is 1-based, but initializes line and
-          // column fields with 0 by default.
+                                                                          
+                                             
           uint32_t line = sourceLocOpt.getValue().line;
           uint32_t column = sourceLocOpt.getValue().column;
           if (line != 0) {
@@ -175,13 +175,13 @@ class ProfileGenerator {
     }
   }
 
-  /// Retrieves the name of a native function from a given internal stack frame.
-  /// Supports memoization.
-  /// \param frame Internal SamplingProfiler::StackFrame object. Has to be
-  /// either NativeFunction or FinalizableNativeFunction.
-  /// \return std::string_view pointing to the stored raw std::string that
-  /// represents the name of the native function associated with the provided
-  /// stack frame.
+                                                                                
+                           
+                                                                          
+                                                         
+                                                                          
+                                                                             
+                  
   std::string_view getNativeFunctionName(
       const SamplingProfiler::StackFrame &frame) {
     assert(
@@ -206,13 +206,13 @@ class ProfileGenerator {
     return nativeFunctionNameView;
   }
 
-  /// Obtains detailed information about a JavaScript function from its frame
-  /// info. Supports memoization.
-  /// \param frameInfo Internal SamplingProfiler::JSFunctionFrameInfo object.
-  /// \return A JSFunctionFrameDetailsCacheValue tuple containing:
-  /// - The function name as a StringEntry object.
-  /// - An optional StringEntry object representing the source script URL.
-  /// - An optional DebugSourceLocation object providing the source location.
+                                                                             
+                                 
+                                                                             
+                                                                  
+                                                  
+                                                                          
+                                                                             
   JSFunctionFrameDetailsCacheValue getJSFunctionDetails(
       const SamplingProfiler::JSFunctionFrameInfo &frameInfo) {
     JSFunctionFrameDetailsKey key(frameInfo.module, frameInfo.functionId);
@@ -231,7 +231,7 @@ class ProfileGenerator {
         getFunctionDefinitionSourceLocation(bcProvider, frameInfo.functionId);
     std::optional<std::string> maybeSourceScriptURL = std::nullopt;
     if (debugSourceLocation.hasValue()) {
-      // Bundle has debug info.
+                               
       auto filenameId = debugSourceLocation.getValue().filenameId;
       maybeSourceScriptURL =
           bcProvider->getDebugInfo()->getFilenameByID(filenameId);
@@ -263,31 +263,31 @@ class ProfileGenerator {
     return valueToCache;
   }
 
-  /// Places a std::string into stringStorage_.
-  /// \return std::string_view that can be supplied to Frame. Returned view
-  /// will never be invalidated as long as the storage is not deallocated.
+                                               
+                                                                           
+                                                                          
   std::string_view storeString(const std::string &str) {
     stringStorage_->push_back(str);
     return stringStorage_->back();
   }
 
-  /// SamplingProfiler instance expected to outlive ProfileGenerator.
+                                                                     
   const SamplingProfiler &samplingProfiler_;
-  /// Sampled stacks from SamplingProfiler.
+                                           
   const std::vector<SamplingProfiler::StackTrace> &sampledStacks_;
 
   NativeFunctionNameCache nativeFunctionNameCache_{};
   JSFunctionFrameDetailsCache jsFunctionFrameCache_{};
   SourceScriptURLCache sourceScriptURLCache_{};
 
-  /// Container for all strings inside the profile that is currently
-  /// being constructed. It will be owned by the profile later. There could be
-  /// duplicates in this storage: the uniqueness of frames is determined by
-  /// internal VM concepts, not by the names of functions and string contents.
+                                                                    
+                                                                              
+                                                                           
+                                                                              
   std::unique_ptr<std::deque<std::string>> stringStorage_;
 };
 
-} // namespace
+}             
 
 fhsp::Profile generateProfile(
     const SamplingProfiler &samplingProfiler,
@@ -296,7 +296,7 @@ fhsp::Profile generateProfile(
   return profileGenerator.generate();
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMESVM_SAMPLING_PROFILER_AVAILABLE
+#endif                                        

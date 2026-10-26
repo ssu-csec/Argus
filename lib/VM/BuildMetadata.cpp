@@ -20,15 +20,15 @@ namespace vm {
 Metadata buildMetadata(CellKind kind, BuildMetadataCallback *builder) {
   const GCCell *base;
 #ifdef HERMES_UBSAN
-  // Using members on a nullptr is UB, but using a pointer to static memory is
-  // not.
+                                                                              
+         
   static const int64_t buf[128]{};
   base = reinterpret_cast<const GCCell *>(&buf);
 #else
-  // Use nullptr when not building with UBSAN to ensure fast failures.
+                                                                      
   base = nullptr;
 #endif
-  // This memory should not be read or written to
+                                                 
   Metadata::Builder mb(base);
   builder(base, mb);
   Metadata meta = mb.build();
@@ -39,12 +39,12 @@ Metadata buildMetadata(CellKind kind, BuildMetadataCallback *builder) {
 }
 
 void buildMetadataTable() {
-  // Once the storage is initialized, also initialize the global array of VTable
-  // pointers using the new metadata.
+                                                                                
+                                     
   static std::once_flag flag;
   std::call_once(flag, [] {
-    // For each class of object, initialize its metadata
-    // Only run this once per class, not once per Runtime instantiation.
+                                                        
+                                                                        
     Metadata::metadataTable = {
 #define CELL_KIND(name) buildMetadata(CellKind::name##Kind, name##BuildMeta),
 #include "hermes/VM/CellKinds.def"
@@ -63,7 +63,7 @@ void buildMetadataTable() {
   });
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
 #undef DEBUG_TYPE

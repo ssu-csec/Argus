@@ -14,4 +14,4 @@ llvh::raw_ostream &operator<<(llvh::raw_ostream &os, Identifier id) {
   return os << id.str();
 }
 
-} // namespace hermes
+}                    

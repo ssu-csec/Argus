@@ -17,9 +17,9 @@
 
 namespace hermes {
 
-/// Class storing a uniqued set of strings, preserving the order of initial
-/// insertion.  This is similar to llvm's SetVector, but more efficient
-/// because it does not duplicate the strings in the index.
+                                                                           
+                                                                       
+                                                           
 struct StringSetVector final {
   using iterator = std::deque<std::string>::iterator;
   using const_iterator = std::deque<std::string>::const_iterator;
@@ -27,25 +27,25 @@ struct StringSetVector final {
 
   StringSetVector() = default;
 
-  // Type is movable.
+                     
   StringSetVector(StringSetVector &&) = default;
   StringSetVector &operator=(StringSetVector &&) = default;
 
-  // Type is not copyable.
+                          
   StringSetVector(const StringSetVector &) = delete;
   StringSetVector &operator=(const StringSetVector &) = delete;
 
-  /// Adds a string, \p str to the vector if it is not already present.
-  /// \return the index of the string in the vector.
+                                                                       
+                                                    
   inline size_type insert(llvh::StringRef str);
 
-  /// Return an iterator \c it such that *it == str if such an iterator exists
-  /// or end() otherwise.
+                                                                              
+                         
   inline iterator find(llvh::StringRef str);
   inline const_iterator find(llvh::StringRef str) const;
 
-  /// Return a reference to the \p i'th string inserted into this set vector.
-  /// Assumes \pre i < size().
+                                                                             
+                              
   inline const std::string &operator[](size_type i) const;
 
   inline size_type size() const;
@@ -58,15 +58,15 @@ struct StringSetVector final {
   inline const_iterator end() const;
 
  private:
-  /// The object that owns storage for the strings, in initial insertion order.
-  /// We use a deque so that insertions do not move previous strings.  We seek
-  /// to preserve them because small strings' characters may be stored in-line
-  /// so a StringRef of a small string would point into the string and would be
-  /// invalidated if it were moved.
+                                                                               
+                                                                              
+                                                                              
+                                                                               
+                                   
   std::deque<std::string> stringsStorage_;
 
-  /// A map from strings to their index in the storage.  The strings referred
-  /// to in the keys of this mapping are owned by \c stringsToStorage_.
+                                                                             
+                                                                       
   using index_type = uint32_t;
   llvh::DenseMap<llvh::StringRef, index_type> stringsToIndex_;
 };
@@ -134,6 +134,6 @@ inline StringSetVector::const_iterator StringSetVector::end() const {
   return stringsStorage_.end();
 }
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_SUPPORT_STRINGSETVECTOR_H
+#endif                                    

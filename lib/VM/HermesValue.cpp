@@ -39,7 +39,7 @@ llvh::raw_ostream &operator<<(llvh::raw_ostream &OS, HermesValue hv) {
       auto *cell = static_cast<GCCell *>(hv.getPointer());
       OS << "[String " << ":" << (cell ? cell->getDebugAllocationId() : 0)
          << " " << llvh::format_hex((uintptr_t)cell, 10);
-      // Note contained StringPrimitive may be NULL.
+                                                    
       if (hv.getString()) {
         llvh::SmallVector<char16_t, 16> storage;
         hv.getString()->appendUTF16String(storage);
@@ -56,7 +56,7 @@ llvh::raw_ostream &operator<<(llvh::raw_ostream &OS, HermesValue hv) {
       auto *cell = static_cast<GCCell *>(hv.getPointer());
       OS << "[BigInt " << ":" << (cell ? cell->getDebugAllocationId() : 0)
          << " " << llvh::format_hex((uintptr_t)cell, 10);
-      // Note contained BigIntPrimitive may be NULL.
+                                                    
       if (hv.getBigInt()) {
         llvh::ArrayRef<uint8_t> storage = hv.getBigInt()->getRawDataCompact();
         for (auto it = storage.rbegin(); it != storage.rend(); ++it) {
@@ -86,10 +86,10 @@ llvh::raw_ostream &operator<<(llvh::raw_ostream &OS, HermesValue hv) {
 #endif
     default:
       double num = hv.getDouble();
-      // Is it representable as int64_t?
+                                        
       if (num >= std::numeric_limits<int64_t>::lowest() &&
-          // The cast is to ignore the following warning:
-          // implicit conversion from 'int64_t' to 'double' changes value.
+                                                         
+                                                                          
           num <= (double)std::numeric_limits<int64_t>::max() &&
           (int64_t)num == num) {
         return OS << "[double " << (int64_t)num << "]";
@@ -99,5 +99,5 @@ llvh::raw_ostream &operator<<(llvh::raw_ostream &OS, HermesValue hv) {
   }
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

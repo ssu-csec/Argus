@@ -26,7 +26,7 @@
 #include <assert.h>
 #include <string.h>
 
-// Include the platform-specific parts of this class.
+                                                     
 #ifdef LLVM_ON_UNIX
 #include "Unix/Host.inc"
 #endif
@@ -45,11 +45,11 @@
 
 #define DEBUG_TYPE "host-detection"
 
-//===----------------------------------------------------------------------===//
-//
-//  Implementations of the CPU detection routines
-//
-//===----------------------------------------------------------------------===//
+                                                                                
+  
+                                                 
+  
+                                                                                
 
 using namespace llvh;
 
@@ -66,13 +66,13 @@ static std::unique_ptr<llvh::MemoryBuffer>
 }
 
 StringRef sys::detail::getHostCPUNameForPowerPC(StringRef ProcCpuinfoContent) {
-  // Access to the Processor Version Register (PVR) on PowerPC is privileged,
-  // and so we must use an operating-system interface to determine the current
-  // processor type. On Linux, this is exposed through the /proc/cpuinfo file.
+                                                                             
+                                                                              
+                                                                              
   const char *generic = "generic";
 
-  // The cpu line is second (after the 'processor: 0' line), so if this
-  // buffer is too small then something has changed (or is wrong).
+                                                                       
+                                                                  
   StringRef::const_iterator CPUInfoStart = ProcCpuinfoContent.begin();
   StringRef::const_iterator CPUInfoEnd = ProcCpuinfoContent.end();
 
@@ -81,8 +81,8 @@ StringRef sys::detail::getHostCPUNameForPowerPC(StringRef ProcCpuinfoContent) {
   StringRef::const_iterator CPUStart = nullptr;
   size_t CPULen = 0;
 
-  // We need to find the first line which starts with cpu, spaces, and a colon.
-  // After the colon, there may be some additional spaces and then the cpu type.
+                                                                               
+                                                                                
   while (CIP < CPUInfoEnd && CPUStart == nullptr) {
     if (CIP < CPUInfoEnd && *CIP == '\n')
       ++CIP;
@@ -145,15 +145,15 @@ StringRef sys::detail::getHostCPUNameForPowerPC(StringRef ProcCpuinfoContent) {
 }
 
 StringRef sys::detail::getHostCPUNameForARM(StringRef ProcCpuinfoContent) {
-  // The cpuid register on arm is not accessible from user space. On Linux,
-  // it is exposed through the /proc/cpuinfo file.
+                                                                           
+                                                  
 
-  // Read 32 lines from /proc/cpuinfo, which should contain the CPU part line
-  // in all cases.
+                                                                             
+                  
   SmallVector<StringRef, 32> Lines;
   ProcCpuinfoContent.split(Lines, "\n");
 
-  // Look for the CPU implementer line.
+                                       
   StringRef Implementer;
   StringRef Hardware;
   for (unsigned I = 0, E = Lines.size(); I != E; ++I) {
@@ -163,19 +163,19 @@ StringRef sys::detail::getHostCPUNameForARM(StringRef ProcCpuinfoContent) {
       Hardware = Lines[I].substr(8).ltrim("\t :");
   }
 
-  if (Implementer == "0x41") { // ARM Ltd.
-    // MSM8992/8994 may give cpu part for the core that the kernel is running on,
-    // which is undeterministic and wrong. Always return cortex-a53 for these SoC.
+  if (Implementer == "0x41") {            
+                                                                                 
+                                                                                  
     if (Hardware.endswith("MSM8994") || Hardware.endswith("MSM8996"))
       return "cortex-a53";
 
 
-    // Look for the CPU part line.
+                                  
     for (unsigned I = 0, E = Lines.size(); I != E; ++I)
       if (Lines[I].startswith("CPU part"))
-        // The CPU part is a 3 digit hexadecimal number with a 0x prefix. The
-        // values correspond to the "Part number" in the CP15/c0 register. The
-        // contents are specified in the various processor manuals.
+                                                                             
+                                                                              
+                                                                   
         return StringSwitch<const char *>(Lines[I].substr(8).ltrim("\t :"))
             .Case("0x926", "arm926ej-s")
             .Case("0xb02", "mpcore")
@@ -196,7 +196,7 @@ StringRef sys::detail::getHostCPUNameForARM(StringRef ProcCpuinfoContent) {
             .Default("generic");
   }
 
-  if (Implementer == "0x42" || Implementer == "0x43") { // Broadcom | Cavium.
+  if (Implementer == "0x42" || Implementer == "0x43") {                      
     for (unsigned I = 0, E = Lines.size(); I != E; ++I) {
       if (Lines[I].startswith("CPU part")) {
         return StringSwitch<const char *>(Lines[I].substr(8).ltrim("\t :"))
@@ -211,15 +211,15 @@ StringRef sys::detail::getHostCPUNameForARM(StringRef ProcCpuinfoContent) {
     }
   }
 
-  if (Implementer == "0x51") // Qualcomm Technologies, Inc.
-    // Look for the CPU part line.
+  if (Implementer == "0x51")                               
+                                  
     for (unsigned I = 0, E = Lines.size(); I != E; ++I)
       if (Lines[I].startswith("CPU part"))
-        // The CPU part is a 3 digit hexadecimal number with a 0x prefix. The
-        // values correspond to the "Part number" in the CP15/c0 register. The
-        // contents are specified in the various processor manuals.
+                                                                             
+                                                                              
+                                                                   
         return StringSwitch<const char *>(Lines[I].substr(8).ltrim("\t :"))
-            .Case("0x06f", "krait") // APQ8064
+            .Case("0x06f", "krait")           
             .Case("0x201", "kryo")
             .Case("0x205", "kryo")
             .Case("0x211", "kryo")
@@ -229,19 +229,19 @@ StringRef sys::detail::getHostCPUNameForARM(StringRef ProcCpuinfoContent) {
             .Case("0xc01", "saphira")
             .Default("generic");
 
-  if (Implementer == "0x53") { // Samsung Electronics Co., Ltd.
-    // The Exynos chips have a convoluted ID scheme that doesn't seem to follow
-    // any predictive pattern across variants and parts.
+  if (Implementer == "0x53") {                                 
+                                                                               
+                                                        
     unsigned Variant = 0, Part = 0;
 
-    // Look for the CPU variant line, whose value is a 1 digit hexadecimal
-    // number, corresponding to the Variant bits in the CP15/C0 register.
+                                                                          
+                                                                         
     for (auto I : Lines)
       if (I.consume_front("CPU variant"))
         I.ltrim("\t :").getAsInteger(0, Variant);
 
-    // Look for the CPU part line, whose value is a 3 digit hexadecimal
-    // number, corresponding to the PartNum bits in the CP15/C0 register.
+                                                                       
+                                                                         
     for (auto I : Lines)
       if (I.consume_front("CPU part"))
         I.ltrim("\t :").getAsInteger(0, Part);
@@ -249,7 +249,7 @@ StringRef sys::detail::getHostCPUNameForARM(StringRef ProcCpuinfoContent) {
     unsigned Exynos = (Variant << 12) | Part;
     switch (Exynos) {
     default:
-      // Default by falling through to Exynos M1.
+                                                 
       LLVM_FALLTHROUGH;
 
     case 0x1001:
@@ -264,14 +264,14 @@ StringRef sys::detail::getHostCPUNameForARM(StringRef ProcCpuinfoContent) {
 }
 
 StringRef sys::detail::getHostCPUNameForS390x(StringRef ProcCpuinfoContent) {
-  // STIDP is a privileged operation, so use /proc/cpuinfo instead.
+                                                                   
 
-  // The "processor 0:" line comes after a fair amount of other information,
-  // including a cache breakdown, but this should be plenty.
+                                                                            
+                                                            
   SmallVector<StringRef, 32> Lines;
   ProcCpuinfoContent.split(Lines, "\n");
 
-  // Look for the CPU features.
+                               
   SmallVector<StringRef, 32> CPUFeatures;
   for (unsigned I = 0, E = Lines.size(); I != E; ++I)
     if (Lines[I].startswith("features")) {
@@ -282,16 +282,16 @@ StringRef sys::detail::getHostCPUNameForS390x(StringRef ProcCpuinfoContent) {
       }
     }
 
-  // We need to check for the presence of vector support independently of
-  // the machine type, since we may only use the vector register set when
-  // supported by the kernel (and hypervisor).
+                                                                         
+                                                                         
+                                              
   bool HaveVectorSupport = false;
   for (unsigned I = 0, E = CPUFeatures.size(); I != E; ++I) {
     if (CPUFeatures[I] == "vx")
       HaveVectorSupport = true;
   }
 
-  // Now check the processor machine type.
+                                          
   for (unsigned I = 0, E = Lines.size(); I != E; ++I) {
     if (Lines[I].startswith("processor ")) {
       size_t Pos = Lines[I].find("machine = ");
@@ -321,15 +321,15 @@ StringRef sys::detail::getHostCPUNameForBPF() {
   return "generic";
 #else
   uint8_t insns[40] __attribute__ ((aligned (8))) =
-      /* BPF_MOV64_IMM(BPF_REG_0, 0) */
+                                       
     { 0xb7, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
-      /* BPF_MOV64_IMM(BPF_REG_2, 1) */
+                                       
       0xb7, 0x2, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0,
-      /* BPF_JMP_REG(BPF_JLT, BPF_REG_0, BPF_REG_2, 1) */
+                                                         
       0xad, 0x20, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0,
-      /* BPF_MOV64_IMM(BPF_REG_0, 1) */
+                                       
       0xb7, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0,
-      /* BPF_EXIT_INSN() */
+                           
       0x95, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 };
 
   struct bpf_prog_load_attr {
@@ -343,12 +343,12 @@ StringRef sys::detail::getHostCPUNameForBPF() {
     uint32_t kern_version;
     uint32_t prog_flags;
   } attr = {};
-  attr.prog_type = 1; /* BPF_PROG_TYPE_SOCKET_FILTER */
+  attr.prog_type = 1;                                  
   attr.insn_cnt = 5;
   attr.insns = (uint64_t)insns;
   attr.license = (uint64_t)"DUMMY";
 
-  int fd = syscall(321 /* __NR_bpf */, 5 /* BPF_PROG_LOAD */, &attr, sizeof(attr));
+  int fd = syscall(321               , 5                    , &attr, sizeof(attr));
   if (fd >= 0) {
     close(fd);
     return "v2";
@@ -361,17 +361,17 @@ StringRef sys::detail::getHostCPUNameForBPF() {
     defined(__x86_64__) || defined(_M_X64)
 
 enum VendorSignatures {
-  SIG_INTEL = 0x756e6547 /* Genu */,
-  SIG_AMD = 0x68747541 /* Auth */
+  SIG_INTEL = 0x756e6547           ,
+  SIG_AMD = 0x68747541           
 };
 
-// The check below for i386 was copied from clang's cpuid.h (__get_cpuid_max).
-// Check motivated by bug reports for OpenSSL crashing on CPUs without CPUID
-// support. Consequently, for i386, the presence of CPUID is checked first
-// via the corresponding eflags bit.
-// Removal of cpuid.h header motivated by PR30384
-// Header cpuid.h and method __get_cpuid_max are not used in llvm, clang, openmp
-// or test-suite, but are used in external projects e.g. libstdcxx
+                                                                              
+                                                                            
+                                                                          
+                                    
+                                                 
+                                                                                
+                                                                  
 static bool isCpuIdSupported() {
 #if defined(__GNUC__) || defined(__clang__)
 #if defined(__i386__)
@@ -400,14 +400,14 @@ static bool isCpuIdSupported() {
   return true;
 }
 
-/// getX86CpuIDAndInfo - Execute the specified cpuid and return the 4 values in
-/// the specified arguments.  If we can't run cpuid on the host, return true.
+                                                                               
+                                                                             
 static bool getX86CpuIDAndInfo(unsigned value, unsigned *rEAX, unsigned *rEBX,
                                unsigned *rECX, unsigned *rEDX) {
 #if defined(__GNUC__) || defined(__clang__)
 #if defined(__x86_64__)
-  // gcc doesn't know cpuid would clobber ebx/rbx. Preserve it manually.
-  // FIXME: should we save this for Clang?
+                                                                        
+                                          
   __asm__("movq\t%%rbx, %%rsi\n\t"
           "cpuid\n\t"
           "xchgq\t%%rbx, %%rsi\n\t"
@@ -425,7 +425,7 @@ static bool getX86CpuIDAndInfo(unsigned value, unsigned *rEAX, unsigned *rEBX,
   return true;
 #endif
 #elif defined(_MSC_VER)
-  // The MSVC intrinsic is portable across x86 and x64.
+                                                       
   int registers[4];
   __cpuid(registers, value);
   *rEAX = registers[0];
@@ -438,16 +438,16 @@ static bool getX86CpuIDAndInfo(unsigned value, unsigned *rEAX, unsigned *rEBX,
 #endif
 }
 
-/// getX86CpuIDAndInfoEx - Execute the specified cpuid with subleaf and return
-/// the 4 values in the specified arguments.  If we can't run cpuid on the host,
-/// return true.
+                                                                              
+                                                                                
+                
 static bool getX86CpuIDAndInfoEx(unsigned value, unsigned subleaf,
                                  unsigned *rEAX, unsigned *rEBX, unsigned *rECX,
                                  unsigned *rEDX) {
 #if defined(__GNUC__) || defined(__clang__)
 #if defined(__x86_64__)
-  // gcc doesn't know cpuid would clobber ebx/rbx. Preserve it manually.
-  // FIXME: should we save this for Clang?
+                                                                        
+                                          
   __asm__("movq\t%%rbx, %%rsi\n\t"
           "cpuid\n\t"
           "xchgq\t%%rbx, %%rsi\n\t"
@@ -477,12 +477,12 @@ static bool getX86CpuIDAndInfoEx(unsigned value, unsigned subleaf,
 #endif
 }
 
-// Read control register 0 (XCR0). Used to detect features such as AVX.
+                                                                       
 static bool getX86XCR0(unsigned *rEAX, unsigned *rEDX) {
 #if defined(__GNUC__) || defined(__clang__)
-  // Check xgetbv; this uses a .byte sequence instead of the instruction
-  // directly because older assemblers do not include support for xgetbv and
-  // there is no easy way to conditionally compile based on the assembler used.
+                                                                        
+                                                                            
+                                                                               
   __asm__(".byte 0x0f, 0x01, 0xd0" : "=a"(*rEAX), "=d"(*rEDX) : "c"(0));
   return false;
 #elif defined(_MSC_FULL_VER) && defined(_XCR_XFEATURE_ENABLED_MASK)
@@ -497,14 +497,14 @@ static bool getX86XCR0(unsigned *rEAX, unsigned *rEDX) {
 
 static void detectX86FamilyModel(unsigned EAX, unsigned *Family,
                                  unsigned *Model) {
-  *Family = (EAX >> 8) & 0xf; // Bits 8 - 11
-  *Model = (EAX >> 4) & 0xf;  // Bits 4 - 7
+  *Family = (EAX >> 8) & 0xf;               
+  *Model = (EAX >> 4) & 0xf;               
   if (*Family == 6 || *Family == 0xf) {
     if (*Family == 0xf)
-      // Examine extended family ID if family ID is F.
-      *Family += (EAX >> 20) & 0xff; // Bits 20 - 27
-    // Examine extended model ID if family ID is 6 or F.
-    *Model += ((EAX >> 16) & 0xf) << 4; // Bits 16 - 19
+                                                      
+      *Family += (EAX >> 20) & 0xff;                
+                                                        
+    *Model += ((EAX >> 16) & 0xf) << 4;                
   }
 }
 
@@ -531,154 +531,154 @@ getIntelProcessorTypeAndSubtype(unsigned Family, unsigned Model,
     break;
   case 6:
     switch (Model) {
-    case 0x01: // Pentium Pro processor
+    case 0x01:                         
       *Type = X86::INTEL_PENTIUM_PRO;
       break;
-    case 0x03: // Intel Pentium II OverDrive processor, Pentium II processor,
-               // model 03
-    case 0x05: // Pentium II processor, model 05, Pentium II Xeon processor,
-               // model 05, and Intel Celeron processor, model 05
-    case 0x06: // Celeron processor, model 06
+    case 0x03:                                                               
+                          
+    case 0x05:                                                              
+                                                                 
+    case 0x06:                               
       *Type = X86::INTEL_PENTIUM_II;
       break;
-    case 0x07: // Pentium III processor, model 07, and Pentium III Xeon
-               // processor, model 07
-    case 0x08: // Pentium III processor, model 08, Pentium III Xeon processor,
-               // model 08, and Celeron processor, model 08
-    case 0x0a: // Pentium III Xeon processor, model 0Ah
-    case 0x0b: // Pentium III processor, model 0Bh
+    case 0x07:                                                         
+                                     
+    case 0x08:                                                                
+                                                           
+    case 0x0a:                                         
+    case 0x0b:                                    
       *Type = X86::INTEL_PENTIUM_III;
       break;
-    case 0x09: // Intel Pentium M processor, Intel Celeron M processor model 09.
-    case 0x0d: // Intel Pentium M processor, Intel Celeron M processor, model
-               // 0Dh. All processors are manufactured using the 90 nm process.
-    case 0x15: // Intel EP80579 Integrated Processor and Intel EP80579
-               // Integrated Processor with Intel QuickAssist Technology
+    case 0x09:                                                                  
+    case 0x0d:                                                               
+                                                                               
+    case 0x15:                                                        
+                                                                        
       *Type = X86::INTEL_PENTIUM_M;
       break;
-    case 0x0e: // Intel Core Duo processor, Intel Core Solo processor, model
-               // 0Eh. All processors are manufactured using the 65 nm process.
+    case 0x0e:                                                              
+                                                                               
       *Type = X86::INTEL_CORE_DUO;
-      break;   // yonah
-    case 0x0f: // Intel Core 2 Duo processor, Intel Core 2 Duo mobile
-               // processor, Intel Core 2 Quad processor, Intel Core 2 Quad
-               // mobile processor, Intel Core 2 Extreme processor, Intel
-               // Pentium Dual-Core processor, Intel Xeon processor, model
-               // 0Fh. All processors are manufactured using the 65 nm process.
-    case 0x16: // Intel Celeron processor model 16h. All processors are
-               // manufactured using the 65 nm process
-      *Type = X86::INTEL_CORE2; // "core2"
+      break;           
+    case 0x0f:                                                       
+                                                                           
+                                                                         
+                                                                          
+                                                                               
+    case 0x16:                                                         
+                                                      
+      *Type = X86::INTEL_CORE2;           
       *Subtype = X86::INTEL_CORE2_65;
       break;
-    case 0x17: // Intel Core 2 Extreme processor, Intel Xeon processor, model
-               // 17h. All processors are manufactured using the 45 nm process.
-               //
-               // 45nm: Penryn , Wolfdale, Yorkfield (XE)
-    case 0x1d: // Intel Xeon processor MP. All processors are manufactured using
-               // the 45 nm process.
-      *Type = X86::INTEL_CORE2; // "penryn"
+    case 0x17:                                                               
+                                                                               
+                 
+                                                         
+    case 0x1d:                                                                  
+                                    
+      *Type = X86::INTEL_CORE2;            
       *Subtype = X86::INTEL_CORE2_45;
       break;
-    case 0x1a: // Intel Core i7 processor and Intel Xeon processor. All
-               // processors are manufactured using the 45 nm process.
-    case 0x1e: // Intel(R) Core(TM) i7 CPU         870  @ 2.93GHz.
-               // As found in a Summer 2010 model iMac.
+    case 0x1a:                                                         
+                                                                      
+    case 0x1e:                                                    
+                                                       
     case 0x1f:
-    case 0x2e:             // Nehalem EX
-      *Type = X86::INTEL_COREI7; // "nehalem"
+    case 0x2e:                          
+      *Type = X86::INTEL_COREI7;             
       *Subtype = X86::INTEL_COREI7_NEHALEM;
       break;
-    case 0x25: // Intel Core i7, laptop version.
-    case 0x2c: // Intel Core i7 processor and Intel Xeon processor. All
-               // processors are manufactured using the 32 nm process.
-    case 0x2f: // Westmere EX
-      *Type = X86::INTEL_COREI7; // "westmere"
+    case 0x25:                                  
+    case 0x2c:                                                         
+                                                                      
+    case 0x2f:               
+      *Type = X86::INTEL_COREI7;              
       *Subtype = X86::INTEL_COREI7_WESTMERE;
       break;
-    case 0x2a: // Intel Core i7 processor. All processors are manufactured
-               // using the 32 nm process.
+    case 0x2a:                                                            
+                                          
     case 0x2d:
-      *Type = X86::INTEL_COREI7; //"sandybridge"
+      *Type = X86::INTEL_COREI7;                
       *Subtype = X86::INTEL_COREI7_SANDYBRIDGE;
       break;
     case 0x3a:
-    case 0x3e:             // Ivy Bridge EP
-      *Type = X86::INTEL_COREI7; // "ivybridge"
+    case 0x3e:                             
+      *Type = X86::INTEL_COREI7;               
       *Subtype = X86::INTEL_COREI7_IVYBRIDGE;
       break;
 
-    // Haswell:
+               
     case 0x3c:
     case 0x3f:
     case 0x45:
     case 0x46:
-      *Type = X86::INTEL_COREI7; // "haswell"
+      *Type = X86::INTEL_COREI7;             
       *Subtype = X86::INTEL_COREI7_HASWELL;
       break;
 
-    // Broadwell:
+                 
     case 0x3d:
     case 0x47:
     case 0x4f:
     case 0x56:
-      *Type = X86::INTEL_COREI7; // "broadwell"
+      *Type = X86::INTEL_COREI7;               
       *Subtype = X86::INTEL_COREI7_BROADWELL;
       break;
 
-    // Skylake:
-    case 0x4e: // Skylake mobile
-    case 0x5e: // Skylake desktop
-    case 0x8e: // Kaby Lake mobile
-    case 0x9e: // Kaby Lake desktop
-      *Type = X86::INTEL_COREI7; // "skylake"
+               
+    case 0x4e:                  
+    case 0x5e:                   
+    case 0x8e:                    
+    case 0x9e:                     
+      *Type = X86::INTEL_COREI7;             
       *Subtype = X86::INTEL_COREI7_SKYLAKE;
       break;
 
-    // Skylake Xeon:
+                    
     case 0x55:
       *Type = X86::INTEL_COREI7;
-      *Subtype = X86::INTEL_COREI7_SKYLAKE_AVX512; // "skylake-avx512"
+      *Subtype = X86::INTEL_COREI7_SKYLAKE_AVX512;                    
       break;
 
-    // Cannonlake:
+                  
     case 0x66:
       *Type = X86::INTEL_COREI7;
-      *Subtype = X86::INTEL_COREI7_CANNONLAKE; // "cannonlake"
+      *Subtype = X86::INTEL_COREI7_CANNONLAKE;                
       break;
 
-    case 0x1c: // Most 45 nm Intel Atom processors
-    case 0x26: // 45 nm Atom Lincroft
-    case 0x27: // 32 nm Atom Medfield
-    case 0x35: // 32 nm Atom Midview
-    case 0x36: // 32 nm Atom Midview
+    case 0x1c:                                    
+    case 0x26:                       
+    case 0x27:                       
+    case 0x35:                      
+    case 0x36:                      
       *Type = X86::INTEL_BONNELL;
-      break; // "bonnell"
+      break;             
 
-    // Atom Silvermont codes from the Intel software optimization guide.
+                                                                        
     case 0x37:
     case 0x4a:
     case 0x4d:
     case 0x5a:
     case 0x5d:
-    case 0x4c: // really airmont
+    case 0x4c:                  
       *Type = X86::INTEL_SILVERMONT;
-      break; // "silvermont"
-    // Goldmont:
-    case 0x5c: // Apollo Lake
-    case 0x5f: // Denverton
+      break;                
+                
+    case 0x5c:               
+    case 0x5f:             
       *Type = X86::INTEL_GOLDMONT;
-      break; // "goldmont"
+      break;              
     case 0x7a:
       *Type = X86::INTEL_GOLDMONT_PLUS;
       break;
     case 0x57:
-      *Type = X86::INTEL_KNL; // knl
+      *Type = X86::INTEL_KNL;       
       break;
     case 0x85:
-      *Type = X86::INTEL_KNM; // knm
+      *Type = X86::INTEL_KNM;       
       break;
 
-    default: // Unknown family 6 CPU, try to guess.
+    default:                                       
       if (Features & (1 << X86::FEATURE_AVX512VBMI)) {
         *Type = X86::INTEL_COREI7;
         *Subtype = X86::INTEL_COREI7_CANNONLAKE;
@@ -692,7 +692,7 @@ getIntelProcessorTypeAndSubtype(unsigned Family, unsigned Model,
       }
 
       if (Features & (1 << X86::FEATURE_AVX512ER)) {
-        *Type = X86::INTEL_KNL; // knl
+        *Type = X86::INTEL_KNL;       
         break;
       }
 
@@ -730,21 +730,21 @@ getIntelProcessorTypeAndSubtype(unsigned Family, unsigned Model,
         break;
       }
       if (Features & (1 << X86::FEATURE_SSE4_1)) {
-        *Type = X86::INTEL_CORE2; // "penryn"
+        *Type = X86::INTEL_CORE2;            
         *Subtype = X86::INTEL_CORE2_45;
         break;
       }
       if (Features & (1 << X86::FEATURE_SSSE3)) {
         if (Features2 & (1 << (X86::FEATURE_MOVBE - 32))) {
-          *Type = X86::INTEL_BONNELL; // "bonnell"
+          *Type = X86::INTEL_BONNELL;             
         } else {
-          *Type = X86::INTEL_CORE2; // "core2"
+          *Type = X86::INTEL_CORE2;           
           *Subtype = X86::INTEL_CORE2_65;
         }
         break;
       }
       if (Features2 & (1 << (X86::FEATURE_EM64T - 32))) {
-        *Type = X86::INTEL_CORE2; // "core2"
+        *Type = X86::INTEL_CORE2;           
         *Subtype = X86::INTEL_CORE2_65;
         break;
       }
@@ -781,16 +781,16 @@ getIntelProcessorTypeAndSubtype(unsigned Family, unsigned Model,
     break;
   }
   default:
-    break; /*"generic"*/
+    break;              
   }
 }
 
 static void getAMDProcessorTypeAndSubtype(unsigned Family, unsigned Model,
                                           unsigned Features, unsigned *Type,
                                           unsigned *Subtype) {
-  // FIXME: this poorly matches the generated SubtargetFeatureKV table.  There
-  // appears to be no way to generate the wide variety of AMD-specific targets
-  // from the information returned from CPUID.
+                                                                              
+                                                                              
+                                              
   switch (Family) {
   case 4:
     *Type = X86::AMD_i486;
@@ -801,35 +801,35 @@ static void getAMDProcessorTypeAndSubtype(unsigned Family, unsigned Model,
     case 6:
     case 7:
       *Subtype = X86::AMDPENTIUM_K6;
-      break; // "k6"
+      break;        
     case 8:
       *Subtype = X86::AMDPENTIUM_K62;
-      break; // "k6-2"
+      break;          
     case 9:
     case 13:
       *Subtype = X86::AMDPENTIUM_K63;
-      break; // "k6-3"
+      break;          
     case 10:
       *Subtype = X86::AMDPENTIUM_GEODE;
-      break; // "geode"
+      break;           
     }
     break;
   case 6:
     if (Features & (1 << X86::FEATURE_SSE)) {
       *Type = X86::AMD_ATHLON_XP;
-      break; // "athlon-xp"
+      break;               
     }
     *Type = X86::AMD_ATHLON;
-    break; // "athlon"
+    break;            
   case 15:
     if (Features & (1 << X86::FEATURE_SSE3)) {
       *Type = X86::AMD_K8SSE3;
-      break; // "k8-sse3"
+      break;             
     }
     *Type = X86::AMD_K8;
-    break; // "k8"
+    break;        
   case 16:
-    *Type = X86::AMDFAM10H; // "amdfam10"
+    *Type = X86::AMDFAM10H;              
     switch (Model) {
     case 2:
       *Subtype = X86::AMDFAM10H_BARCELONA;
@@ -844,35 +844,35 @@ static void getAMDProcessorTypeAndSubtype(unsigned Family, unsigned Model,
     break;
   case 20:
     *Type = X86::AMD_BTVER1;
-    break; // "btver1";
+    break;             
   case 21:
     *Type = X86::AMDFAM15H;
     if (Model >= 0x60 && Model <= 0x7f) {
       *Subtype = X86::AMDFAM15H_BDVER4;
-      break; // "bdver4"; 60h-7Fh: Excavator
+      break;                                
     }
     if (Model >= 0x30 && Model <= 0x3f) {
       *Subtype = X86::AMDFAM15H_BDVER3;
-      break; // "bdver3"; 30h-3Fh: Steamroller
+      break;                                  
     }
     if ((Model >= 0x10 && Model <= 0x1f) || Model == 0x02) {
       *Subtype = X86::AMDFAM15H_BDVER2;
-      break; // "bdver2"; 02h, 10h-1Fh: Piledriver
+      break;                                      
     }
     if (Model <= 0x0f) {
       *Subtype = X86::AMDFAM15H_BDVER1;
-      break; // "bdver1"; 00h-0Fh: Bulldozer
+      break;                                
     }
     break;
   case 22:
     *Type = X86::AMD_BTVER2;
-    break; // "btver2"
+    break;            
   case 23:
     *Type = X86::AMDFAM17H;
     *Subtype = X86::AMDFAM17H_ZNVER1;
     break;
   default:
-    break; // "generic"
+    break;             
   }
 }
 
@@ -912,9 +912,9 @@ static void getAvailableFeatures(unsigned ECX, unsigned EDX, unsigned MaxLeaf,
   if ((ECX >> 22) & 1)
     Features2 |= 1 << (X86::FEATURE_MOVBE - 32);
 
-  // If CPUID indicates support for XSAVE, XRESTORE and AVX, and XGETBV
-  // indicates that the AVX registers will be saved and restored on context
-  // switch, then we have full AVX support.
+                                                                       
+                                                                           
+                                           
   const unsigned AVXBits = (1 << 27) | (1 << 28);
   bool HasAVX = ((ECX & AVXBits) == AVXBits) && !getX86XCR0(&EAX, &EDX) &&
                 ((EAX & 0x6) == 0x6);
@@ -989,10 +989,10 @@ StringRef sys::getHostCPUName() {
   unsigned MaxLeaf, Vendor;
 
 #if defined(__GNUC__) || defined(__clang__)
-  //FIXME: include cpuid.h from clang or copy __get_cpuid_max here
-  // and simplify it to not invoke __cpuid (like cpu_model.c in
-  // compiler-rt/lib/builtins/cpu_model.c?
-  // Opting for the second option.
+                                                                  
+                                                               
+                                          
+                                  
   if(!isCpuIdSupported())
     return "generic";
 #endif
@@ -1016,13 +1016,13 @@ StringRef sys::getHostCPUName() {
     getAMDProcessorTypeAndSubtype(Family, Model, Features, &Type, &Subtype);
   }
 
-  // Check subtypes first since those are more specific.
+                                                        
 #define X86_CPU_SUBTYPE(ARCHNAME, ENUM) \
   if (Subtype == X86::ENUM) \
     return ARCHNAME;
 #include "llvh/Support/X86TargetParser.def"
 
-  // Now check types.
+                     
 #define X86_CPU_TYPE(ARCHNAME, ENUM) \
   if (Type == X86::ENUM) \
     return ARCHNAME;
@@ -1098,12 +1098,12 @@ StringRef sys::getHostCPUName() { return "generic"; }
 #endif
 
 #if defined(__linux__) && defined(__x86_64__)
-// On Linux, the number of physical cores can be computed from /proc/cpuinfo,
-// using the number of unique physical/core id pairs. The following
-// implementation reads the /proc/cpuinfo format on an x86_64 system.
+                                                                             
+                                                                   
+                                                                     
 static int computeHostNumPhysicalCores() {
-  // Read /proc/cpuinfo as a stream (until EOF reached). It cannot be
-  // mmapped because it appears to have 0 size.
+                                                                     
+                                               
   llvh::ErrorOr<std::unique_ptr<llvh::MemoryBuffer>> Text =
       llvh::MemoryBuffer::getFileAsStream("/proc/cpuinfo");
   if (std::error_code EC = Text.getError()) {
@@ -1112,8 +1112,8 @@ static int computeHostNumPhysicalCores() {
     return -1;
   }
   SmallVector<StringRef, 8> strs;
-  (*Text)->getBuffer().split(strs, "\n", /*MaxSplit=*/-1,
-                             /*KeepEmpty=*/false);
+  (*Text)->getBuffer().split(strs, "\n",              -1,
+                                           false);
   int CurPhysicalId = -1;
   int CurCoreId = -1;
   SmallSet<std::pair<int, int>, 32> UniqueItems;
@@ -1146,7 +1146,7 @@ static int computeHostNumPhysicalCores() {
 #include <sys/param.h>
 #include <sys/sysctl.h>
 
-// Gets the number of *physical cores* on the machine.
+                                                      
 static int computeHostNumPhysicalCores() {
   uint32_t count;
   size_t len = sizeof(count);
@@ -1162,7 +1162,7 @@ static int computeHostNumPhysicalCores() {
   return count;
 }
 #else
-// On other systems, return -1 to indicate unknown.
+                                                   
 static int computeHostNumPhysicalCores() { return -1; }
 #endif
 
@@ -1203,17 +1203,17 @@ bool sys::getHostCPUFeatures(StringMap<bool> &Features) {
   Features["aes"]    = (ECX >> 25) & 1;
   Features["rdrnd"]  = (ECX >> 30) & 1;
 
-  // If CPUID indicates support for XSAVE, XRESTORE and AVX, and XGETBV
-  // indicates that the AVX registers will be saved and restored on context
-  // switch, then we have full AVX support.
+                                                                       
+                                                                           
+                                           
   bool HasAVXSave = ((ECX >> 27) & 1) && ((ECX >> 28) & 1) &&
                     !getX86XCR0(&EAX, &EDX) && ((EAX & 0x6) == 0x6);
-  // AVX512 requires additional context to be saved by the OS.
+                                                              
   bool HasAVX512Save = HasAVXSave && ((EAX & 0xe0) == 0xe0);
 
   Features["avx"]   = HasAVXSave;
   Features["fma"]   = ((ECX >> 12) & 1) && HasAVXSave;
-  // Only enable XSAVE if OS has enabled support for saving YMM state.
+                                                                      
   Features["xsave"] = ((ECX >> 26) & 1) && HasAVXSave;
   Features["f16c"]  = ((ECX >> 29) & 1) && HasAVXSave;
 
@@ -1234,8 +1234,8 @@ bool sys::getHostCPUFeatures(StringMap<bool> &Features) {
 
   Features["64bit"]  = HasExtLeaf1 && ((EDX >> 29) & 1);
 
-  // Miscellaneous memory related features, detected by
-  // using the 0x80000008 leaf of the CPUID instruction
+                                                       
+                                                       
   bool HasExtLeaf8 = MaxExtLevel >= 0x80000008 &&
                      !getX86CpuIDAndInfo(0x80000008, &EAX, &EBX, &ECX, &EDX);
   Features["clzero"]   = HasExtLeaf8 && ((EBX >> 0) & 1);
@@ -1247,12 +1247,12 @@ bool sys::getHostCPUFeatures(StringMap<bool> &Features) {
   Features["fsgsbase"]   = HasLeaf7 && ((EBX >>  0) & 1);
   Features["sgx"]        = HasLeaf7 && ((EBX >>  2) & 1);
   Features["bmi"]        = HasLeaf7 && ((EBX >>  3) & 1);
-  // AVX2 is only supported if we have the OS save support from AVX.
+                                                                    
   Features["avx2"]       = HasLeaf7 && ((EBX >>  5) & 1) && HasAVXSave;
   Features["bmi2"]       = HasLeaf7 && ((EBX >>  8) & 1);
   Features["invpcid"]    = HasLeaf7 && ((EBX >> 10) & 1);
   Features["rtm"]        = HasLeaf7 && ((EBX >> 11) & 1);
-  // AVX512 is only supported if the OS supports the context save for it.
+                                                                         
   Features["avx512f"]    = HasLeaf7 && ((EBX >> 16) & 1) && HasAVX512Save;
   Features["avx512dq"]   = HasLeaf7 && ((EBX >> 17) & 1) && HasAVX512Save;
   Features["rdseed"]     = HasLeaf7 && ((EBX >> 18) & 1);
@@ -1284,22 +1284,22 @@ bool sys::getHostCPUFeatures(StringMap<bool> &Features) {
   Features["movdiri"]         = HasLeaf7 && ((ECX >> 27) & 1);
   Features["movdir64b"]       = HasLeaf7 && ((ECX >> 28) & 1);
 
-  // There are two CPUID leafs which information associated with the pconfig
-  // instruction:
-  // EAX=0x7, ECX=0x0 indicates the availability of the instruction (via the 18th
-  // bit of EDX), while the EAX=0x1b leaf returns information on the
-  // availability of specific pconfig leafs.
-  // The target feature here only refers to the the first of these two.
-  // Users might need to check for the availability of specific pconfig
-  // leaves using cpuid, since that information is ignored while
-  // detecting features using the "-march=native" flag.
-  // For more info, see X86 ISA docs.
+                                                                            
+                 
+                                                                                 
+                                                                    
+                                            
+                                                                       
+                                                                       
+                                                                
+                                                       
+                                     
   Features["pconfig"] = HasLeaf7 && ((EDX >> 18) & 1);
 
   bool HasLeafD = MaxLevel >= 0xd &&
                   !getX86CpuIDAndInfoEx(0xd, 0x1, &EAX, &EBX, &ECX, &EDX);
 
-  // Only enable XSAVE if OS has enabled support for saving YMM state.
+                                                                      
   Features["xsaveopt"] = HasLeafD && ((EAX >> 0) & 1) && HasAVXSave;
   Features["xsavec"]   = HasLeafD && ((EAX >> 1) & 1) && HasAVXSave;
   Features["xsaves"]   = HasLeafD && ((EAX >> 3) & 1) && HasAVXSave;
@@ -1322,7 +1322,7 @@ bool sys::getHostCPUFeatures(StringMap<bool> &Features) {
 
   SmallVector<StringRef, 32> CPUFeatures;
 
-  // Look for the CPU features.
+                               
   for (unsigned I = 0, E = Lines.size(); I != E; ++I)
     if (Lines[I].startswith("Features")) {
       Lines[I].split(CPUFeatures, ' ');
@@ -1330,7 +1330,7 @@ bool sys::getHostCPUFeatures(StringMap<bool> &Features) {
     }
 
 #if defined(__aarch64__)
-  // Keep track of which crypto features we have seen
+                                                     
   enum { CAP_AES = 0x1, CAP_PMULL = 0x2, CAP_SHA1 = 0x4, CAP_SHA2 = 0x8 };
   uint32_t crypto = 0;
 #endif
@@ -1353,8 +1353,8 @@ bool sys::getHostCPUFeatures(StringMap<bool> &Features) {
                                    .Default("");
 
 #if defined(__aarch64__)
-    // We need to check crypto separately since we need all of the crypto
-    // extensions to enable the subtarget feature
+                                                                         
+                                                 
     if (CPUFeatures[I] == "aes")
       crypto |= CAP_AES;
     else if (CPUFeatures[I] == "pmull")
@@ -1370,7 +1370,7 @@ bool sys::getHostCPUFeatures(StringMap<bool> &Features) {
   }
 
 #if defined(__aarch64__)
-  // If we have all crypto bits we can add the feature
+                                                      
   if (crypto == (CAP_AES | CAP_PMULL | CAP_SHA1 | CAP_SHA2))
     Features["crypto"] = true;
 #endif

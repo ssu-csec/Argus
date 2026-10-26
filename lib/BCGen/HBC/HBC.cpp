@@ -36,15 +36,15 @@ using namespace hbc;
 
 namespace {
 
-// If we have less than this number of instructions in a Function, and we're
-// not compiling in optimized mode, take shortcuts during register allocation.
-// 250 was chosen so that registers will fit in a single byte even after some
-// have been reserved for function parameters.
+                                                                            
+                                                                              
+                                                                             
+                                              
 const unsigned kFastRegisterAllocationThreshold = 250;
 
-// If register allocation is expected to take more than this number of bytes of
-// RAM, and we're not trying to optimize, use a simpler pass to reduce compile
-// time memory usage.
+                                                                               
+                                                                              
+                     
 const uint64_t kRegisterAllocationMemoryLimit = 10L * 1024 * 1024;
 
 void lowerIR(Module *M, const BytecodeGenerationOptions &options) {
@@ -54,16 +54,16 @@ void lowerIR(Module *M, const BytecodeGenerationOptions &options) {
   PassManager PM{M->getContext().getCodeGenerationSettings()};
   PM.addPass<LowerLoadStoreFrameInst>();
   if (options.optimizationEnabled) {
-    // OptEnvironmentInit needs to run before LowerConstants.
+                                                             
     PM.addPass<OptEnvironmentInit>();
   }
-  // LowerExponentiationOperator needs to run before LowerBuiltinCalls because
-  // it introduces calls to HermesInternal.
+                                                                              
+                                           
   PM.addPass<LowerExponentiationOperator>();
-  // LowerBuiltinCalls needs to run before the rest of the lowering.
+                                                                    
   PM.addPass<LowerBuiltinCalls>();
-  // It is important to run LowerNumericProperties before LoadConstants
-  // as LowerNumericProperties could generate new constants.
+                                                                       
+                                                            
   PM.addPass<LowerNumericProperties>();
   PM.addPass<LowerConstruction>();
   PM.addPass<LowerArgumentsArray>();
@@ -74,22 +74,22 @@ void lowerIR(Module *M, const BytecodeGenerationOptions &options) {
   PM.addPass<LoadConstants>();
   PM.addPass<LoadParameters>();
   if (options.optimizationEnabled) {
-    // Lowers AllocObjects and its sequential literal properties into a single
-    // HBCAllocObjectFromBufferInst
+                                                                              
+                                   
     PM.addPass<LowerAllocObject>();
-    // Reduce comparison and conditional jump to single comparison jump
+                                                                       
     PM.addPass<LowerCondBranch>();
-    // Turn Calls into CallNs.
+                              
     PM.addPass<FuncCallNOpts>();
-    // Move loads to child blocks if possible.
+                                              
     PM.addCodeMotion();
-    // Eliminate common HBCLoadConstInsts.
+                                          
     PM.addCSE();
-    // Drop unused HBCLoadParamInsts.
+                                     
     PM.addDCE();
   }
 
-  // Move StartGenerator instructions to the start of functions.
+                                                                
   PM.addHoistStartGenerator();
 
   PM.run(M);
@@ -102,9 +102,9 @@ void lowerIR(Module *M, const BytecodeGenerationOptions &options) {
   }
 }
 
-/// Used in delta optimizing mode.
-/// \return a UniquingStringLiteralAccumulator seeded with strings  from a
-/// bytecode provider \p bcProvider.
+                                  
+                                                                          
+                                    
 UniquingStringLiteralAccumulator stringAccumulatorFromBCProvider(
     const BCProviderBase &bcProvider) {
   uint32_t count = bcProvider.getStringCount();
@@ -135,66 +135,66 @@ UniquingStringLiteralAccumulator stringAccumulatorFromBCProvider(
       std::move(css), std::move(isIdentifier)};
 }
 
-/// A container that deduplicates byte sequences, while keeping the original
-/// insertion order with the duplicates. Note: strings are used as a
-/// representation for code reuse and simplicity, but the contents are meant to
-/// be interpreted as unsigned bytes.
-/// It maintains:
-/// - a StringSetVector containing the uniqued strings.
-/// - a vector mapping each originally inserted string in order to an index in
-///   the StringSetVector.
-/// This is a specialized class used only by \c LiteralBufferBuilder.
-/// NOTE: We use std::string instead of std::vector<uint8_t> for code reuse.
+                                                                            
+                                                                    
+                                                                               
+                                     
+                 
+                                                       
+                                                                              
+                          
+                                                                     
+                                                                            
 class UniquedStringVector {
  public:
-  /// Append a string.
+                      
   void push_back(llvh::StringRef str) {
     indexInSet_.push_back(set_.insert(str));
   }
 
-  /// \return how many strings the vector contains, in other words, how many
-  ///     times \c push_back() was called.
+                                                                            
+                                          
   size_t size() const {
     return indexInSet_.size();
   }
 
-  /// \return the begin iterator over the uniqued set of strings in insertion
-  ///  order.
+                                                                             
+             
   StringSetVector::const_iterator beginSet() const {
     return set_.begin();
   }
-  /// \return the end iterator over the uniqued set of strings in insertion
-  ///  order.
+                                                                           
+             
   StringSetVector::const_iterator endSet() const {
     return set_.end();
   }
 
-  /// \return the index in the uniqued set corresponding to the insertion index
-  ///     \p insertionIndex.
+                                                                               
+                            
   uint32_t indexInSet(size_t insertionIndex) const {
     return indexInSet_[insertionIndex];
   }
 
  private:
-  /// The uniqued string set in insertion order.
+                                                
   StringSetVector set_{};
-  /// Index into the set of each original non-deduplicated string in insertion
-  /// order.
+                                                                              
+            
   std::vector<uint32_t> indexInSet_{};
 };
 
-/// A utility class which collects all serialized literals from a module,
-/// optionally deduplicates them, and installs them in the
-/// BytecodeModuleGenerator.
+                                                                         
+                                                          
+                            
 class LiteralBufferBuilder {
  public:
-  /// Constructor.
-  /// \param m the IR module to process.
-  /// \param shouldVisitFunction a predicate indicating whether a function
-  ///     should be processed or not. (In some cases like segment splitting we
-  ///     want to exclude part of the module.)
-  /// \param bmGen the BytecodeModuleGenerator to use.
-  /// \param optimize whether to deduplicate the serialized literals.
+                  
+                                        
+                                                                          
+                                                                              
+                                              
+                                                      
+                                                                     
   LiteralBufferBuilder(
       Module *m,
       const std::function<bool(Function const *)> &shouldVisitFunction,
@@ -206,70 +206,70 @@ class LiteralBufferBuilder {
         optimize_(optimize),
         literalGenerator_(bmGen) {}
 
-  /// Do everything: collect the literals, optionally deduplicate them, install
-  /// them in the BytecodeModuleGenerator.
+                                                                               
+                                          
   void generate();
 
  private:
-  /// Traverse the module, skipping functions that should not be visited,
-  /// and collect all serialized array and object literals and the corresponding
-  /// instruction.
+                                                                         
+                                                                                
+                  
   void traverse();
 
-  // Serialization handlers for different instructions.
+                                                       
 
   void serializeLiteralFor(AllocArrayInst *AAI);
   void serializeLiteralFor(HBCAllocObjectFromBufferInst *AOFB);
 
-  /// Serialize the the input literals \p elements into the UniquedStringVector
-  /// \p dest.
-  /// \p isKeyBuffer: whether this is generating object literal key buffer or
-  /// not.
+                                                                               
+              
+                                                                             
+          
   void serializeInto(
       UniquedStringVector &dest,
       llvh::ArrayRef<Literal *> elements,
       bool isKeyBuffer);
 
  private:
-  /// The IR module to process.
+                               
   Module *const M_;
-  /// A predicate indicating whether a function should be processed or not. (In
-  /// some cases like segment splitting we want to exclude part of the module.)
+                                                                               
+                                                                               
   const std::function<bool(const Function *)> &shouldVisitFunction_;
-  /// The BytecodeModuleGenerator to use.
+                                         
   BytecodeModuleGenerator &bmGen_;
-  /// Whether to deduplicate the serialized literals.
+                                                     
   bool const optimize_;
 
-  /// The stateless generator object.
+                                     
   SerializedLiteralGenerator literalGenerator_;
 
-  /// Temporary buffer to serialize literals into. We keep it around instead
-  /// of allocating a new one every time.
+                                                                            
+                                         
   std::vector<unsigned char> tempBuffer_{};
 
-  /// Each element is a serialized array literal.
+                                                 
   UniquedStringVector arrays_{};
 
-  /// Each element records the instruction whose literal was serialized at the
-  /// corresponding index in \c arrays_.
+                                                                              
+                                        
   std::vector<const Instruction *> arraysInst_{};
 
-  /// Each element is the keys portion of a serialized object literal.
+                                                                      
   UniquedStringVector objKeys_{};
 
-  /// Each element is the values portion of a serialized object literal.
+                                                                        
   UniquedStringVector objVals_{};
 
-  /// Each element records the instruction whose literal was serialized at the
-  /// corresponding index in \c objKeys_/objVals_.
+                                                                              
+                                                  
   std::vector<const Instruction *> objInst_{};
 };
 
 void LiteralBufferBuilder::generate() {
   traverse();
 
-  // Construct the serialized storage, optionally optimizing it.
+                                                                
   ConsecutiveStringStorage arrayStorage{
       arrays_.beginSet(), arrays_.endSet(), std::true_type{}, optimize_};
   ConsecutiveStringStorage keyStorage{
@@ -277,10 +277,10 @@ void LiteralBufferBuilder::generate() {
   ConsecutiveStringStorage valStorage{
       objVals_.beginSet(), objVals_.endSet(), std::true_type{}, optimize_};
 
-  // Populate the offset map.
+                             
   BytecodeModuleGenerator::LiteralOffsetMapTy literalOffsetMap{};
 
-  // Visit all array literals.
+                              
   auto arrayView = const_cast<const ConsecutiveStringStorage &>(arrayStorage)
                        .getStringTableView();
   for (size_t i = 0, e = arraysInst_.size(); i != e; ++i) {
@@ -292,7 +292,7 @@ void LiteralBufferBuilder::generate() {
         arrayView[arrayIndexInSet].getOffset(), UINT32_MAX};
   }
 
-  // Visit all object literals - they are split in two buffers.
+                                                               
   auto keyView = const_cast<const ConsecutiveStringStorage &>(keyStorage)
                      .getStringTableView();
   auto valView = const_cast<const ConsecutiveStringStorage &>(valStorage)
@@ -372,7 +372,7 @@ void LiteralBufferBuilder::serializeLiteralFor(
       "objKeys_ and objVals_ must be the same size");
   objInst_.push_back(AOFB);
 }
-}; // namespace
+};             
 
 std::unique_ptr<BytecodeModule> hbc::generateBytecodeModule(
     Module *M,
@@ -391,18 +391,18 @@ std::unique_ptr<BytecodeModule> hbc::generateBytecodeModule(
       std::move(baseBCProvider));
 }
 
-/// Encode a Unicode codepoint into a UTF8 sequence and append it to \p
-/// storage. Code points above 0xFFFF are encoded into UTF16, and the
-/// resulting surrogate pair values are encoded individually into UTF8.
+                                                                       
+                                                                     
+                                                                       
 static inline void appendUnicodeToStorage(
     uint32_t cp,
     llvh::SmallVectorImpl<char> &storage) {
-  // Sized to allow for two 16-bit values to be encoded.
-  // A 16-bit value takes up to three bytes encoded in UTF-8.
+                                                        
+                                                             
   char buf[8];
   char *d = buf;
-  // We need to normalize code points which would be encoded with a surrogate
-  // pair. Note that this produces technically invalid UTF-8.
+                                                                             
+                                                             
   if (LLVM_LIKELY(cp < 0x10000)) {
     hermes::encodeUTF8(d, cp);
   } else {
@@ -433,13 +433,13 @@ std::unique_ptr<BytecodeModule> hbc::generateBytecodeModule(
   if (segment) {
     BMGen.setSegmentID(*segment);
   }
-  // Empty if all functions should be generated (i.e. bundle splitting was not
-  // requested).
+                                                                              
+                
   llvh::DenseSet<Function *> functionsToGenerate = segment
       ? M->getFunctionsInSegment(*segment)
       : llvh::DenseSet<Function *>{};
 
-  /// \return true if we should generate function \p f.
+                                                       
   std::function<bool(const Function *)> shouldGenerate;
   if (segment) {
     shouldGenerate = [entryPoint, &functionsToGenerate](const Function *f) {
@@ -449,21 +449,21 @@ std::unique_ptr<BytecodeModule> hbc::generateBytecodeModule(
     shouldGenerate = [](const Function *) { return true; };
   }
 
-  /// Mapping of the source text UTF-8 to the modified UTF-16-like
-  /// representation used by string literal encoding.
-  /// See appendUnicodeToStorage.
-  /// If a function source isn't in this map, then it's entirely ASCII and can
-  /// be added to the string table unmodified.
-  /// This allows us to add strings to the StringLiteralTable,
-  /// which will convert actual UTF-8 to UTF-16 automatically if it's detected,
-  /// meaning we'd not be able to directly look up the original function source
-  /// in the table.
+                                                                  
+                                                     
+                                 
+                                                                              
+                                              
+                                                              
+                                                                               
+                                                                               
+                   
   llvh::DenseMap<llvh::StringRef, llvh::SmallVector<char, 32>>
       unicodeFunctionSources{};
 
-  { // Collect all the strings in the bytecode module into a storage.
-    // If we are in delta optimizing mode, start with the string storage from
-    // our base bytecode provider.
+  {                                                                  
+                                                                             
+                                  
     auto strings = baseBCProvider
         ? stringAccumulatorFromBCProvider(*baseBCProvider)
         : UniquingStringLiteralAccumulator{};
@@ -473,7 +473,7 @@ std::unique_ptr<BytecodeModule> hbc::generateBytecodeModule(
     };
 
     auto addString = [&strings](llvh::StringRef str) {
-      strings.addString(str, /* isIdentifier */ false);
+      strings.addString(str,                    false);
     };
 
     traverseLiteralStrings(M, shouldGenerate, addStringOrIdent);
@@ -482,24 +482,24 @@ std::unique_ptr<BytecodeModule> hbc::generateBytecodeModule(
       addString(kStrippedFunctionName);
     }
 
-    /// Add the original function source \p str to the \c strings table.
-    /// If it's not ASCII, re-encode it using the string table's string literal
-    /// encoding and map from the original source to the newly encoded source in
-    /// unicodeFunctionSources,so it can be reused below.
+                                                                        
+                                                                               
+                                                                                
+                                                         
     auto addFunctionSource = [&strings,
                               &unicodeFunctionSources](llvh::StringRef str) {
       if (hermes::isAllASCII(str.begin(), str.end())) {
-        // Fast path, no re-encoding needed.
-        strings.addString(str, /* isIdentifier */ false);
+                                            
+        strings.addString(str,                    false);
       } else {
         auto &storage = unicodeFunctionSources[str];
         if (!storage.empty())
           return;
         for (const char *cur = str.begin(), *e = str.end(); cur != e;
-             /* increment in body */) {
+                                    ) {
           if (LLVM_UNLIKELY(isUTF8Start(*cur))) {
-            // Decode and re-encode the character and append it to the string
-            // storage
+                                                                             
+                      
             appendUnicodeToStorage(
                 hermes::_decodeUTF8SlowPath<false>(
                     cur, [](const llvh::Twine &) {}),
@@ -511,12 +511,12 @@ std::unique_ptr<BytecodeModule> hbc::generateBytecodeModule(
         }
         strings.addString(
             llvh::StringRef{storage.begin(), storage.size()},
-            /* isIdentifier */ false);
+                               false);
       }
     };
 
-    // Populate strings table and if the source of a function contains unicode,
-    // add an entry to the unicodeFunctionSources.
+                                                                               
+                                                  
     traverseFunctions(
         M,
         shouldGenerate,
@@ -533,14 +533,14 @@ std::unique_ptr<BytecodeModule> hbc::generateBytecodeModule(
             std::move(strings), options.optimizationEnabled));
   }
 
-  // Generate the serialized literal buffers.
+                                             
   {
     LiteralBufferBuilder litBuilder{
         M, shouldGenerate, BMGen, options.optimizationEnabled};
     litBuilder.generate();
   }
 
-  // Add each function to BMGen so that each function has a unique ID.
+                                                                      
   for (auto &F : *M) {
     if (!shouldGenerate(&F)) {
       continue;
@@ -560,13 +560,13 @@ std::unique_ptr<BytecodeModule> hbc::generateBytecodeModule(
       }
     }
 
-    // Add entries to function source table for non-default source.
+                                                                   
     if (!F.isGlobalScope()) {
       if (auto source = F.getSourceRepresentationStr()) {
         auto it = unicodeFunctionSources.find(*source);
-        // If the original source was mapped to a re-encoded one in
-        // unicodeFunctionSources, then use the re-encoded source to lookup the
-        // string ID. Otherwise it's ASCII and can be used directly.
+                                                                   
+                                                                               
+                                                                    
         if (it != unicodeFunctionSources.end()) {
           BMGen.addFunctionSource(
               index,
@@ -580,13 +580,13 @@ std::unique_ptr<BytecodeModule> hbc::generateBytecodeModule(
   }
   assert(BMGen.getEntryPointIndex() != -1 && "Entry point not added");
 
-  // Construct the relative function scope depth map.
+                                                     
   FunctionScopeAnalysis scopeAnalysis{lexicalTopLevel};
 
-  // Allow reusing the debug cache between functions
+                                                    
   FileAndSourceMapIdCache debugCache{};
 
-  // Bytecode generation for each function.
+                                           
   for (auto &F : *M) {
     if (!shouldGenerate(&F)) {
       continue;
@@ -604,8 +604,8 @@ std::unique_ptr<BytecodeModule> hbc::generateBytecodeModule(
         RA.setMemoryLimit(kRegisterAllocationMemoryLimit);
       }
       PostOrderAnalysis PO(&F);
-      /// The order of the blocks is reverse-post-order, which is a simply
-      /// topological sort.
+                                                                          
+                           
       llvh::SmallVector<BasicBlock *, 16> order(PO.rbegin(), PO.rend());
       RA.allocate(order);
 
@@ -623,8 +623,8 @@ std::unique_ptr<BytecodeModule> hbc::generateBytecodeModule(
       }
       PM.addPass<SpillRegisters>(RA);
       if (options.basicBlockProfiling) {
-        // Insert after all other passes so that it sees final basic block
-        // list.
+                                                                          
+                
         PM.addPass<InsertProfilePoint>();
       }
       PM.run(&F);
@@ -678,8 +678,8 @@ std::unique_ptr<BytecodeModule> hbc::generateBytecode(
     BytecodeSerializer BS{OS, options};
     BS.serialize(*BM, sourceHash);
   }
-  // Now that the BytecodeFunctions know their offsets into the stream, we can
-  // populate the source map.
+                                                                              
+                             
   if (sourceMapGen)
     BM->populateSourceMap(sourceMapGen);
   return BM;

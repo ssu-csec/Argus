@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Argus route-local cookie semantics 0.11 (normal return type versus call and reuse effects)",
+  "type": "object",
+  "required": ["domain", "route_id", "classifier_version", "semantic_label", "purpose_basis", "cookie_field", "connection_status", "serialization_status", "evidence", "reason", "reason_code"],
+  "properties": {
+    "conditional_read_insertion": {
+      "type": "object",
+      "description": "Conditional exact-read insertion only. Never upgrades initial dependency, local_role or final purpose. Empty observations are not evidence of absence.",
+      "required": ["status", "reason", "observations", "contract", "conditions"],
+      "properties": {
+        "status": {"enum": ["NOT_ANALYZED", "READ_NOT_LINKED", "BOUNDARY_UNRESOLVED", "ANALYSIS_LIMIT", "POSITION_OBSERVED"]},
+        "contract": {"const": "CONDITIONAL_EXACT_READ_INSERTION_V1"},
+        "reason": {"type": "string"},
+        "conditions": {"type": "array", "items": {"type": "string"}},
+        "observations": {"type": "array", "items": {
+          "type": "object",
+          "required": ["status", "allocation", "allocation_relation", "read", "sink", "rhs_operand", "conditional_fields", "positions", "initial_time_dependency", "initial_dependency_evidence", "execution_reference", "boundary_evidence", "conditions", "unresolved"],
+          "properties": {
+            "status": {"enum": ["POSITION_OBSERVED", "BOUNDARY_UNRESOLVED"]},
+            "allocation_relation": {"const": "EXACT_SAMPLED_ALLOCATION"},
+            "conditional_fields": {"type": "array", "uniqueItems": true, "items": {"enum": ["NAME", "VALUE", "EXPIRES", "MAX_AGE", "TTL", "OTHER_ATTRIBUTE"]}},
+            "initial_time_dependency": {"enum": ["PRESENT", "ABSENT", "UNKNOWN", "MIXED"]},
+            "execution_reference": {"const": "execution_uncertainty"},
+            "read": {"type": "object", "required": ["function", "value_id", "instruction", "block", "location"]},
+            "sink": {"type": "object", "required": ["function", "value_id", "instruction", "block", "location"]}
+          }
+        }}
+      }
+    },
+    "execution_uncertainty": {
+      "type": "object",
+      "description": "Deduplicated legacy findings with references, not a safety or completeness proof. NO_MODELED_BLOCKER retains its original narrow scope.",
+      "required": ["status", "findings", "execution_success", "browser_storage"],
+      "properties": {
+        "status": {"enum": ["NOT_ANALYZED", "UNCERTAINTY_RECORDED", "NO_ADDITIONAL_RECORDED_FINDING"]},
+        "findings": {"type": "array"},
+        "execution_success": {"const": "NOT_PROVEN"},
+        "browser_storage": {"const": "NOT_TESTED"}
+      }
+    },
+    "date_states": {"$ref": "#/$defs/date_states"},
+    "local_role": {
+      "type": "object",
+      "required": ["status", "fields", "expiration_only", "basis", "dependency", "serialization_states", "prewrite_status", "blockers", "assumptions", "evidence"],
+      "properties": {
+        "date_states": {"$ref": "#/$defs/date_states"},
+        "status": {"enum": ["PROVEN", "PARTIAL", "UNVERIFIED"]},
+        "fields": {"type": "array", "uniqueItems": true, "items": {"enum": ["NAME", "VALUE", "EXPIRES", "MAX_AGE", "TTL", "OTHER_ATTRIBUTE"]}},
+        "expiration_only": {"type": ["boolean", "null"]},
+        "basis": {"enum": ["STATIC_RHS_STRUCTURE", "EXPRESSION_INTENT_ONLY", "UNRESOLVED"]},
+        "dependency": {"enum": ["PRESENT", "ABSENT", "UNVERIFIED", "NO_SAME_INVOCATION_FLOW"]},
+        "serialization_states": {"type": "array"},
+        "prewrite_status": {"enum": ["UNVERIFIED", "NO_SAME_INVOCATION_FLOW", "NO_MODELED_BLOCKER", "MODELED_TYPEERROR_BEFORE_WRITE", "POSSIBLE_TYPEERROR_BEFORE_WRITE"]},
+        "cookie_interpretation": {"type": "object", "properties": {
+          "scope": {"const": "CONDITIONAL_STRUCTURE_NOT_RUNTIME_PARSER"},
+          "initial_pair_required_for_attribute_role": {"const": false},
+          "parser_acceptance": {"const": "NOT_EVALUATED"},
+          "effective_expiration": {"const": "UNVERIFIED"},
+          "browser_storage": {"const": "NOT_TESTED"}
+        }},
+        "blockers": {"type": "array"}, "assumptions": {"type": "array"}, "evidence": {"type": "array"}
+      }
+    },
+    "sink_identity": {"type": "object", "required": ["status", "reason", "evidence"], "properties": {"status": {"enum": ["SUPPORTED_BROWSER_DOCUMENT", "UNVERIFIED"]}, "reason": {"type": "string"}, "evidence": {"type": "array"}}},
+    "domain": {"type": "string"},
+    "route_id": {"type": "integer"},
+    "classifier_version": {"type": "string"},
+    "analysis_seconds": {"type": "number", "minimum": 0},
+    "semantic_label": {"enum": ["BENIGN_EXPIRATION", "BENIGN_FUNCTIONAL", "TRACKING_RELATED", "UNCLEAR", null]},
+    "purpose_basis": {"enum": ["STATIC_FLOW_SUPPORTED", "EXPIRATION_INTENT_ONLY", "INSUFFICIENT_EVIDENCE", "NOT_APPLICABLE_NO_MATCHED_FLOW"]},
+    "cookie_field": {"enum": ["NAME", "VALUE", "EXPIRES", "OTHER_ATTRIBUTE", "MULTIPLE", "UNKNOWN"]},
+    "cookie_field_basis": {"enum": ["RECONSTRUCTED_VALUE_DEPENDENCY", "RECONSTRUCTED_INTENT_ONLY", "UNRESOLVED_OR_NOT_APPLICABLE"]},
+    "roles": {"type": "array", "items": {"enum": ["NAME", "VALUE", "EXPIRES", "OTHER_ATTRIBUTE", "UNKNOWN"]}, "uniqueItems": true},
+    "connection_status": {"enum": ["SUPPORTED", "DISPROVED", "UNVERIFIED", "BLOCKED_BY_EXCEPTION", "OBJECT_REFERENCE_ONLY", "OBJECT_FLOW_WITH_INVALID_DATE"]},
+    "serialization_status": {"enum": ["TIMESTAMP_EXPRESSION", "INVALID_DATE", "FUNCTION_REFERENCE", "TYPEERROR_BEFORE_SINK", "UNKNOWN", "MIXED_OR_CONDITIONAL", "NOT_APPLICABLE_NO_MATCHED_FLOW"]},
+    "evidence": {"type": "array", "items": {"type": "object"}},
+    "rejected_memory_bridges": {"type": "array", "items": {"type": "object"}},
+    "reason": {"type": "string"},
+    "reason_code": {"type": "string"}
+  },
+  "$defs": {
+    "date_states": {"type": "array", "items": {
+      "type": "object", "required": ["allocation", "read", "mode", "is_sampled_allocation", "initial_time_dependency", "paths", "blockers"],
+      "properties": {
+        "allocation": {"type": "string"}, "read": {"type": "string"},
+        "is_sampled_allocation": {"type": "boolean"},
+        "initial_time_dependency": {"enum": ["PRESENT", "ABSENT", "MIXED", "UNKNOWN"]},
+        "mode": {"const": "BOUNDED_PATH_SET_TIME"},
+        "paths": {"type": "array", "items": {"type": "object", "required": ["blocks", "conditions", "setter_sequence", "initial_time_dependency", "validity", "effects", "exceptions", "serialization"], "properties": {
+          "initial_time_dependency": {"enum": ["PRESENT", "ABSENT", "UNKNOWN"]},
+          "validity": {"enum": ["VALID", "INVALID", "MAYBE_INVALID", "UNKNOWN"]},
+          "standard_normal_returns": {"type": "array", "description": "Scope-qualified conditional normal return type facts or explicit rejections. Original opaque Value/dependency/content stay unchanged; prior effects are not discharged.", "items": {
+            "type": "object", "required": ["rule", "scope", "instruction", "supported", "assumptions", "execution_success"],
+            "properties": {"rule": {"const": "STANDARD_NORMAL_RETURN"}, "supported": {"type": "boolean"}, "execution_success": {"const": "NOT_PROVEN"}, "normal_types": {"const": ["String", "undefined"]}, "pure": {"const": false}, "call_exceptions": {"const": "MAY_THROW"}}
+          }},
+          "standard_primitive_uses": {"type": "array", "description": "Current concat conversion obligation only, never producer purity, content/delimiter safety or actual execution.", "items": {
+            "type": "object", "required": ["rule", "scope", "instruction", "supported", "assumptions", "reason"],
+            "properties": {"rule": {"const": "STANDARD_PRIMITIVE_CONCAT_USE"}, "supported": {"type": "boolean"}, "prior_effects": {"const": "NOT_DISCHARGED"}, "value_content_and_dependency": {"const": "UNCHANGED"}}
+          }},
+          "completed_numeric_results": {"type": "array", "items": {
+            "type": "object", "required": ["rule", "scope", "instruction", "sampled_allocation", "path", "normal_result_type", "condition", "operand_primitive", "prior_conversion_effects", "prior_conversion_exceptions", "finite", "date_range", "execution_safe"],
+            "properties": {
+              "rule": {"const": "COMPLETED_NUMBER_MULTIPLY_BEFORE_ALLOCATION"},
+              "normal_result_type": {"const": "Number"},
+              "operand_primitive": {"const": "NOT_PROVEN"},
+              "prior_conversion_effects": {"const": "NOT_PROVEN_PURE"},
+              "prior_conversion_exceptions": {"const": "MAY_THROW_BEFORE_ALLOCATION"},
+              "finite": {"const": "NOT_PROVEN"},
+              "date_range": {"const": "NOT_PROVEN"},
+              "execution_safe": {"const": "NOT_PROVEN"}
+            }
+          }},
+          "completed_numeric_reaching_edges": {"type": "array"},
+          "number_bindings": {"type": "array", "description": "Conditional primitive Number actual-to-formal proofs, not coercibility, purity, execution, finite Date, or benign purpose. Partial/missing IR never closes the callset.", "items": {
+            "type": "object", "required": ["rule", "callee", "formal", "supported", "hashes", "assumptions", "execution_success"],
+            "properties": {
+              "rule": {"const": "NUMBER_ACTUAL_FORMAL_PROOF"},
+              "supported": {"type": "boolean"},
+              "execution_success": {"const": "NOT_PROVEN"},
+              "hashes": {"type": "object", "required": ["engine_sha256", "reconstructed_sha256", "base_ir_sha256", "ir_sha256", "complete_ir"]}
+            }
+          }}
+        }}},
+        "blockers": {"type": "array"}
+      }
+    }}
+  },
+  "allOf": [
+    {"if": {"properties": {"semantic_label": {"type": "null"}}}, "then": {"properties": {"purpose_basis": {"const": "NOT_APPLICABLE_NO_MATCHED_FLOW"}, "connection_status": {"const": "DISPROVED"}}}},
+    {"if": {"properties": {"semantic_label": {"const": "BENIGN_EXPIRATION"}}}, "then": {"properties": {"cookie_field": {"const": "EXPIRES"}}}},
+    {"if": {"properties": {"purpose_basis": {"const": "EXPIRATION_INTENT_ONLY"}}}, "then": {"properties": {"serialization_status": {"enum": ["INVALID_DATE", "FUNCTION_REFERENCE", "TYPEERROR_BEFORE_SINK"]}}}}
+  ]
+}

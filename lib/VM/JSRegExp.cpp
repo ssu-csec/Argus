@@ -25,8 +25,8 @@
 namespace hermes {
 namespace vm {
 
-//===----------------------------------------------------------------------===//
-// class JSRegExp
+                                                                                
+                 
 
 const ObjectVTable JSRegExp::vt{
     VTable(
@@ -78,8 +78,8 @@ PseudoHandle<JSRegExp> JSRegExp::create(
 Handle<HiddenClass> JSRegExp::createMatchClass(
     Runtime &runtime,
     Handle<HiddenClass> arrayClass) {
-  // Adds the property \p name to matchClass which, upon return, will point to
-  // the newly created hidden class.
+                                                                              
+                                    
   auto addProperty = [&](Handle<HiddenClass> clazz, Predefined::Str name) {
     auto added = HiddenClass::addProperty(
         clazz,
@@ -141,7 +141,7 @@ ExecutionStatus JSRegExp::initialize(
 
   auto pattern = runtime.makeHandle(getPattern(otherHandle.get(), runtime));
 
-  // Fast path to avoid recompiling the RegExp if the flags match
+                                                                 
   if (LLVM_LIKELY(
           sflags->toByte() == getSyntaxFlags(otherHandle.get()).toByte())) {
     initialize(
@@ -155,7 +155,7 @@ ExecutionStatus JSRegExp::initialize(
   return initialize(selfHandle, runtime, pattern, flags);
 }
 
-/// ES11 21.2.3.2.2 RegExpInitialize ( obj, pattern, flags )
+                                                            
 ExecutionStatus JSRegExp::initialize(
     Handle<JSRegExp> selfHandle,
     Runtime &runtime,
@@ -170,7 +170,7 @@ ExecutionStatus JSRegExp::initialize(
   llvh::SmallVector<char16_t, 16> patternText16;
   pattern->appendUTF16String(patternText16);
 
-  // Build the regex.
+                     
   regex::Regex<regex::UTF16RegexTraits> regex(patternText16, flagsText16);
 
   if (!regex.valid()) {
@@ -178,9 +178,9 @@ ExecutionStatus JSRegExp::initialize(
         TwineChar16("Invalid RegExp: ") +
         regex::constants::messageForError(regex.getError()));
   }
-  // The regex is valid. Compile and store its bytecode.
+                                                        
   auto bytecode = regex.compile();
-  // Also store the name mappings.
+                                  
   if (LLVM_UNLIKELY(
           initializeGroupNameMappingObj(
               runtime,
@@ -278,7 +278,7 @@ CallResult<RegExpMatch> performSearch(
   if (matchResult == regex::MatchRuntimeResult::StackOverflow) {
     return runtime.raiseRangeError("Maximum regex stack depth reached");
   } else if (matchResult == regex::MatchRuntimeResult::NoMatch) {
-    return RegExpMatch{}; // not found.
+    return RegExpMatch{};              
   }
   size_t matchRangeCount = nativeMatchRanges.size();
   assert(matchRangeCount > 0);
@@ -307,16 +307,16 @@ CallResult<RegExpMatch> JSRegExp::search(
   assert(selfHandle->bytecode_ && "Missing bytecode");
   auto input = StringPrimitive::createStringView(runtime, strHandle);
 
-  // Note we may still have a match if searchStartOffset == str.size(),
-  // if the regexp can match an empty string
+                                                                       
+                                            
   if (searchStartOffset > input.length()) {
-    return RegExpMatch{}; // no match possible
+    return RegExpMatch{};                     
   }
 
   auto matchFlags = regex::constants::matchDefault;
 
-  // Respect the sticky flag, which forces us to match only at the given
-  // location.
+                                                                        
+              
   if (selfHandle->syntaxFlags_.sticky) {
     matchFlags |= regex::constants::matchOnlyAtStart;
   }
@@ -341,7 +341,7 @@ CallResult<RegExpMatch> JSRegExp::search(
         matchFlags);
   }
 
-  // Only update on successful match.
+                                     
   if (LLVM_UNLIKELY(matchResult == ExecutionStatus::EXCEPTION)) {
     return ExecutionStatus::EXCEPTION;
   } else if (!matchResult->empty()) {
@@ -377,7 +377,7 @@ std::string JSRegExp::_snapshotNameImpl(GCCell *cell, GC &gc) {
 
 void JSRegExp::_snapshotAddEdgesImpl(GCCell *cell, GC &gc, HeapSnapshot &snap) {
   auto *const self = vmcast<JSRegExp>(cell);
-  // Call the super type to add any other custom edges.
+                                                       
   JSObject::_snapshotAddEdgesImpl(self, gc, snap);
   if (self->bytecode_) {
     snap.addNamedEdge(
@@ -390,8 +390,8 @@ void JSRegExp::_snapshotAddEdgesImpl(GCCell *cell, GC &gc, HeapSnapshot &snap) {
 void JSRegExp::_snapshotAddNodesImpl(GCCell *cell, GC &gc, HeapSnapshot &snap) {
   auto *const self = vmcast<JSRegExp>(cell);
   if (self->bytecode_) {
-    // Add a native node for regex bytecode, to account for native size
-    // directly owned by the regex.
+                                                                       
+                                   
     snap.beginNode();
     snap.endNode(
         HeapSnapshot::NodeType::Native,
@@ -403,14 +403,14 @@ void JSRegExp::_snapshotAddNodesImpl(GCCell *cell, GC &gc, HeapSnapshot &snap) {
 }
 #endif
 
-/// \return an escaped string equivalent to \p pattern.
-/// This is used to construct the 'source' property of RegExp. This requires
-/// us to return a string from which the regexp may be reconstructed as if
-/// from a /foo/ style literal. Note this is different from the RegExp
-/// constructor that takes a string, e.g. new RegExp("/") returns a regexp
-/// that matches /, but
-/// /// does not (it's a comment!). So we may have to perform surgery on the
-/// pattern.
+                                                       
+                                                                            
+                                                                          
+                                                                      
+                                                                          
+                       
+                                                                            
+            
 CallResult<HermesValue> JSRegExp::escapePattern(
     Handle<StringPrimitive> pattern,
     Runtime &runtime) {
@@ -421,16 +421,16 @@ CallResult<HermesValue> JSRegExp::escapePattern(
   for (char16_t c : patternView) {
     switch (c) {
       case u'/':
-        // Avoid premature end of regex.
-        // TODO nice to have: don't do this if we are in square brackets.
-        // /[/]/ is valid and the middle / does not need to be escaped.
-        // However /[\/]/ is also valid and means the same thing
-        // (CharacterEscape production from regexp grammar). Still it would be
-        // nice to not unnecessarily mangle the user's supplied pattern.
+                                        
+                                                                         
+                                                                       
+                                                                
+                                                                              
+                                                                        
         result.append(isBackslashed ? "/" : "\\/");
         break;
 
-        // Escape line terminators. See ES5.1 7.3.
+                                                  
       case u'\n':
         result.append(isBackslashed ? "n" : "\\n");
         break;
@@ -453,19 +453,19 @@ CallResult<HermesValue> JSRegExp::escapePattern(
     }
     isBackslashed = (c == u'\\') && !isBackslashed;
   }
-  // "If P is the empty String, this specification can be met by letting S be
-  // '(?:)'."
+                                                                             
+             
   if (result.empty()) {
     result = u"(?:)";
   }
 
-  // Avoid unnecessary allocation in the likely event the source and pattern
-  // match.
+                                                                            
+           
   if (patternView.equals(result.arrayRef())) {
     return pattern.getHermesValue();
   }
   return StringPrimitive::create(runtime, result);
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

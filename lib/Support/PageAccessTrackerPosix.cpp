@@ -30,11 +30,11 @@ std::unique_ptr<volatile PageAccessTracker> PageAccessTracker::create(
         << "Nothing to track because the buffer is less than a page.\n";
     return nullptr;
   }
-  // If buffer start is not page aligned, choose the next page's start address.
+                                                                               
   void *bufStartPage =
       (void *)(((uintptr_t)bufStart + pageSize - 1) / pageSize * pageSize);
-  // If buffer end is not page aligned, choose the last page end address that
-  // is inside the buffer.
+                                                                             
+                          
   void *bufEndPage =
       (void *)(((uintptr_t)bufStart + bufSize) / pageSize * pageSize);
   assert(
@@ -43,7 +43,7 @@ std::unique_ptr<volatile PageAccessTracker> PageAccessTracker::create(
   uint32_t totalPages =
       ((uintptr_t)bufEndPage - (uintptr_t)bufStartPage) / pageSize;
 
-// On linux, failure to access the page triggers a sigsegv; on macOS, a sigbus.
+                                                                               
 #if defined(__linux__)
   const int signum = SIGSEGV;
 #elif defined(__APPLE__) && defined(__MACH__)
@@ -57,7 +57,7 @@ std::unique_ptr<volatile PageAccessTracker> PageAccessTracker::create(
       (new PageAccessTracker(pageSize, bufStartPage, totalPages, signum))
           ->install());
 
-  // Mark the whole bytecode file unreadable.
+                                             
   if (mprotect(bufStartPage, totalPages * pageSize, PROT_NONE) != 0) {
     perror("mprotect failed");
     tracker.reset();
@@ -67,7 +67,7 @@ std::unique_ptr<volatile PageAccessTracker> PageAccessTracker::create(
 }
 
 volatile PageAccessTracker *PageAccessTracker::install() {
-  // Register custom signal handler for accessing unreadable pages.
+                                                                   
   assert(sigmuxCookie_ == nullptr);
   if (sigmux_init(signal_)) {
     perror("sigmux_init failed");
@@ -85,7 +85,7 @@ PageAccessTracker *PageAccessTracker::uninstall() volatile {
     sigmux_unregister(sigmuxCookie_);
     sigmuxCookie_ = nullptr;
   }
-  // We are no longer volatile.
+                               
   return const_cast<PageAccessTracker *>(this);
 }
 
@@ -127,36 +127,36 @@ sigmux_action PageAccessTracker::signalHandler(
   auto tracker = reinterpret_cast<PageAccessTracker *>(trackerPtr);
   siginfo_t *si = siginfo->info;
   if (!tracker) {
-    // This is impossible because the signal handler would only be registered
-    // if the PageAccessTracker is initialized.
+                                                                             
+                                               
     _exit(EXIT_FAILURE);
   }
 
-  // Check if accessed address falls into the file buffer range.
-  // If the address is not in range, tell sigmux to search for other handlers.
+                                                                
+                                                                              
   if (si->si_signo != tracker->signal_ || !tracker->isTracking(si->si_addr)) {
     return SIGMUX_CONTINUE_SEARCH;
   }
-  // Mark the page readable so we can continue execution.
+                                                         
   void *accessedPage = (void *)((uintptr_t)si->si_addr / tracker->pageSize_ *
                                 tracker->pageSize_);
   if (mprotect(accessedPage, tracker->pageSize_, PROT_READ) != 0) {
     _exit(EXIT_FAILURE);
   }
-  // Measure how long it takes to actually read the page.
+                                                         
   auto toNanos = [](timespec &ts) {
     return static_cast<double>(ts.tv_sec) * 1e9 + ts.tv_nsec;
   };
   timespec t;
   clock_gettime(CLOCK_REALTIME, &t);
   auto before = toNanos(t);
-  // Read the first byte and "use" it in clock_gettime to prevent reordering.
+                                                                             
   t.tv_nsec += *reinterpret_cast<char *>(accessedPage);
   clock_gettime(CLOCK_REALTIME, &t);
   auto after = toNanos(t);
   tracker->recordPageAccess(si->si_addr, (after - before) / 1000);
 
-  // We successfully handled the signal.
+                                        
   return SIGMUX_CONTINUE_EXECUTION;
 }
 
@@ -262,4 +262,4 @@ bool PageAccessTracker::printPageAccessedOrder(
   return true;
 }
 
-#endif // HERMES_HAS_REAL_PAGE_TRACKER
+#endif                                

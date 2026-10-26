@@ -21,11 +21,11 @@ bool validateAST(Context &astContext, SemContext &semCtx, Node *root) {
     canonicalizeForBlockScoping(astContext, root);
   }
   if (astContext.getConvertES6Classes()) {
-    // Convert ES6 classes to functions
+                                       
     transformES6Classes(astContext, root);
   }
 
-  // Validate the entire AST.
+                             
   SemanticValidator validator{astContext, semCtx, true};
   return validator.doIt(root);
 }
@@ -51,5 +51,5 @@ bool validateFunctionAST(
   return validator.doFunction(function, strict);
 }
 
-} // namespace sem
-} // namespace hermes
+}                 
+}                    

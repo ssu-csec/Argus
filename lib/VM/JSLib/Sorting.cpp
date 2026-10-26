@@ -21,10 +21,10 @@ SortModel::~SortModel() = default;
 
 namespace {
 
-/// Helper function to make sort algorithm stable
-/// If [i] < [j], return true
-/// If [j] < [i], return false
-/// If [i] == [j], compare their original index
+                                                 
+                             
+                              
+                                               
 CallResult<bool> _less(
     SortModel *sm,
     const std::vector<uint32_t> &index,
@@ -39,7 +39,7 @@ CallResult<bool> _less(
   return (*res != 0) ? (*res < 0) : (index[i] < index[j]);
 }
 
-/// Helper function to swap both items and their indices
+                                                        
 ExecutionStatus
 _swap(SortModel *sm, std::vector<uint32_t> &index, uint32_t i, uint32_t j) {
   if (sm->swap(i, j) == ExecutionStatus::EXCEPTION) {
@@ -51,9 +51,9 @@ _swap(SortModel *sm, std::vector<uint32_t> &index, uint32_t i, uint32_t j) {
   return ExecutionStatus::RETURNED;
 }
 
-/**
- * @param base the beginning of the logical array
- */
+   
+                                                 
+   
 LLVM_NODISCARD ExecutionStatus heapFixDown(
     SortModel *sm,
     std::vector<uint32_t> &index,
@@ -70,7 +70,7 @@ LLVM_NODISCARD ExecutionStatus heapFixDown(
 
   while (i <= lastGood) {
     uint32_t j = (i - base) * 2 + 1 + base;
-    // Find the greater of the two children
+                                           
     if (j + 1 < end) {
       res = _less(sm, index, j, j + 1);
       if (res == ExecutionStatus::EXCEPTION) {
@@ -80,7 +80,7 @@ LLVM_NODISCARD ExecutionStatus heapFixDown(
         ++j;
       }
     }
-    // If the child is greater than us, exchange places
+                                                       
     res = _less(sm, index, i, j);
     if (res == ExecutionStatus::EXCEPTION) {
       return ExecutionStatus::EXCEPTION;
@@ -107,7 +107,7 @@ ExecutionStatus heapSort(
     return ExecutionStatus::RETURNED;
   }
 
-  // "heapify"
+              
   uint32_t start = (end - begin - 2) / 2 + begin;
   do {
     if (heapFixDown(sm, index, begin, start, end) ==
@@ -157,23 +157,23 @@ ExecutionStatus insertionSort(
   return ExecutionStatus::RETURNED;
 }
 
-// Must be at lest 3, for "median of three" to work
+                                                   
 const uint32_t INSERTION_THRESHOLD = 6;
 
-/// Performs the partition for quickSort between elements [l,r].
-/// Pre-condition: [l] <= [l+1] <= [r] and [l+1] is the pivot.
-/// This routine is guaranteed to complete even with an inconsistent comparison
-/// routine because it always makes forward progress and doesn't rely on
-/// sentinels.
-/// \return the new index of the pivot.
+                                                                
+                                                              
+                                                                               
+                                                                        
+              
+                                       
 CallResult<uint32_t> quickSortPartition(
     SortModel *sm,
     std::vector<uint32_t> &index,
     uint32_t l,
     uint32_t r) {
   CallResult<bool> res{false};
-  // Now [l] <= [l+1] <= [r]
-  // [l+1] is our pivot.
+                            
+                        
   uint32_t pivot = l + 1;
 
   uint32_t i = pivot + 1, j = r;
@@ -204,7 +204,7 @@ CallResult<uint32_t> quickSortPartition(
     --j;
   }
 
-  // [j] <= [pivot], we can put the pivot in its final position
+                                                               
   if (j != pivot) {
     if (_swap(sm, index, pivot, j) == ExecutionStatus::EXCEPTION)
       return ExecutionStatus::EXCEPTION;
@@ -222,17 +222,17 @@ ExecutionStatus doQuickSort(
   CallResult<bool> res{false};
 quicksort_top:
   if (limit <= 0) {
-    // Bail to heap sort
+                        
     return heapSort(sm, index, l, r + 1);
   }
 
-  // Median-of-three
-  // Place the middle element at [l+1]
+                    
+                                      
   if (_swap(sm, index, l + 1, l + ((r - l) >> 1)) ==
       ExecutionStatus::EXCEPTION) {
     return ExecutionStatus::EXCEPTION;
   }
-  // Sort, [l], [l+1], [r]
+                          
   res = _less(sm, index, r, l + 1);
   if (res == ExecutionStatus::EXCEPTION) {
     return ExecutionStatus::EXCEPTION;
@@ -261,16 +261,16 @@ quicksort_top:
     }
   }
 
-  // Now [l] <= [l+1] <= [r]
-  // [l+1] is our pivot and [r] is a sentinel
+                            
+                                             
   CallResult<uint32_t> partitionResult{quickSortPartition(sm, index, l, r)};
   if (partitionResult == ExecutionStatus::EXCEPTION) {
     return ExecutionStatus::EXCEPTION;
   }
   uint32_t j = *partitionResult;
 
-  // To limit the stack size, recurse for the smaller partition and do
-  // tail-recursion for the bigger one
+                                                                      
+                                      
   uint32_t lSize = j - l;
   uint32_t rSize = r - j;
   if (lSize <= rSize) {
@@ -323,13 +323,13 @@ quicksort_top:
   return ExecutionStatus::RETURNED;
 }
 
-} // namespace
+}             
 
 ExecutionStatus quickSort(SortModel *sm, uint32_t begin, uint32_t end) {
   if (begin >= end)
     return ExecutionStatus::RETURNED;
   uint32_t len = end - begin;
-  std::vector<uint32_t> index(len); // Array of original indices of items
+  std::vector<uint32_t> index(len);                                      
   for (uint32_t i = 0; i < len; ++i) {
     index[i] = i;
   }
@@ -341,5 +341,5 @@ ExecutionStatus quickSort(SortModel *sm, uint32_t begin, uint32_t end) {
   }
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

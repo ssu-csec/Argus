@@ -26,26 +26,26 @@ void JSWeakMapImplBase::WeakMapImplBaseBuildMeta(
   JSObjectBuildMeta(cell, mb);
 }
 
-/// Set a key/value, overwriting the previous value at that key,
-/// or add a new key/value if the key doesn't exist.
+                                                                
+                                                    
 ExecutionStatus JSWeakMapImplBase::setValue(
     Handle<JSWeakMapImplBase> self,
     Runtime &runtime,
     Handle<JSObject> key,
     Handle<> value) {
-  // No allocations should occur while a WeakRefKey is live.
+                                                            
   NoAllocScope noAlloc{runtime};
   WeakRefLookupKey lookupKey{runtime, key};
   DenseSetT::iterator it = self->set_.find_as(lookupKey);
 
   if (it != self->set_.end()) {
-    // Key already exists, update existing value.
+                                                 
     it->setMappedValue(*value);
     return ExecutionStatus::RETURNED;
   }
 
-  // If we have exceeded the target size, check and clear unused entries before
-  // adding a new one.
+                                                                               
+                      
   if (self->set_.size() >= self->targetSize_) {
     self->clearFreeableEntries();
   }
@@ -57,8 +57,8 @@ ExecutionStatus JSWeakMapImplBase::setValue(
   return ExecutionStatus::RETURNED;
 }
 
-/// Delete a key/value in the map.
-/// \return true if the key/value existed and was removed.
+                                  
+                                                          
 bool JSWeakMapImplBase::deleteValue(
     Handle<JSWeakMapImplBase> self,
     Runtime &runtime,
@@ -74,7 +74,7 @@ bool JSWeakMapImplBase::deleteValue(
   return true;
 }
 
-/// \return true if the \p key exists in the map.
+                                                 
 bool JSWeakMapImplBase::hasValue(
     Handle<JSWeakMapImplBase> self,
     Runtime &runtime,
@@ -106,20 +106,20 @@ uint32_t JSWeakMapImplBase::debugFreeSlotsAndGetSize(
 }
 
 void JSWeakMapImplBase::clearFreeableEntries() {
-  // We only release slots in the STW phase or finalizer, and this function is
-  // mostly called when setting new values (mutator thread), so it's safe.
+                                                                              
+                                                                          
   for (auto it = set_.begin(); it != set_.end(); ++it) {
     if (!it->isKeyValid()) {
       it->releaseSlot();
-      // Every key must be erased immediately after the underlying slot is
-      // freed.
-      // Note that DenseSet::erase() doesn't invalidate any iterators, so it's
-      // safe to call in a loop, and it has void return. If using std::set, we
-      // have to assign the return to it: it = set_.erase(it).
+                                                                          
+               
+                                                                              
+                                                                              
+                                                              
       set_.erase(it);
     }
   }
-  // Compute new target size.
+                             
   targetSize_.update(set_.size() / kOccupancyTarget + 1);
 }
 
@@ -146,10 +146,10 @@ void JSWeakMapImplBase::_snapshotAddEdgesImpl(
         HeapSnapshot::EdgeType::Internal, "map", self->getMapID(gc));
   }
 
-  // Add edges to objects pointed by WeakRef keys and its mapped values.
+                                                                        
   uint32_t edge_index = 0;
   for (const auto &key : self->set_) {
-    // Skip if the ref is not valid.
+                                    
     if (!key.isKeyValid()) {
       continue;
     }
@@ -163,7 +163,7 @@ void JSWeakMapImplBase::_snapshotAddEdgesImpl(
     if (auto id = gc.getSnapshotID(mappedValue)) {
       snap.addNamedEdge(
           HeapSnapshot::EdgeType::Internal,
-          // Add a suffix to distinguish key and value.
+                                                       
           indexName + "[value]",
           id.getValue());
     }
@@ -247,5 +247,5 @@ CallResult<PseudoHandle<JSWeakMapImpl<C>>> JSWeakMapImpl<C>::create(
 template class JSWeakMapImpl<CellKind::JSWeakMapKind>;
 template class JSWeakMapImpl<CellKind::JSWeakSetKind>;
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

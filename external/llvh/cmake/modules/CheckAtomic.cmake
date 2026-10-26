@@ -1,10 +1,10 @@
-# atomic builtins are required for threading support.
+                                                     
 
 INCLUDE(CheckCXXSourceCompiles)
 INCLUDE(CheckLibraryExists)
 
-# Sometimes linking against libatomic is required for atomic ops, if
-# the platform doesn't support lock-free atomics.
+                                                                    
+                                                 
 
 function(check_working_cxx_atomics varname)
   set(OLD_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
@@ -35,12 +35,12 @@ int main() {
 endfunction(check_working_cxx_atomics64)
 
 
-# This isn't necessary on MSVC, so avoid command-line switch annoyance
-# by only running on GCC-like hosts.
+                                                                      
+                                    
 if (LLVM_COMPILER_IS_GCC_COMPATIBLE)
-  # First check if atomics work without the library.
+                                                    
   check_working_cxx_atomics(HAVE_CXX_ATOMICS_WITHOUT_LIB)
-  # If not, check if the library exists, and atomics work with it.
+                                                                  
   if(NOT HAVE_CXX_ATOMICS_WITHOUT_LIB)
     check_library_exists(atomic __atomic_fetch_add_4 "" HAVE_LIBATOMIC)
     if( HAVE_LIBATOMIC )
@@ -55,14 +55,14 @@ if (LLVM_COMPILER_IS_GCC_COMPATIBLE)
   endif()
 endif()
 
-# Check for 64 bit atomic operations.
+                                     
 if(MSVC)
   set(HAVE_CXX_ATOMICS64_WITHOUT_LIB True)
 else()
   check_working_cxx_atomics64(HAVE_CXX_ATOMICS64_WITHOUT_LIB)
 endif()
 
-# If not, check if the library exists, and atomics work with it.
+                                                                
 if(NOT HAVE_CXX_ATOMICS64_WITHOUT_LIB)
   check_library_exists(atomic __atomic_load_8 "" HAVE_CXX_LIBATOMICS64)
   if(HAVE_CXX_LIBATOMICS64)
@@ -76,9 +76,9 @@ if(NOT HAVE_CXX_ATOMICS64_WITHOUT_LIB)
   endif()
 endif()
 
-## TODO: This define is only used for the legacy atomic operations in
-## llvm's Atomic.h, which should be replaced.  Other code simply
-## assumes C++11 <atomic> works.
+                                                                     
+                                                                
+                                
 CHECK_CXX_SOURCE_COMPILES("
 #ifdef _MSC_VER
 #include <windows.h>

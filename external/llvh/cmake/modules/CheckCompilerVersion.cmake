@@ -1,5 +1,5 @@
-# Check if the host compiler is new enough. LLVM requires at least GCC 4.8,
-# MSVC 2015 (Update 3), or Clang 3.1.
+                                                                           
+                                     
 
 include(CheckCXXSourceCompiles)
 
@@ -22,10 +22,10 @@ if(NOT DEFINED LLVM_COMPILER_CHECKED)
         endif()
         set(CLANG_CL 1)
       elseif(NOT LLVM_ENABLE_LIBCXX)
-        # Otherwise, test that we aren't using too old of a version of libstdc++
-        # with the Clang compiler. This is tricky as there is no real way to
-        # check the version of libstdc++ directly. Instead we test for a known
-        # bug in libstdc++4.6 that is fixed in libstdc++4.7.
+                                                                                
+                                                                            
+                                                                              
+                                                            
         set(OLD_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
         set(OLD_CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES})
         set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -std=c++0x")

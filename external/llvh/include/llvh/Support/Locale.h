@@ -14,4 +14,4 @@ bool isPrint(int c);
 }
 }
 
-#endif // LLVM_SUPPORT_LOCALE_H
+#endif                         

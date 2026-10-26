@@ -81,11 +81,11 @@ class CompressedPointer {
 
   CompressedPointer(const CompressedPointer &) = default;
 
-  /// We delete the assignment operator, subclasses should determine how the
-  /// value is assigned and then use setNoBarrier.
-  /// (except in MSVC: this is to work around lack of CWG 1734.
-  /// CompressedPointer will not be considered trivial otherwise.)
-  /// TODO(T40821815) Consider removing this workaround when updating MSVC
+                                                                            
+                                                  
+                                                               
+                                                                  
+                                                                          
 #ifndef _MSC_VER
   CompressedPointer &operator=(const CompressedPointer &) = delete;
 #else
@@ -172,7 +172,7 @@ class AssignableCompressedPointer : public CompressedPointer {
   using CompressedPointer::get;
 };
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMES_VM_COMPRESSEDPOINTER_H
+#endif                                 

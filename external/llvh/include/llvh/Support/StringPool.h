@@ -37,15 +37,15 @@ namespace llvh {
 
   class PooledStringPtr;
 
-  /// StringPool - An interned string pool. Use the intern method to add a
-  /// string. Strings are removed automatically as PooledStringPtrs are
-  /// destroyed.
+                                                                          
+                                                                       
+                
   class StringPool {
-    /// PooledString - This is the value of an entry in the pool's interning
-    /// table.
+                                                                            
+              
     struct PooledString {
-      StringPool *Pool = nullptr;  ///< So the string can remove itself.
-      unsigned Refcount = 0;       ///< Number of referencing PooledStringPtrs.
+      StringPool *Pool = nullptr;                                       
+      unsigned Refcount = 0;                                                   
 
     public:
       PooledString() = default;
@@ -61,21 +61,21 @@ namespace llvh {
     StringPool();
     ~StringPool();
 
-    /// intern - Adds a string to the pool and returns a reference-counted
-    /// pointer to it. No additional memory is allocated if the string already
-    /// exists in the pool.
+                                                                          
+                                                                              
+                           
     PooledStringPtr intern(StringRef Str);
 
-    /// empty - Checks whether the pool is empty. Returns true if so.
-    ///
+                                                                     
+       
     inline bool empty() const { return InternTable.empty(); }
   };
 
-  /// PooledStringPtr - A pointer to an interned string. Use operator bool to
-  /// test whether the pointer is valid, and operator * to get the string if so.
-  /// This is a lightweight value class with storage requirements equivalent to
-  /// a single pointer, but it does have reference-counting overhead when
-  /// copied.
+                                                                             
+                                                                                
+                                                                               
+                                                                         
+             
   class PooledStringPtr {
     using entry_t = StringPool::entry_t;
 
@@ -135,6 +135,6 @@ namespace llvh {
     inline bool operator!=(const PooledStringPtr &That) const { return S != That.S; }
   };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_SUPPORT_STRINGPOOL_H
+#endif                             

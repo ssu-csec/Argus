@@ -76,8 +76,8 @@ void BytecodeFunctionGenerator::addDebugSourceLocation(
   assert(
       !complete_ &&
       "Cannot modify BytecodeFunction after call to bytecodeGenerationComplete.");
-  // If an address is repeated, it means no actual bytecode was emitted for the
-  // previous source location.
+                                                                               
+                              
   if (!debugLocations_.empty() &&
       debugLocations_.back().address == info.address) {
     debugLocations_.back() = info;
@@ -122,20 +122,23 @@ BytecodeFunctionGenerator::generateBytecodeFunction(
     case Function::DefinitionKind::ES6Method:
       header.flags.prohibitInvoke = FunctionHeaderFlag::ProhibitConstruct;
       break;
+    case Function::DefinitionKind::ES6DerivedConstructor:
+      header.flags.derivedConstructor = true;
+      LLVM_FALLTHROUGH;
     case Function::DefinitionKind::ES6Constructor:
       header.flags.prohibitInvoke = FunctionHeaderFlag::ProhibitCall;
       break;
     default:
-      // ES9.0 9.2.3 step 4 states that generator functions and async
-      // functions cannot be constructed.
-      // We place this check outside the `DefinitionKind` because generator
-      // functions may also be ES6 methods, for example, and are not included
-      // in the DefinitionKind enum.
-      // Note that we only have to check for GeneratorFunctionKind in this
-      // case, because ES6 methods are already checked above, and ES6
-      // constructors are prohibited from being generator functions.
-      // As such, this is the only case in which we must change the
-      // prohibitInvoke flag based on valueKind.
+                                                                     
+                                         
+                                                                           
+                                                                             
+                                    
+                                                                          
+                                                                     
+                                                                    
+                                                                   
+                                                
       header.flags.prohibitInvoke =
           (valueKind == ValueKind::GeneratorFunctionKind ||
            valueKind == ValueKind::AsyncFunctionKind)
@@ -144,6 +147,7 @@ BytecodeFunctionGenerator::generateBytecodeFunction(
       break;
   }
 
+  header.flags.asyncGenerator = definitionKind == Function::DefinitionKind::ES6AsyncGenerator;
   header.flags.strictMode = strictMode;
   header.flags.hasExceptionHandler = exceptionHandlers_.size();
 
@@ -160,11 +164,11 @@ unsigned BytecodeFunctionGenerator::getScopeDescID(ScopeDesc *S) {
 }
 
 void BytecodeFunctionGenerator::shrinkJump(offset_t loc) {
-  // We are shrinking a long jump into a short jump.
-  // The size of operand reduces from 4 bytes to 1 byte, a delta of 3.
+                                                    
+                                                                      
   opcodes_.erase(opcodes_.begin() + loc, opcodes_.begin() + loc + 3);
 
-  // Change this instruction from long jump to short jump.
+                                                          
   longToShortJump(loc - 1);
 }
 
@@ -172,8 +176,8 @@ void BytecodeFunctionGenerator::updateJumpTarget(
     offset_t loc,
     int newVal,
     int bytes) {
-  // The jump target is encoded in little-endian. Update it correctly
-  // regardless of host byte order.
+                                                                     
+                                   
   for (; bytes; --bytes, ++loc) {
     opcodes_[loc] = (opcode_atom_t)(newVal);
     newVal >>= 8;
@@ -186,8 +190,8 @@ void BytecodeFunctionGenerator::updateJumpTableOffset(
     uint32_t instLoc) {
   assert(opcodes_.size() > instLoc && "invalid switchimm offset");
 
-  // The offset is not aligned, but will be aligned when read in the
-  // interpreter.
+                                                                    
+                 
   updateJumpTarget(
       loc,
       opcodes_.size() + jumpTableOffset * sizeof(uint32_t) - instLoc,
@@ -199,8 +203,8 @@ void BytecodeFunctionGenerator::bytecodeGenerationComplete() {
   complete_ = true;
   bytecodeSize_ = opcodes_.size();
 
-  // Add the jump tables inline with the opcodes, as a 4-byte aligned section at
-  // the end of the opcode array.
+                                                                                
+                                 
   if (!jumpTable_.empty()) {
     uint32_t alignedOpcodes = llvh::alignTo<sizeof(uint32_t)>(bytecodeSize_);
     uint32_t jumpTableBytes = jumpTable_.size() * sizeof(uint32_t);
@@ -215,7 +219,8 @@ void BytecodeFunctionGenerator::bytecodeGenerationComplete() {
 
 unsigned BytecodeModuleGenerator::addFunction(Function *F) {
   lazyFunctions_ |= F->isLazy();
-  asyncFunctions_ |= llvh::isa<AsyncFunction>(F);
+  asyncFunctions_ |= llvh::isa<AsyncFunction>(F) ||
+      F->getDefinitionKind() == Function::DefinitionKind::ES6AsyncGenerator;
   return functionIDMap_.allocate(F);
 }
 
@@ -223,8 +228,8 @@ unsigned BytecodeModuleGenerator::addScopeDesc(ScopeDesc *S) {
   if (S && S->hasFunction() &&
       S->getFunction()->getContext().getDebugInfoSetting() !=
           DebugInfoSetting::ALL) {
-    // short-circuit S to be nullptr when not emitting the debug information,
-    // which effectively causes all scopes to use the same (empty) descriptor.
+                                                                             
+                                                                              
     S = nullptr;
   }
 
@@ -233,14 +238,14 @@ unsigned BytecodeModuleGenerator::addScopeDesc(ScopeDesc *S) {
 }
 
 namespace {
-/// \return the UTF8 encoding for \p name, replacing surrogates if any is
-/// present.
+                                                                         
+            
 static Identifier ensureUTF8Identifer(
     StringTable &st,
     Identifier name,
     std::string &nameUTF8Buffer) {
-  // Check if name has any surrogates. If it doesn't, then it already is a valid
-  // UTF8 string, and as such can be written to the debug info.
+                                                                                
+                                                               
   bool hasSurrogate = false;
   const char *it = name.str().begin();
   const char *nameEnd = name.str().end();
@@ -253,15 +258,15 @@ static Identifier ensureUTF8Identifer(
   if (hasSurrogate) {
     nameUTF8Buffer.clear();
 
-    // name has surrogates, meaning it is not a valid UTF8 string (these strings
-    // are still valid within Hermes itself).
+                                                                                
+                                             
     convertUTF8WithSurrogatesToUTF8WithReplacements(nameUTF8Buffer, name.str());
     name = st.getIdentifier(nameUTF8Buffer);
   }
 
   return name;
 }
-} // namespace
+}             
 
 unsigned BytecodeModuleGenerator::serializeScopeChain(
     StringTable &st,
@@ -285,7 +290,7 @@ unsigned BytecodeModuleGenerator::serializeScopeChain(
 
     flags.isDynamic = S->getDynamic();
 
-    // All names in the scope are accessible from S, ...
+                                                        
     std::string nameUTF8Buffer;
     for (Variable *V : S->getVariables()) {
       Identifier nameUTF8 =
@@ -449,21 +454,21 @@ std::unique_ptr<BytecodeModule> BytecodeModuleGenerator::generate() {
     }
 
     if (BFG.hasDebugInfo()) {
-      // Only serialize the scopes if any debug info has been output. Note that
-      // using a for each construct is wrong as serializeScopeChain may add
-      // entries to newScopeDescs_ (via addScopeDesc) which may in turn
-      // re-allocate the vector being iterated on.
+                                                                               
+                                                                           
+                                                                       
+                                                  
       for (uint32_t s = 0, end = newScopeDescs_.size(); s < end; ++s) {
         serializeScopeChain(
             F->getContext().getStringTable(), debugInfoGen, newScopeDescs_[s]);
       }
 
-      // All scopes in newScopeDesc_ have already been serialized, thus
-      // newScopeDescs_ can be cleared.
+                                                                       
+                                       
       newScopeDescs_.clear();
 
-      // The scope descriptor table is serialized, thus it can be used to patch
-      // any references to it in the current function's debug data.
+                                                                               
+                                                                   
       BFG.patchDebugSourceLocations(scopeDescIDAddr_);
 
       uint32_t sourceLocOffset = debugInfoGen.appendSourceLocations(
@@ -487,5 +492,5 @@ std::unique_ptr<BytecodeModule> BytecodeModuleGenerator::generate() {
   return BM;
 }
 
-} // namespace hbc
-} // namespace hermes
+}                 
+}                    

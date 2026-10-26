@@ -22,22 +22,22 @@
 
 namespace llvh {
 
-/// PrintRecyclingAllocatorStats - Helper for RecyclingAllocator for
-/// printing statistics.
-///
+                                                                    
+                        
+   
 void PrintRecyclerStats(size_t Size, size_t Align, size_t FreeListSize);
 
-/// Recycler - This class manages a linked-list of deallocated nodes
-/// and facilitates reusing deallocated memory in place of allocating
-/// new memory.
-///
+                                                                    
+                                                                     
+               
+   
 template <class T, size_t Size = sizeof(T), size_t Align = alignof(T)>
 class Recycler {
   struct FreeNode {
     FreeNode *Next;
   };
 
-  /// List of nodes that have deleted contents and are not in active use.
+                                                                         
   FreeNode *FreeList = nullptr;
 
   FreeNode *pop_val() {
@@ -56,15 +56,15 @@ class Recycler {
 
 public:
   ~Recycler() {
-    // If this fails, either the callee has lost track of some allocation,
-    // or the callee isn't tracking allocations and should just call
-    // clear() before deleting the Recycler.
+                                                                          
+                                                                    
+                                            
     assert(!FreeList && "Non-empty recycler deleted!");
   }
 
-  /// clear - Release all the tracked allocations to the allocator. The
-  /// recycler must be free of any tracked allocations before being
-  /// deleted; calling clear is one way to ensure this.
+                                                                       
+                                                                   
+                                                       
   template<class AllocatorType>
   void clear(AllocatorType &Allocator) {
     while (FreeList) {
@@ -73,11 +73,11 @@ public:
     }
   }
 
-  /// Special case for BumpPtrAllocator which has an empty Deallocate()
-  /// function.
-  ///
-  /// There is no need to traverse the free list, pulling all the objects into
-  /// cache.
+                                                                       
+               
+     
+                                                                              
+            
   void clear(BumpPtrAllocator &) { FreeList = nullptr; }
 
   template<class SubClass, class AllocatorType>
@@ -96,7 +96,7 @@ public:
   }
 
   template<class SubClass, class AllocatorType>
-  void Deallocate(AllocatorType & /*Allocator*/, SubClass* Element) {
+  void Deallocate(AllocatorType &              , SubClass* Element) {
     push(reinterpret_cast<FreeNode *>(Element));
   }
 

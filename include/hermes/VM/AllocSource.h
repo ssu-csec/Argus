@@ -11,15 +11,15 @@
 namespace hermes {
 namespace vm {
 
-/// Tag indicating where to allocate backing storage.
+                                                     
 enum class AllocSource {
-  /// Allocate memory using \p oscompat::vm_allocate.
+                                                     
   VMAllocate,
 
-  /// Allocate memory using \p malloc.
+                                      
   Malloc
 };
 
-} // namespace vm
-} // namespace hermes
-#endif //  HERMES_VM_ALLOC_SOURCE_H
+}                
+}                    
+#endif                             

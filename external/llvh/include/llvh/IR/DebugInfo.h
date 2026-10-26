@@ -28,55 +28,55 @@ class DbgDeclareInst;
 class DbgValueInst;
 class Module;
 
-/// Find subprogram that is enclosing this scope.
+                                                 
 DISubprogram *getDISubprogram(const MDNode *Scope);
 
-/// Strip debug info in the module if it exists.
-///
-/// To do this, we remove all calls to the debugger intrinsics and any named
-/// metadata for debugging. We also remove debug locations for instructions.
-/// Return true if module is modified.
+                                                
+   
+                                                                            
+                                                                            
+                                      
 bool StripDebugInfo(Module &M);
 bool stripDebugInfo(Function &F);
 
-/// Downgrade the debug info in a module to contain only line table information.
-///
-/// In order to convert debug info to what -gline-tables-only would have
-/// created, this does the following:
-///   1) Delete all debug intrinsics.
-///   2) Delete all non-CU named metadata debug info nodes.
-///   3) Create new DebugLocs for each instruction.
-///   4) Create a new CU debug info, and similarly for every metadata node
-///      that's reachable from the CU debug info.
-///   All debug type metadata nodes are unreachable and garbage collected.
+                                                                                
+   
+                                                                        
+                                     
+                                     
+                                                           
+                                                   
+                                                                          
+                                                 
+                                                                          
 bool stripNonLineTableDebugInfo(Module &M);
 
-/// Return Debug Info Metadata Version by checking module flags.
+                                                                
 unsigned getDebugMetadataVersionFromModule(const Module &M);
 
-/// Utility to find all debug info in a module.
-///
-/// DebugInfoFinder tries to list all debug info MDNodes used in a module. To
-/// list debug info MDNodes used by an instruction, DebugInfoFinder uses
-/// processDeclare, processValue and processLocation to handle DbgDeclareInst,
-/// DbgValueInst and DbgLoc attached to instructions. processModule will go
-/// through all DICompileUnits in llvm.dbg.cu and list debug info MDNodes
-/// used by the CUs.
+                                               
+   
+                                                                             
+                                                                        
+                                                                              
+                                                                           
+                                                                         
+                    
 class DebugInfoFinder {
 public:
-  /// Process entire module and collect debug info anchors.
+                                                           
   void processModule(const Module &M);
-  /// Process a single instruction and collect debug info anchors.
+                                                                  
   void processInstruction(const Module &M, const Instruction &I);
 
-  /// Process DbgDeclareInst.
+                             
   void processDeclare(const Module &M, const DbgDeclareInst *DDI);
-  /// Process DbgValueInst.
+                           
   void processValue(const Module &M, const DbgValueInst *DVI);
-  /// Process debug info location.
+                                  
   void processLocation(const Module &M, const DILocation *Loc);
 
-  /// Clear all lists.
+                      
   void reset();
 
 private:
@@ -136,6 +136,6 @@ private:
   SmallPtrSet<const MDNode *, 32> NodesSeen;
 };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_IR_DEBUGINFO_H
+#endif                       

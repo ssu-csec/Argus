@@ -13,8 +13,8 @@
 namespace hermes {
 namespace vm {
 
-/// Helper class to store a GC object inline in Runtime. When combined with
-/// StackRuntime, this is useful for preserving GC state on the stack.
+                                                                           
+                                                                      
 class GCStorage {
  public:
   GCStorage(
@@ -82,7 +82,7 @@ class GCStorage {
 #endif
 };
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMES_VM_GCSTORAGE_H
+#endif                         

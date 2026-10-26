@@ -5,52 +5,52 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-/**===----------------------------------------------------------------------===
-\file
-This header defines helper macros for creating type-safe flags classes.
-Instead of OR-ing integer constants, it declares a class with getters,
-setters and a "fluent" builder API.
+                                                                               
+     
+                                                                       
+                                                                      
+                                   
 
-Users are expected to define a macro listing the names of all flags, like
-in this example:
+                                                                         
+                
 
-\code
-#define LIST_MY_FLAGS(FLAG) \
-   FLAG(Flag1) \
-   FLAG(Flag2) \
-   FLAG(Flag3)
-\endcode
+     
+                            \
+               \
+               \
+              
+        
 
-Declaring the actual class works like this:
+                                           
 
-\code
-HERMES_VM__DECLARE_FLAGS_CLASS(MyFlags, LIST_MY_FLAGS);
-\endcode
+     
+                                                       
+        
 
-The macro above declares a class that initializes all flags to false on
-construction and offers the following methods for every flag:
+                                                                       
+                                                             
 
-\code
- bool getFLAGNAME() const;
- ClassName setFLAGNAME(bool);
- ClassName plusFLAGNAME();
- ClassName minusFLAGNAME();
-\endcode
+     
+                          
+                             
+                          
+                           
+        
 
-The modifier methods implement a "fluent" API where they return a new
-instance of the class with the corresponding flag set or cleared. This
-pattern is especially convenient when constructing combinations of flags to
-pass to functions.
+                                                                     
+                                                                      
+                                                                           
+                  
 
-Given the declarations for MyFlags above, this is some example usage:
+                                                                     
 
-\code
-MyFlags flagsA{};
-flagsA.setFlag1(true);
-functionCall(flagsA.plusFlag2().minusFlag1().plusFlag3());
-\endcode
-*/
-//===-----------------------------------------------------------------------===
+     
+                 
+                      
+                                                          
+        
+  
+                                                                               
 
 #ifndef HERMES_VM_TYPESAFEFLAGS_H
 #define HERMES_VM_TYPESAFEFLAGS_H
@@ -92,4 +92,4 @@ functionCall(flagsA.plusFlag2().minusFlag1().plusFlag3());
     listMacro(_HERMES_VM__IMPL_FLAG)                         \
   }
 
-#endif // HERMES_VM_TYPESAFEFLAGS_H
+#endif                             

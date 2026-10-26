@@ -26,14 +26,14 @@
 
 namespace llvh {
 
-/// A container which contains a StringRef plus a precomputed hash.
+                                                                   
 class CachedHashStringRef {
   const char *P;
   uint32_t Size;
   uint32_t Hash;
 
 public:
-  // Explicit because hashing a string isn't free.
+                                                  
   explicit CachedHashStringRef(StringRef S)
       : CachedHashStringRef(S, DenseMapInfo<StringRef>::getHashValue(S)) {}
 
@@ -67,9 +67,9 @@ template <> struct DenseMapInfo<CachedHashStringRef> {
   }
 };
 
-/// A container which contains a string, which it owns, plus a precomputed hash.
-///
-/// We do not null-terminate the string.
+                                                                                
+   
+                                        
 class CachedHashString {
   friend struct DenseMapInfo<CachedHashString>;
 
@@ -93,12 +93,12 @@ class CachedHashString {
     assert(isEmptyOrTombstone());
   }
 
-  // TODO: Use small-string optimization to avoid allocating.
+                                                             
 
 public:
   explicit CachedHashString(const char *S) : CachedHashString(StringRef(S)) {}
 
-  // Explicit because copying and hashing a string isn't free.
+                                                              
   explicit CachedHashString(StringRef S)
       : CachedHashString(S, DenseMapInfo<StringRef>::getHashValue(S)) {}
 
@@ -107,8 +107,8 @@ public:
     memcpy(P, S.data(), S.size());
   }
 
-  // Ideally this class would not be copyable.  But SetVector requires copyable
-  // keys, and we want this to be usable there.
+                                                                               
+                                               
   CachedHashString(const CachedHashString &Other)
       : Size(Other.Size), Hash(Other.Hash) {
     if (Other.isEmptyOrTombstone()) {
@@ -174,12 +174,12 @@ template <> struct DenseMapInfo<CachedHashString> {
     if (LHS.P == CachedHashString::getTombstoneKeyPtr())
       return RHS.P == CachedHashString::getTombstoneKeyPtr();
 
-    // This is safe because if RHS.P is the empty or tombstone key, it will have
-    // length 0, so we'll never dereference its pointer.
+                                                                                
+                                                        
     return LHS.val() == RHS.val();
   }
 };
 
-} // namespace llvh
+}                  
 
 #endif

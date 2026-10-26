@@ -35,33 +35,33 @@ class EmitWasmIntrinsicsContext {
     return *ctx.getWasmIntrinsicsContext();
   }
 
-  /// Look for unsafe compiler intrinsics.
+                                          
   hermes::OptValue<WasmIntrinsics::Enum> findWasmIntrinsics(
       Identifier intrinsicsName);
 
-  /// Lookup the expected number of arguments for a specific intrinsic.
+                                                                       
   unsigned getWasmIntrinsicsNumArgs(WasmIntrinsics::Enum index) {
     return intrinsicsNumArgs_[index];
   }
 
  private:
-  /// Map from an intrinisc name to an integer "intrinsic index".
+                                                                 
   llvh::DenseMap<Identifier, WasmIntrinsics::Enum> intrinsics_;
 
-  /// Map from an integer "intrinsic index" to its expected number of
-  /// arguments.
+                                                                     
+                
   unsigned intrinsicsNumArgs_[WasmIntrinsics::_count];
 };
 
 EmitWasmIntrinsicsContext::EmitWasmIntrinsicsContext(StringTable &strTab) {
-  // Insert all intrinsics.
+                           
   int intrinsicsIndex = 0;
 #define WASM_INTRINSICS(name, numArgs)       \
   intrinsics_[strTab.getIdentifier(#name)] = \
       (WasmIntrinsics::Enum)(intrinsicsIndex++);
 #include "hermes/Optimizer/Wasm/WasmIntrinsics.def"
 
-  // Insert number of arguments.
+                                
   intrinsicsIndex = 0;
 #define WASM_INTRINSICS(name, numArgs) \
   intrinsicsNumArgs_[intrinsicsIndex++] = numArgs;
@@ -87,12 +87,12 @@ bool EmitWasmIntrinsics::runOnFunction(Function *F) {
   for (auto &BB : *F) {
     for (auto it = BB.begin(), e = BB.end(); it != e;) {
       auto *inst = &*it++;
-      // Look for an instruction sequence of the kind:
-      //    (Call
-      //        (LoadProperty
-      //            (LoadProperty globalObject, "__uasm")
-      //            Prop)
-      //        ...)
+                                                      
+                 
+                             
+                                                         
+                         
+                    
       if (inst->getKind() != ValueKind::CallInstKind)
         continue;
       auto *callInst = cast<CallInst>(inst);
@@ -113,11 +113,11 @@ bool EmitWasmIntrinsics::runOnFunction(Function *F) {
       if (!objLit || (objLit->getValue().str() != "__uasm"))
         continue;
 
-      // Check if the intrinsic is defined.
+                                           
       auto wasmIntrinsicsIndex =
           wasmIntrinsics.findWasmIntrinsics(propLit->getValue());
       if (!wasmIntrinsicsIndex) {
-        // Undefined intrinsics in __uasm namesapce.
+                                                    
         F->getContext().getSourceErrorManager().error(
             F->getSourceRange(),
             Twine("the intrinsic \"") + propLit->getValue().str() +
@@ -133,7 +133,7 @@ bool EmitWasmIntrinsics::runOnFunction(Function *F) {
                        << "] " << getWasmIntrinsicsName(*wasmIntrinsicsIndex)
                        << "()\n");
 
-      // Check if the intrinsic call has the correct number of arguments.
+                                                                         
       unsigned numArgsExcludingThis = callInst->getNumArguments() - 1;
       unsigned numExpectedArgs =
           wasmIntrinsics.getWasmIntrinsicsNumArgs(*wasmIntrinsicsIndex);
@@ -162,7 +162,7 @@ bool EmitWasmIntrinsics::runOnFunction(Function *F) {
       callInst->replaceAllUsesWith(callIntrinsic);
       callInst->eraseFromParent();
 
-      // Remove property access intructions.
+                                            
       if (!loadProp->hasUsers())
         loadProp->eraseFromParent();
       if (!loadGlobalProp->hasUsers())
@@ -175,7 +175,7 @@ bool EmitWasmIntrinsics::runOnFunction(Function *F) {
   return changed;
 }
 
-} // namespace hermes
+}                    
 
 #undef DEBUG_TYPE
-#endif // HERMES_RUN_WASM
+#endif                   

@@ -19,6 +19,6 @@ using SHA1 = std::array<uint8_t, SHA1_NUM_BYTES>;
 
 std::string hashAsString(const SHA1 &hash);
 
-} // namespace hermes
+}                    
 
 #endif

@@ -77,7 +77,7 @@ static void write_unsigned_impl(raw_ostream &S, T N, size_t MinDigits,
 template <typename T>
 static void write_unsigned(raw_ostream &S, T N, size_t MinDigits,
                            IntegerStyle Style, bool IsNegative = false) {
-  // Output using 32-bit div/mod if possible.
+                                             
   if (N == static_cast<uint32_t>(N))
     write_unsigned_impl(S, static_cast<uint32_t>(N), MinDigits, Style,
                         IsNegative);
@@ -187,11 +187,11 @@ void llvh::write_double(raw_ostream &S, double N, FloatStyle Style,
 
   if (Style == FloatStyle::Exponent || Style == FloatStyle::ExponentUpper) {
 #ifdef _WIN32
-// On MSVCRT and compatible, output of %e is incompatible to Posix
-// by default. Number of exponent digits should be at least 2. "%+03d"
-// FIXME: Implement our formatter to here or Support/Format.h!
+                                                                  
+                                                                      
+                                                              
 #if defined(__MINGW32__)
-    // FIXME: It should be generic to C++11.
+                                            
     if (N == 0.0 && std::signbit(N)) {
       char NegativeZero[] = "-0.000000e+00";
       if (Style == FloatStyle::ExponentUpper)
@@ -202,7 +202,7 @@ void llvh::write_double(raw_ostream &S, double N, FloatStyle Style,
 #else
     int fpcl = _fpclass(N);
 
-    // negative zero
+                    
     if (fpcl == _FPCLASS_NZ) {
       char NegativeZero[] = "-0.000000e+00";
       if (Style == FloatStyle::ExponentUpper)
@@ -224,7 +224,7 @@ void llvh::write_double(raw_ostream &S, double N, FloatStyle Style,
           int c0 = buf[len - 1];
           if (isdigit(static_cast<unsigned char>(c1)) &&
               isdigit(static_cast<unsigned char>(c0))) {
-            // Trim leading '0': "...e+012" -> "...e+12\0"
+                                                          
             buf[len - 3] = c1;
             buf[len - 2] = c0;
             buf[--len] = 0;
@@ -255,10 +255,10 @@ size_t llvh::getDefaultPrecision(FloatStyle Style) {
   switch (Style) {
   case FloatStyle::Exponent:
   case FloatStyle::ExponentUpper:
-    return 6; // Number of decimal places.
+    return 6;                             
   case FloatStyle::Fixed:
   case FloatStyle::Percent:
-    return 2; // Number of decimal places.
+    return 2;                             
   }
   LLVM_BUILTIN_UNREACHABLE;
 }

@@ -13,7 +13,7 @@
 
 namespace hermes {
 
-/// Inline single use functions.
+                                
 class Inlining : public ModulePass {
  public:
   explicit Inlining() : hermes::ModulePass("Inlining") {}
@@ -22,6 +22,6 @@ class Inlining : public ModulePass {
   bool runOnModule(Module *M) override;
 };
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_OPTIMIZER_SCALAR_INLINING_H
+#endif                                      

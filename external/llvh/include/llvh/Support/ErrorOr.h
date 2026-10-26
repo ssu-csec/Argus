@@ -24,35 +24,35 @@
 
 namespace llvh {
 
-/// Represents either an error or a value T.
-///
-/// ErrorOr<T> is a pointer-like class that represents the result of an
-/// operation. The result is either an error, or a value of type T. This is
-/// designed to emulate the usage of returning a pointer where nullptr indicates
-/// failure. However instead of just knowing that the operation failed, we also
-/// have an error_code and optional user data that describes why it failed.
-///
-/// It is used like the following.
-/// \code
-///   ErrorOr<Buffer> getBuffer();
-///
-///   auto buffer = getBuffer();
-///   if (error_code ec = buffer.getError())
-///     return ec;
-///   buffer->write("adena");
-/// \endcode
-///
-///
-/// Implicit conversion to bool returns true if there is a usable value. The
-/// unary * and -> operators provide pointer like access to the value. Accessing
-/// the value when there is an error has undefined behavior.
-///
-/// When T is a reference type the behavior is slightly different. The reference
-/// is held in a std::reference_wrapper<std::remove_reference<T>::type>, and
-/// there is special handling to make operator -> work as if T was not a
-/// reference.
-///
-/// T cannot be a rvalue reference.
+                                            
+   
+                                                                       
+                                                                           
+                                                                                
+                                                                               
+                                                                           
+   
+                                  
+         
+                                  
+   
+                                
+                                            
+                  
+                             
+            
+   
+   
+                                                                            
+                                                                                
+                                                            
+   
+                                                                                
+                                                                            
+                                                                        
+              
+   
+                                   
 template<class T>
 class ErrorOr {
   template <class OtherT> friend class ErrorOr;
@@ -124,8 +124,8 @@ public:
     moveConstruct(std::move(Other));
   }
 
-  // This might eventually need SFINAE but it's more complex than is_convertible
-  // & I'm too lazy to write it right now.
+                                                                                
+                                          
   template <class OtherT>
   explicit ErrorOr(
       ErrorOr<OtherT> &&Other,
@@ -149,7 +149,7 @@ public:
       getStorage()->~storage_type();
   }
 
-  /// Return false if there is an error.
+                                        
   explicit operator bool() const {
     return !HasError;
   }
@@ -177,11 +177,11 @@ private:
   template <class OtherT>
   void copyConstruct(const ErrorOr<OtherT> &Other) {
     if (!Other.HasError) {
-      // Get the other value.
+                             
       HasError = false;
       new (getStorage()) storage_type(*Other.getStorage());
     } else {
-      // Get other's error.
+                           
       HasError = true;
       new (getErrorStorage()) std::error_code(Other.getError());
     }
@@ -209,11 +209,11 @@ private:
   template <class OtherT>
   void moveConstruct(ErrorOr<OtherT> &&Other) {
     if (!Other.HasError) {
-      // Get the other value.
+                             
       HasError = false;
       new (getStorage()) storage_type(std::move(*Other.getStorage()));
     } else {
-      // Get other's error.
+                           
       HasError = true;
       new (getErrorStorage()) std::error_code(Other.getError());
     }
@@ -274,6 +274,6 @@ operator==(const ErrorOr<T> &Err, E Code) {
   return Err.getError() == Code;
 }
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_SUPPORT_ERROROR_H
+#endif                          

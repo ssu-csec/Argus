@@ -29,9 +29,9 @@ namespace vm {
 
 namespace {
 
-/// This class wraps the functionality required to parse a JSON string into
-/// a VM runtime value. It expects a UTF8 string as input, and returns a
-/// HermesValue when parse is called.
+                                                                           
+                                                                        
+                                     
 class RuntimeJSONParser {
  public:
   static constexpr int32_t MAX_RECURSION_DEPTH =
@@ -43,24 +43,24 @@ class RuntimeJSONParser {
       ;
 
  private:
-  /// The VM runtime.
+                     
   Runtime &runtime_;
 
-  /// The lexer.
+                
   JSONLexer lexer_;
 
-  /// Stores the optional reviver parameter.
-  /// https://es5.github.io/#x15.12.2
+                                            
+                                     
   Handle<Callable> reviver_;
 
-  /// A temporary handle, to avoid creating new handles when a temporary one
-  /// is needed to protect some HermesValue.
+                                                                            
+                                            
   MutableHandle<> tmpHandle_;
 
-  /// How many more nesting levels we allow before error.
-  /// Decremented every time a nested level is started,
-  /// and incremented again when leaving the nest.
-  /// If it drops below 0 while parsing, raise a stack overflow.
+                                                         
+                                                       
+                                                  
+                                                                
   int32_t remainingDepth_{MAX_RECURSION_DEPTH};
 
  public:
@@ -73,98 +73,98 @@ class RuntimeJSONParser {
         reviver_(reviver),
         tmpHandle_(runtime) {}
 
-  /// Parse JSON string through lexer_, create objects using runtime_.
-  /// If errors occur, this function will return undefined, and the error
-  /// should be kept inside SourceErrorManager.
+                                                                      
+                                                                         
+                                               
   CallResult<HermesValue> parse();
 
  private:
-  /// Parse a JSON value, starting from the current token.
-  /// When this function is finished, the current token will be set
-  /// to the next token after the current parsed value.
+                                                          
+                                                                   
+                                                       
   CallResult<HermesValue> parseValue();
 
-  /// Parse a JSON array, starting from the "[" token.
-  /// When this function is finished, the current token must be "]".
+                                                      
+                                                                    
   CallResult<HermesValue> parseArray();
 
-  /// Parse a JSON object, starting from the "{" token.
-  /// When this function is finished, the current token must be "}".
+                                                       
+                                                                    
   CallResult<HermesValue> parseObject();
 
-  /// Use reviver to filter the result.
+                                       
   CallResult<HermesValue> revive(Handle<> value);
 
-  /// The abstract operation Walk is a recursive abstract operation that takes
-  /// two parameters: a holder object and the String name of a property in
+                                                                              
+                                                                          
   CallResult<HermesValue> operationWalk(
       Handle<JSObject> holder,
       Handle<> property);
 
-  /// Given value and key, recursively call operationWalk to generate a new
-  /// filtered value. It's a helper function for operationWalk, and does not
-  /// need to return a value
+                                                                           
+                                                                            
+                            
   ExecutionStatus filter(Handle<JSObject> val, Handle<> key);
 };
 
-/// This class wraps the functionality required to stringify an object
-/// as JSON.
+                                                                      
+            
 class JSONStringifyer {
-  /// The runtime.
+                  
   Runtime &runtime_;
 
-  /// The ReplacerFunction, initialized from the "replacer" argument in
-  /// stringify.
+                                                                       
+                
   MutableHandle<Callable> replacerFunction_;
 
-  /// The gap string, which will be used to construct indent.
-  /// Initialized from the "space" argument in stringify.
-  /// gap_ will be nullptr if no gap is specified or if the gap is an empty
-  /// string. This means that if gap_ is not nullptr, it will not be
-  /// an empty string.
+                                                             
+                                                         
+                                                                           
+                                                                    
+                      
   MutableHandle<StringPrimitive> gap_;
 
-  /// The PropertyList, constructed from the "replacer" argument in stringify.
+                                                                              
   MutableHandle<JSArray> propertyList_;
 
-  /// The stack, used at runtime by operationJA and operationJO to store
-  /// `value_` for recursions.
+                                                                        
+                              
   MutableHandle<PropStorage> stackValue_;
 
-  /// An additional stack just for operationJO to store `K` for recursions.
+                                                                           
   MutableHandle<PropStorage> stackJO_;
 
-  /// A temporary handle, to avoid creating new handles when a temporary one
-  /// is needed.
-  /// Note: this should be used with care because it can be shared among
-  /// functions.
+                                                                            
+                
+                                                                        
+                
   MutableHandle<> tmpHandle_;
 
-  /// A second temporary handle for when the first is taken.
+                                                            
   MutableHandle<> tmpHandle2_;
 
-  /// Handle used by operationStr to store the value.
+                                                     
   MutableHandle<> operationStrValue_;
 
-  /// Handle used by operationJO to store K.
+                                            
   MutableHandle<JSArray> operationJOK_;
 
-  /// The holder argument passed to operationStr.
-  /// We define a member variable here to avoid creating a new handle
-  /// each time we are calling operationStr.
+                                                 
+                                                                     
+                                            
   MutableHandle<JSObject> operationStrHolder_;
 
-  /// The current depth of recursion, used at runtime by operationJA and
-  /// operationJO. This is used as a stack overflow guard in stringifying. It
-  /// also doubles as an indent counter for prettified JS.
+                                                                        
+                                                                             
+                                                          
   uint32_t depthCount_{0};
 
-  /// The max amount that depthCount_ is allowed to reach. Once it's reached, an
-  /// exception will be thrown.
+                                                                                
+                               
   static constexpr uint32_t MAX_RECURSION_DEPTH{
       RuntimeJSONParser::MAX_RECURSION_DEPTH};
 
-  /// The output buffer. The serialization process will append into it.
+                                                                       
   llvh::SmallVector<char16_t, 32> output_{};
 
  public:
@@ -200,65 +200,65 @@ class JSONStringifyer {
     return initializeSpace(space);
   }
 
-  /// Stringify \p value.
+                         
   CallResult<HermesValue> stringify(Handle<> value);
 
  private:
-  /// Check the type of replacer, initialize
-  /// ReplacerFunction (replacerFunction_) and PropertyList (propertyList_).
-  /// Covers step 3 and 4 in ES5.1 15.12.3.
+                                            
+                                                                            
+                                           
   LLVM_NODISCARD ExecutionStatus initializeReplacer(Handle<> replacer);
 
-  /// Check the type of space, initialize gap (gap_).
-  /// Covers step 5, 6, 7, 8 in ES5.1 15.12.3.
+                                                     
+                                              
   ExecutionStatus initializeSpace(Handle<> space);
 
-  /// Implement the Str(key, holder) abstract operation to serialize a value.
-  /// According to the spec, \p key should always be a string.
-  /// However if this function is called from operationJA, we
-  /// we don't want to convert every index into string.
-  /// Hence we leave the key as it is, and convert them to string if needed.
-  /// The holder is always stored in operationStrHolder_ by caller.
-  /// \return whether the result is not undefined.
+                                                                             
+                                                              
+                                                             
+                                                       
+                                                                            
+                                                                   
+                                                  
   CallResult<bool> operationStr(HermesValue key);
 
-  /// Implement the abstract operation Quote(value).
-  /// It wraps a String value in double quotes and escapes characters within it.
+                                                    
+                                                                                
   void operationQuote(StringView value);
 
-  /// Implement the abstract operation JA(value). The value to operate on
-  /// is always the current last element in stackValue_.
-  /// It serializes an array.
+                                                                         
+                                                        
+                             
   ExecutionStatus operationJA();
 
-  /// Implement the abstract operation JO(value). The value to operate on
-  /// is always the current last element in stackValue_.
-  /// It serializes an object.
+                                                                         
+                                                        
+                              
   ExecutionStatus operationJO();
 
-  /// Append '\n' and indent to output_.
-  /// The indent is constructed according to depthCount_.
+                                        
+                                                         
   void indent();
 
-  /// Push a value to stack when traversing the object recursively.
-  /// It also checks if the value already exsists in the stack for
-  /// cyclic recursion.
-  /// \return true if the push is successful (no cyclic).
+                                                                   
+                                                                  
+                       
+                                                         
   CallResult<bool> pushValueToStack(HermesValue value);
 
-  /// Pop the top of stack.
+                           
   void popValueFromStack();
 
-  /// Append the string indicated as \p identifierID to output_.
+                                                                
   void appendToOutput(SymbolID identifierID);
 
-  /// Append the string indicated as \p str to output_.
+                                                       
   void appendToOutput(const StringPrimitive *str);
 };
-} // namespace
+}             
 
 CallResult<HermesValue> RuntimeJSONParser::parse() {
-  // parseValue() requires one token to start with.
+                                                   
   if (LLVM_UNLIKELY(lexer_.advance() == ExecutionStatus::EXCEPTION)) {
     return ExecutionStatus::EXCEPTION;
   }
@@ -267,7 +267,7 @@ CallResult<HermesValue> RuntimeJSONParser::parse() {
     return ExecutionStatus::EXCEPTION;
   }
 
-  // Make sure the next token must be EOF.
+                                          
   if (LLVM_UNLIKELY(lexer_.getCurToken()->getKind() != JSONTokenKind::Eof)) {
     return lexer_.errorUnexpectedChar();
   }
@@ -392,8 +392,8 @@ CallResult<HermesValue> RuntimeJSONParser::parseObject() {
       "Wrong entrance to parseObject");
   auto object = runtime_.makeHandle(JSObject::create(runtime_));
 
-  // If the lexer encounters a string in this context, it should treat it as a
-  // key string, which means it will store the string as a symbol.
+                                                                              
+                                                                  
   if (LLVM_UNLIKELY(
           lexer_.advanceStrAsSymbol() == ExecutionStatus::EXCEPTION)) {
     return ExecutionStatus::EXCEPTION;
@@ -475,7 +475,7 @@ CallResult<HermesValue> RuntimeJSONParser::revive(Handle<> value) {
 CallResult<HermesValue> RuntimeJSONParser::operationWalk(
     Handle<JSObject> holder,
     Handle<> property) {
-  // The operation is recursive so it needs a GCScope.
+                                                      
   GCScope gcScope(runtime_);
 
   llvh::SaveAndRestore<decltype(remainingDepth_)> oldDepth{
@@ -505,7 +505,7 @@ CallResult<HermesValue> RuntimeJSONParser::operationWalk(
     GCScopeMarkerRAII marker(runtime_);
     for (uint64_t index = 0, e = *lenRes; index < e; ++index) {
       tmpHandle = HermesValue::encodeUntrustedNumberValue(index);
-      // Note that deleting elements doesn't affect array length.
+                                                                 
       if (LLVM_UNLIKELY(
               filter(objHandle, tmpHandle) == ExecutionStatus::EXCEPTION)) {
         return ExecutionStatus::EXCEPTION;
@@ -528,8 +528,8 @@ CallResult<HermesValue> RuntimeJSONParser::operationWalk(
       marker.flush();
     }
   }
-  // We have delayed converting the property to a string if it was index.
-  // Now we have to do it because we are passing it to the reviver.
+                                                                         
+                                                                   
   tmpHandle = *property;
   auto strRes = toString_RJS(runtime_, tmpHandle);
   if (LLVM_UNLIKELY(strRes == ExecutionStatus::EXCEPTION)) {
@@ -572,8 +572,8 @@ CallResult<HermesValue> runtimeJSONParse(
     Runtime &runtime,
     Handle<StringPrimitive> jsonString,
     Handle<Callable> reviver) {
-  // Our parser requires UTF16 data that does not move during GCs, so
-  // in most cases we'll need to copy, except for external 16-bit strings.
+                                                                     
+                                                                          
   UTF16Ref ref;
   SmallU16String<32> storage;
   if (LLVM_UNLIKELY(jsonString->isExternal() && !jsonString->isASCII())) {
@@ -599,11 +599,11 @@ CallResult<HermesValue> runtimeJSONParseRef(
 ExecutionStatus JSONStringifyer::initializeReplacer(Handle<> replacer) {
   if (!vmisa<JSObject>(*replacer))
     return ExecutionStatus::RETURNED;
-  // replacer is an object.
+                           
 
   if ((replacerFunction_ = dyn_vmcast<Callable>(*replacer)))
     return ExecutionStatus::RETURNED;
-  // replacer is not a callable.
+                                
 
   auto replacerArray = Handle<JSObject>::dyn_vmcast(replacer);
   CallResult<bool> isArrayRes =
@@ -613,7 +613,7 @@ ExecutionStatus JSONStringifyer::initializeReplacer(Handle<> replacer) {
   }
   if (!*isArrayRes)
     return ExecutionStatus::RETURNED;
-  // replacer is arrayish
+                         
 
   CallResult<uint64_t> lenRes = getArrayLikeLength_RJS(replacerArray, runtime_);
   if (LLVM_UNLIKELY(lenRes == ExecutionStatus::EXCEPTION)) {
@@ -629,13 +629,13 @@ ExecutionStatus JSONStringifyer::initializeReplacer(Handle<> replacer) {
   }
   propertyList_ = arrRes->get();
 
-  // Iterate through all indexes, in ascending order.
+                                                     
   GCScope gcScope{runtime_};
   auto marker = gcScope.createMarker();
   for (uint64_t i = 0, e = *lenRes; i < e; ++i) {
     gcScope.flushToMarker(marker);
 
-    // Get the property value.
+                              
     tmpHandle_ = HermesValue::encodeUntrustedNumberValue(i);
     auto propRes =
         JSObject::getComputed_RJS(replacerArray, runtime_, tmpHandle_);
@@ -643,8 +643,8 @@ ExecutionStatus JSONStringifyer::initializeReplacer(Handle<> replacer) {
       return ExecutionStatus::EXCEPTION;
     }
     PseudoHandle<> v = std::move(*propRes);
-    // Convert v to string and store into item, if v is string, number, JSString
-    // or JSNumber.
+                                                                                
+                   
     if (v->isString()) {
       tmpHandle_ = std::move(v);
     } else if (
@@ -661,7 +661,7 @@ ExecutionStatus JSONStringifyer::initializeReplacer(Handle<> replacer) {
 
     if (tmpHandle_->isUndefined())
       continue;
-    // We only add item to propertyList if item is not already an element.
+                                                                          
     bool exists = false;
     auto len = propertyList_->getEndIndex();
     for (uint32_t i = 0; i < len; ++i) {
@@ -699,11 +699,11 @@ ExecutionStatus JSONStringifyer::initializeSpace(Handle<> space) {
     assert(
         intRes != ExecutionStatus::EXCEPTION &&
         "toInteger on a number cannot throw");
-    // Clamp result to [0,10].
+                              
     auto spaceCount =
         static_cast<int>(std::max(0.0, std::min(10.0, intRes->getNumber())));
     if (spaceCount > 0) {
-      // Construct a string with spaceCount spaces.
+                                                   
       llvh::SmallString<32> spaces;
       for (int i = 0; i < spaceCount; ++i) {
         spaces.push_back(' ');
@@ -722,7 +722,7 @@ ExecutionStatus JSONStringifyer::initializeSpace(Handle<> space) {
       }
       gap_ = strRes->getString();
     } else if (str->getStringLength() > 0) {
-      // If the string is empty, we don't set the gap.
+                                                      
       gap_ = str.get();
     }
   }
@@ -733,7 +733,7 @@ CallResult<bool> JSONStringifyer::operationStr(HermesValue key) {
   GCScopeMarkerRAII marker{runtime_};
   tmpHandle_ = key;
 
-  // Str.1: access holder[key].
+                               
   auto propRes =
       JSObject::getComputed_RJS(operationStrHolder_, runtime_, tmpHandle_);
   if (LLVM_UNLIKELY(propRes == ExecutionStatus::EXCEPTION)) {
@@ -741,7 +741,7 @@ CallResult<bool> JSONStringifyer::operationStr(HermesValue key) {
   }
   operationStrValue_.set(propRes->get());
 
-  // Str.2. If Type(value) is Object or BigInt, then
+                                                    
   MutableHandle<> hValueHV{runtime_, *operationStrValue_};
   if (vmisa<BigIntPrimitive>(*operationStrValue_)) {
     CallResult<HermesValue> hObjRes = toObject(runtime_, hValueHV);
@@ -754,8 +754,8 @@ CallResult<bool> JSONStringifyer::operationStr(HermesValue key) {
   }
 
   if (auto valueObj = Handle<JSObject>::dyn_vmcast(hValueHV)) {
-    // Str.2.
-    // Str.2.a: check if toJSON exists in value.
+             
+                                                
     if (LLVM_UNLIKELY(
             (propRes = JSObject::getNamedWithReceiver_RJS(
                  valueObj,
@@ -764,18 +764,18 @@ CallResult<bool> JSONStringifyer::operationStr(HermesValue key) {
                  operationStrValue_)) == ExecutionStatus::EXCEPTION)) {
       return ExecutionStatus::EXCEPTION;
     }
-    // Str.2.b: check if toJSON is a Callable.
+                                              
     if (auto toJSON = Handle<Callable>::dyn_vmcast(
             runtime_.makeHandle(std::move(*propRes)))) {
       if (!tmpHandle_->isString()) {
-        // Lazily convert key to a string.
+                                          
         auto status = toString_RJS(runtime_, tmpHandle_);
         assert(
             status != ExecutionStatus::EXCEPTION &&
             "toString on a property cannot fail");
         tmpHandle_ = status->getHermesValue();
       }
-      // Call toJSON with key as argument, value as this.
+                                                         
       auto callRes = Callable::executeCall1(
           toJSON, runtime_, operationStrValue_, *tmpHandle_);
       if (LLVM_UNLIKELY(callRes == ExecutionStatus::EXCEPTION)) {
@@ -785,19 +785,19 @@ CallResult<bool> JSONStringifyer::operationStr(HermesValue key) {
     }
   }
 
-  // Str.3.
+           
   if (replacerFunction_) {
-    // Str.3.a.
+               
     if (!tmpHandle_->isString()) {
-      // Lazily convert key to a string.
+                                        
       auto status = toString_RJS(runtime_, tmpHandle_);
       assert(
           status != ExecutionStatus::EXCEPTION &&
           "toString on a property cannot fail");
       tmpHandle_ = status->getHermesValue();
     }
-    // If ReplacerFunction exists, call it with key and value as argument,
-    // holder as this.
+                                                                          
+                      
     auto callRes = Callable::executeCall2(
         replacerFunction_,
         runtime_,
@@ -810,38 +810,38 @@ CallResult<bool> JSONStringifyer::operationStr(HermesValue key) {
     operationStrValue_ = std::move(*callRes);
   }
 
-  // Str.4: unbox value if necessary.
-  // If Type(value) is Object, then
+                                     
+                                   
   if (vmisa<JSNumber>(*operationStrValue_)) {
-    //  If value has a [[NumberData]] internal slot, then
-    //      Set value to ? ToNumber(value).
+                                                         
+                                           
     auto numRes = toNumber_RJS(runtime_, operationStrValue_);
     if (LLVM_UNLIKELY(numRes == ExecutionStatus::EXCEPTION)) {
       return ExecutionStatus::EXCEPTION;
     }
     operationStrValue_ = *numRes;
   } else if (vmisa<JSString>(*operationStrValue_)) {
-    //  Else if value has a [[StringData]] internal slot, then
-    //      Set value to ? ToString(value).
+                                                              
+                                           
     auto strRes = toString_RJS(runtime_, operationStrValue_);
     if (LLVM_UNLIKELY(strRes == ExecutionStatus::EXCEPTION)) {
       return ExecutionStatus::EXCEPTION;
     }
     operationStrValue_ = strRes->getHermesValue();
   } else if (auto *jsBool = dyn_vmcast<JSBoolean>(*operationStrValue_)) {
-    //  Else if value has a [[BooleanData]] internal slot, then
-    //      Set value to value.[[BooleanData]].
+                                                               
+                                               
     operationStrValue_ =
         HermesValue::encodeBoolValue(jsBool->getPrimitiveBoolean());
   } else if (auto jsBigInt = dyn_vmcast<JSBigInt>(*operationStrValue_)) {
-    //  Else if value has a [[BigIntData]] internal slot, then
-    //      Set value to value.[[BigIntData]]
+                                                              
+                                             
     BigIntPrimitive *bigintData =
         JSBigInt::getPrimitiveBigInt(jsBigInt, runtime_);
     operationStrValue_ = HermesValue::encodeBigIntValue(bigintData);
   }
 
-  // Str.5.
+           
   if (operationStrValue_->isNull()) {
     appendToOutput(Predefined::getSymbolID(Predefined::null));
     return true;
@@ -849,16 +849,16 @@ CallResult<bool> JSONStringifyer::operationStr(HermesValue key) {
 
   if (operationStrValue_->isBool()) {
     if (operationStrValue_->getBool()) {
-      // Str.6.
+               
       appendToOutput(Predefined::getSymbolID(Predefined::trueStr));
     } else {
-      // Str.7.
+               
       appendToOutput(Predefined::getSymbolID(Predefined::falseStr));
     }
     return true;
   }
 
-  // Str.8.
+           
   if (operationStrValue_->isString()) {
     operationQuote(
         StringPrimitive::createStringView(
@@ -866,7 +866,7 @@ CallResult<bool> JSONStringifyer::operationStr(HermesValue key) {
     return true;
   }
 
-  // Str.9.
+           
   if (operationStrValue_->isNumber()) {
     if (std::isfinite(operationStrValue_->getNumber())) {
       auto status = toString_RJS(runtime_, operationStrValue_);
@@ -880,12 +880,12 @@ CallResult<bool> JSONStringifyer::operationStr(HermesValue key) {
     return true;
   }
 
-  // Str.10
+           
   if (vmisa<BigIntPrimitive>(*operationStrValue_)) {
     return runtime_.raiseTypeError("Do not know how to serialize a BigInt");
   }
 
-  // Str.11.
+            
   if (vmisa<JSObject>(*operationStrValue_) &&
       !vmisa<Callable>(*operationStrValue_)) {
     auto cr = pushValueToStack(*operationStrValue_);
@@ -896,8 +896,8 @@ CallResult<bool> JSONStringifyer::operationStr(HermesValue key) {
     if (LLVM_UNLIKELY(!*cr)) {
       return runtime_.raiseTypeError("cyclical structure in JSON object");
     }
-    // Flush just before the recursive call (pushValueToStack can create
-    // handles).
+                                                                        
+                
     marker.flush();
     CallResult<bool> isArrayRes =
         isArray(runtime_, vmcast<JSObject>(*operationStrValue_));
@@ -912,7 +912,7 @@ CallResult<bool> JSONStringifyer::operationStr(HermesValue key) {
     return true;
   }
 
-  // Str.12.
+            
   return false;
 }
 
@@ -929,9 +929,9 @@ void JSONStringifyer::operationQuote(StringView value) {
 ExecutionStatus JSONStringifyer::operationJA() {
   GCScopeMarkerRAII marker{runtime_};
 
-  // JA.3.
+          
   auto stepBack = depthCount_;
-  // JA.4.
+          
   if (depthCount_ + 1 >= MAX_RECURSION_DEPTH) {
     return runtime_.raiseStackOverflow(
         Runtime::StackOverflowKind::JSONStringify);
@@ -947,27 +947,27 @@ ExecutionStatus JSONStringifyer::operationJA() {
     return ExecutionStatus::EXCEPTION;
   }
   if (*lenRes > 0) {
-    // If array is not empty, we need to lead with an indent.
+                                                             
     indent();
   }
-  // JA.5, 6, 7, 8.
+                   
   for (uint64_t index = 0; index < *lenRes; ++index) {
     if (index > 0) {
-      // JA.10.
+               
       output_.push_back(u',');
       indent();
     }
-    // JA.8.a.
+              
     operationStrHolder_ = vmcast<JSObject>(
         stackValue_->at(stackValue_->size() - 1).getObject(runtime_));
-    // Flush just before the recursion in case any handles were created.
+                                                                        
     marker.flush();
     auto status = operationStr(HermesValue::encodeUntrustedNumberValue(index));
     if (LLVM_UNLIKELY(status == ExecutionStatus::EXCEPTION)) {
       return ExecutionStatus::EXCEPTION;
     }
     if (LLVM_UNLIKELY(!status.getValue())) {
-      // operationStr returns undefined, we need to replace with null.
+                                                                      
       appendToOutput(Predefined::getSymbolID(Predefined::null));
     }
   }
@@ -983,9 +983,9 @@ ExecutionStatus JSONStringifyer::operationJA() {
 ExecutionStatus JSONStringifyer::operationJO() {
   GCScopeMarkerRAII marker{runtime_};
 
-  // JO.3.
+          
   auto stepBack = depthCount_;
-  // JO.4.
+          
   if (depthCount_ + 1 >= MAX_RECURSION_DEPTH) {
     return runtime_.raiseStackOverflow(
         Runtime::StackOverflowKind::JSONStringify);
@@ -996,17 +996,17 @@ ExecutionStatus JSONStringifyer::operationJO() {
   indent();
 
   if (propertyList_) {
-    // JO.5.
+            
     operationJOK_ = propertyList_.get();
   } else {
-    // JO.6.
+            
     tmpHandle_ = HermesValue::encodeObjectValue(
         stackValue_->at(stackValue_->size() - 1).getObject(runtime_));
     if (LLVM_LIKELY(!Handle<JSObject>::vmcast(tmpHandle_)->isProxyObject())) {
-      // enumerableOwnProperties_RJS is the spec definition, and is
-      // used below on proxies so the correct traps get called.  In
-      // the common case of a non-proxy object, we can do less work by
-      // calling getOwnPropertyNames.
+                                                                   
+                                                                   
+                                                                      
+                                     
       auto cr = JSObject::getOwnPropertyNames(
           Handle<JSObject>::vmcast(tmpHandle_), runtime_, true);
       if (cr == ExecutionStatus::EXCEPTION) {
@@ -1027,29 +1027,29 @@ ExecutionStatus JSONStringifyer::operationJO() {
 
   marker.flush();
 
-  // JO.8.
+          
   bool hasElement = false;
   for (uint32_t index = 0, len = operationJOK_->getEndIndex(); index < len;
        ++index) {
-    // JO.8.a.
-    // We are speculating that the Str operation will not return undefined,
-    // and just append the key/value pair to the output. If it turns out
-    // that the Str operation does return undefined, we roll back to
-    // curLocation.
+              
+                                                                           
+                                                                        
+                                                                    
+                   
     auto savedLocation = output_.size();
 
     if (hasElement) {
-      // JO.10.
+               
       output_.push_back(u',');
       indent();
     }
 
     tmpHandle_ = operationJOK_->at(runtime_, index).unboxToHV(runtime_);
     if (LLVM_UNLIKELY(!tmpHandle_->isString())) {
-      // property may come from getOwnPropertyNames, which may contain numbers.
-      // getOwnPropertyNames and propertyList_ are both only populated
-      // with strings, numbers, and undefined only.
-      // None of them are objects, so toString cannot throw.
+                                                                               
+                                                                      
+                                                   
+                                                            
       assert(!tmpHandle_->isObject() && "property name is an object");
       auto status = toString_RJS(runtime_, tmpHandle_);
       assert(
@@ -1057,19 +1057,19 @@ ExecutionStatus JSONStringifyer::operationJO() {
           "toString on a property cannot fail");
       tmpHandle_ = status->getHermesValue();
     }
-    // tmpHandle now contains property as string.
-    // JO.8.b.i
+                                                 
+               
     operationQuote(
         StringPrimitive::createStringView(
             runtime_, Handle<StringPrimitive>::vmcast(tmpHandle_)));
-    // JO.8.b.ii
+                
     output_.push_back(u':');
-    // JO.8.b.iii
+                 
     if (gap_.get()) {
       output_.push_back(u' ');
     }
 
-    // JO.9.a.
+              
     operationStrHolder_ = vmcast<JSObject>(
         stackValue_->at(stackValue_->size() - 1).getObject(runtime_));
 
@@ -1079,7 +1079,7 @@ ExecutionStatus JSONStringifyer::operationJO() {
       return ExecutionStatus::EXCEPTION;
     }
 
-    // Flush just before recursion (propStoragePushBack may create handles).
+                                                                            
     marker.flush();
     auto result = operationStr(*tmpHandle_);
 
@@ -1091,20 +1091,20 @@ ExecutionStatus JSONStringifyer::operationJO() {
     }
 
     if (LLVM_UNLIKELY(!result.getValue())) {
-      // Str returns undefined, we need to roll back.
+                                                     
       output_.resize(savedLocation);
     } else {
       hasElement = true;
     }
   }
-  // It's important to reset depthCount_ first, because the last
-  // indent before } should be the old indent.
+                                                                
+                                              
   depthCount_ = stepBack;
 
   if (hasElement) {
     indent();
   } else {
-    // If the object is empty, we need to roll back the first indent.
+                                                                     
     output_.resize(beginningLoc);
   }
   output_.push_back(u'}');
@@ -1151,11 +1151,11 @@ void JSONStringifyer::appendToOutput(const StringPrimitive *str) {
 }
 
 CallResult<HermesValue> JSONStringifyer::stringify(Handle<> value) {
-  // All previous steps have been covered by the constructor.
-  // Clear the output buffer.
+                                                             
+                             
   output_.clear();
 
-  // Step 9, 10 in ES5.1 15.12.3.
+                                 
   operationStrHolder_ = JSObject::create(runtime_).get();
   auto status = JSObject::defineOwnProperty(
       operationStrHolder_,
@@ -1168,7 +1168,7 @@ CallResult<HermesValue> JSONStringifyer::stringify(Handle<> value) {
       "defineOwnProperty on a newly created object cannot fail");
   (void)status;
 
-  // Step 11 in ES5.1 15.12.3.
+                              
   status = operationStr(
       HermesValue::encodeStringValue(
           runtime_.getPredefinedString(Predefined::emptyString)));
@@ -1196,5 +1196,5 @@ CallResult<HermesValue> runtimeJSONStringify(
   return stringifyer.stringify(value);
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

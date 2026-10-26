@@ -15,14 +15,14 @@
 
 namespace hermes {
 
-/// SourceErrorManager coordinate translator that translates compiling source
-/// code's line:column to its original location based on input source map.
+                                                                             
+                                                                          
 class SourceMapTranslator final : public SourceErrorManager::ICoordTranslator {
-  /// Parsed input source maps for each input JS file.
-  /// js file's buffer id => SourceMap.
+                                                      
+                                       
   llvh::DenseMap<unsigned, std::shared_ptr<SourceMap>> sourceMaps_;
 
-  /// For lazily adding new virtual buffer for translated original source file.
+                                                                               
   SourceErrorManager &sourceErrorManager_;
 
  public:
@@ -31,14 +31,14 @@ class SourceMapTranslator final : public SourceErrorManager::ICoordTranslator {
 
   ~SourceMapTranslator() override = default;
 
-  /// Add new fileBufId => sourceMap mapping.
-  /// \p fileBufId is the compiling js file corresponding to \p sourceMap.
+                                             
+                                                                          
   void addSourceMap(unsigned fileBufId, std::unique_ptr<SourceMap> sourceMap);
 
-  /// Translate \p coords to its original location in-place.
+                                                            
   void translate(SourceErrorManager::SourceCoords &coords) override;
 };
 
-} // namespace hermes
+}                    
 
 #endif

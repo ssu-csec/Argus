@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//===----------------------------------------------------------------------===//
-/// \file
-/// ES6.0 23.1 Initialize the Map constructor.
-//===----------------------------------------------------------------------===//
+                                                                                
+         
+                                              
+                                                                                
 
 #include "JSLibInternal.h"
 
@@ -20,7 +20,7 @@ namespace vm {
 Handle<JSObject> createMapConstructor(Runtime &runtime) {
   auto mapPrototype = Handle<JSObject>::vmcast(&runtime.mapPrototype);
 
-  // Map.prototype.xxx methods.
+                               
   defineMethod(
       runtime,
       mapPrototype,
@@ -159,7 +159,7 @@ mapConstructor(void *, Runtime &runtime, NativeArgs args) {
     return ExecutionStatus::EXCEPTION;
   }
 
-  // ES6.0 23.1.1.1.7: Cache adder across all iterations of the loop.
+                                                                     
   auto adder =
       Handle<Callable>::dyn_vmcast(runtime.makeHandle(std::move(*propRes)));
   if (!adder) {
@@ -270,7 +270,7 @@ mapPrototypeKeys(void *, Runtime &runtime, NativeArgs args) {
   return iterator.getHermesValue();
 }
 
-// ES12 23.1.3.9 Map.prototype.set ( key, value )
+                                                 
 CallResult<HermesValue>
 mapPrototypeSet(void *, Runtime &runtime, NativeArgs args) {
   auto selfHandle = args.dyncastThis<JSMap>();
@@ -278,8 +278,8 @@ mapPrototypeSet(void *, Runtime &runtime, NativeArgs args) {
     return runtime.raiseTypeError("Non-Map object called on Map.prototype.set");
   }
   auto keyHandle = args.getArgHandle(0);
-  // 5. If key is -0, set key to +0.
-  // N.B. in the case of Map, only key should be normalized but not the value.
+                                    
+                                                                              
   auto key = keyHandle->isNumber() && keyHandle->getNumber() == 0
       ? HandleRootOwner::getZeroValue()
       : keyHandle;
@@ -350,5 +350,5 @@ mapIteratorPrototypeNext(void *, Runtime &runtime, NativeArgs args) {
   }
   return *cr;
 }
-} // namespace vm
-} // namespace hermes
+}                
+}                    

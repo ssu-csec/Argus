@@ -41,18 +41,18 @@
 #include <sys/types.h>
 typedef off_t llvm_regoff_t;
 typedef struct {
-  llvm_regoff_t rm_so;		/* start of match */
-  llvm_regoff_t rm_eo;		/* end of match */
+  llvm_regoff_t rm_so;		                    
+  llvm_regoff_t rm_eo;		                  
 } llvm_regmatch_t;
 
 typedef struct llvm_regex {
   int re_magic;
-  size_t re_nsub;		/* number of parenthesized subexpressions */
-  const char *re_endp;	/* end pointer for REG_PEND */
-  struct re_guts *re_g;	/* none of your business :-) */
+  size_t re_nsub;		                                            
+  const char *re_endp;	                              
+  struct re_guts *re_g;	                               
 } llvm_regex_t;
 
-/* llvh_regcomp() flags */
+                          
 #define	REG_BASIC	0000
 #define	REG_EXTENDED	0001
 #define	REG_ICASE	0002
@@ -62,7 +62,7 @@ typedef struct llvm_regex {
 #define	REG_PEND	0040
 #define	REG_DUMP	0200
 
-/* llvh_regerror() flags */
+                           
 #define	REG_NOMATCH	 1
 #define	REG_BADPAT	 2
 #define	REG_ECOLLATE	 3
@@ -79,16 +79,16 @@ typedef struct llvm_regex {
 #define	REG_EMPTY	14
 #define	REG_ASSERT	15
 #define	REG_INVARG	16
-#define	REG_ATOI	255	/* convert name to number (!) */
-#define	REG_ITOA	0400	/* convert number to name (!) */
+#define	REG_ATOI	255	                                
+#define	REG_ITOA	0400	                                
 
-/* llvh_regexec() flags */
+                          
 #define	REG_NOTBOL	00001
 #define	REG_NOTEOL	00002
 #define	REG_STARTEND	00004
-#define	REG_TRACE	00400	/* tracing of execution */
-#define	REG_LARGE	01000	/* force large representation */
-#define	REG_BACKR	02000	/* force use of backref code */
+#define	REG_TRACE	00400	                          
+#define	REG_LARGE	01000	                                
+#define	REG_BACKR	02000	                               
 
 #ifdef __cplusplus
 extern "C" {
@@ -105,4 +105,4 @@ size_t  llvh_strlcpy(char *dst, const char *src, size_t siz);
 }
 #endif
 
-#endif /* !_REGEX_H_ */
+#endif                 

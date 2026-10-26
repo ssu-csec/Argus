@@ -22,8 +22,8 @@ namespace hermes {
 namespace hbc {
 
 namespace {
-/// In blockToFix, change all incoming Phi values from previousBlock to instead
-/// come from newBlock.
+                                                                               
+                       
 void updateIncomingPhiValues(
     BasicBlock *blockToFix,
     BasicBlock *previousBlock,
@@ -41,15 +41,15 @@ void updateIncomingPhiValues(
     }
   }
 }
-// Get the next instruction(s) after this Instruction. Creates branches as
-// necessary.
+                                                                          
+             
 llvh::SmallVector<Instruction *, 4> getInsertionPointsAfter(
     IRBuilder &builder,
     Instruction *inst) {
   llvh::SmallVector<Instruction *, 4> points;
 
   if (!llvh::isa<TerminatorInst>(inst)) {
-    // Easy case for non-terminators. Just return the next inst.
+                                                                
     auto pos = inst->getIterator();
     pos++;
     points.push_back(&*pos);
@@ -71,43 +71,43 @@ llvh::SmallVector<Instruction *, 4> getInsertionPointsAfter(
   return points;
 }
 
-/// Update the insertion point of the builder to the "entry insertion point"
-/// of the function, which is where we insert new lowered instructions that must
-/// execute on entry.
+                                                                            
+                                                                                
+                     
 void updateToEntryInsertionPoint(IRBuilder &builder, Function *F) {
   auto &BB = F->front();
   auto it = BB.begin();
   auto end = BB.end();
-  // Skip all HBCCreateEnvironmentInst.
+                                       
   while (it != end && llvh::isa<HBCCreateEnvironmentInst>(*it))
     ++it;
 
   builder.setInsertionPoint(&*it);
 }
 
-} // namespace
+}             
 
 bool LoadConstants::operandMustBeLiteral(Instruction *Inst, unsigned opIndex) {
-  // HBCLoadConstInst is meant to load a constant
+                                                 
   if (llvh::isa<HBCLoadConstInst>(Inst))
     return true;
 
-  // The operand of HBCLoadParamInst is a literal index.
+                                                        
   if (llvh::isa<HBCLoadParamInst>(Inst))
     return true;
 
   if (llvh::isa<HBCAllocObjectFromBufferInst>(Inst))
     return true;
 
-  // All operands of AllocArrayInst are literals.
+                                                 
   if (llvh::isa<AllocArrayInst>(Inst))
     return true;
 
   if (llvh::isa<AllocObjectInst>(Inst)) {
-    // The AllocObjectInst::SizeIdx is a literal.
+                                                 
     if (opIndex == AllocObjectInst::SizeIdx)
       return true;
-    // AllocObjectInst::ParentObjectIdx is a literal if it is the EmptySentinel.
+                                                                                
     if (opIndex == AllocObjectInst::ParentObjectIdx &&
         llvh::isa<EmptySentinel>(Inst->getOperand(opIndex)))
       return true;
@@ -115,63 +115,63 @@ bool LoadConstants::operandMustBeLiteral(Instruction *Inst, unsigned opIndex) {
     return false;
   }
 
-  // SwitchInst's rest of the operands are case values,
-  // hence they will stay as constant.
+                                                       
+                                      
   if (llvh::isa<SwitchInst>(Inst) && opIndex > 0)
     return true;
 
-  // StoreOwnPropertyInst and StoreNewOwnPropertyInst.
+                                                      
   if (auto *SOP = llvh::dyn_cast<StoreOwnPropertyInst>(Inst)) {
     if (opIndex == StoreOwnPropertyInst::PropertyIdx) {
       if (llvh::isa<StoreNewOwnPropertyInst>(Inst)) {
-        // In StoreNewOwnPropertyInst the property name must be a literal.
+                                                                          
         return true;
       }
 
-      // If the propery is a LiteralNumber, the property is enumerable, and it
-      // is a valid array index, it is coming from an array initialization and
-      // we will emit it as PutByIndex.
+                                                                              
+                                                                              
+                                       
       if (auto *LN = llvh::dyn_cast<LiteralNumber>(Inst->getOperand(opIndex))) {
         if (SOP->getIsEnumerable() && LN->convertToArrayIndex().hasValue())
           return true;
       }
     }
 
-    // StoreOwnPropertyInst's isEnumerable is a boolean constant.
+                                                                 
     if (opIndex == StoreOwnPropertyInst::IsEnumerableIdx)
       return true;
 
     return false;
   }
 
-  // If StorePropertyInst's property ID is a LiteralString, we will keep it
-  // untouched and emit try_put_by_id eventually.
+                                                                           
+                                                 
   if (llvh::isa<StorePropertyInst>(Inst) &&
       opIndex == StorePropertyInst::PropertyIdx &&
       llvh::isa<LiteralString>(Inst->getOperand(opIndex)))
     return true;
 
-  // If LoadPropertyInst's property ID is a LiteralString, we will keep it
-  // untouched and emit try_put_by_id eventually.
+                                                                          
+                                                 
   if (llvh::isa<LoadPropertyInst>(Inst) &&
       opIndex == LoadPropertyInst::PropertyIdx &&
       llvh::isa<LiteralString>(Inst->getOperand(opIndex)))
     return true;
 
-  // If DeletePropertyInst's property ID is a LiteralString, we will keep it
-  // untouched and emit try_put_by_id eventually.
+                                                                            
+                                                 
   if (llvh::isa<DeletePropertyInst>(Inst) &&
       opIndex == DeletePropertyInst::PropertyIdx &&
       llvh::isa<LiteralString>(Inst->getOperand(opIndex)))
     return true;
 
-  // StoreGetterSetterInst's isEnumerable is a boolean constant.
+                                                                
   if (llvh::isa<StoreGetterSetterInst>(Inst) &&
       opIndex == StoreGetterSetterInst::IsEnumerableIdx)
     return true;
 
-  // Both pattern and flags operands of the CreateRegExpInst
-  // are literal strings.
+                                                            
+                         
   if (llvh::isa<CreateRegExpInst>(Inst))
     return true;
 
@@ -181,25 +181,25 @@ bool LoadConstants::operandMustBeLiteral(Instruction *Inst, unsigned opIndex) {
        opIndex >= SwitchImmInst::FirstCaseIdx))
     return true;
 
-  /// CallBuiltin's callee and "this" should always be literals.
+                                                                
   if (llvh::isa<CallBuiltinInst>(Inst) &&
       (opIndex == CallBuiltinInst::CalleeIdx ||
        opIndex == CallBuiltinInst::ThisIdx))
     return true;
 
-  /// Call's new.target must be literal if it is undefined (well, it doesn't,
-  /// but an undefined new.target won't be emitted to bytecode, hence it doesn't
-  /// need to be loaded).
+                                                                             
+                                                                                
+                         
   if (llvh::isa<CallInst>(Inst) && opIndex == CallInst::NewTargetIdx)
     return true;
 
-  /// GetBuiltinClosureInst's builtin index is always literal.
+                                                              
   if (llvh::isa<GetBuiltinClosureInst>(Inst) &&
       opIndex == GetBuiltinClosureInst::BuiltinIndexIdx)
     return true;
 
 #ifdef HERMES_RUN_WASM
-  /// CallIntrinsic's IntrinsicIndexIdx should always be literals.
+                                                                  
   if (llvh::isa<CallIntrinsicInst>(Inst) &&
       (opIndex == CallIntrinsicInst::IntrinsicIndexIdx))
     return true;
@@ -214,7 +214,7 @@ bool LoadConstants::operandMustBeLiteral(Instruction *Inst, unsigned opIndex) {
       opIndex == ThrowIfHasRestrictedGlobalPropertyInst::PropertyIdx) {
     return true;
   }
-  // DirectEvalInst's isStrict is a boolean constant.
+                                                     
   if (llvh::isa<DirectEvalInst>(Inst) &&
       opIndex == DirectEvalInst::IsStrictIdx) {
     return true;
@@ -227,7 +227,7 @@ bool LoadConstants::runOnFunction(Function *F) {
   IRBuilder builder(F);
   bool changed = false;
 
-  /// Inserts and returns a load instruction for \p literal before \p where.
+                                                                            
   auto createLoadLiteral = [&builder](Literal *literal, Instruction *where) {
     builder.setInsertionPoint(where);
     return llvh::isa<GlobalObject>(literal)
@@ -238,10 +238,10 @@ bool LoadConstants::runOnFunction(Function *F) {
   for (BasicBlock &BB : *F) {
     for (auto &I : BB) {
       if (auto *phi = llvh::dyn_cast<PhiInst>(&I)) {
-        // Since PhiInsts must always be at the start of a basic block, we have
-        // to insert the load instruction in the predecessor. This lowering is
-        // sub-optimal: for conditional branches, the load constant operation
-        // will be performed before the branch decides which path to take.
+                                                                               
+                                                                              
+                                                                             
+                                                                          
         for (unsigned i = 0, e = phi->getNumEntries(); i < e; ++i) {
           auto [val, bb] = phi->getEntry(i);
           if (auto *literal = llvh::dyn_cast<Literal>(val)) {
@@ -252,10 +252,10 @@ bool LoadConstants::runOnFunction(Function *F) {
         }
         continue;
       }
-      // For all other instructions, insert load constants right before the they
-      // are needed. This minimizes their live range and therefore reduces
-      // register pressure. CodeMotion and CSE can later hoist and deduplicate
-      // them.
+                                                                                
+                                                                          
+                                                                              
+              
       for (unsigned i = 0, e = I.getNumOperands(); i < e; ++i) {
         if (auto *literal = llvh::dyn_cast<Literal>(I.getOperand(i))) {
           if (!operandMustBeLiteral(&I, i)) {
@@ -276,7 +276,7 @@ bool LoadParameters::runOnFunction(Function *F) {
 
   updateToEntryInsertionPoint(builder, F);
 
-  // Index of 0 is the "this" parameter.
+                                        
   unsigned index = 1;
   for (Parameter *p : F->getParameters()) {
     auto *load =
@@ -286,11 +286,11 @@ bool LoadParameters::runOnFunction(Function *F) {
     changed = true;
   }
 
-  // Lower accesses to "this".
+                              
   auto *thisParam = F->getThisParameter();
   if (thisParam && thisParam->hasUsers()) {
-    // In strict mode just use param 0 directly. In non-strict, we must coerce
-    // it to an object.
+                                                                              
+                       
     Value *getThisInst = F->isStrictMode()
         ? cast<Value>(
               builder.createHBCLoadParamInst(builder.getLiteralNumber(0)))
@@ -306,7 +306,7 @@ ScopeCreationInst *LowerLoadStoreFrameInst::getScope(
     Variable *var,
     ScopeCreationInst *environment) {
   if (var->getParent() == environment->getCreatedScopeDesc()) {
-    // Var's scope belongs to the current function.
+                                                   
     assert(
         var->getParent()->getFunction() == builder.getFunction() &&
         "Scope should only be found if var is not captured from another "
@@ -317,8 +317,8 @@ ScopeCreationInst *LowerLoadStoreFrameInst::getScope(
   auto *environmentWithParent =
       llvh::dyn_cast<NestedScopeCreationInst>(environment);
   if (!environmentWithParent) {
-    // Failed to find the variable in the current Function -- the first scope in
-    // a Function is always an non-NestedScopeCreationInst.
+                                                                                
+                                                           
     assert(
         var->getParent()->getFunction() != builder.getFunction() &&
         "Failed to find scope in current function for local variable.");
@@ -326,7 +326,7 @@ ScopeCreationInst *LowerLoadStoreFrameInst::getScope(
         environment->getCreatedScopeDesc(), var->getParent());
   }
 
-  // Keep looking.
+                  
   return getScope(builder, var, environmentWithParent->getParentScope());
 }
 
@@ -336,7 +336,7 @@ bool LowerLoadStoreFrameInst::runOnFunction(Function *F) {
 
   bool fnScopeCreated = false;
   for (BasicBlock &BB : F->getBasicBlockList()) {
-    for (auto I = BB.begin(), E = BB.end(); I != E; /* nothing */) {
+    for (auto I = BB.begin(), E = BB.end(); I != E;              ) {
       Instruction *Inst = &*I;
       ++I;
       if (auto *csi = llvh::dyn_cast<CreateScopeInst>(Inst)) {
@@ -363,17 +363,17 @@ bool LowerLoadStoreFrameInst::runOnFunction(Function *F) {
     }
   }
 
-  // At this point all scopes used in F should be materialized. However, not
-  // materializing F's scope potentially breaks lazy compilation as the compiler
-  // always assumes all "external" scopes (i.e., those that have already been
-  // compiled) have been materialized. Therefore, materialize the function scope
-  // now. This instruction will be optimized out if unused in optimized builds.
+                                                                            
+                                                                                
+                                                                             
+                                                                                
+                                                                               
   assert(fnScopeCreated && "Function body scope not materialized.");
   (void)fnScopeCreated;
 
   for (BasicBlock &BB : F->getBasicBlockList()) {
-    for (auto I = BB.begin(), E = BB.end(); I != E; /* nothing */) {
-      // Keep the reference and increment iterator first.
+    for (auto I = BB.begin(), E = BB.end(); I != E;              ) {
+                                                         
       Instruction *Inst = &*I;
       ++I;
 
@@ -445,8 +445,8 @@ bool LowerLoadStoreFrameInst::runOnFunction(Function *F) {
 }
 
 CreateArgumentsInst *LowerArgumentsArray::getCreateArgumentsInst(Function *F) {
-  // CreateArgumentsInst is always in the first block in normal functions,
-  // but is in the second block in GeneratorInnerFunctions.
+                                                                          
+                                                           
   if (llvh::isa<GeneratorInnerFunction>(F)) {
     for (BasicBlock *succ : F->front().getTerminator()->successors()) {
       for (auto &inst : *succ) {
@@ -478,11 +478,11 @@ bool LowerArgumentsArray::runOnFunction(Function *F) {
   AllocStackInst *lazyReg = builder.createAllocStackInst("arguments");
   builder.createStoreStackInst(builder.getLiteralUndefined(), lazyReg);
 
-  // Process all LoadPropertyInst's first because they may add another user
-  // to the list of users of createArguments.
-  // Specifically the case when `arguments[arguments]` is accessed.
-  // Note that in such a case, a single LoadPropertyInst will appear twice in
-  // the use list. Use a set so we only remove it once.
+                                                                           
+                                             
+                                                                   
+                                                                             
+                                                       
   llvh::SmallSetVector<Instruction *, 16> uniqueUsers;
   uniqueUsers.insert(
       createArguments->getUsers().begin(), createArguments->getUsers().end());
@@ -494,12 +494,12 @@ bool LowerArgumentsArray::runOnFunction(Function *F) {
       builder.setCurrentSourceLevelScope(load->getSourceLevelScope());
       auto *propertyString = llvh::dyn_cast<LiteralString>(load->getProperty());
       if (propertyString && propertyString->getValue().str() == "length") {
-        // For `arguments.length`, get the length.
+                                                  
         auto *length = builder.createHBCGetArgumentsLengthInst(lazyReg);
         load->replaceAllUsesWith(length);
         load->eraseFromParent();
       } else {
-        // For all other property loads, get by index.
+                                                      
         auto *get = builder.createHBCGetArgumentsPropByValInst(
             load->getProperty(), lazyReg);
         load->replaceAllUsesWith(get);
@@ -513,7 +513,7 @@ bool LowerArgumentsArray::runOnFunction(Function *F) {
       createArguments->getUsers().begin(), createArguments->getUsers().end());
   for (Value *user : uniqueUsers) {
     if (auto *phi = llvh::dyn_cast<PhiInst>(user)) {
-      // We have to insert another branch where we can reify the value.
+                                                                       
       for (int i = 0, n = phi->getNumEntries(); i < n; i++) {
         auto entry = phi->getEntry(i);
         if (entry.first != createArguments)
@@ -529,8 +529,8 @@ bool LowerArgumentsArray::runOnFunction(Function *F) {
         builder.createBranchInst(thisBlock);
 
         phi->updateEntry(i, reifiedValue, newBlock);
-        // Update all other PHI nodes in thisBlock that currently reference
-        // previousBlock so they instead reference newBlock.
+                                                                           
+                                                            
         updateIncomingPhiValues(thisBlock, previousBlock, newBlock);
 
         auto *branch = previousBlock->getTerminator();
@@ -539,8 +539,8 @@ bool LowerArgumentsArray::runOnFunction(Function *F) {
             branch->setOperand(newBlock, j);
       }
     } else if (auto *inst = llvh::dyn_cast<Instruction>(user)) {
-      // For other users, insert a reification so we can replace
-      // the usage with this array.
+                                                                
+                                   
       builder.setInsertionPoint(inst);
       builder.setLocation(inst->getLocation());
       builder.setCurrentSourceLevelScope(inst->getSourceLevelScope());
@@ -563,8 +563,8 @@ bool LowerArgumentsArray::runOnFunction(Function *F) {
 bool DedupReifyArguments::runOnFunction(Function *F) {
   bool changed = false;
 
-  // Check if there are any HBCReifyArgumentsInst in the function before
-  // calculating dominator tree and reverse post order to save compile time.
+                                                                        
+                                                                            
   bool hasRAI = false;
   for (auto &BB : *F) {
     for (auto &inst : BB.getInstList()) {
@@ -612,7 +612,6 @@ bool DedupReifyArguments::runOnFunction(Function *F) {
 
 bool LowerConstruction::runOnFunction(Function *F) {
   IRBuilder builder(F);
-  auto *prototypeString = builder.getLiteralString("prototype");
 
   for (BasicBlock &BB : F->getBasicBlockList()) {
     IRBuilder::InstructionDestroyer destroyer;
@@ -622,9 +621,9 @@ bool LowerConstruction::runOnFunction(Function *F) {
         builder.setLocation(constructor->getLocation());
         builder.setCurrentSourceLevelScope(constructor->getSourceLevelScope());
         auto closure = constructor->getCallee();
-        auto prototype =
-            builder.createLoadPropertyInst(closure, prototypeString);
-        auto thisObject = builder.createHBCCreateThisInst(prototype, closure);
+                                                                              
+        auto thisObject = builder.createHBCCreateThisInst(
+            constructor->getNewTarget(), closure);
 
         llvh::SmallVector<Value *, 8> args;
         for (int i = 1, n = constructor->getNumArguments(); i < n; i++) {
@@ -649,7 +648,7 @@ bool LowerCalls::runOnFunction(Function *F) {
   for (auto &BB : *F) {
     for (auto &I : BB) {
       auto *call = llvh::dyn_cast<CallInst>(&I);
-      // This also matches constructors.
+                                        
       if (!call)
         continue;
       builder.setInsertionPoint(call);
@@ -659,12 +658,12 @@ bool LowerCalls::runOnFunction(Function *F) {
           HVMRegisterAllocator::CALL_EXTRA_REGISTERS;
 
       for (int i = 0, e = call->getNumArguments(); i < e; i++, --reg) {
-        // If this is a Call instruction, emit explicit Movs to the argument
-        // registers. If this is a CallN instruction, emit ImplicitMovs
-        // instead, to express that these registers get written to by the CallN,
-        // even though they are not the destination.
-        // Lastly, if this is argument 0 of CallBuiltinInst emit ImplicitMov to
-        // encode that the "this" register is implicitly set to undefined.
+                                                                            
+                                                                       
+                                                                                
+                                                    
+                                                                               
+                                                                          
         Value *arg = call->getArgument(i);
         if (llvh::isa<HBCCallNInst>(call) ||
             (i == 0 && llvh::isa<CallBuiltinInst>(call))) {
@@ -738,14 +737,14 @@ bool LoadConstantValueNumbering::runOnFunction(Function *F) {
 
   for (auto &BB : *F) {
     IRBuilder::InstructionDestroyer destroyer;
-    // Maps a register number to the instruction that last modified it.
-    // Every Instruction is either an HBCLoadConstInst or a Mov whose
-    // operand is a HBCLoadConstInst
+                                                                       
+                                                                     
+                                    
     llvh::DenseMap<unsigned, Instruction *> regToInstMap{};
     for (auto &I : BB) {
       HBCLoadConstInst *loadI{nullptr};
-      // Value numbering currently only tracks the values of registers that
-      // have a constant in them, or that have had a constant moved in them.
+                                                                           
+                                                                            
       if (!(loadI = llvh::dyn_cast<HBCLoadConstInst>(&I))) {
         if (auto *movI = llvh::dyn_cast<MovInst>(&I)) {
           loadI = llvh::dyn_cast<HBCLoadConstInst>(movI->getSingleOperand());
@@ -759,8 +758,8 @@ bool LoadConstantValueNumbering::runOnFunction(Function *F) {
           if (it != regToInstMap.end()) {
             auto prevI = it->second;
             HBCLoadConstInst *prevLoad{nullptr};
-            // If the key is found, the instruction must be either an
-            // HBCLoadConstInst, or a Mov whose operand is an HBCLoadConstInst.
+                                                                     
+                                                                               
             if (!(prevLoad = llvh::dyn_cast<HBCLoadConstInst>(prevI))) {
               prevLoad = llvh::dyn_cast<HBCLoadConstInst>(prevI->getOperand(0));
             }
@@ -789,23 +788,23 @@ bool LoadConstantValueNumbering::runOnFunction(Function *F) {
 
 bool SpillRegisters::requiresShortOutput(Instruction *I) {
   if (llvh::isa<TerminatorInst>(I)) {
-    // None of our terminators produce results at all
-    // (though GetNextPNameInst modifies operands).
+                                                     
+                                                   
     return false;
   }
 
-  // Instructions that produce no output, don't use the register, even when
-  // allocated.
+                                                                           
+               
   if (I->getType().isNoType())
     return false;
 
   switch (I->getKind()) {
-    // Some instructions become Movs or other opcodes with long variants:
+                                                                         
     case ValueKind::HBCSpillMovInstKind:
     case ValueKind::LoadStackInstKind:
     case ValueKind::MovInstKind:
     case ValueKind::PhiInstKind:
-    // Some instructions aren't actually encoded at all:
+                                                        
     case ValueKind::AllocStackInstKind:
     case ValueKind::TryEndInstKind:
     case ValueKind::TryStartInstKind:
@@ -826,9 +825,11 @@ bool SpillRegisters::requiresShortOperand(Instruction *I, int op) {
     case ValueKind::CallInstKind:
     case ValueKind::ConstructInstKind:
     case ValueKind::CallBuiltinInstKind:
-    case ValueKind::HBCConstructInstKind:
     case ValueKind::HBCCallDirectInstKind:
       return op == CallInst::CalleeIdx;
+    case ValueKind::HBCConstructInstKind:
+                                                                               
+      return op == CallInst::CalleeIdx || op == CallInst::NewTargetIdx;
     default:
       return true;
   }
@@ -850,7 +851,7 @@ bool SpillRegisters::runOnFunction(Function *F) {
   for (BasicBlock &BB : F->getBasicBlockList()) {
     for (Instruction &inst : BB) {
       if (!RA_.isAllocated(&inst)) {
-        // This instruction is dead. Don't bother spilling.
+                                                           
         continue;
       }
 
@@ -872,8 +873,8 @@ bool SpillRegisters::runOnFunction(Function *F) {
       for (int i = 0, e = inst.getNumOperands(); i < e; i++) {
         auto *op = llvh::dyn_cast<Instruction>(inst.getOperand(i));
         if (!op || !RA_.isAllocated(op)) {
-          // This is either not an instruction, or a dead instruction.
-          // Either way, we don't have to do anything.
+                                                                      
+                                                      
           continue;
         }
         auto opRegister = RA_.getRegister(op);
@@ -910,11 +911,11 @@ bool SpillRegisters::runOnFunction(Function *F) {
 
             if (!replaceWithFirstSpill)
               continue;
-            // Replace all uses of the inst with the spilling inst
+                                                                  
             inst.replaceAllUsesWith(storeInst);
-            // Except for the actual spill of course
+                                                    
             storeInst->setOperand(&inst, 0);
-            // Disable now that the job is done.
+                                                
             replaceWithFirstSpill = false;
           }
         }
@@ -927,7 +928,7 @@ bool SpillRegisters::runOnFunction(Function *F) {
 bool LowerSwitchIntoJumpTables::runOnFunction(Function *F) {
   bool changed = false;
   llvh::SmallVector<SwitchInst *, 4> switches;
-  // Collect all switch instructions.
+                                     
   for (BasicBlock &BB : *F)
     for (auto &it : BB) {
       if (auto *S = llvh::dyn_cast<SwitchInst>(&it))
@@ -943,7 +944,7 @@ bool LowerSwitchIntoJumpTables::runOnFunction(Function *F) {
 }
 
 bool LowerSwitchIntoJumpTables::lowerIntoJumpTable(SwitchInst *switchInst) {
-  // if its a constant switch don't bother
+                                          
   if (llvh::isa<Literal>(switchInst->getInputValue())) {
     return false;
   }
@@ -962,7 +963,7 @@ bool LowerSwitchIntoJumpTables::lowerIntoJumpTable(SwitchInst *switchInst) {
     if (!num)
       return false;
 
-    // Check whether it is representable as uint32.
+                                                   
     if (auto ival = num->isIntTypeRepresentible<uint32_t>()) {
       values.push_back(num);
       blocks.push_back(casePair.second);
@@ -980,16 +981,16 @@ bool LowerSwitchIntoJumpTables::lowerIntoJumpTable(SwitchInst *switchInst) {
 
   assert(minValue <= maxValue && "Minimum cannot exceed maximum");
   uint32_t range = maxValue - minValue;
-  // We can't generate a table for a zero-sized range.
+                                                      
   if (range == 0)
     return false;
 
-  // The number of cases is range + 1, which must fit in a uint32.
+                                                                  
   if (range == std::numeric_limits<uint32_t>::max())
     return false;
 
-  // Check the "denseness" of the cases.
-  // Don't convert small switches.
+                                        
+                                  
   if (range / numCases > 5 || numCases < 10)
     return false;
 
@@ -1007,7 +1008,7 @@ bool LowerSwitchIntoJumpTables::lowerIntoJumpTable(SwitchInst *switchInst) {
   return true;
 }
 
-} // namespace hbc
-} // namespace hermes
+}                 
+}                    
 
 #undef DEBUG_TYPE

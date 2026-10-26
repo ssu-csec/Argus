@@ -18,5 +18,5 @@ void BoxedDoubleBuildMeta(const GCCell *cell, Metadata::Builder &mb) {
   mb.setVTable(&BoxedDouble::vt);
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

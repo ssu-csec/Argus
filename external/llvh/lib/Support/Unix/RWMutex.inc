@@ -11,10 +11,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-//===----------------------------------------------------------------------===//
-//=== WARNING: Implementation here must contain only generic UNIX code that
-//===          is guaranteed to work on *all* UNIX variants.
-//===----------------------------------------------------------------------===//
+                                                                                
+                                                                           
+                                                            
+                                                                                
 
 #include "llvh/Support/Mutex.h"
 
@@ -22,9 +22,9 @@ namespace llvh {
 
 using namespace sys;
 
-// This naive implementation treats readers the same as writers.  This
-// will therefore deadlock if a thread tries to acquire a read lock
-// multiple times.
+                                                                      
+                                                                   
+                  
 
 RWMutexImpl::RWMutexImpl() : data_(new MutexImpl(false)) { }
 

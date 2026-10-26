@@ -1,5 +1,5 @@
-# Returns the host triple.
-# Invokes config.guess
+                          
+                      
 
 function( get_host_triple var )
   if( MSVC )

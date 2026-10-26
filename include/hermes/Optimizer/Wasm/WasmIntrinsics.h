@@ -20,12 +20,12 @@ enum Enum : unsigned char {
   _count,
 };
 
-} // namespace WasmIntrinsics
+}                            
 
-/// Return a string representation of the Wasm intrinsics.
+                                                          
 const char *getWasmIntrinsicsName(unsigned intrinsics);
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_INST_WASM_INTRINSICS_H
-#endif // HERMES_RUN_WASM
+#endif                                 
+#endif                   

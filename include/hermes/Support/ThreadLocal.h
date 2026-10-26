@@ -20,34 +20,34 @@
 
 namespace hermes {
 
-/// Wrapper calls for thread local using pthread API.
-/// Mainly copied from fbandroid/libraries/profilo/deps/fb/ThreadLocal.h
+                                                     
+                                                                        
 template <typename T>
 class ThreadLocal {
  public:
-  /// Constructor that has to be called from a thread-neutral place.
+                                                                    
   ThreadLocal() : key_(0) {
     initialize();
   }
 
-  /// Accessing thread local slot pointer via overloaded operator.
+                                                                  
   T *operator->() const {
     return get();
   }
 
-  /// Accessing thread local slot pointer via method call.
+                                                          
   T *get() const {
     return (T *)pthread_getspecific(key_);
   }
 
-  /// Release and \return thread local slot.
+                                            
   T *release() {
     T *obj = get();
     pthread_setspecific(key_, nullptr);
     return obj;
   }
 
-  /// Set thread local slot to \p other.
+                                        
   void set(T *other = nullptr) {
     T *old = (T *)pthread_getspecific(key_);
     if (old != other) {
@@ -76,8 +76,8 @@ class ThreadLocal {
   pthread_key_t key_;
 };
 
-} // namespace hermes
+}                    
 
-#endif // _WINDOWS
+#endif            
 
-#endif // HERMES_SUPPORT_THREADLOCAL_H
+#endif                                

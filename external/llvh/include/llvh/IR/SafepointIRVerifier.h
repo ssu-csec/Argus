@@ -24,12 +24,12 @@ namespace llvh {
 class Function;
 class FunctionPass;
 
-/// Run the safepoint verifier over a single function.  Crashes on failure.
+                                                                           
 void verifySafepointIR(Function &F);
 
-/// Create an instance of the safepoint verifier pass which can be added to
-/// a pass pipeline to check for relocation bugs.
+                                                                           
+                                                 
 FunctionPass *createSafepointIRVerifierPass();
 }
 
-#endif // LLVM_IR_SAFEPOINT_IR_VERIFIER
+#endif                                 

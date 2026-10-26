@@ -15,7 +15,7 @@ import sys
 from os import path
 
 
-# This is about 80 characters long (4 characters per byte + comma + space)
+                                                                          
 BYTES_PER_LINE = 12
 IS_PY3 = sys.version_info > (3, 0)
 
@@ -25,22 +25,22 @@ def main():
     parser.add_argument("file")
     args = parser.parse_args()
 
-    # Ensure the file exists before writing out anything
+                                                        
     if not path.exists(args.file):
         raise Exception('File "{}" doesn\'t exist'.format(args.file))
 
     with open(args.file, "rb") as f:
-        # Could read in chunks instead for extra performance, but this script
-        # isn't meant to be used on gigantic files.
+                                                                             
+                                                   
         file_as_bytes = f.read()
 
-    # Make groups of bytes that fit in a single line
+                                                    
     lines = [
         file_as_bytes[i : i + BYTES_PER_LINE]
         for i in range(0, len(file_as_bytes), BYTES_PER_LINE)
     ]
-    # in python2, byte is same as str and interating it yield strs.
-    # in python3, byte is distinct and interating it yield ints.
+                                                                   
+                                                                
     print(
         ",\n".join(
             ", ".join("0x{:02x}".format(b if IS_PY3 else ord(b)) for b in l)

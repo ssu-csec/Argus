@@ -13,7 +13,7 @@
 
 namespace hermes {
 
-// Used in hvm.cpp and hermes.cpp
+                                 
 class MemoryBuffer : public Buffer {
  public:
   MemoryBuffer(const llvh::MemoryBuffer *buffer) : buffer_(buffer) {
@@ -25,7 +25,7 @@ class MemoryBuffer : public Buffer {
   const llvh::MemoryBuffer *buffer_;
 };
 
-// Like MemoryBuffer, but owns the underlying llvh::MemoryBuffer
+                                                                
 class OwnedMemoryBuffer : public MemoryBuffer {
  public:
   OwnedMemoryBuffer(std::unique_ptr<llvh::MemoryBuffer> buffer)
@@ -35,7 +35,7 @@ class OwnedMemoryBuffer : public MemoryBuffer {
   std::unique_ptr<llvh::MemoryBuffer> data_;
 };
 
-// An adapter that wraps a hermes::Buffer in a llvh::MemoryBuffer
+                                                                 
 class HermesLLVMMemoryBuffer : public llvh::MemoryBuffer {
  public:
   HermesLLVMMemoryBuffer(
@@ -59,6 +59,6 @@ class HermesLLVMMemoryBuffer : public llvh::MemoryBuffer {
   std::unique_ptr<hermes::Buffer> data_;
 };
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_SUPPORT_MEMORYBUFFER_H
+#endif                                 

@@ -21,6 +21,6 @@ class FuncSigOpts : public ModulePass {
   bool runOnModule(Module *M) override;
 };
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_OPTIMIZER_SCALAR_FUNCSIGOPTS_H
+#endif                                         

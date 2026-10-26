@@ -28,14 +28,14 @@ CallResult<HermesValue> runRequireCall(
   {
     auto cachedExports = domain->getCachedExports(runtime, cjsModuleOffset);
     if (!cachedExports->isEmpty()) {
-      // Fast path: require() completed, so just return exports immediately.
+                                                                            
       return cachedExports.getHermesValue();
     }
   }
 
   if (auto module = domain->getModule(runtime, cjsModuleOffset)) {
     assert(module.get() != nullptr);
-    // Still initializing, so return the current state of module.exports.
+                                                                         
     auto res = JSObject::getNamed_RJS(
         runtime.makeHandle(std::move(module)),
         runtime,
@@ -47,7 +47,7 @@ CallResult<HermesValue> runRequireCall(
   }
 
   GCScope gcScope{runtime};
-  // If not initialized yet, start initializing and set the module object.
+                                                                          
   Handle<JSObject> module = runtime.makeHandle(JSObject::create(runtime));
   Handle<JSObject> exports = runtime.makeHandle(JSObject::create(runtime));
   if (LLVM_UNLIKELY(
@@ -63,9 +63,9 @@ CallResult<HermesValue> runRequireCall(
 
   MutableHandle<JSObject> requireFn{runtime};
   if (context) {
-    // Slow path.
-    // If the context is provided, then it will be used to resolve string
-    // requires in future calls to require().
+                 
+                                                                         
+                                             
     auto funcRes = BoundFunction::create(
         runtime,
         Handle<Callable>::vmcast(&runtime.requireFunction),
@@ -76,7 +76,7 @@ CallResult<HermesValue> runRequireCall(
     }
     requireFn = vmcast<BoundFunction>(*funcRes);
 
-    // Set the require.context property.
+                                        
     PropertyFlags pf = PropertyFlags::defaultNewNamedPropertyFlags();
     pf.writable = 0;
     pf.configurable = 0;
@@ -90,10 +90,10 @@ CallResult<HermesValue> runRequireCall(
       return ExecutionStatus::EXCEPTION;
     }
   } else {
-    // Fast path.
-    // The context must not be provided, and any actual calls to require()
-    // should have been turned into requireFast() calls.
-    // Calls to require() should throw.
+                 
+                                                                          
+                                                        
+                                       
     requireFn = domain->getThrowingRequire(runtime).get();
   }
 
@@ -117,14 +117,14 @@ CallResult<HermesValue> runRequireCall(
               exports.getHermesValue(),
               requireFn.getHermesValue(),
               module.getHermesValue()) == ExecutionStatus::EXCEPTION)) {
-    // If initialization of the module throws, reset it so that calling require
-    // again may succeed.
+                                                                               
+                         
     domain->setModule(cjsModuleOffset, runtime, Runtime::getNullValue());
     return ExecutionStatus::EXCEPTION;
   }
 
-  // The module.exports object may have been replaced during initialization,
-  // so we have to run getNamed to ensure we pick up the changes.
+                                                                            
+                                                                 
   auto exportsRes = JSObject::getNamed_RJS(
       module, runtime, Predefined::getSymbolID(Predefined::exports));
   if (LLVM_UNLIKELY(exportsRes == ExecutionStatus::EXCEPTION)) {
@@ -139,7 +139,7 @@ CallResult<HermesValue> requireFast(void *, Runtime &runtime, NativeArgs args) {
       runtime.getStackFrames().begin()->getSavedCodeBlock() != nullptr &&
       "requireFast() cannot be called from native");
 
-  // Find the RuntimeModule from which this require was called.
+                                                               
   RuntimeModule *runtimeModule =
       runtime.getStackFrames().begin()->getSavedCodeBlock()->getRuntimeModule();
   auto domain = runtimeModule->getDomain(runtime);
@@ -162,7 +162,7 @@ static llvh::SmallString<32> canonicalizePath(
     Runtime &runtime,
     Handle<StringPrimitive> dirname,
     Handle<StringPrimitive> target) {
-  // Copy the current path so we can modify it as necessary.
+                                                            
   llvh::SmallString<32> canonicalPath{};
 
   auto appendToCanonical = [&canonicalPath](
@@ -177,16 +177,16 @@ static llvh::SmallString<32> canonicalizePath(
   };
 
   if (target->getStringLength() > 0 && target->at(0) == u'/') {
-    // If the dirname is absolute (starts with a '/'), resolve from the module
-    // root.
+                                                                              
+            
     appendToCanonical(target, 1);
   } else {
-    // Else, the dirname is relative. Resolve from the dirname.
+                                                               
     appendToCanonical(dirname);
     appendToCanonical(target);
   }
 
-  // Remove all dots. This is done to get rid of ../ or anything like ././.
+                                                                           
   llvh::sys::path::remove_dots(
       canonicalPath, true, llvh::sys::path::Style::posix);
 
@@ -221,7 +221,7 @@ CallResult<HermesValue> require(void *, Runtime &runtime, NativeArgs args) {
   }
   Handle<SymbolID> targetID = *cr;
 
-  // Find the relevant CJS module.
+                                  
   OptValue<uint32_t> cjsModuleOffset = domain->getCJSModuleOffset(*targetID);
   if (LLVM_UNLIKELY(!cjsModuleOffset)) {
     return runtime.raiseTypeError(
@@ -242,5 +242,5 @@ CallResult<HermesValue> require(void *, Runtime &runtime, NativeArgs args) {
   return runRequireCall(runtime, newRequireContext, domain, *cjsModuleOffset);
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

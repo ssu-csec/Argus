@@ -25,13 +25,13 @@ struct UCollatorDeleter {
   }
 };
 
-/// Returns a pointer to the singleton UCollator. It is thread-safe because
-/// threads can only access const APIs using this handle(which are thread-safe
-/// as per the documentation). Please refer to
-/// https://unicode-org.github.io/icu/userguide/icu/design.html#thread-safe-const-apis,
-/// for more details. This
-/// function invokes ucol_open only once and keeps it as a singleton for better
-/// performance instead of ucol_open/ucol_close in each invocation.
+                                                                           
+                                                                              
+                                              
+                                                                                       
+                          
+                                                                               
+                                                                   
 const UCollator *getUCollatorInstance() {
   using UCollatorPtr = std::unique_ptr<UCollator, UCollatorDeleter>;
   static UCollatorPtr coll = [] {
@@ -39,14 +39,14 @@ const UCollator *getUCollatorInstance() {
     UCollator *coll = ucol_open(uloc_getDefault(), &err);
 
     if (U_FAILURE(err)) {
-      // Failover to root locale if we're unable to open in default locale.
+                                                                           
       err = U_ZERO_ERROR;
       coll = ucol_open("", &err);
     }
     assert(U_SUCCESS(err) && "failed to open collator");
 
-    // Normalization mode allows for strings that can be represented
-    // in two different ways to compare as equal.
+                                                                    
+                                                 
     ucol_setAttribute(coll, UCOL_NORMALIZATION_MODE, UCOL_ON, &err);
     assert(U_SUCCESS(err) && "failed to set collator attribute");
     return UCollatorPtr(coll, UCollatorDeleter());
@@ -54,7 +54,7 @@ const UCollator *getUCollatorInstance() {
 
   return coll.get();
 }
-} // namespace
+}             
 
 int localeCompare(
     llvh::ArrayRef<char16_t> left,
@@ -90,12 +90,12 @@ void dateFormat(
 
   llvh::SmallVector<char16_t, 32> tzstr;
 
-  // We have to use this roundabout method to get the timezone name because
-  // tzname cannot be concurrently accessed. Specifically, we have previously
-  // observed cases where calls to tzset (and functions that call tzset, such as
-  // localtime), may set elements of tzname to null. In this case, any thread
-  // directly reading tzname at the same time may read the null value, causing
-  // a segfault.
+                                                                           
+                                                                             
+                                                                                
+                                                                             
+                                                                              
+                
   char tz[50];
   time_t t = time(nullptr);
   struct tm timeInfo;
@@ -144,8 +144,8 @@ void convertToCase(
     llvh::SmallVectorImpl<char16_t> &buf,
     CaseConversion targetCase,
     bool useCurrentLocale) {
-  // To be able to call the converters, we have to get a pointer.
-  // UChar is 16 bits, so a cast works.
+                                                                 
+                                       
   const UChar *src = (const UChar *)buf.data();
   auto srcLen = buf.size();
 
@@ -153,8 +153,8 @@ void convertToCase(
       targetCase == CaseConversion::ToUpper ? u_strToUpper : u_strToLower;
   const char *locale = useCurrentLocale ? uloc_getDefault() : "";
 
-  // First, try to uppercase without changing the length.
-  // This will likely work.
+                                                         
+                           
   llvh::SmallVector<char16_t, 64> dest{};
   dest.resize(srcLen);
   UErrorCode err = U_ZERO_ERROR;
@@ -162,18 +162,18 @@ void convertToCase(
       converter((UChar *)dest.begin(), srcLen, src, srcLen, locale, &err);
   dest.resize(resultLen);
 
-  // In the rare case our string was too small, rerun it.
+                                                         
   if (LLVM_UNLIKELY(resultLen > srcLen)) {
     err = U_ZERO_ERROR;
     converter((UChar *)dest.begin(), resultLen, src, srcLen, locale, &err);
   }
-  // Assign to the inout parameter.
+                                   
   buf = dest;
 }
 
 void normalize(llvh::SmallVectorImpl<char16_t> &buf, NormalizationForm form) {
-  // To be able to call the converters, we have to get a pointer.
-  // UChar is 16 bits, so a cast works.
+                                                                 
+                                       
   const UChar *src = (const UChar *)buf.data();
   auto srcLen = buf.size();
   UErrorCode err = U_ZERO_ERROR;
@@ -195,9 +195,9 @@ void normalize(llvh::SmallVectorImpl<char16_t> &buf, NormalizationForm form) {
   }
   assert(U_SUCCESS(err) && norm && "Failed to get Normalizer instance");
 
-  // First, try to normalize without changing the length.
-  // This will likely work; note that this is an optimization for the
-  // non-enlarging case.
+                                                         
+                                                                     
+                        
   llvh::SmallVector<char16_t, 64> dest{};
   dest.resize(srcLen);
   err = U_ZERO_ERROR;
@@ -205,17 +205,17 @@ void normalize(llvh::SmallVectorImpl<char16_t> &buf, NormalizationForm form) {
       unorm2_normalize(norm, src, srcLen, (UChar *)dest.begin(), srcLen, &err);
   dest.resize(resultLen);
 
-  // In the rare case our string was too small, rerun it.
+                                                         
   if (LLVM_UNLIKELY(resultLen > srcLen)) {
     err = U_ZERO_ERROR;
     unorm2_normalize(norm, src, srcLen, (UChar *)dest.begin(), resultLen, &err);
   }
 
-  // Assign to the inout parameter.
+                                   
   buf = dest;
 }
 
-} // namespace platform_unicode
-} // namespace hermes
+}                              
+}                    
 
-#endif // HERMES_PLATFORM_UNICODE_ICU
+#endif                               

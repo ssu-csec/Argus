@@ -5,12 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//===----------------------------------------------------------------------===//
-/// \file
-/// A simple replacement of llvh::Optional<> to be used with trivially copyable
-/// types in performance-sensitive context because llvh::Optional<> is not
-/// trivially copyable.
-//===----------------------------------------------------------------------===//
+                                                                                
+         
+                                                                               
+                                                                          
+                       
+                                                                                
 
 #ifndef HERMES_SUPPORT_OPTVALUE_H
 #define HERMES_SUPPORT_OPTVALUE_H
@@ -24,10 +24,10 @@
 
 namespace hermes {
 
-/// A simple trivially copyable replacement for llvh::Optional<>. Trivially
-/// copyable objects use a more efficient ABI passing convenient (can be passed
-/// directly in registers) and simplify some situations involving goto-s due to
-/// their trivial destructors.
+                                                                           
+                                                                               
+                                                                               
+                              
 template <typename T>
 class OptValue {
   static_assert(
@@ -70,10 +70,10 @@ static_assert(
     std::is_trivially_copyable<OptValue<int>>::value,
     "OptValue<int> must be trivially copyable");
 
-/// Specialization for bool that improves codegen by collapsing compares.
+                                                                         
 template <>
 class OptValue<bool> {
-  // -1 = none, 0 = false, 1 = true
+                                   
   int value_;
 
  public:
@@ -117,16 +117,16 @@ template <typename T, typename U>
 bool operator!=(const OptValue<T> &a, const OptValue<U> &b) {
   return !(a == b);
 }
-} // namespace hermes
+}                    
 
 namespace llvh {
 template <typename T>
 struct isPodLike;
 template <typename T>
 struct isPodLike<hermes::OptValue<T>> {
-  // An OptValue<T> is pod-like if T is.
+                                        
   static const bool value = isPodLike<T>::value;
 };
-} // namespace llvh
+}                  
 
-#endif // HERMES_SUPPORT_OPTVALUE_H
+#endif                             

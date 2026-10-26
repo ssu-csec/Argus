@@ -15,7 +15,7 @@
 
 namespace hermes {
 
-/// A generic buffer interface.  E.g. for memmapped bytecode.
+                                                             
 class HERMES_EXPORT Buffer {
  public:
   Buffer() : data_(nullptr), size_(0) {}
@@ -37,6 +37,6 @@ class HERMES_EXPORT Buffer {
   size_t size_ = 0;
 };
 
-} // namespace hermes
+}                    
 
 #endif

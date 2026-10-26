@@ -14,24 +14,24 @@
 namespace hermes {
 namespace vm {
 
-/// Parse JSON string \p jsonString according to ES5.1 15.12.1 and 15.12.2.
+                                                                           
 CallResult<HermesValue> runtimeJSONParse(
     Runtime &runtime,
     Handle<StringPrimitive> jsonString,
     Handle<Callable> reviver);
 
-/// Alternative interface to runtimeJSONParse for strings outside the JS heap.
+                                                                              
 CallResult<HermesValue> runtimeJSONParseRef(Runtime &runtime, UTF16Stream &&s);
 
-/// Returns a String in JSON format representing an ECMAScript value,
-/// according to 15.12.3.
+                                                                     
+                         
 CallResult<HermesValue> runtimeJSONStringify(
     Runtime &runtime,
     Handle<> value,
     Handle<> replacer,
     Handle<> space);
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
 #endif

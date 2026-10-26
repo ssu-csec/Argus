@@ -36,7 +36,7 @@ inline Handle<HiddenClass> Runtime::getHiddenClassForPrototype(
   return Handle<HiddenClass>::vmcast(clazz);
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMES_VM_RUNTIME_INLINE_H
+#endif                              

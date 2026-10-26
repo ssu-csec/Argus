@@ -32,9 +32,9 @@
 #include <memory>
 #include <vector>
 
-// Determine whether statistics should be enabled. We must do it here rather
-// than in CMake because multi-config generators cannot determine this at
-// configure time.
+                                                                            
+                                                                         
+                  
 #if !defined(NDEBUG) || LLVM_FORCE_ENABLE_STATS
 #define LLVM_ENABLE_STATS 1
 #endif
@@ -58,7 +58,7 @@ public:
   const char *getName() const { return Name; }
   const char *getDesc() const { return Desc; }
 
-  /// construct - This should only be called for non-global statistics.
+                                                                       
   void construct(const char *debugtype, const char *name, const char *desc) {
     DebugType = debugtype;
     Name = name;
@@ -67,7 +67,7 @@ public:
     Initialized = false;
   }
 
-  // Allow use of this class as the value itself.
+                                                 
   operator unsigned() const { return getValue(); }
 
 #if LLVM_ENABLE_STATS
@@ -112,15 +112,15 @@ public:
 
   void updateMax(unsigned V) {
     unsigned PrevMax = Value.load(std::memory_order_relaxed);
-    // Keep trying to update max until we succeed or another thread produces
-    // a bigger max than us.
+                                                                            
+                            
     while (V > PrevMax && !Value.compare_exchange_weak(
                               PrevMax, V, std::memory_order_relaxed)) {
     }
     init();
   }
 
-#else  // Statistics are disabled in release builds.
+#else                                               
 
   const Statistic &operator=(unsigned Val) {
     return *this;
@@ -152,7 +152,7 @@ public:
 
   void updateMax(unsigned V) {}
 
-#endif  // LLVM_ENABLE_STATS
+#endif                      
 
 protected:
   Statistic &init() {
@@ -164,56 +164,56 @@ protected:
   void RegisterStatistic();
 };
 
-// STATISTIC - A macro to make definition of statistics really simple.  This
-// automatically passes the DEBUG_TYPE of the file into the statistic.
+                                                                            
+                                                                      
 #define STATISTIC(VARNAME, DESC)                                               \
   static llvh::Statistic VARNAME = {DEBUG_TYPE, #VARNAME, DESC, {0}, {false}}
 
-/// Enable the collection and printing of statistics.
+                                                     
 void EnableStatistics(bool PrintOnExit = true);
 
-/// Check if statistics are enabled.
+                                    
 bool AreStatisticsEnabled();
 
-/// Return a file stream to print our output on.
+                                                
 std::unique_ptr<raw_fd_ostream> CreateInfoOutputFile();
 
-/// Print statistics to the file returned by CreateInfoOutputFile().
+                                                                    
 void PrintStatistics();
 
-/// Print statistics to the given output stream.
+                                                
 void PrintStatistics(raw_ostream &OS);
 
-/// Print statistics in JSON format. This does include all global timers (\see
-/// Timer, TimerGroup). Note that the timers are cleared after printing and will
-/// not be printed in human readable form or in a second call of
-/// PrintStatisticsJSON().
+                                                                              
+                                                                                
+                                                                
+                          
 void PrintStatisticsJSON(raw_ostream &OS);
 
-/// Get the statistics. This can be used to look up the value of
-/// statistics without needing to parse JSON.
-///
-/// This function does not prevent statistics being updated by other threads
-/// during it's execution. It will return the value at the point that it is
-/// read. However, it will prevent new statistics from registering until it
-/// completes.
+                                                                
+                                             
+   
+                                                                            
+                                                                           
+                                                                           
+              
 const std::vector<std::pair<StringRef, unsigned>> GetStatistics();
 
-/// Reset the statistics. This can be used to zero and de-register the
-/// statistics in order to measure a compilation.
-///
-/// When this function begins to call destructors prior to returning, all
-/// statistics will be zero and unregistered. However, that might not remain the
-/// case by the time this function finishes returning. Whether update from other
-/// threads are lost or merely deferred until during the function return is
-/// timing sensitive.
-///
-/// Callers who intend to use this to measure statistics for a single
-/// compilation should ensure that no compilations are in progress at the point
-/// this function is called and that only one compilation executes until calling
-/// GetStatistics().
+                                                                      
+                                                 
+   
+                                                                         
+                                                                                
+                                                                                
+                                                                           
+                     
+   
+                                                                     
+                                                                               
+                                                                                
+                    
 void ResetStatistics();
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_ADT_STATISTIC_H
+#endif                        

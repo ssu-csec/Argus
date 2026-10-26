@@ -14,8 +14,8 @@ namespace impl_icu {
 static constexpr char REPLACEMENT_CHARACTER = '?';
 
 std::string toUTF8ASCII(std::u16string_view utf16Source) {
-  // ASCII characters are 7-bit in both UTF8 and UTF16 with the same integer
-  // values. Safe to coerce these values from chat16_t (16-bit) to char (8-bit).
+                                                                            
+                                                                                
   std::string result;
   for (const char16_t codeUnit : utf16Source) {
     if (codeUnit <= 0x7f) {
@@ -28,8 +28,8 @@ std::string toUTF8ASCII(std::u16string_view utf16Source) {
 }
 
 std::u16string toUTF16ASCII(std::string_view utf8Source) {
-  // ASCII characters are 7-bit in UTF8 and UTF16 with the same integer values.
-  // Safe to promote these values from char (8-bit) to char16_t (16-bit).
+                                                                               
+                                                                         
   std::u16string result;
   for (const unsigned char c : utf8Source) {
     if (c <= 0x7f) {
@@ -59,6 +59,6 @@ std::string toLowerASCII(std::string str) {
   return str;
 }
 
-} // namespace impl_icu
-} // namespace platform_intl
-} // namespace hermes
+}                      
+}                           
+}                    

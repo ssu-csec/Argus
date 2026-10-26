@@ -30,14 +30,14 @@
 
 namespace llvh {
 
-/// NoFolder - Create "constants" (actually, instructions) with no folding.
+                                                                           
 class NoFolder {
 public:
   explicit NoFolder() = default;
 
-  //===--------------------------------------------------------------------===//
-  // Binary Operators
-  //===--------------------------------------------------------------------===//
+                                                                                
+                     
+                                                                                
 
   Instruction *CreateAdd(Constant *LHS, Constant *RHS,
                          bool HasNUW = false, bool HasNSW = false) const {
@@ -176,9 +176,9 @@ public:
     return BinaryOperator::Create(Opc, LHS, RHS);
   }
 
-  //===--------------------------------------------------------------------===//
-  // Unary Operators
-  //===--------------------------------------------------------------------===//
+                                                                                
+                    
+                                                                                
 
   Instruction *CreateNeg(Constant *C,
                          bool HasNUW = false, bool HasNSW = false) const {
@@ -204,9 +204,9 @@ public:
     return BinaryOperator::CreateNot(C);
   }
 
-  //===--------------------------------------------------------------------===//
-  // Memory Instructions
-  //===--------------------------------------------------------------------===//
+                                                                                
+                        
+                                                                                
 
   Constant *CreateGetElementPtr(Type *Ty, Constant *C,
                                 ArrayRef<Constant *> IdxList) const {
@@ -214,9 +214,9 @@ public:
   }
 
   Constant *CreateGetElementPtr(Type *Ty, Constant *C, Constant *Idx) const {
-    // This form of the function only exists to avoid ambiguous overload
-    // warnings about whether to convert Idx to ArrayRef<Constant *> or
-    // ArrayRef<Value *>.
+                                                                        
+                                                                       
+                         
     return ConstantExpr::getGetElementPtr(Ty, C, Idx);
   }
 
@@ -232,9 +232,9 @@ public:
 
   Constant *CreateInBoundsGetElementPtr(Type *Ty, Constant *C,
                                         Constant *Idx) const {
-    // This form of the function only exists to avoid ambiguous overload
-    // warnings about whether to convert Idx to ArrayRef<Constant *> or
-    // ArrayRef<Value *>.
+                                                                        
+                                                                       
+                         
     return ConstantExpr::getInBoundsGetElementPtr(Ty, C, Idx);
   }
 
@@ -243,9 +243,9 @@ public:
     return GetElementPtrInst::CreateInBounds(Ty, C, IdxList);
   }
 
-  //===--------------------------------------------------------------------===//
-  // Cast/Conversion Operators
-  //===--------------------------------------------------------------------===//
+                                                                                
+                              
+                                                                                
 
   Instruction *CreateCast(Instruction::CastOps Op, Constant *C,
                     Type *DestTy) const {
@@ -289,9 +289,9 @@ public:
     return CastInst::CreateTruncOrBitCast(C, DestTy);
   }
 
-  //===--------------------------------------------------------------------===//
-  // Compare Instructions
-  //===--------------------------------------------------------------------===//
+                                                                                
+                         
+                                                                                
 
   Instruction *CreateICmp(CmpInst::Predicate P,
                           Constant *LHS, Constant *RHS) const {
@@ -303,9 +303,9 @@ public:
     return new FCmpInst(P, LHS, RHS);
   }
 
-  //===--------------------------------------------------------------------===//
-  // Other Instructions
-  //===--------------------------------------------------------------------===//
+                                                                                
+                       
+                                                                                
 
   Instruction *CreateSelect(Constant *C,
                             Constant *True, Constant *False) const {
@@ -337,6 +337,6 @@ public:
   }
 };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_IR_NOFOLDER_H
+#endif                      

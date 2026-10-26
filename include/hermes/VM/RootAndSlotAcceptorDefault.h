@@ -16,8 +16,8 @@
 namespace hermes {
 namespace vm {
 
-/// A RootAndSlotAcceptorDefault provides a convenient overload for GCPointers
-/// to be lowered into raw pointers.
+                                                                              
+                                    
 class RootAndSlotAcceptorDefault : public RootAndSlotAcceptor {
  public:
   explicit RootAndSlotAcceptorDefault(PointerBase &pointerBase)
@@ -60,18 +60,18 @@ class RootAndSlotAcceptorDefault : public RootAndSlotAcceptor {
   }
 
   virtual void acceptSym(SymbolID sym) {
-    // By default, symbol processing is a noop. Only a handful of acceptors
-    // need to override it.
-    // Not final because sometimes custom behavior is desired.
+                                                                           
+                           
+                                                              
   }
 
  protected:
   PointerBase &pointerBase_;
 };
 
-/// A RootAndSlotAcceptorWithNamesDefault is similar to a
-/// RootAndSlotAcceptorDefault, except it provides an overload for the named
-/// acceptor of GCPointers.
+                                                         
+                                                                            
+                           
 class RootAndSlotAcceptorWithNamesDefault
     : public RootAndSlotAcceptorWithNames {
  public:
@@ -115,9 +115,9 @@ class RootAndSlotAcceptorWithNamesDefault
   }
 
   virtual void acceptSym(SymbolID sym, const char *name) {
-    // By default, symbol processing is a noop. Only a handful of acceptors
-    // need to override it.
-    // Not final because sometimes custom behavior is desired.
+                                                                           
+                           
+                                                              
   }
 
  protected:
@@ -131,17 +131,17 @@ class WeakAcceptorDefault : public WeakRootAcceptor {
 
   void acceptWeak(WeakRootBase &ptr) final;
 
-  /// Subclasses override this implementation instead of accept(WeakRootBase &).
+                                                                                
   virtual void acceptWeak(GCCell *&ptr) = 0;
 
  protected:
-  // Named differently to avoid collisions with
-  // RootAndSlotAcceptorDefault::pointerBase_.
+                                               
+                                              
   PointerBase &pointerBaseForWeakRoot_;
 };
 
-/// @name Inline implementations.
-/// @{
+                                 
+      
 
 inline void WeakAcceptorDefault::acceptWeak(WeakRootBase &ptr) {
   GCCell *p = ptr.getNoBarrierUnsafe(pointerBaseForWeakRoot_);
@@ -149,9 +149,9 @@ inline void WeakAcceptorDefault::acceptWeak(WeakRootBase &ptr) {
   ptr = CompressedPointer::encode(p, pointerBaseForWeakRoot_);
 }
 
-/// @}
+      
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
 #endif

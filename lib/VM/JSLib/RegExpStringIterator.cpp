@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//===----------------------------------------------------------------------===//
-/// \file
-/// ES11 21.2.7 RegExp String Iterator Objects
-//===----------------------------------------------------------------------===//
+                                                                                
+         
+                                              
+                                                                                
 #include "JSLibInternal.h"
 
 #include "hermes/VM/JSRegExpStringIterator.h"
@@ -28,7 +28,7 @@ void populateRegExpStringIteratorPrototype(Runtime &runtime) {
       regExpStringIteratorPrototypeNext,
       0);
 
-  // ES11 21.2.7.1.2 %RegExpStringIteratorPrototype% [ @@toStringTag ]
+                                                                      
   auto dpf = DefinePropertyFlags::getDefaultNewPropertyFlags();
   dpf.writable = 0;
   dpf.enumerable = 0;
@@ -40,13 +40,13 @@ void populateRegExpStringIteratorPrototype(Runtime &runtime) {
       dpf);
 }
 
-/// ES11 21.2.7.1.1 %RegExpStringIteratorPrototype%.next ( ) 1-3
+                                                                
 CallResult<HermesValue>
 regExpStringIteratorPrototypeNext(void *, Runtime &runtime, NativeArgs args) {
-  // 1. Let O be the this value.
-  // 2. If Type(O) is not Object, throw a TypeError exception.
-  // 3. If O does not have all of the internal slots of a RegExp String Iterator
-  // Object Instance (see 21.2.7.2), throw a TypeError exception.
+                                
+                                                              
+                                                                                
+                                                                 
   auto O = args.dyncastThis<JSRegExpStringIterator>();
   if (LLVM_UNLIKELY(!O)) {
     return runtime.raiseTypeError(
@@ -55,5 +55,5 @@ regExpStringIteratorPrototypeNext(void *, Runtime &runtime, NativeArgs args) {
   return JSRegExpStringIterator::nextElement(O, runtime);
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

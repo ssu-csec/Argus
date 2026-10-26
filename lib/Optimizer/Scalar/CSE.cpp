@@ -24,13 +24,13 @@ using namespace hermes;
 
 STATISTIC(NumCSE, "Number of instructions CSE'd");
 
-//===----------------------------------------------------------------------===//
-//                                Simple Value
-//===----------------------------------------------------------------------===//
+                                                                                
+                                              
+                                                                                
 
 namespace {
-/// CSEValue - Instances of this struct represent available values in the
-/// scoped hash table.
+                                                                         
+                      
 struct CSEValue {
   Instruction *inst_;
 
@@ -43,12 +43,12 @@ struct CSEValue {
         inst_ == llvh::DenseMapInfo<Instruction *>::getTombstoneKey();
   }
 
-  /// Return true if we know how to CSE this instruction.
+                                                         
   static bool canHandle(Instruction *Inst) {
     return isSimpleSideEffectFreeInstruction(Inst);
   }
 };
-} // end anonymous namespace
+}                           
 
 namespace llvh {
 template <>
@@ -62,7 +62,7 @@ struct DenseMapInfo<CSEValue> {
   static unsigned getHashValue(CSEValue Val);
   static bool isEqual(CSEValue LHS, CSEValue RHS);
 };
-} // end namespace llvh
+}                      
 
 unsigned llvh::DenseMapInfo<CSEValue>::getHashValue(CSEValue Val) {
   return Val.inst_->getHashCode();
@@ -76,9 +76,9 @@ bool llvh::DenseMapInfo<CSEValue>::isEqual(CSEValue LHS, CSEValue RHS) {
   return LHSI->getKind() == RHSI->getKind() && LHSI->isIdenticalTo(RHSI);
 }
 
-//===----------------------------------------------------------------------===//
-//                               CSE Interface
-//===----------------------------------------------------------------------===//
+                                                                                
+                                              
+                                                                                
 
 namespace {
 
@@ -93,22 +93,22 @@ using ScopedHTType = llvh::ScopedHashTable<
     llvh::DenseMapInfo<CSEValue>,
     AllocatorTy>;
 
-// StackNode - contains all the needed information to create a stack for doing
-// a depth first traversal of the tree. This includes scopes for values and
-// loads as well as the generation. There is a child iterator so that the
-// children do not need to be store spearately.
+                                                                              
+                                                                           
+                                                                         
+                                               
 class StackNode : public DomTreeDFS::StackNode<CSEContext> {
  public:
   inline StackNode(CSEContext *ctx, const DominanceInfoNode *n);
 
  private:
-  /// RAII to create and pop a scope when the stack node is created and
-  /// destroyed.
+                                                                       
+                
   ScopedHTType::ScopeTy scope_;
 };
 
-/// CSEContext - This pass does a simple depth-first walk of the dominator
-/// tree, eliminating trivially redundant instructions.
+                                                                          
+                                                       
 class CSEContext : public DomTreeDFS::Visitor<CSEContext, StackNode> {
  public:
   CSEContext(const DominanceInfo &DT)
@@ -123,40 +123,40 @@ class CSEContext : public DomTreeDFS::Visitor<CSEContext, StackNode> {
  private:
   friend StackNode;
 
-  /// AvailableValues - This scoped hash table contains the current values of
-  /// all of our simple scalar expressions.  As we walk down the domtree, we
-  /// look to see if instructions are in this. If so, we replace them with what
-  /// we find, otherwise we insert them so that dominated values can succeed in
-  /// their lookup.
+                                                                             
+                                                                            
+                                                                               
+                                                                               
+                   
   ScopedHTType availableValues_{};
 };
 
 inline StackNode::StackNode(CSEContext *ctx, const DominanceInfoNode *n)
     : DomTreeDFS::StackNode<CSEContext>(ctx, n),
       scope_{ctx->availableValues_} {}
-} // end anonymous namespace
+}                           
 
-//===----------------------------------------------------------------------===//
-//                             CSE Implementation
-//===----------------------------------------------------------------------===//
+                                                                                
+                                                 
+                                                                                
 
 bool CSEContext::processNode(StackNode *SN) {
   BasicBlock *BB = SN->node()->getBlock();
   bool changed = false;
 
-  // Keep a list of instructions that should be deleted when the basic block
-  // is processed.
+                                                                            
+                  
   IRBuilder::InstructionDestroyer destroyer;
 
-  // See if any instructions in the block can be eliminated.  If so, do it.  If
-  // not, add them to AvailableValues.
+                                                                               
+                                      
   for (auto &Inst : *BB) {
-    // If this is not a simple instruction that we can value number, skip it.
+                                                                             
     if (!CSEValue::canHandle(&Inst))
       continue;
 
-    // Now that we know we have an instruction we understand see if the
-    // instruction has an available value.  If so, use it.
+                                                                       
+                                                          
     if (Value *V = availableValues_.lookup(&Inst)) {
       Inst.replaceAllUsesWith(V);
       destroyer.add(&Inst);
@@ -165,7 +165,7 @@ bool CSEContext::processNode(StackNode *SN) {
       continue;
     }
 
-    // Otherwise, just remember that this value is available.
+                                                             
     availableValues_.insert(&Inst, &Inst);
   }
 

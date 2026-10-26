@@ -17,17 +17,17 @@
 
 namespace hermes {
 
-// Forward declaration.
+                       
 class JSONEmitter;
 
 namespace vm {
 
-/// An ExecTrace is a trace of some aspects of the execution, intended to
-/// help us to determine whether the replay of a trace has "implementation-level
-/// determinism": whether the original and replay executions are the same
-/// at fine granularity.
-/// A GCExecTrace is a GC-specific component of that, recording allocation
-/// states before and after GC.
+                                                                         
+                                                                                
+                                                                         
+                        
+                                                                          
+                               
 class GCExecTrace {
  public:
   GCExecTrace() = default;
@@ -52,10 +52,10 @@ class GCExecTrace {
 
  private:
 #ifdef HERMESVM_API_TRACE_DEBUG
-  /// Record of a GC.  The allocSizes is only valid for YG GCs, and
-  /// may be empty.  If non-empty, it is the sequence of kind and size
-  /// of all the allocations.  Some string kinds have their std::string
-  /// representation also recorded.
+                                                                   
+                                                                      
+                                                                       
+                                   
   struct GCRecord {
     std::vector<std::tuple<CellKind, uint32_t, std::string>> allocSizes;
     bool isYG;
@@ -125,7 +125,7 @@ void GCExecTrace::addFullGC(
 void GCExecTrace::emit(::hermes::JSONEmitter &) const {}
 #endif
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMES_VM_EXECTRACE_H
+#endif                         

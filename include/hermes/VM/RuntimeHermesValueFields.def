@@ -21,8 +21,8 @@ RUNTIME_HV_FIELD_PROTOTYPE(objectPrototype)
 RUNTIME_HV_FIELD_PROTOTYPE(objectConstructor)
 RUNTIME_HV_FIELD_PROTOTYPE(errorConstructor)
 
-/// JSError and JSError.prototype, and constructor and prototype of all native
-/// error types.
+                                                                              
+                
 #define ALL_ERROR_TYPE(name)                  \
   RUNTIME_HV_FIELD_PROTOTYPE(name##Prototype) \
   RUNTIME_HV_FIELD_PROTOTYPE(name##Constructor)
@@ -43,7 +43,7 @@ RUNTIME_HV_FIELD_PROTOTYPE(arrayBufferPrototype)
 RUNTIME_HV_FIELD_PROTOTYPE(dataViewPrototype)
 RUNTIME_HV_FIELD_PROTOTYPE(typedArrayBasePrototype)
 
-/// %TypedArray%.prototype and constructor for each typed array.
+                                                                
 #define TYPED_ARRAY(name, type)                    \
   RUNTIME_HV_FIELD_PROTOTYPE(name##ArrayPrototype) \
   RUNTIME_HV_FIELD_PROTOTYPE(name##ArrayConstructor)
@@ -73,6 +73,9 @@ RUNTIME_HV_FIELD_PROTOTYPE(arrayPrototypeValues)
 RUNTIME_HV_FIELD_PROTOTYPE(asyncFunctionPrototype)
 RUNTIME_HV_FIELD_PROTOTYPE(stringIteratorPrototype)
 RUNTIME_HV_FIELD_PROTOTYPE(regExpStringIteratorPrototype)
+RUNTIME_HV_FIELD_PROTOTYPE(asyncIteratorPrototype)
+RUNTIME_HV_FIELD_PROTOTYPE(asyncGeneratorPrototype)
+RUNTIME_HV_FIELD_PROTOTYPE(asyncGeneratorFunctionPrototype)
 RUNTIME_HV_FIELD_PROTOTYPE(generatorPrototype)
 RUNTIME_HV_FIELD_PROTOTYPE(generatorFunctionPrototype)
 RUNTIME_HV_FIELD_PROTOTYPE(parseIntFunction)
@@ -82,9 +85,9 @@ RUNTIME_HV_FIELD_PROTOTYPE(jsErrorStackAccessor)
 RUNTIME_HV_FIELD_PROTOTYPE(callSitePrototype)
 RUNTIME_HV_FIELD_PROTOTYPE(textEncoderPrototype)
 
-// TODO: for Serialization/Deserialization  after global object initialization
-// we record specialCodeBlockDomain_ and create runtimemodule later need to
-// revisit this in stage 2
+                                                                              
+                                                                           
+                          
 RUNTIME_HV_FIELD_RUNTIMEMODULE(specialCodeBlockDomain_)
 
 RUNTIME_HV_FIELD_INSTANCE(global_)
@@ -92,10 +95,10 @@ RUNTIME_HV_FIELD_INSTANCE(thrownValue_)
 RUNTIME_HV_FIELD_INSTANCE(keptObjects_)
 #ifdef HERMES_ENABLE_DEBUGGER
 RUNTIME_HV_FIELD_INSTANCE(debuggerInternalObject_)
-#endif // HERMES_ENABLE_DEBUGGER
+#endif                          
 
 #ifdef HERMES_ENABLE_INTL
-// TODO T65916424: move these out of Runtime
+                                            
 RUNTIME_HV_FIELD_INSTANCE(intlCollator)
 RUNTIME_HV_FIELD_PROTOTYPE(intlCollatorPrototype)
 RUNTIME_HV_FIELD_INSTANCE(intlDateTimeFormat)

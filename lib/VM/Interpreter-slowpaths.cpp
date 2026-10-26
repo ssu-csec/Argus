@@ -41,8 +41,8 @@ ExecutionStatus Interpreter::caseDirectEval(
 
   GCScopeMarkerRAII gcMarker{runtime};
 
-  // Check to see if global eval() has been overriden, in which case call it as
-  // as normal function.
+                                                                               
+                        
   auto global = runtime.getGlobal();
   auto existingEval = global->getNamed_RJS(
       global, runtime, Predefined::getSymbolID(Predefined::eval));
@@ -76,8 +76,8 @@ ExecutionStatus Interpreter::caseDirectEval(
     return ExecutionStatus::RETURNED;
   }
 
-  // Create a dummy scope, so that the local eval executes in its own scope
-  // (as per the spec for strict callers, which is the only thing we support).
+                                                                           
+                                                                              
 
   ScopeChain scopeChain{};
   scopeChain.scopes.emplace_back();
@@ -151,7 +151,7 @@ ExecutionStatus Interpreter::caseIteratorBegin(
     PinnedHermesValue *frameRegs,
     const inst::Inst *ip) {
   if (LLVM_LIKELY(vmisa<JSArray>(O2REG(IteratorBegin)))) {
-    // Attempt to get the fast path for array iteration.
+                                                        
     NamedPropertyDescriptor desc;
     JSObject *propObj = JSObject::getNamedDescriptorPredefined(
         Handle<JSArray>::vmcast(&O2REG(IteratorBegin)),
@@ -179,7 +179,7 @@ ExecutionStatus Interpreter::caseIteratorBegin(
     return ExecutionStatus::EXCEPTION;
   }
   O2REG(IteratorBegin) = iterRecord->nextMethod.getHermesValue();
-  // Write the result last in case it is the same register as O2REG.
+                                                                    
   O1REG(IteratorBegin) = iterRecord->iterator.getHermesValue();
   return ExecutionStatus::RETURNED;
 }
@@ -193,30 +193,30 @@ ExecutionStatus Interpreter::caseIteratorNext(
         O2REG(IteratorNext).getNumberAs<JSArray::size_type>();
     if (i >=
         JSArray::getLength(vmcast<JSArray>(O3REG(IteratorNext)), runtime)) {
-      // Finished iterating the array, stop.
+                                            
       O2REG(IteratorNext) = HermesValue::encodeUndefinedValue();
       O1REG(IteratorNext) = HermesValue::encodeUndefinedValue();
       return ExecutionStatus::RETURNED;
     }
     Handle<JSArray> arr = Handle<JSArray>::vmcast(&O3REG(IteratorNext));
     {
-      // Fast path: look up the property in indexed storage.
-      // Runs when there is no hole and a regular non-accessor property exists
-      // at the current index, because those are the only properties stored
-      // in indexed storage.
-      // If there is another kind of property we have to call getComputed_RJS.
-      // No need to check the fastIndexProperties flag because the indexed
-      // storage would be deleted and at() would return empty in that case.
+                                                            
+                                                                              
+                                                                           
+                            
+                                                                              
+                                                                          
+                                                                           
       NoAllocScope noAlloc{runtime};
       SmallHermesValue value = arr->at(runtime, i);
       if (LLVM_LIKELY(!value.isEmpty())) {
         O2REG(IteratorNext) = HermesValue::encodeUntrustedNumberValue(i + 1);
-        // Write the result last in case it is the same register as O2REG.
+                                                                          
         O1REG(IteratorNext) = value.unboxToHV(runtime);
         return ExecutionStatus::RETURNED;
       }
     }
-    // Slow path, just run the full getComputedPropertyValue_RJS path.
+                                                                      
     GCScopeMarkerRAII marker{runtime};
     Handle<> idxHandle{&O2REG(IteratorNext)};
     CallResult<PseudoHandle<>> valueRes =
@@ -225,17 +225,17 @@ ExecutionStatus Interpreter::caseIteratorNext(
       return ExecutionStatus::EXCEPTION;
     }
     O2REG(IteratorNext) = HermesValue::encodeUntrustedNumberValue(i + 1);
-    // Write the result last in case it is the same register as O2REG.
+                                                                      
     O1REG(IteratorNext) = valueRes->get();
     return ExecutionStatus::RETURNED;
   }
   if (LLVM_UNLIKELY(O2REG(IteratorNext).isUndefined())) {
-    // In all current use cases of IteratorNext, we check and branch away
-    // from IteratorNext in the case that iterStorage was set to undefined
-    // (which indicates completion of iteration).
-    // If we introduce a use case which allows calling IteratorNext,
-    // then this assert can be removed. For now, this branch just returned
-    // undefined in NDEBUG mode.
+                                                                         
+                                                                          
+                                                 
+                                                                    
+                                                                          
+                                
     assert(false && "IteratorNext called on completed iterator");
     O1REG(IteratorNext) = HermesValue::encodeUndefinedValue();
     return ExecutionStatus::RETURNED;
@@ -259,13 +259,13 @@ ExecutionStatus Interpreter::caseIteratorNext(
     return ExecutionStatus::EXCEPTION;
   }
   if (toBoolean(doneRes->get())) {
-    // Done with iteration. Clear the iterator so that subsequent
-    // instructions do not call next() or return().
+                                                                 
+                                                   
     O2REG(IteratorNext) = HermesValue::encodeUndefinedValue();
     O1REG(IteratorNext) = HermesValue::encodeUndefinedValue();
   } else {
-    // Not done iterating, so get the `value` property and store it
-    // as the result.
+                                                                   
+                     
     CallResult<PseudoHandle<>> propRes = JSObject::getNamed_RJS(
         resultObj, runtime, Predefined::getSymbolID(Predefined::value));
     if (LLVM_UNLIKELY(propRes == ExecutionStatus::EXCEPTION)) {
@@ -282,12 +282,12 @@ ExecutionStatus Interpreter::caseGetPNameList(
     PinnedHermesValue *frameRegs,
     const Inst *ip) {
   if (O2REG(GetPNameList).isUndefined() || O2REG(GetPNameList).isNull()) {
-    // Set the iterator to be undefined value.
+                                              
     O1REG(GetPNameList) = HermesValue::encodeUndefinedValue();
     return ExecutionStatus::RETURNED;
   }
 
-  // Convert to object and store it back to the register.
+                                                         
   auto res = toObject(runtime, Handle<>(&O2REG(GetPNameList)));
   if (LLVM_UNLIKELY(res == ExecutionStatus::EXCEPTION)) {
     return ExecutionStatus::EXCEPTION;
@@ -304,8 +304,8 @@ ExecutionStatus Interpreter::caseGetPNameList(
   auto arr = *cr;
   O3REG(GetPNameList) = HermesValue::encodeUntrustedNumberValue(beginIndex);
   O4REG(GetPNameList) = HermesValue::encodeUntrustedNumberValue(endIndex);
-  // Write the result last in case it is the same register as one of the in/out
-  // operands.
+                                                                               
+              
   O1REG(GetPNameList) = arr.getHermesValue();
   return ExecutionStatus::RETURNED;
 }
@@ -325,7 +325,7 @@ ExecutionStatus Interpreter::implCallBuiltin(
 
   auto newFrame = StackFramePtr::initFrame(
       runtime.stackPointer_, FRAME, ip, curCodeBlock, op3 - 1, nf, false);
-  // "thisArg" is implicitly assumed to "undefined".
+                                                    
   newFrame.getThisArgRef() = HermesValue::encodeUndefinedValue();
 
   SLOW_DEBUG(dumpCallArguments(llvh::dbgs(), runtime, newFrame));
@@ -347,7 +347,7 @@ ExecutionStatus Interpreter::declareGlobalVarImpl(
   GCScopeMarkerRAII mark{runtime};
   DefinePropertyFlags dpf = DefinePropertyFlags::getDefaultNewPropertyFlags();
   dpf.configurable = 0;
-  // Do not overwrite existing globals with undefined.
+                                                      
   dpf.setValue = 0;
 
   CallResult<bool> res = JSObject::defineOwnProperty(
@@ -361,12 +361,12 @@ ExecutionStatus Interpreter::declareGlobalVarImpl(
     assert(
         !runtime.getGlobal()->isProxyObject() &&
         "global can't be a proxy object");
-    // If the property already exists, this should be a noop.
-    // Instead of incurring the cost to check every time, do it
-    // only if an exception is thrown, and swallow the exception
-    // if it exists, since we didn't want to make the call,
-    // anyway.  This most likely means the property is
-    // non-configurable.
+                                                             
+                                                               
+                                                                
+                                                           
+                                                      
+                        
     NamedPropertyDescriptor desc;
     if (!JSObject::getOwnNamedDescriptor(
             runtime.getGlobal(),
@@ -402,7 +402,7 @@ static CallResult<HermesValue> doBigIntBinOp(
     BigIntBinaryOp Oper,
     Handle<BigIntPrimitive> lhs,
     Handle<> rhs) {
-  // Cannot use ToBigInt here as it would incorrectly allow boolean/string rhs.
+                                                                               
   CallResult<HermesValue> res = toNumeric_RJS(runtime, rhs);
   if (res == ExecutionStatus::EXCEPTION) {
     return ExecutionStatus::EXCEPTION;
@@ -414,8 +414,8 @@ static CallResult<HermesValue> doBigIntBinOp(
 }
 
 namespace {
-/// BigIntOper maps the \param Oper (a Number operation) to its respective
-/// BigIntPrimitive counterpart.
+                                                                          
+                                
 template <auto Oper>
 int BigIntOper;
 
@@ -455,7 +455,7 @@ constexpr auto &BigIntOper<doInc> = BigIntPrimitive::inc;
 template <>
 constexpr auto &BigIntOper<doDec> = BigIntPrimitive::dec;
 
-} // namespace
+}             
 
 template <auto Oper>
 CallResult<HermesValue>
@@ -529,13 +529,13 @@ template CallResult<HermesValue>
 doBitOperSlowPath<doBitXor>(Runtime &runtime, Handle<> lhs, Handle<> rhs);
 
 namespace {
-/// ToIntegral maps the \param Oper shift operation (on Number) to the function
-/// used to convert the operation's lhs operand to integer.
+                                                                               
+                                                           
 template <auto Oper>
 inline int ToIntegral;
 
-// For LShift, we need to use toUInt32 first because lshift on negative
-// numbers is undefined behavior in theory.
+                                                                       
+                                           
 template <>
 inline constexpr auto &ToIntegral<doLShift> = toUInt32_RJS;
 
@@ -544,7 +544,7 @@ inline constexpr auto &ToIntegral<doRShift> = toInt32_RJS;
 
 template <>
 inline constexpr auto &ToIntegral<doURshift> = toUInt32_RJS;
-} // namespace
+}             
 
 template <auto Oper>
 CallResult<HermesValue>
@@ -613,37 +613,37 @@ template CallResult<HermesValue> doIncDecOperSlowPath<doDec>(
     Handle<> src);
 
 CallResult<HermesValue> doBitNotSlowPath(Runtime &runtime, Handle<> src) {
-  // Try converting src to a numeric.
+                                     
   auto numRes = toNumeric_RJS(runtime, src);
   if (LLVM_UNLIKELY(numRes == ExecutionStatus::EXCEPTION))
     return ExecutionStatus::EXCEPTION;
-  // Test for BigInt since it is cheaper than testing for number. If it is a
-  // number, truncate it and perform bitwise not.
+                                                                            
+                                                 
   if (LLVM_LIKELY(!numRes->isBigInt()))
     return HermesValue::encodeUntrustedNumberValue(
         ~hermes::truncateToInt32(numRes->getNumber()));
 
-  // The result is a BigInt, perform a BigInt bitwise not.
+                                                          
   auto bigint = runtime.makeHandle(numRes->getBigInt());
   return BigIntPrimitive::unaryNOT(runtime, bigint);
 }
 
 CallResult<HermesValue> doNegateSlowPath(Runtime &runtime, Handle<> src) {
-  // Try converting src to a numeric.
+                                     
   auto numRes = toNumeric_RJS(runtime, src);
   if (LLVM_UNLIKELY(numRes == ExecutionStatus::EXCEPTION))
     return ExecutionStatus::EXCEPTION;
-  // Test for BigInt since it is cheaper than testing for number. If it is a
-  // number, negate it and return.
+                                                                            
+                                  
   if (LLVM_LIKELY(!numRes->isBigInt()))
     return HermesValue::encodeUntrustedNumberValue(-numRes->getNumber());
 
-  // The result is a BigInt, perform a BigInt unary minus.
+                                                          
   auto bigint = runtime.makeHandle(numRes->getBigInt());
   return BigIntPrimitive::unaryMinus(runtime, bigint);
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
 #undef DEBUG_TYPE

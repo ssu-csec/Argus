@@ -36,7 +36,7 @@ class JamCRC {
 public:
   JamCRC(uint32_t Init = 0xFFFFFFFFU) : CRC(Init) {}
 
-  // Update the CRC calculation with Data.
+                                          
   void update(ArrayRef<char> Data);
 
   uint32_t getCRC() const { return CRC; }
@@ -44,6 +44,6 @@ public:
 private:
   uint32_t CRC;
 };
-} // End of namespace llvh
+}                         
 
 #endif

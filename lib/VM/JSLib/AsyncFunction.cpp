@@ -5,27 +5,27 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//===----------------------------------------------------------------------===//
-/// \file
-/// ES12 26.7.1 The AsyncFunction constructor.
-//===----------------------------------------------------------------------===//
+                                                                                
+         
+                                              
+                                                                                
 #include "JSLibInternal.h"
 
 namespace hermes {
 namespace vm {
 
-/// 26.7.1.1 AsyncFunction ( p1, p2, … , pn, body )
+                                                   
 CallResult<HermesValue>
 asyncFunctionConstructor(void *, Runtime &runtime, NativeArgs args) {
-  /// 3. Return CreateDynamicFunction(C, NewTarget, async, args).
+                                                                 
   return createDynamicFunction(runtime, args, DynamicFunctionKind::Async);
 }
 
 Handle<JSObject> createAsyncFunctionConstructor(Runtime &runtime) {
   auto proto = Handle<JSObject>::vmcast(&runtime.asyncFunctionPrototype);
 
-  /// 26.7.2 Properties of the AsyncFunction Constructor
-  /// has a [[Prototype]] internal slot whose value is %Function%.
+                                                        
+                                                                  
   auto cons = runtime.makeHandle(
       NativeConstructor::create(
           runtime,
@@ -36,9 +36,9 @@ Handle<JSObject> createAsyncFunctionConstructor(Runtime &runtime) {
           NativeConstructor::creatorFunction<JSAsyncFunction>,
           CellKind::JSAsyncFunctionKind));
 
-  /// has a "name" property whose value is "AsyncFunction".
-  /// 26.7.2.1 AsyncFunction.length
-  /// 26.7.2.2 AsyncFunction.prototype
+                                                           
+                                   
+                                      
   auto st = Callable::defineNameLengthAndPrototype(
       cons,
       runtime,
@@ -55,10 +55,10 @@ Handle<JSObject> createAsyncFunctionConstructor(Runtime &runtime) {
   dpf.writable = 0;
   dpf.enumerable = 0;
 
-  /// 26.7.3 Properties of the AsyncFunction Prototype Object
+                                                             
 
-  /// 26.7.3.1 AsyncFunction.prototype.constructor
-  /// The initial value of is %AsyncFunction%.
+                                                  
+                                              
   defineProperty(
       runtime,
       proto,
@@ -66,8 +66,8 @@ Handle<JSObject> createAsyncFunctionConstructor(Runtime &runtime) {
       cons,
       dpf);
 
-  /// 26.7.3.2 AsyncFunction.prototype [ @@toStringTag ]
-  /// The initial value is the String value "AsyncFunction".
+                                                        
+                                                            
   defineProperty(
       runtime,
       proto,
@@ -78,5 +78,5 @@ Handle<JSObject> createAsyncFunctionConstructor(Runtime &runtime) {
   return cons;
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

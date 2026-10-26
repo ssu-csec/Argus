@@ -13,8 +13,8 @@
 namespace hermes {
 namespace vm {
 
-//===----------------------------------------------------------------------===//
-// class JSDate
+                                                                                
+               
 
 const ObjectVTable JSDate::vt{
     VTable(CellKind::JSDateKind, cellSize<JSDate>()),
@@ -44,5 +44,5 @@ JSDate::create(Runtime &runtime, double value, Handle<JSObject> parentHandle) {
   return JSObjectInit::initToPseudoHandle(runtime, cell);
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

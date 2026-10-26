@@ -31,7 +31,7 @@ ConsoleHostContext::ConsoleHostContext(vm::Runtime &runtime) {
   });
 }
 
-/// Raises an uncatchable quit exception.
+                                         
 static vm::CallResult<vm::HermesValue>
 quit(void *, vm::Runtime &runtime, vm::NativeArgs) {
   return runtime.raiseQuitError();
@@ -63,7 +63,7 @@ createHeapSnapshot(void *, vm::Runtime &runtime, vm::NativeArgs args) {
   }
 
   if (fileName.empty()) {
-    // "-" is recognized as stdout.
+                                   
     fileName = "-";
   } else if (
       !llvh::StringRef{fileName}.endswith(".heapsnapshot") &&
@@ -72,18 +72,18 @@ createHeapSnapshot(void *, vm::Runtime &runtime, vm::NativeArgs args) {
         "Filename must end in .heapsnapshot or .heaptimeline");
   }
   if (auto err = runtime.getHeap().createSnapshotToFile(fileName)) {
-    // This isn't a TypeError, but no other built-in can express file errors,
-    // so this will have to do.
+                                                                             
+                               
     return runtime.raiseTypeError(
         TwineChar16("Could not write out to the file located at \"") +
         llvh::StringRef(fileName) +
         "\". System error: " + llvh::StringRef(err.message()));
   }
   return HermesValue::encodeUndefinedValue();
-#else // !defined(HERMES_MEMORY_INSTRUMENTATION)
+#else                                           
   return runtime.raiseTypeError(
       "Heap snapshotting requires a build with memory instrumentation");
-#endif // !defined(HERMES_MEMORY_INSTRUMENTATION)
+#endif                                           
 }
 
 static vm::CallResult<vm::HermesValue>
@@ -176,7 +176,7 @@ void installConsoleBindings(
         "global.defineOwnProperty() failed");
   };
 
-  // Define the 'quit' function.
+                                
   defineGlobalFunc(
       vm::Predefined::getSymbolID(vm::Predefined::quit), quit, nullptr, 0);
   defineGlobalFunc(
@@ -185,7 +185,7 @@ void installConsoleBindings(
       nullptr,
       1);
 
-  // Define the 'loadSegment' function.
+                                       
   defineGlobalFunc(
       runtime
           .ignoreAllocationFailure(runtime.getIdentifierTable().getSymbolHandle(
@@ -212,12 +212,12 @@ void installConsoleBindings(
       &ctx,
       1);
 
-  // Define `setImmediate` to be the same as `setTimeout` here.
-  // `setTimeout` doesn't use the time provided to it, and due to this
-  // being CLI code, we don't have an event loop.
-  // This allows the Promise polyfill to work enough for testing in the
-  // terminal, though other hosts should provide their own implementation of the
-  // event loop.
+                                                               
+                                                                      
+                                                 
+                                                                       
+                                                                                
+                
   defineGlobalFunc(
       runtime
           .ignoreAllocationFailure(runtime.getIdentifierTable().getSymbolHandle(
@@ -228,14 +228,14 @@ void installConsoleBindings(
       1);
 }
 
-// If a function body might throw C++ exceptions other than
-// jsi::JSError from Hermes, it should be wrapped in this form:
-//
-//   return maybeCatchException([&] { body })
-//
-// This will execute body; if exceptions are enabled, this execution
-// will be wrapped in a try/catch that catches those exceptions, report it then
-// exit.
+                                                           
+                                                               
+  
+                                             
+  
+                                                                    
+                                                                               
+        
 namespace {
 
 template <typename F>
@@ -244,11 +244,11 @@ auto maybeCatchException(const F &f) -> decltype(f()) {
   try {
     return f();
   } catch (const std::exception &ex) {
-    // Report thrown exception and exit the process with failure code.
+                                                                      
     llvh::errs() << ex.what();
     exit(1);
   }
-#else // HERMESVM_EXCEPTION_ON_OOM
+#else                             
   return f();
 #endif
 }
@@ -315,7 +315,7 @@ bool executeHBCBytecodeImpl(
   if (options.sampleProfiling) {
     vm::SamplingProfiler::enable();
   }
-#endif // HERMESVM_SAMPLING_PROFILER_AVAILABLE
+#endif                                        
 
   llvh::StringRef sourceURL{};
   if (filename)
@@ -331,23 +331,23 @@ bool executeHBCBytecodeImpl(
     vm::SamplingProfiler::disable();
     vm::SamplingProfiler::dumpChromeTraceGlobal(llvh::errs());
   }
-#endif // HERMESVM_SAMPLING_PROFILER_AVAILABLE
+#endif                                        
 
   bool threwException = status == vm::ExecutionStatus::EXCEPTION;
 
   if (threwException) {
-    // Make sure stdout catches up to stderr.
+                                             
     llvh::outs().flush();
     runtime->printException(
         llvh::errs(), runtime->makeHandle(runtime->getThrownValue()));
   }
 
-  // Perform a microtask checkpoint after running script.
+                                                         
   microtask::performCheckpoint(*runtime);
 
   if (!ctx.tasksEmpty()) {
     vm::GCScopeMarkerRAII marker{scope};
-    // Run the tasks until there are no more.
+                                             
     vm::MutableHandle<vm::Callable> task{*runtime};
     while (auto optTask = ctx.dequeueTask()) {
       task = std::move(*optTask);
@@ -361,7 +361,7 @@ bool executeHBCBytecodeImpl(
         break;
       }
 
-      // Perform a microtask checkpoint at the end of every task tick.
+                                                                      
       microtask::performCheckpoint(*runtime);
     }
   }
@@ -397,10 +397,10 @@ bool executeHBCBytecodeImpl(
   return !threwException;
 }
 
-} // namespace
+}             
 
-/// Executes the HBC bytecode provided in HermesVM.
-/// \return true on success, false on error.
+                                                   
+                                            
 bool executeHBCBytecode(
     std::shared_ptr<hbc::BCProvider> &&bytecode,
     const ExecuteOptions &options,
@@ -410,4 +410,4 @@ bool executeHBCBytecode(
   });
 }
 
-} // namespace hermes
+}                    

@@ -16,8 +16,8 @@
 namespace hermes {
 namespace vm {
 
-/// A LimitedStorageProvider is an adapter that imposes an extra limit on
-/// requests for new storage.
+                                                                         
+                             
 class LimitedStorageProvider final : public StorageProvider {
   std::unique_ptr<StorageProvider> delegate_;
   size_t limit_;
@@ -34,7 +34,7 @@ class LimitedStorageProvider final : public StorageProvider {
   void deleteStorageImpl(void *storage) override;
 };
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
 #endif

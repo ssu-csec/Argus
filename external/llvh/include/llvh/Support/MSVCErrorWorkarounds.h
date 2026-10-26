@@ -23,8 +23,8 @@
 
 namespace llvh {
 
-// A default-constructible llvh::Error that is suitable for use with MSVC's
-// std::future implementation which requires default constructible types.
+                                                                           
+                                                                         
 class MSVCPError : public Error {
 public:
   MSVCPError() { (void)!!*this; }
@@ -39,8 +39,8 @@ public:
   MSVCPError(Error Err) : Error(std::move(Err)) {}
 };
 
-// A default-constructible llvh::Expected that is suitable for use with MSVC's
-// std::future implementation, which requires default constructible types.
+                                                                              
+                                                                          
 template <typename T> class MSVCPExpected : public Expected<T> {
 public:
   MSVCPExpected()
@@ -79,6 +79,6 @@ public:
       : Expected<T>(std::move(Other)) {}
 };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_SUPPORT_MSVCERRORWORKAROUNDS_H
+#endif                                       

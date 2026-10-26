@@ -20,32 +20,32 @@
 
 namespace llvh {
 
-/// A switch()-like statement whose cases are string literals.
-///
-/// The StringSwitch class is a simple form of a switch() statement that
-/// determines whether the given string matches one of the given string
-/// literals. The template type parameter \p T is the type of the value that
-/// will be returned from the string-switch expression. For example,
-/// the following code switches on the name of a color in \c argv[i]:
-///
-/// \code
-/// Color color = StringSwitch<Color>(argv[i])
-///   .Case("red", Red)
-///   .Case("orange", Orange)
-///   .Case("yellow", Yellow)
-///   .Case("green", Green)
-///   .Case("blue", Blue)
-///   .Case("indigo", Indigo)
-///   .Cases("violet", "purple", Violet)
-///   .Default(UnknownColor);
-/// \endcode
+                                                              
+   
+                                                                        
+                                                                       
+                                                                            
+                                                                    
+                                                                     
+   
+         
+                                              
+                       
+                             
+                             
+                           
+                         
+                             
+                                        
+                             
+            
 template<typename T, typename R = T>
 class StringSwitch {
-  /// The string we are matching.
+                                 
   const StringRef Str;
 
-  /// The pointer to the result of this switch statement, once known,
-  /// null before that.
+                                                                     
+                       
   Optional<T> Result;
 
 public:
@@ -53,10 +53,10 @@ public:
   explicit StringSwitch(StringRef S)
   : Str(S), Result() { }
 
-  // StringSwitch is not copyable.
+                                  
   StringSwitch(const StringSwitch &) = delete;
 
-  // StringSwitch is not assignable due to 'Str' being 'const'.
+                                                               
   void operator=(const StringSwitch &) = delete;
   void operator=(StringSwitch &&other) = delete;
 
@@ -65,7 +65,7 @@ public:
 
   ~StringSwitch() = default;
 
-  // Case-sensitive case matchers
+                                 
   LLVM_ATTRIBUTE_ALWAYS_INLINE
   StringSwitch &Case(StringLiteral S, T Value) {
     if (!Result && Str == S) {
@@ -150,7 +150,7 @@ public:
     return Case(S0, Value).Cases(S1, S2, S3, S4, S5, S6, S7, S8, S9, Value);
   }
 
-  // Case-insensitive case matchers.
+                                    
   LLVM_ATTRIBUTE_ALWAYS_INLINE
   StringSwitch &CaseLower(StringLiteral S, T Value) {
     if (!Result && Str.equals_lower(S))
@@ -214,6 +214,6 @@ public:
   }
 };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_ADT_STRINGSWITCH_H
+#endif                           

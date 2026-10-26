@@ -33,12 +33,12 @@ protected:
 public:
   virtual ~GVMaterializer();
 
-  /// Make sure the given GlobalValue is fully read.
-  ///
+                                                    
+     
   virtual Error materialize(GlobalValue *GV) = 0;
 
-  /// Make sure the entire Module has been completely read.
-  ///
+                                                           
+     
   virtual Error materializeModule() = 0;
 
   virtual Error materializeMetadata() = 0;
@@ -47,6 +47,6 @@ public:
   virtual std::vector<StructType *> getIdentifiedStructTypes() const = 0;
 };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_IR_GVMATERIALIZER_H
+#endif                            

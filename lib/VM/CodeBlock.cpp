@@ -47,7 +47,7 @@ static void validateInstructions(ArrayRef<uint8_t> list, unsigned frameSize) {
     assert(reg32 < frameSize && "invalid register index");
   };
   auto validateAddr32 = [&](OperandAddr32 ip, OperandAddr32 offset) {
-    // Check the offset while avoiding overflow.
+                                                
     assert(
         (offset < 0 ? ip + offset >= 0 : offset < listSize - ip) &&
         "invalid jmp offset");
@@ -130,10 +130,10 @@ CodeBlock *CodeBlock::createCodeBlock(
       {bytecode, header.bytecodeSizeInBytes()}, header.frameSize());
 #endif
 
-  // Compute size needed for caching from the highest accessed indices.
-  // If the highest access index is 0, that function does not use this cache at
-  // all so there is no reason to allocate it. If the function does access the
-  // cache we need to allocate an extra slot for the no-cache indicator.
+                                                                       
+                                                                               
+                                                                              
+                                                                        
   auto sizeComputer = [](uint8_t highest) -> uint32_t {
     return highest == 0 ? 0 : highest + 1;
   };
@@ -233,9 +233,9 @@ OptValue<hbc::DebugSourceLocation> CodeBlock::getSourceLocation(
     hbc::DebugSourceLocation location;
     location.line = coords.line;
     location.column = coords.col;
-    // We don't actually have a filename table, so we can't really provide
-    // this. Fortunately the location of uncompiled codeblocks is primarily
-    // used by heap snapshots, which substitutes it for the SourceID anyways.
+                                                                          
+                                                                           
+                                                                             
     location.filenameId = facebook::hermes::debugger::kInvalidLocation;
     return location;
   }
@@ -253,17 +253,17 @@ OptValue<hbc::DebugSourceLocation> CodeBlock::getSourceLocation(
 }
 
 OptValue<uint32_t> CodeBlock::getFunctionSourceID() const {
-  // Note that for the case of lazy compilation, the function sources had been
-  // reserved into the function source table of the root bytecode module.
-  // For non-lazy module, the lazy root module is itself.
+                                                                              
+                                                                         
+                                                         
   llvh::ArrayRef<std::pair<uint32_t, uint32_t>> table =
       runtimeModule_->getLazyRootModule()
           ->getBytecode()
           ->getFunctionSourceTable();
 
-  // Performs a binary search since the function source table is sorted by the
-  // 1st value. We could further optimize the lookup by loading it as a map in
-  // the RuntimeModule, but the table is expected to be small.
+                                                                              
+                                                                              
+                                                              
   auto it = std::lower_bound(
       table.begin(),
       table.end(),
@@ -328,10 +328,10 @@ std::unique_ptr<hbc::BytecodeModule> compileLazyFunction(
   Function *entryPoint = pair.first;
   Function *lexicalRoot = pair.second;
 
-  // We look up source map URLs by iterating modules and finding the first one
-  // with a matching buffer id, which will be the root module. These lazily
-  // compiled compiled modules therefore don't need to duplicate the URL,
-  // which can be several MB if it encodes the source map itself.
+                                                                              
+                                                                           
+                                                                         
+                                                                 
   BytecodeGenerationOptions opts = BytecodeGenerationOptions::defaults();
   opts.stripSourceMappingURL = true;
 
@@ -340,7 +340,7 @@ std::unique_ptr<hbc::BytecodeModule> compileLazyFunction(
 
   return bytecodeModule;
 }
-} // namespace
+}             
 
 ExecutionStatus CodeBlock::lazyCompileImpl(Runtime &runtime) {
   assert(isLazy() && "Laziness has not been checked");
@@ -353,7 +353,7 @@ ExecutionStatus CodeBlock::lazyCompileImpl(Runtime &runtime) {
   auto bcModule = compileLazyFunction(lazyData);
 
   if (manager.getErrorCount()) {
-    // Raise a SyntaxError to be consistent with eval().
+                                                        
     return runtime.raiseSyntaxError(
         llvh::StringRef{outputManager.getErrorString()});
   }
@@ -362,8 +362,8 @@ ExecutionStatus CodeBlock::lazyCompileImpl(Runtime &runtime) {
 
   runtimeModule_->initializeLazyMayAllocate(
       hbc::BCProviderFromSrc::createBCProviderFromSrc(std::move(bcModule)));
-  // Reset all meta lazyData of the CodeBlock to point to the newly
-  // generated bytecode module.
+                                                                   
+                               
   functionID_ = runtimeModule_->getBytecode()->getGlobalFunctionIndex();
   functionHeader_ =
       runtimeModule_->getBytecode()->getFunctionHeader(functionID_);
@@ -371,7 +371,7 @@ ExecutionStatus CodeBlock::lazyCompileImpl(Runtime &runtime) {
 
   return ExecutionStatus::RETURNED;
 }
-#endif // HERMESVM_LEAN
+#endif                 
 
 void CodeBlock::markCachedHiddenClasses(
     Runtime &runtime,
@@ -391,12 +391,12 @@ uint32_t CodeBlock::getVirtualOffset() const {
 
 #ifdef HERMES_ENABLE_DEBUGGER
 
-/// Makes the page that \p address is in writable.
-/// If it fails, aborts execution.
+                                                  
+                                  
 static void makeWritable(void *address, size_t length) {
   void *endAddress = static_cast<void *>(static_cast<char *>(address) + length);
 
-  // Align the address to page size before setting the pagesize.
+                                                                
   void *alignedAddress = reinterpret_cast<void *>(llvh::alignDown(
       reinterpret_cast<uintptr_t>(address), hermes::oscompat::page_size()));
 
@@ -438,15 +438,15 @@ void CodeBlock::uninstallBreakpointAtOffset(
       *address == static_cast<hbc::opcode_atom_t>(OpCode::Debugger) &&
       "can't uninstall a non-debugger instruction");
 
-  // This is valid because we can only uninstall breakpoints that we installed.
-  // Therefore, the page here must be writable.
+                                                                               
+                                               
   *address = opCode;
   --numInstalledBreakpoints_;
 }
 
 #endif
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
 #undef DEBUG_TYPE

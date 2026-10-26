@@ -20,8 +20,8 @@
 namespace hermes {
 namespace vm {
 
-/// ES9 7.3.17 CreateListFromArrayLike
-/// Returns the length of the List
+                                      
+                                  
 inline CallResult<uint64_t> getArrayLikeLength_RJS(
     Handle<JSObject> arrayLikeHandle,
     Runtime &runtime) {
@@ -33,12 +33,12 @@ inline CallResult<uint64_t> getArrayLikeLength_RJS(
   return toLengthU64(runtime, runtime.makeHandle(std::move(*propRes)));
 }
 
-/// ES9 7.3.17 CreateListFromArrayLike
-/// This will call ElementCB length times, once for each element,
-/// passing \c Runtime*, the \c uint64_t index, and \c PseudoHandle<>
-/// value.  ElementCB is responsible for consuming the elements
-/// however it likes.  It is permitted to allocate, and it must return
-/// ExecutionStatus.
+                                      
+                                                                 
+                                                                     
+                                                               
+                                                                      
+                    
 template <typename ElementCB>
 ExecutionStatus createListFromArrayLike_RJS(
     Handle<JSObject> arrayLikeHandle,
@@ -52,9 +52,9 @@ ExecutionStatus createListFromArrayLike_RJS(
   if (LLVM_LIKELY(elemArray)) {
     for (uint64_t elemIdx = 0; elemIdx < length; ++elemIdx) {
       gcScope.flushToMarker(marker);
-      // Fast path: we already have an array, so try and bypass the getComputed
-      // checks and the handle loads & stores. Directly call ArrayImpl::at,
-      // and only call getComputed if the element is empty.
+                                                                               
+                                                                           
+                                                           
       PseudoHandle<> elem = createPseudoHandle(
           elemArray->at(runtime, elemIdx).unboxToHV(runtime));
       if (LLVM_LIKELY(!elem->isEmpty())) {
@@ -65,8 +65,8 @@ ExecutionStatus createListFromArrayLike_RJS(
         }
         continue;
       }
-      // Slow path fallback: the actual getComputed on this,
-      // because the real value could be up the prototype chain.
+                                                            
+                                                                
       iHandle = HermesValue::encodeTrustedNumberValue(elemIdx);
       CallResult<PseudoHandle<>> propRes =
           JSObject::getComputed_RJS(arrayLikeHandle, runtime, iHandle);
@@ -80,7 +80,7 @@ ExecutionStatus createListFromArrayLike_RJS(
       }
     }
   } else {
-    // Not an array. Use this slow path.
+                                        
     for (uint64_t elemIdx = 0; elemIdx < length; ++elemIdx) {
       gcScope.flushToMarker(marker);
       iHandle = HermesValue::encodeTrustedNumberValue(elemIdx);
@@ -99,8 +99,8 @@ ExecutionStatus createListFromArrayLike_RJS(
   return ExecutionStatus::RETURNED;
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 #pragma GCC diagnostic pop
 
-#endif // HERMES_VM_ARRAYLIKE_H
+#endif                         

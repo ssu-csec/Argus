@@ -37,46 +37,46 @@ class JSDataView final : public JSObject {
       Runtime &runtime,
       Handle<JSObject> prototype);
 
-  /// Retrieves a pointer to the held buffer.
+                                             
   Handle<JSArrayBuffer> getBuffer(Runtime &runtime) {
     assert(buffer_ && "Cannot get a null buffer");
     return runtime.makeHandle(buffer_);
   }
 
-  /// \return the number of bytes viewed by this DataView.
+                                                          
   size_type byteLength() const {
     return length_;
   }
 
-  /// \return the position within the buffer that this DataView points at.
+                                                                          
   size_type byteOffset() const {
     return offset_;
   }
 
-  /// Get the value stored in the bytes from offset to offset + sizeof(T), in
-  /// either little or big endian order.
-  /// \p offset The distance (in bytes) from the beginning of the DataView to
-  ///   look at.
-  /// \p littleEndian If true, then read the bytes in little endian order, else
-  ///   read them as big endian order.
-  /// \return The value which the bytes requested to view represent, as a type.
-  /// \pre attached() must be true
+                                                                             
+                                        
+                                                                             
+                
+                                                                               
+                                      
+                                                                               
+                                  
   template <typename T>
   T get(Runtime &runtime, size_type offset, bool littleEndian) const;
 
-  /// Set the value stored in the bytes from offset to offset + sizeof(T), in
-  /// either little or big endian order.
-  /// \p offset The distance (in bytes) from the beginning of the DataView to
-  ///   look at.
-  /// \p value The typed value to insert into the underlying storage.
-  /// \p littleEndian Whether to write the value as little or big endian.
-  /// \pre attached() must be true
+                                                                             
+                                        
+                                                                             
+                
+                                                                     
+                                                                         
+                                  
   template <typename T>
   void set(Runtime &runtime, size_type offset, T value, bool littleEndian);
 
-  /// Check if the underlying JSArrayBuffer is attached.
-  /// \return true iff the JSArrayBuffer being viewed by this JSDataView is
-  ///   attached to some storage.
+                                                        
+                                                                           
+                                 
   bool attached(Runtime &runtime) const {
     assert(
         buffer_ &&
@@ -101,11 +101,11 @@ class JSDataView final : public JSObject {
   friend void JSDataViewBuildMeta(const GCCell *cell, Metadata::Builder &mb);
 
  private:
-  /// buffer_ is the underlying storage of the bytes for a DataView.
+                                                                    
   GCPointer<JSArrayBuffer> buffer_;
-  /// offset_ is the position within the buffer that the DataView begins at.
+                                                                            
   size_type offset_;
-  /// length_ is the amount of bytes the DataView views inside the storage.
+                                                                           
   size_type length_;
 
  public:
@@ -115,8 +115,8 @@ class JSDataView final : public JSObject {
       Handle<HiddenClass> clazz);
 };
 
-/// @name Implementations
-/// @{
+                         
+      
 
 template <typename T>
 T JSDataView::get(
@@ -158,9 +158,9 @@ void JSDataView::set(
       sizeof(T));
 }
 
-/// @}
+      
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
 #endif

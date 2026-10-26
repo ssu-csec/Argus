@@ -35,11 +35,11 @@
 
 namespace llvh {
 
-//===----------------------------------------------------------------------===//
-// BasicBlock pred_iterator definition
-//===----------------------------------------------------------------------===//
+                                                                                
+                                      
+                                                                                
 
-template <class Ptr, class USE_iterator> // Predecessor Iterator
+template <class Ptr, class USE_iterator>                        
 class PredIterator {
 public:
   using iterator_category = std::forward_iterator_tag;
@@ -53,7 +53,7 @@ private:
   USE_iterator It;
 
   inline void advancePastNonTerminators() {
-    // Loop to ignore non-terminator uses (for example BlockAddresses).
+                                                                       
     while (!It.atEnd()) {
       if (auto *Inst = dyn_cast<Instruction>(*It))
         if (Inst->isTerminator())
@@ -79,24 +79,24 @@ public:
   }
   inline pointer *operator->() const { return &operator*(); }
 
-  inline Self& operator++() {   // Preincrement
+  inline Self& operator++() {                  
     assert(!It.atEnd() && "pred_iterator out of range!");
     ++It; advancePastNonTerminators();
     return *this;
   }
 
-  inline Self operator++(int) { // Postincrement
+  inline Self operator++(int) {                 
     Self tmp = *this; ++*this; return tmp;
   }
 
-  /// getOperandNo - Return the operand number in the predecessor's
-  /// terminator of the successor.
+                                                                   
+                                  
   unsigned getOperandNo() const {
     return It.getOperandNo();
   }
 
-  /// getUse - Return the operand Use in the predecessor's terminator
-  /// of the successor.
+                                                                     
+                       
   Use &getUse() const {
     return It.getUse();
   }
@@ -129,9 +129,9 @@ inline pred_const_range predecessors(const BasicBlock *BB) {
   return pred_const_range(pred_begin(BB), pred_end(BB));
 }
 
-//===----------------------------------------------------------------------===//
-// Instruction and BasicBlock succ_iterator helpers
-//===----------------------------------------------------------------------===//
+                                                                                
+                                                   
+                                                                                
 
 template <class InstructionT, class BlockT>
 class SuccIterator
@@ -149,12 +149,12 @@ private:
   using Self = SuccIterator<InstructionT, BlockT>;
 
   inline bool index_is_valid(int Idx) {
-    // Note that we specially support the index of zero being valid even in the
-    // face of a null instruction.
+                                                                               
+                                  
     return Idx >= 0 && (Idx == 0 || Idx <= (int)Inst->getNumSuccessors());
   }
 
-  /// Proxy object to allow write access in operator[]
+                                                      
   class SuccessorProxy {
     Self It;
 
@@ -177,31 +177,31 @@ private:
   };
 
 public:
-  // begin iterator
+                   
   explicit inline SuccIterator(InstructionT *Inst) : Inst(Inst), Idx(0) {}
-  // end iterator
+                 
   inline SuccIterator(InstructionT *Inst, bool) : Inst(Inst) {
     if (Inst)
       Idx = Inst->getNumSuccessors();
     else
-      // Inst == NULL happens, if a basic block is not fully constructed and
-      // consequently getTerminator() returns NULL. In this case we construct
-      // a SuccIterator which describes a basic block that has zero
-      // successors.
-      // Defining SuccIterator for incomplete and malformed CFGs is especially
-      // useful for debugging.
+                                                                            
+                                                                             
+                                                                   
+                    
+                                                                              
+                              
       Idx = 0;
   }
 
-  /// This is used to interface between code that wants to
-  /// operate on terminator instructions directly.
+                                                          
+                                                  
   int getSuccessorIndex() const { return Idx; }
 
   inline bool operator==(const Self &x) const { return Idx == x.Idx; }
 
   inline BlockT *operator*() const { return Inst->getSuccessor(Idx); }
 
-  // We use the basic block pointer directly for operator->.
+                                                            
   inline BlockT *operator->() const { return operator*(); }
 
   inline bool operator<(const Self &RHS) const {
@@ -223,15 +223,15 @@ public:
 
   inline Self &operator-=(int RHS) { return operator+=(-RHS); }
 
-  // Specially implement the [] operation using a proxy object to support
-  // assignment.
+                                                                         
+                
   inline SuccessorProxy operator[](int Offset) {
     Self TmpIt = *this;
     TmpIt += Offset;
     return SuccessorProxy(TmpIt);
   }
 
-  /// Get the source BlockT of this iterator.
+                                             
   inline BlockT *getSource() {
     assert(Inst && "Source not available, if basic block was malformed");
     return Inst->getParent();
@@ -293,12 +293,12 @@ inline succ_const_range successors(const BasicBlock *BB) {
   return succ_const_range(succ_begin(BB), succ_end(BB));
 }
 
-//===--------------------------------------------------------------------===//
-// GraphTraits specializations for basic block graphs (CFGs)
-//===--------------------------------------------------------------------===//
+                                                                              
+                                                            
+                                                                              
 
-// Provide specializations of GraphTraits to be able to treat a function as a
-// graph of basic blocks...
+                                                                             
+                           
 
 template <> struct GraphTraits<BasicBlock*> {
   using NodeRef = BasicBlock *;
@@ -319,11 +319,11 @@ template <> struct GraphTraits<const BasicBlock*> {
   static ChildIteratorType child_end(NodeRef N) { return succ_end(N); }
 };
 
-// Provide specializations of GraphTraits to be able to treat a function as a
-// graph of basic blocks... and to walk it in inverse order.  Inverse order for
-// a function is considered to be when traversing the predecessor edges of a BB
-// instead of the successor edges.
-//
+                                                                             
+                                                                               
+                                                                               
+                                  
+  
 template <> struct GraphTraits<Inverse<BasicBlock*>> {
   using NodeRef = BasicBlock *;
   using ChildIteratorType = pred_iterator;
@@ -342,18 +342,18 @@ template <> struct GraphTraits<Inverse<const BasicBlock*>> {
   static ChildIteratorType child_end(NodeRef N) { return pred_end(N); }
 };
 
-//===--------------------------------------------------------------------===//
-// GraphTraits specializations for function basic block graphs (CFGs)
-//===--------------------------------------------------------------------===//
+                                                                              
+                                                                     
+                                                                              
 
-// Provide specializations of GraphTraits to be able to treat a function as a
-// graph of basic blocks... these are the same as the basic block iterators,
-// except that the root node is implicitly the first node of the function.
-//
+                                                                             
+                                                                            
+                                                                          
+  
 template <> struct GraphTraits<Function*> : public GraphTraits<BasicBlock*> {
   static NodeRef getEntryNode(Function *F) { return &F->getEntryBlock(); }
 
-  // nodes_iterator/begin/end - Allow iteration over all nodes in the graph
+                                                                           
   using nodes_iterator = pointer_iterator<Function::iterator>;
 
   static nodes_iterator nodes_begin(Function *F) {
@@ -370,7 +370,7 @@ template <> struct GraphTraits<const Function*> :
   public GraphTraits<const BasicBlock*> {
   static NodeRef getEntryNode(const Function *F) { return &F->getEntryBlock(); }
 
-  // nodes_iterator/begin/end - Allow iteration over all nodes in the graph
+                                                                           
   using nodes_iterator = pointer_iterator<Function::const_iterator>;
 
   static nodes_iterator nodes_begin(const Function *F) {
@@ -384,11 +384,11 @@ template <> struct GraphTraits<const Function*> :
   static size_t size(const Function *F) { return F->size(); }
 };
 
-// Provide specializations of GraphTraits to be able to treat a function as a
-// graph of basic blocks... and to walk it in inverse order.  Inverse order for
-// a function is considered to be when traversing the predecessor edges of a BB
-// instead of the successor edges.
-//
+                                                                             
+                                                                               
+                                                                               
+                                  
+  
 template <> struct GraphTraits<Inverse<Function*>> :
   public GraphTraits<Inverse<BasicBlock*>> {
   static NodeRef getEntryNode(Inverse<Function *> G) {
@@ -402,6 +402,6 @@ template <> struct GraphTraits<Inverse<const Function*>> :
   }
 };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_IR_CFG_H
+#endif                 

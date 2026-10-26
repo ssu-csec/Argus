@@ -16,12 +16,12 @@ uint32_t UniquingFilenameTable::addFilename(llvh::StringRef filename) {
   return filenames_.insert(filename);
 }
 
-/* static */ ConsecutiveStringStorage UniquingFilenameTable::toStorage(
+             ConsecutiveStringStorage UniquingFilenameTable::toStorage(
     UniquingFilenameTable table) {
   auto &filenames = table.filenames_;
   return ConsecutiveStringStorage{
       filenames.begin(), filenames.end(), std::false_type{}, false};
 }
 
-} // namespace hbc
-} // namespace hermes
+}                 
+}                    

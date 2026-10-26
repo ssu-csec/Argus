@@ -19,7 +19,7 @@
 
 namespace llvh {
 class raw_ostream;
-} // namespace llvh
+}                  
 
 namespace hermes {
 class SourceMapGenerator;
@@ -27,14 +27,14 @@ namespace hbc {
 
 using llvh::raw_ostream;
 
-/// Generates a BytecodeModule from a module \p M, and will return a unique_ptr
-/// to the new module. The \p options parameter controls bytecode generation. If
-/// \p sourceMap is not null, populate it with debug information from the
-/// generated module.
-/// \p baseBCProvider is the base bytecode used in delta optimizing mode;
-/// when it is not null and optimization is turned on, we optimize for the delta
-/// size between base and current bytecode.
-/// \returns a pointer to the BytecodeModule.
+                                                                               
+                                                                                
+                                                                         
+                     
+                                                                         
+                                                                                
+                                           
+                                             
 std::unique_ptr<BytecodeModule> generateBytecodeModule(
     Module *M,
     Function *entryPoint,
@@ -52,13 +52,13 @@ std::unique_ptr<BytecodeModule> generateBytecodeModule(
     SourceMapGenerator *sourceMap = nullptr,
     std::unique_ptr<BCProviderBase> baseBCProvider = nullptr);
 
-/// Parses the OutputFormatKind and generates bytecode.
-/// Will dump the operation specified, or will output a bundle.
-/// The source map \p sourceMap, if not null, is populated with debug
-/// information for the module.
-/// \p baseBCProvider is the base bytecode used in delta optimizing mode;
-/// when it is not null and optimization is turned on, we optimize for the delta
-/// size between base and current bytecode.
+                                                       
+                                                               
+                                                                     
+                               
+                                                                         
+                                                                                
+                                           
 std::unique_ptr<BytecodeModule> generateBytecode(
     Module *M,
     raw_ostream &OS,
@@ -67,7 +67,7 @@ std::unique_ptr<BytecodeModule> generateBytecode(
     hermes::OptValue<uint32_t> segment = llvh::None,
     SourceMapGenerator *sourceMap = nullptr,
     std::unique_ptr<BCProviderBase> baseBCProvider = nullptr);
-} // namespace hbc
-} // namespace hermes
+}                 
+}                    
 
 #endif

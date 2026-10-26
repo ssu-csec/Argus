@@ -16,21 +16,21 @@ namespace hermes {
 
 namespace graphql {
 
-/// Returns regex bytecode for detecting and extracting graphql dependencies
+                                                                            
 inline std::vector<uint8_t> getCompiledGraphQLRegex() {
-  /// Bytecode for the regex that detects dependencies in GraphQL template
-  /// literals.
+                                                                          
+               
   regex::Regex<regex::UTF16RegexTraits> graphqlQueryRegex{
       u"(?:^\\s*?(?:query|fragment|mutation|subscription) +(\\w+))", u"m"};
   return graphqlQueryRegex.compile();
 }
 
-/// Extracts graphql dependencies from graphQL template literals.
-/// \param templateString graphql string with possible dependencies.
-/// \param graphqlQueryRegexBytecode regex for matching and extracting
-/// dependencies.
-/// \param callback called with StringRef regex captures found by
-/// the graphqlQueryRegexBytecode expression. Returns void.
+                                                                 
+                                                                    
+                                                                      
+                 
+                                                                 
+                                                           
 template <typename ElementCB>
 void getGraphQLDependencies(
     llvh::StringRef templateString,
@@ -54,7 +54,7 @@ void getGraphQLDependencies(
     searchStart = captures[0].end;
   }
 }
-} // namespace graphql
-} // namespace hermes
+}                     
+}                    
 
 #endif

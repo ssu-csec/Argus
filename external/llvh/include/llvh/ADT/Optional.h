@@ -28,7 +28,7 @@
 namespace llvh {
 
 namespace optional_detail {
-/// Storage for any type.
+                         
 template <typename T, bool IsPodLike> struct OptionalStorage {
   AlignedCharArrayUnion<T> storage;
   bool hasVal = false;
@@ -67,11 +67,11 @@ template <typename T, bool IsPodLike> struct OptionalStorage {
     return *this;
   }
 
-  // FIXME: these assignments (& the equivalent const T&/const Optional& ctors)
-  // could be made more efficient by passing by value, possibly unifying them
-  // with the rvalue versions above - but this could place a different set of
-  // requirements (notably: the existence of a default ctor) when implemented
-  // in that way. Careful SFINAE to avoid such pitfalls would be required.
+                                                                               
+                                                                             
+                                                                             
+                                                                             
+                                                                          
   OptionalStorage &operator=(const T &y) {
     if (hasVal)
       *getPointer() = y;
@@ -108,8 +108,8 @@ template <typename T, bool IsPodLike> struct OptionalStorage {
   }
 };
 
-#if !defined(__GNUC__) || defined(__clang__) // GCC up to GCC7 miscompiles this.
-/// Storage for trivially copyable types only.
+#if !defined(__GNUC__) || defined(__clang__)                                    
+                                              
 template <typename T> struct OptionalStorage<T, true> {
   AlignedCharArrayUnion<T> storage;
   bool hasVal = false;
@@ -126,7 +126,7 @@ template <typename T> struct OptionalStorage<T, true> {
   void reset() { hasVal = false; }
 };
 #endif
-} // namespace optional_detail
+}                             
 
 template <typename T> class Optional {
   optional_detail::OptionalStorage<T, isPodLike<T>::value> Storage;
@@ -149,7 +149,7 @@ public:
   }
   Optional &operator=(Optional &&O) = default;
 
-  /// Create a new object by constructing it in place with the given arguments.
+                                                                               
   template <typename... ArgTypes> void emplace(ArgTypes &&... Args) {
     reset();
     Storage.hasVal = true;
@@ -203,7 +203,7 @@ public:
 };
 
 template <typename T> struct isPodLike<Optional<T>> {
-  // An Optional<T> is pod-like if T is.
+                                        
   static const bool value = isPodLike<T>::value;
 };
 
@@ -341,6 +341,6 @@ template <typename T> bool operator>=(const T &X, const Optional<T> &Y) {
   return !(X < Y);
 }
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_ADT_OPTIONAL_H
+#endif                       

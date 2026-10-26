@@ -70,7 +70,7 @@ static void r4(uint32_t &A, uint32_t &B, uint32_t &C, uint32_t &D, uint32_t &E,
   B = rol(B, 30);
 }
 
-/* code */
+          
 #define SHA1_K0 0x5a827999
 #define SHA1_K20 0x6ed9eba1
 #define SHA1_K40 0x8f1bbcdc
@@ -99,7 +99,7 @@ void SHA1::hashBlock() {
   uint32_t D = InternalState.State[3];
   uint32_t E = InternalState.State[4];
 
-  // 4 rounds of 20 operations each. Loop unrolled.
+                                                   
   r0(A, B, C, D, E, 0, InternalState.Buffer.L);
   r0(E, A, B, C, D, 1, InternalState.Buffer.L);
   r0(D, E, A, B, C, 2, InternalState.Buffer.L);
@@ -216,36 +216,36 @@ void SHA1::update(ArrayRef<uint8_t> Data) {
 }
 
 void SHA1::pad() {
-  // Implement SHA-1 padding (fips180-2 5.1.1)
+                                              
 
-  // Pad with 0x80 followed by 0x00 until the end of the block
+                                                              
   addUncounted(0x80);
   while (InternalState.BufferOffset != 56)
     addUncounted(0x00);
 
-  // Append length in the last 8 bytes
-  addUncounted(0); // We're only using 32 bit lengths
-  addUncounted(0); // But SHA-1 supports 64 bit lengths
-  addUncounted(0); // So zero pad the top bits
-  addUncounted(InternalState.ByteCount >> 29); // Shifting to multiply by 8
+                                      
+  addUncounted(0);                                   
+  addUncounted(0);                                     
+  addUncounted(0);                            
+  addUncounted(InternalState.ByteCount >> 29);                             
   addUncounted(InternalState.ByteCount >>
-               21); // as SHA-1 supports bitstreams as well as
-  addUncounted(InternalState.ByteCount >> 13); // byte.
+               21);                                           
+  addUncounted(InternalState.ByteCount >> 13);         
   addUncounted(InternalState.ByteCount >> 5);
   addUncounted(InternalState.ByteCount << 3);
 }
 
 StringRef SHA1::final() {
-  // Pad to complete the last block
+                                   
   pad();
 
 #ifdef SHA_BIG_ENDIAN
-  // Just copy the current state
+                                
   for (int i = 0; i < 5; i++) {
     HashResult[i] = InternalState.State[i];
   }
 #else
-  // Swap byte order back
+                         
   for (int i = 0; i < 5; i++) {
     HashResult[i] = (((InternalState.State[i]) << 24) & 0xff000000) |
                     (((InternalState.State[i]) << 8) & 0x00ff0000) |
@@ -254,7 +254,7 @@ StringRef SHA1::final() {
   }
 #endif
 
-  // Return pointer to hash (20 characters)
+                                           
   return StringRef((char *)HashResult, HASH_LENGTH);
 }
 
@@ -263,10 +263,10 @@ StringRef SHA1::result() {
 
   auto Hash = final();
 
-  // Restore the state
+                      
   InternalState = StateToRestore;
 
-  // Return pointer to hash (20 characters)
+                                           
   return Hash;
 }
 

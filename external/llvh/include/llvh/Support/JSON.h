@@ -55,27 +55,27 @@
 namespace llvh {
 namespace json {
 
-// === String encodings ===
-//
-// JSON strings are character sequences (not byte sequences like std::string).
-// We need to know the encoding, and for simplicity only support UTF-8.
-//
-//   - When parsing, invalid UTF-8 is a syntax error like any other
-//
-//   - When creating Values from strings, callers must ensure they are UTF-8.
-//        with asserts on, invalid UTF-8 will crash the program
-//        with asserts off, we'll substitute the replacement character (U+FFFD)
-//     Callers can use json::isUTF8() and json::fixUTF8() for validation.
-//
-//   - When retrieving strings from Values (e.g. asString()), the result will
-//     always be valid UTF-8.
+                           
+  
+                                                                              
+                                                                       
+  
+                                                                   
+  
+                                                                             
+                                                               
+                                                                               
+                                                                         
+  
+                                                                             
+                             
 
-/// Returns true if \p S is valid UTF-8, which is required for use as JSON.
-/// If it returns false, \p Offset is set to a byte offset near the first error.
+                                                                           
+                                                                                
 bool isUTF8(llvh::StringRef S, size_t *ErrOffset = nullptr);
-/// Replaces invalid UTF-8 sequences in \p S with the replacement character
-/// (U+FFFD). The returned string is valid UTF-8.
-/// This is much slower than isUTF8, so test that first.
+                                                                           
+                                                 
+                                                        
 std::string fixUTF8(llvh::StringRef S);
 
 class Array;
@@ -83,8 +83,8 @@ class ObjectKey;
 class Value;
 template <typename T> Value toJSON(const llvh::Optional<T> &Opt);
 
-/// An Object is a JSON object, which maps strings to heterogenous JSON values.
-/// It simulates DenseMap<ObjectKey, Value>. ObjectKey is a maybe-owned string.
+                                                                               
+                                                                               
 class Object {
   using Storage = DenseMap<ObjectKey, Value, llvh::DenseMapInfo<StringRef>>;
   Storage M;
@@ -97,8 +97,8 @@ public:
   using const_iterator = Storage::const_iterator;
 
   explicit Object() = default;
-  // KV is a trivial key-value struct for list-initialization.
-  // (using std::pair forces extra copies).
+                                                              
+                                           
   struct KV;
   explicit Object(std::initializer_list<KV> Properties);
 
@@ -123,15 +123,15 @@ public:
 
   iterator find(StringRef K) { return M.find_as(K); }
   const_iterator find(StringRef K) const { return M.find_as(K); }
-  // operator[] acts as if Value was default-constructible as null.
+                                                                   
   Value &operator[](const ObjectKey &K);
   Value &operator[](ObjectKey &&K);
-  // Look up a property, returning nullptr if it doesn't exist.
+                                                               
   Value *get(StringRef K);
   const Value *get(StringRef K) const;
-  // Typed accessors return None/nullptr if
-  //   - the property doesn't exist
-  //   - or it has the wrong type
+                                           
+                                   
+                                 
   llvh::Optional<std::nullptr_t> getNull(StringRef K) const;
   llvh::Optional<bool> getBoolean(StringRef K) const;
   llvh::Optional<double> getNumber(StringRef K) const;
@@ -147,8 +147,8 @@ inline bool operator!=(const Object &LHS, const Object &RHS) {
   return !(LHS == RHS);
 }
 
-/// An Array is a JSON array, which contains heterogeneous JSON values.
-/// It simulates std::vector<Value>.
+                                                                       
+                                    
 class Array {
   std::vector<Value> V;
 
@@ -188,7 +188,7 @@ public:
     V.emplace_back(std::forward<Args>(A)...);
   }
   void pop_back() { V.pop_back(); }
-  // FIXME: insert() takes const_iterator since C++11, old libstdc++ disagrees.
+                                                                               
   iterator insert(iterator P, const Value &E) { return V.insert(P, E); }
   iterator insert(iterator P, Value &&E) {
     return V.insert(P, std::move(E));
@@ -204,90 +204,90 @@ public:
 };
 inline bool operator!=(const Array &L, const Array &R) { return !(L == R); }
 
-/// A Value is an JSON value of unknown type.
-/// They can be copied, but should generally be moved.
-///
-/// === Composing values ===
-///
-/// You can implicitly construct Values from:
-///   - strings: std::string, SmallString, formatv, StringRef, char*
-///              (char*, and StringRef are references, not copies!)
-///   - numbers
-///   - booleans
-///   - null: nullptr
-///   - arrays: {"foo", 42.0, false}
-///   - serializable things: types with toJSON(const T&)->Value, found by ADL
-///
-/// They can also be constructed from object/array helpers:
-///   - json::Object is a type like map<ObjectKey, Value>
-///   - json::Array is a type like vector<Value>
-/// These can be list-initialized, or used to build up collections in a loop.
-/// json::ary(Collection) converts all items in a collection to Values.
-///
-/// === Inspecting values ===
-///
-/// Each Value is one of the JSON kinds:
-///   null    (nullptr_t)
-///   boolean (bool)
-///   number  (double or int64)
-///   string  (StringRef)
-///   array   (json::Array)
-///   object  (json::Object)
-///
-/// The kind can be queried directly, or implicitly via the typed accessors:
-///   if (Optional<StringRef> S = E.getAsString()
-///     assert(E.kind() == Value::String);
-///
-/// Array and Object also have typed indexing accessors for easy traversal:
-///   Expected<Value> E = parse(R"( {"options": {"font": "sans-serif"}} )");
-///   if (Object* O = E->getAsObject())
-///     if (Object* Opts = O->getObject("options"))
-///       if (Optional<StringRef> Font = Opts->getString("font"))
-///         assert(Opts->at("font").kind() == Value::String);
-///
-/// === Converting JSON values to C++ types ===
-///
-/// The convention is to have a deserializer function findable via ADL:
-///     fromJSON(const json::Value&, T&)->bool
-/// Deserializers are provided for:
-///   - bool
-///   - int and int64_t
-///   - double
-///   - std::string
-///   - vector<T>, where T is deserializable
-///   - map<string, T>, where T is deserializable
-///   - Optional<T>, where T is deserializable
-/// ObjectMapper can help writing fromJSON() functions for object types.
-///
-/// For conversion in the other direction, the serializer function is:
-///    toJSON(const T&) -> json::Value
-/// If this exists, then it also allows constructing Value from T, and can
-/// be used to serialize vector<T>, map<string, T>, and Optional<T>.
-///
-/// === Serialization ===
-///
-/// Values can be serialized to JSON:
-///   1) raw_ostream << Value                    // Basic formatting.
-///   2) raw_ostream << formatv("{0}", Value)    // Basic formatting.
-///   3) raw_ostream << formatv("{0:2}", Value)  // Pretty-print with indent 2.
-///
-/// And parsed:
-///   Expected<Value> E = json::parse("[1, 2, null]");
-///   assert(E && E->kind() == Value::Array);
+                                             
+                                                      
+   
+                            
+   
+                                             
+                                                                    
+                                                                   
+               
+                
+                     
+                                    
+                                                                             
+   
+                                                           
+                                                         
+                                                
+                                                                             
+                                                                       
+   
+                             
+   
+                                        
+                         
+                    
+                               
+                         
+                           
+                            
+   
+                                                                            
+                                                 
+                                          
+   
+                                                                           
+                                                                            
+                                       
+                                                   
+                                                                 
+                                                             
+   
+                                               
+   
+                                                                       
+                                              
+                                   
+            
+                       
+              
+                   
+                                            
+                                                 
+                                              
+                                                                        
+   
+                                                                      
+                                      
+                                                                          
+                                                                    
+   
+                         
+   
+                                     
+                                                                     
+                                                                     
+                                                                               
+   
+               
+                                                      
+                                             
 class Value {
 public:
   enum Kind {
     Null,
     Boolean,
-    /// Number values can store both int64s and doubles at full precision,
-    /// depending on what they were constructed/parsed from.
+                                                                          
+                                                            
     Number,
     String,
     Array,
     Object,
   };
 
-  // It would be nice to have Value() be null. But that would make {} null too.
+                                                                               
   Value(const Value &M) { copyFrom(M); }
   Value(Value &&M) { moveFrom(std::move(M)); }
   Value(std::initializer_list<Value> Elements);
@@ -297,7 +297,7 @@ public:
   Value(json::Object &&Properties) : Type(T_Object) {
     create<json::Object>(std::move(Properties));
   }
-  // Strings: types with value semantics. Must be valid UTF-8.
+                                                              
   Value(std::string V) : Type(T_String) {
     if (LLVM_UNLIKELY(!isUTF8(V))) {
       assert(false && "Invalid UTF-8 in value used as JSON");
@@ -308,7 +308,7 @@ public:
   Value(const llvh::SmallVectorImpl<char> &V)
       : Value(std::string(V.begin(), V.end())){};
   Value(const llvh::formatv_object_base &V) : Value(V.str()){};
-  // Strings: types with reference semantics. Must be valid UTF-8.
+                                                                  
   Value(StringRef V) : Type(T_StringRef) {
     create<llvh::StringRef>(V);
     if (LLVM_UNLIKELY(!isUTF8(V))) {
@@ -318,8 +318,8 @@ public:
   }
   Value(const char *V) : Value(StringRef(V)) {}
   Value(std::nullptr_t) : Type(T_Null) {}
-  // Boolean (disallow implicit conversions).
-  // (The last template parameter is a dummy to keep templates distinct.)
+                                             
+                                                                         
   template <
       typename T,
       typename = typename std::enable_if<std::is_same<T, bool>::value>::type,
@@ -327,7 +327,7 @@ public:
   Value(T B) : Type(T_Boolean) {
     create<bool>(B);
   }
-  // Integers (except boolean). Must be non-narrowing convertible to int64_t.
+                                                                             
   template <
       typename T,
       typename = typename std::enable_if<std::is_integral<T>::value>::type,
@@ -335,7 +335,7 @@ public:
   Value(T I) : Type(T_Integer) {
     create<int64_t>(int64_t{I});
   }
-  // Floating point. Must be non-narrowing convertible to double.
+                                                                 
   template <typename T,
             typename =
                 typename std::enable_if<std::is_floating_point<T>::value>::type,
@@ -343,7 +343,7 @@ public:
   Value(T D) : Type(T_Double) {
     create<double>(double{D});
   }
-  // Serializable types: with a toJSON(const T&)->Value function, found by ADL.
+                                                                               
   template <typename T,
             typename = typename std::enable_if<std::is_same<
                 Value, decltype(toJSON(*(const T *)nullptr))>::value>,
@@ -382,7 +382,7 @@ public:
     llvm_unreachable("Unknown kind");
   }
 
-  // Typed accessors return None/nullptr if the Value is not of this type.
+                                                                          
   llvh::Optional<std::nullptr_t> getAsNull() const {
     if (LLVM_LIKELY(Type == T_Null))
       return nullptr;
@@ -400,7 +400,7 @@ public:
       return as<int64_t>();
     return llvh::None;
   }
-  // Succeeds if the Value is a Number, and exactly representable as int64_t.
+                                                                             
   llvh::Optional<int64_t> getAsInteger() const {
     if (LLVM_LIKELY(Type == T_Integer))
       return as<int64_t>();
@@ -433,17 +433,17 @@ public:
     return LLVM_LIKELY(Type == T_Array) ? &as<json::Array>() : nullptr;
   }
 
-  /// Serializes this Value to JSON, writing it to the provided stream.
-  /// The formatting is compact (no extra whitespace) and deterministic.
-  /// For pretty-printing, use the formatv() format_provider below.
+                                                                       
+                                                                        
+                                                                   
   friend llvh::raw_ostream &operator<<(llvh::raw_ostream &, const Value &);
 
 private:
   void destroy();
   void copyFrom(const Value &M);
-  // We allow moving from *const* Values, by marking all members as mutable!
-  // This hack is needed to support initializer-list syntax efficiently.
-  // (std::initializer_list<T> is a container of const T).
+                                                                            
+                                                                        
+                                                          
   void moveFrom(const Value &&M);
   friend class Array;
   friend class Object;
@@ -452,8 +452,8 @@ private:
     new (reinterpret_cast<T *>(Union.buffer)) T(std::forward<U>(V)...);
   }
   template <typename T> T &as() const {
-    // Using this two-step static_cast via void * instead of reinterpret_cast
-    // silences a -Wstrict-aliasing false positive from GCC6 and earlier.
+                                                                             
+                                                                         
     void *Storage = static_cast<void *>(Union.buffer);
     return *static_cast<T *>(Storage);
   }
@@ -472,7 +472,7 @@ private:
     T_Object,
     T_Array,
   };
-  // All members mutable, see moveFrom().
+                                         
   mutable ValueType Type;
   mutable llvh::AlignedCharArrayUnion<bool, double, int64_t, llvh::StringRef,
                                       std::string, json::Array, json::Object>
@@ -483,10 +483,10 @@ bool operator==(const Value &, const Value &);
 inline bool operator!=(const Value &L, const Value &R) { return !(L == R); }
 llvh::raw_ostream &operator<<(llvh::raw_ostream &, const Value &);
 
-/// ObjectKey is a used to capture keys in Object. Like Value but:
-///   - only strings are allowed
-///   - it's optimized for the string literal case (Owned == nullptr)
-/// Like Value, strings must be UTF-8. See isUTF8 documentation for details.
+                                                                  
+                                
+                                                                     
+                                                                            
 class ObjectKey {
 public:
   ObjectKey(const char *S) : ObjectKey(StringRef(S)) {}
@@ -524,8 +524,8 @@ public:
   std::string str() const { return Data.str(); }
 
 private:
-  // FIXME: this is unneccesarily large (3 pointers). Pointer + length + owned
-  // could be 2 pointers at most.
+                                                                              
+                                 
   std::unique_ptr<std::string> Owned;
   llvh::StringRef Data;
 };
@@ -556,8 +556,8 @@ inline std::pair<Object::iterator, bool> Object::insert(KV E) {
   return try_emplace(std::move(E.K), std::move(E.V));
 }
 
-// Standard deserializers are provided for primitive types.
-// See comments on Value.
+                                                           
+                         
 inline bool fromJSON(const Value &E, std::string &Out) {
   if (auto S = E.getAsString()) {
     Out = *S;
@@ -627,32 +627,32 @@ bool fromJSON(const Value &E, std::map<std::string, T> &Out) {
   return false;
 }
 
-// Allow serialization of Optional<T> for supported T.
+                                                      
 template <typename T> Value toJSON(const llvh::Optional<T> &Opt) {
   return Opt ? Value(*Opt) : Value(nullptr);
 }
 
-/// Helper for mapping JSON objects onto protocol structs.
-///
-/// Example:
-/// \code
-///   bool fromJSON(const Value &E, MyStruct &R) {
-///     ObjectMapper O(E);
-///     if (!O || !O.map("mandatory_field", R.MandatoryField))
-///       return false;
-///     O.map("optional_field", R.OptionalField);
-///     return true;
-///   }
-/// \endcode
+                                                          
+   
+            
+         
+                                                  
+                          
+                                                              
+                       
+                                                 
+                    
+       
+            
 class ObjectMapper {
 public:
   ObjectMapper(const Value &E) : O(E.getAsObject()) {}
 
-  /// True if the expression is an object.
-  /// Must be checked before calling map().
+                                          
+                                           
   operator bool() { return O; }
 
-  /// Maps a property to a field, if it exists.
+                                               
   template <typename T> bool map(StringRef Prop, T &Out) {
     assert(*this && "Must check this is an object before calling map()");
     if (const Value *E = O->get(Prop))
@@ -660,8 +660,8 @@ public:
     return false;
   }
 
-  /// Maps a property to a field, if it exists.
-  /// (Optional requires special handling, because missing keys are OK).
+                                               
+                                                                        
   template <typename T> bool map(StringRef Prop, llvh::Optional<T> &Out) {
     assert(*this && "Must check this is an object before calling map()");
     if (const Value *E = O->get(Prop))
@@ -674,9 +674,9 @@ private:
   const Object *O;
 };
 
-/// Parses the provided JSON source, or returns a ParseError.
-/// The returned Value is self-contained and owns its strings (they do not refer
-/// to the original source).
+                                                             
+                                                                                
+                            
 llvh::Expected<Value> parse(llvh::StringRef JSON);
 
 class ParseError : public llvh::ErrorInfo<ParseError> {
@@ -694,14 +694,14 @@ public:
     return llvh::inconvertibleErrorCode();
   }
 };
-} // namespace json
+}                  
 
-/// Allow printing json::Value with formatv().
-/// The default style is basic/compact formatting, like operator<<.
-/// A format string like formatv("{0:2}", Value) pretty-prints with indent 2.
+                                              
+                                                                   
+                                                                             
 template <> struct format_provider<llvh::json::Value> {
   static void format(const llvh::json::Value &, raw_ostream &, StringRef);
 };
-} // namespace llvh
+}                  
 
 #endif

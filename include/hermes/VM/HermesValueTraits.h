@@ -18,7 +18,7 @@
 namespace hermes {
 namespace vm {
 
-/// White-list classes than can be managed by a HermesValue.
+                                                            
 template <class T>
 struct IsGCObject : public std::false_type {};
 
@@ -27,7 +27,7 @@ struct IsGCObject : public std::false_type {};
   template <>                    \
   struct IsGCObject<name> : public std::true_type {}
 
-// Alphabetized allowlist of objects that can be managed by HermesValue.
+                                                                        
 HERMES_VM_GCOBJECT(Arguments);
 HERMES_VM_GCOBJECT(ArrayImpl);
 HERMES_VM_GCOBJECT(BigIntPrimitive);
@@ -81,7 +81,7 @@ struct DummyObject;
 template <>
 struct IsGCObject<testhelpers::DummyObject> : public std::true_type {};
 
-// Typed arrays use templates and cannot use the macro above
+                                                            
 template <typename T, CellKind C>
 class JSTypedArray;
 template <typename T, CellKind C>
@@ -136,22 +136,22 @@ struct HermesValueTraits;
 
 template <>
 struct HermesValueTraits<HermesValue> {
-  /// The type to be returned by Handle<T>::get().
+                                                  
   using value_type = HermesValue;
-  /// The type to be returned by Handle<T>::operator->().
+                                                         
   using arrow_type = const HermesValue *;
-  /// Whether this type is a GCCell
+                                   
   static constexpr bool is_cell = false;
 
-  /// The default initialization value of this type.
+                                                    
   static constexpr value_type defaultValue() {
     return HermesValue::encodeUndefinedValue();
   };
-  /// Encode a \c HermesValue into the type.
+                                            
   static value_type encode(HermesValue value) {
     return value;
   }
-  /// Decode a \c HermesValue from the type.
+                                            
   static HermesValue decode(value_type value) {
     return value;
   }
@@ -160,22 +160,22 @@ struct HermesValueTraits<HermesValue> {
   }
 
  private:
-  // arrow() must be called with a reference to a non-temporary object, as it
-  // returns the address of its parameter. Forbid calls to arrow() with a
-  // temporary object through this unimplemented overload.
+                                                                             
+                                                                         
+                                                          
   static void arrow(HermesValue &&value);
 };
 
 template <>
 struct HermesValueTraits<SymbolID> {
-  /// The type to be returned by Handle<T>::get().
+                                                  
   using value_type = SymbolID;
-  /// The type to be returned by Handle<T>::operator->().
+                                                         
   using arrow_type = const SymbolID *;
-  /// Whether this type is a GCCell
+                                   
   static constexpr bool is_cell = false;
 
-  /// The default initialization value of this type.
+                                                    
   static value_type defaultValue() {
     return SymbolID{};
   };
@@ -275,24 +275,24 @@ struct HermesValueTraits<T, true> {
   }
 };
 
-/// A helper class to deduce whether it is safe to assign Handle<From> into
-/// Handle<To>.
+                                                                           
+               
 template <class From, class To>
 struct IsHermesValueConvertible {
   using FromTraits = HermesValueTraits<From>;
   using ToTraits = HermesValueTraits<To>;
 
   static constexpr bool value =
-      // Anything is convertable to HermesValue.
+                                                
       std::is_same<To, HermesValue>::value ||
-      // A type is convertable to itself.
+                                         
       std::is_same<From, To>::value ||
-      // An object can be converted to its base class.
+                                                      
       (FromTraits::is_cell && ToTraits::is_cell &&
        std::is_base_of<To, From>::value);
 };
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMES_VM_HERMESVALUETRAITS_H
+#endif                                 

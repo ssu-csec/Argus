@@ -14,9 +14,9 @@
 
 namespace llvh {
 
-/// Base class for ilist nodes.
-///
-/// Optionally tracks whether this node is the sentinel.
+                               
+   
+                                                        
 template <bool EnableSentinelTracking> class ilist_node_base;
 
 template <> class ilist_node_base<false> {
@@ -48,6 +48,6 @@ public:
   void initializeSentinel() { PrevAndSentinel.setInt(true); }
 };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_ADT_ILIST_NODE_BASE_H
+#endif                              

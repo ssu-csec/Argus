@@ -17,7 +17,7 @@ bool MemorySizeParser::parse(
   const char *ArgStart = Arg.c_str();
   char *End;
 
-  // Parse integer part, leaving 'End' pointing to the first non-integer char
+                                                                             
   Val.bytes = (unsigned)strtol(ArgStart, &End, 0);
 
   if (End == ArgStart) {
@@ -44,10 +44,10 @@ bool MemorySizeParser::parse(
         if (state == SawPrefixPlusI) {
           state = Error;
         } else {
-          return false; // No error
+          return false;            
         }
         break;
-      case 'i': // Ignore the 'i' in KiB if people use that
+      case 'i':                                            
         if (state == SawPrefix) {
           state = SawPrefixPlusI;
         } else {
@@ -55,7 +55,7 @@ bool MemorySizeParser::parse(
         }
         break;
       case 'b':
-      case 'B': // Ignore B suffix
+      case 'B':                   
         if (state == SawWholeSpec) {
           state = Error;
         } else {
@@ -91,10 +91,10 @@ bool MemorySizeParser::parse(
         break;
 
       default:
-        // Print an error message if unrecognized character!
+                                                            
         return O.error("'" + Arg + "' value invalid for file size argument!");
     }
   }
 }
 
-} // namespace cl
+}                

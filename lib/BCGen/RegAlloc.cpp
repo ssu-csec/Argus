@@ -80,11 +80,11 @@ void RegisterFile::dump() {
 }
 
 Register RegisterFile::allocateRegister() {
-  // We first check for the 'all' case because we usually have a small number of
-  // active bits (<64), so this operation is actually faster than the linear
-  // scan.
+                                                                                
+                                                                            
+          
   if (registers.none()) {
-    // If all bits are set, create a new register and return it.
+                                                                
     unsigned numRegs = registers.size();
     registers.resize(numRegs + 1, false);
     Register R = Register(numRegs);
@@ -93,7 +93,7 @@ Register RegisterFile::allocateRegister() {
     return R;
   }
 
-  // Search for a free register to use.
+                                       
   int i = registers.find_first();
   assert(i >= 0 && "Unexpected failure to allocate a register");
   Register R(i);
@@ -127,8 +127,8 @@ Register RegisterFile::tailAllocateConsecutive(unsigned n) {
   return Register(firstClear);
 }
 
-/// \returns true if the PHI node has an external user (that requires a
-/// register read) and a local writer.
+                                                                       
+                                      
 static bool phiReadWrite(PhiInst *P) {
   bool localPhiUse = false;
   bool externalUse = false;
@@ -143,15 +143,15 @@ static bool phiReadWrite(PhiInst *P) {
     externalUse |= U->getParent() != parent;
   }
 
-  // TODO: the code used to perform a stricter check which missed some cases.
-  // TODO: need to come up with a better condition.
-  // bool localWrite = false;
-  // for (int i = 0, limit = P->getNumEntries(); !localWrite && i < limit; ++i)
-  // {
-  //   auto entry = P->getEntry(i);
-  //   localWrite |= entry.first != P && entry.second == parent;
-  // }
-  // return terminatorUse || localPhiUse || (externalUse && localWrite);
+                                                                             
+                                                   
+                             
+                                                                               
+      
+                                   
+                                                                
+      
+                                                                        
 
   return terminatorUse || localPhiUse || externalUse;
 }
@@ -160,7 +160,7 @@ void RegisterAllocator::lowerPhis(ArrayRef<BasicBlock *> order) {
   llvh::SmallVector<PhiInst *, 8> PHIs;
   IRBuilder builder(F);
 
-  // Collect all PHIs.
+                      
   for (auto &BB : order) {
     for (auto &Inst : *BB) {
       if (auto *P = llvh::dyn_cast<PhiInst>(&Inst)) {
@@ -169,24 +169,24 @@ void RegisterAllocator::lowerPhis(ArrayRef<BasicBlock *> order) {
     }
   }
 
-  // The MOV sequence at the end of the block writes the values that need to go
-  // into the PHI node registers in the jump-destination basic blocks. In the
-  // case of cycles we may need to read a value from a current PHI node and also
-  // prepare the value of the same PHI node for the next iteration. To make sure
-  // that we read an up-to-date value we copy the value using a MOV before we
-  // emit the MOV sequence and replace all external uses.
+                                                                               
+                                                                             
+                                                                                
+                                                                                
+                                                                             
+                                                         
   for (PhiInst *P : PHIs) {
     if (!phiReadWrite(P))
       continue;
 
-    // The MOV sequence may clobber the PHI. Insert a copy.
+                                                           
     builder.setInsertionPoint(P->getParent()->getTerminator());
     auto *mov = builder.createMovInst(P);
 
     Value::UseListTy users = P->getUsers();
-    // Update all external users:
+                                 
     for (auto *U : users) {
-      // Local uses of the PHI are allowed.
+                                           
       if (!llvh::isa<PhiInst>(U) && !llvh::isa<TerminatorInst>(U) &&
           U->getParent() == P->getParent())
         continue;
@@ -195,11 +195,11 @@ void RegisterAllocator::lowerPhis(ArrayRef<BasicBlock *> order) {
     }
   }
 
-  /// A list of registers that were copied to prevent clobbering. Maps the
-  /// original PHI node to the copied value.
+                                                                          
+                                            
   DenseMap<Value *, MovInst *> copied;
 
-  // Lower all PHI nodes into a sequence of MOVs in the predecessor blocks.
+                                                                           
   for (PhiInst *P : PHIs) {
     for (unsigned i = 0, e = P->getNumEntries(); i < e; ++i) {
       auto E = P->getEntry(i);
@@ -208,16 +208,16 @@ void RegisterAllocator::lowerPhis(ArrayRef<BasicBlock *> order) {
       auto *mov = builder.createMovInst(E.first);
       P->updateEntry(i, mov, E.second);
 
-      // If the terminator uses the value that we are inserting then we can fix
-      // the lifetime by making it use the MOV. We can do this because we know
-      // that terminators don't modify values in destination PHI nodes and this
-      // allows us to merge the lifetime of the value and save a register.
+                                                                               
+                                                                              
+                                                                               
+                                                                          
       copied[E.first] = mov;
     }
   }
 
-  // The terminator comes after the MOV sequence, so make sure it uses the
-  // updated registers.
+                                                                          
+                       
   for (auto &BB : order) {
     auto *term = BB->getTerminator();
 
@@ -239,22 +239,22 @@ void RegisterAllocator::lowerPhis(ArrayRef<BasicBlock *> order) {
 void RegisterAllocator::calculateLocalLiveness(
     BlockLifetimeInfo &livenessInfo,
     BasicBlock *BB) {
-  // For each instruction in the block:
+                                       
   for (auto &it : *BB) {
     Instruction *I = &it;
 
     unsigned idx = getInstructionNumber(I);
     livenessInfo.kill_.set(idx);
 
-    // PHI nodes require special handling because they are flow sensitive. Mask
-    // out flow that does not go in the direction of the phi edge.
+                                                                               
+                                                                  
     if (auto *P = llvh::dyn_cast<PhiInst>(I)) {
       llvh::SmallVector<unsigned, 4> incomingValueNum;
 
-      // Collect all incoming value numbers.
+                                            
       for (int i = 0, e = P->getNumEntries(); i < e; i++) {
         auto E = P->getEntry(i);
-        // Skip unreachable predecessors.
+                                         
         if (!blockLiveness_.count(E.second))
           continue;
         if (auto *II = llvh::dyn_cast<Instruction>(E.first)) {
@@ -262,10 +262,10 @@ void RegisterAllocator::calculateLocalLiveness(
         }
       }
 
-      // Block the incoming values from flowing into the predecessors.
+                                                                      
       for (int i = 0, e = P->getNumEntries(); i < e; i++) {
         auto E = P->getEntry(i);
-        // Skip unreachable predecessors.
+                                         
         if (!blockLiveness_.count(E.second))
           continue;
         for (auto num : incomingValueNum) {
@@ -273,10 +273,10 @@ void RegisterAllocator::calculateLocalLiveness(
         }
       }
 
-      // Allow the flow of incoming values in specific directions:
+                                                                  
       for (int i = 0, e = P->getNumEntries(); i < e; i++) {
         auto E = P->getEntry(i);
-        // Skip unreachable predecessors.
+                                         
         if (!blockLiveness_.count(E.second))
           continue;
         if (auto *II = llvh::dyn_cast<Instruction>(E.first)) {
@@ -286,16 +286,16 @@ void RegisterAllocator::calculateLocalLiveness(
       }
     }
 
-    // For each one of the operands that are also instructions:
+                                                               
     for (unsigned opIdx = 0, e = I->getNumOperands(); opIdx != e; ++opIdx) {
       auto *opInst = llvh::dyn_cast<Instruction>(I->getOperand(opIdx));
       if (!opInst)
         continue;
-      // Skip instructions from unreachable blocks.
+                                                   
       if (!blockLiveness_.count(opInst->getParent()))
         continue;
 
-      // Get the index of the operand.
+                                      
       auto opInstIdx = getInstructionNumber(opInst);
       livenessInfo.gen_.set(opInstIdx);
     }
@@ -319,7 +319,7 @@ void RegisterAllocator::calculateGlobalLiveness(ArrayRef<BasicBlock *> order) {
   unsigned iterations = 0;
   bool changed = false;
 
-  // Init the live-in vector to be GEN-KILL.
+                                            
   for (auto &it : blockLiveness_) {
     BlockLifetimeInfo &livenessInfo = it.second;
     livenessInfo.liveIn_ |= livenessInfo.gen_;
@@ -335,10 +335,10 @@ void RegisterAllocator::calculateGlobalLiveness(ArrayRef<BasicBlock *> order) {
       BasicBlock *BB = *it;
       BlockLifetimeInfo &livenessInfo = blockLiveness_[BB];
 
-      // Rule:  OUT = SUCC0_in  + SUCC1_in ...
+                                              
       for (auto *succ : successors(BB)) {
         BlockLifetimeInfo &succInfo = blockLiveness_[succ];
-        // Check if we are about to change bits in the live-out vector.
+                                                                       
         if (succInfo.liveIn_.test(livenessInfo.liveOut_)) {
           changed = true;
         }
@@ -346,9 +346,9 @@ void RegisterAllocator::calculateGlobalLiveness(ArrayRef<BasicBlock *> order) {
         livenessInfo.liveOut_ |= succInfo.liveIn_;
       }
 
-      // Rule: In = gen + (OUT - KILL)
-      // After initializing 'in' to 'gen' - 'kill', the only way for the result
-      // to change is for 'out' to change, and we check if 'out' changes above.
+                                      
+                                                                               
+                                                                               
       livenessInfo.liveIn_ = livenessInfo.liveOut_;
       livenessInfo.liveIn_ |= livenessInfo.gen_;
       livenessInfo.liveIn_.reset(livenessInfo.kill_);
@@ -372,7 +372,7 @@ void RegisterAllocator::calculateGlobalLiveness(ArrayRef<BasicBlock *> order) {
 
   LLVM_DEBUG(
       dbgs() << "Completed liveness in " << iterations << " iterations\n");
-  // Suppress -Wunused-but-set-variable warning with new compilers.
+                                                                   
   (void)iterations;
 }
 
@@ -388,7 +388,7 @@ Register RegisterAllocator::getRegisterForInstructionAt(
     Register valueReg = getRegister(Value);
     unsigned loc = getInstructionNumber(At);
     if (valueReg.isValid()) {
-      // Check all of valueReg's intervals, and see if any of those contain loc.
+                                                                                
       const Interval &i = getInstructionInterval(Value);
       auto itBegin = i.segments_.begin(), itEnd = i.segments_.end();
       if (std::find_if(itBegin, itEnd, [loc](const Segment &s) {
@@ -399,7 +399,7 @@ Register RegisterAllocator::getRegisterForInstructionAt(
     }
   }
 
-  // Value is not available at At; return an invalid register.
+                                                              
   return Register{};
 }
 
@@ -418,8 +418,8 @@ bool RegisterAllocator::isManuallyAllocatedInterval(Instruction *I) {
 void RegisterAllocator::coalesce(
     DenseMap<Instruction *, Instruction *> &map,
     ArrayRef<BasicBlock *> order) {
-  // Merge all PHI nodes into a single interval. This part is required for
-  // correctness because it bounds the MOV and the PHIs into a single interval.
+                                                                          
+                                                                               
   for (BasicBlock *BB : order) {
     for (Instruction &I : *BB) {
       auto *P = llvh::dyn_cast<PhiInst>(&I);
@@ -430,8 +430,8 @@ void RegisterAllocator::coalesce(
       for (unsigned i = 0, e = P->getNumEntries(); i < e; ++i) {
         auto *mov = cast<MovInst>(P->getEntry(i).first);
 
-        // Bail out if the interval is already mapped, like in the case of self
-        // edges.
+                                                                               
+                 
         if (map.count(mov))
           continue;
 
@@ -441,17 +441,17 @@ void RegisterAllocator::coalesce(
         unsigned idx = getInstructionNumber(mov);
         instructionInterval_[phiNum].add(instructionInterval_[idx]);
 
-        // Record the fact that the mov should use the same register as the phi.
+                                                                                
         map[mov] = P;
       }
     }
   }
 
-  // Given a sequence of MOVs that was generated by the PHI lowering, try to
-  // shorten the lifetime of intervals by reusing copies. For example, we
-  // shorten the lifetime of %0 by making %2 use %1.
-  // %1 = MovInst %0
-  // %2 = MovInst %0
+                                                                            
+                                                                         
+                                                    
+                    
+                    
   for (BasicBlock *BB : order) {
     DenseMap<Value *, MovInst *> lastCopy;
 
@@ -464,7 +464,7 @@ void RegisterAllocator::coalesce(
       if (llvh::isa<Literal>(op))
         continue;
 
-      // If we've made a copy inside this basic block then use the copy.
+                                                                        
       auto it = lastCopy.find(op);
       if (it != lastCopy.end()) {
         mov->setOperand(it->second, 0);
@@ -474,8 +474,8 @@ void RegisterAllocator::coalesce(
     }
   }
 
-  // Optimize the program by coalescing multiple live intervals into a single
-  // long interval. This phase is optional.
+                                                                             
+                                           
   for (BasicBlock *BB : order) {
     for (Instruction &I : *BB) {
       auto *mov = llvh::dyn_cast<MovInst>(&I);
@@ -486,24 +486,24 @@ void RegisterAllocator::coalesce(
       if (!op)
         continue;
 
-      // Don't coalesce intervals that are already coalesced to other intervals
-      // or that there are other intervals that are coalesced into it, or if
-      // the interval is pre-allocated.
+                                                                               
+                                                                            
+                                       
       if (map.count(op) || isAllocated(op) || isAllocated(mov))
         continue;
 
-      // If the MOV is already coalesced into some other interval then merge the
-      // operand into that interval.
+                                                                                
+                                    
       Instruction *dest = mov;
 
-      // Don't handle instructions with target specific lowering because this
-      // means that we won't release them (and call the target specific hook)
-      // until the whole register is freed.
+                                                                             
+                                                                             
+                                           
       if (isManuallyAllocatedInterval(op))
         continue;
 
-      // If the mov is already merged into another interval then find the
-      // destination interval and try to merge the current interval into it.
+                                                                         
+                                                                            
       while (map.count(dest)) {
         dest = map[dest];
       }
@@ -536,7 +536,7 @@ void RegisterAllocator::coalesce(
 }
 
 void RegisterAllocator::allocateFastPass(ArrayRef<BasicBlock *> order) {
-  // Make sure Phis and related Movs get the same register
+                                                          
   for (auto *bb : order) {
     for (auto &inst : *bb) {
       handleInstruction(&inst);
@@ -550,63 +550,63 @@ void RegisterAllocator::allocateFastPass(ArrayRef<BasicBlock *> order) {
     }
   }
 
-  // Bit vector indicating whether a register with a given index is being used
-  // as a block local register.
+                                                                              
+                               
   llvh::BitVector blockLocals;
 
-  // List of free block local registers. We have to maintain this outside the
-  // file because we cannot determine interference between local and global
-  // registers. So we have to ensure that the local registers are only reused
-  // for other block-local instructions.
+                                                                             
+                                                                           
+                                                                             
+                                        
   llvh::SmallVector<Register, 8> freeBlockLocals;
 
-  // A dummy register used for all instructions that have no users.
+                                                                   
   Register deadReg = file.allocateRegister();
 
-  // Iterate in reverse, so we can cheaply determine whether an instruction
-  // is local, and assign it a register accordingly.
+                                                                           
+                                                    
   for (auto *bb : llvh::reverse(order)) {
     for (auto &inst : llvh::reverse(*bb)) {
       if (isAllocated(&inst)) {
-        // If this is using a local register, we know the register is free after
-        // we visit the definition.
+                                                                                
+                                   
         auto reg = getRegister(&inst);
         auto idx = reg.getIndex();
         if (idx < blockLocals.size() && blockLocals.test(idx))
           freeBlockLocals.push_back(reg);
       } else {
-        // Unallocated instruction means the result is dead, because all users
-        // are visited first. Allocate a temporary register.
-        // Note that we cannot assert that the instruction has no users, because
-        // there may be users in dead blocks.
+                                                                              
+                                                            
+                                                                                
+                                             
         updateRegister(&inst, deadReg);
       }
 
-      // Allocate a register to unallocated operands.
+                                                     
       for (size_t i = 0, e = inst.getNumOperands(); i < e; ++i) {
         auto *op = llvh::dyn_cast<Instruction>(inst.getOperand(i));
 
-        // Skip if op is not an instruction or already has a register.
+                                                                      
         if (!op || isAllocated(op))
           continue;
 
         if (op->getParent() != bb) {
-          // Live across blocks, allocate a global regigster.
+                                                             
           updateRegister(op, file.allocateRegister());
           continue;
         }
 
-        // We know this operand is local because:
-        // 1. The operand is in the same block as this one.
-        // 2. All blocks dominated by this block have been visited.
-        // 3. All users must be dominated by their def, since Phis are
-        //    allocated beforehand.
+                                                 
+                                                           
+                                                                   
+                                                                      
+                                   
         if (!freeBlockLocals.empty()) {
           updateRegister(op, freeBlockLocals.pop_back_val());
           continue;
         }
 
-        // No free local register, allocate another one.
+                                                        
         Register reg = file.allocateRegister();
         if (blockLocals.size() <= reg.getIndex())
           blockLocals.resize(reg.getIndex() + 1);
@@ -620,23 +620,23 @@ void RegisterAllocator::allocateFastPass(ArrayRef<BasicBlock *> order) {
 void RegisterAllocator::allocate(ArrayRef<BasicBlock *> order) {
   PerfSection regAlloc("Register Allocation");
 
-  // Lower PHI nodes into a sequence of MOVs.
+                                             
   lowerPhis(order);
 
   {
-    // We have two forms of register allocation: classic and fast pass.
-    // Classic allocation calculates and merges liveness intervals, fast pass
-    // just assigns sequentually. The fast pass can be enabled for small
-    // functions where runtime memory savings will be small, and for large
-    // functions where degenerate behavior can inflate compile time memory
-    // usage.
+                                                                       
+                                                                             
+                                                                        
+                                                                          
+                                                                          
+             
 
     unsigned int instructionCount = 0;
     for (const auto &BB : order) {
       instructionCount += BB->getInstList().size();
     }
-    // We allocate five bits per instruction per basicblock in our liveness
-    // sets.
+                                                                           
+            
     uint64_t estimatedMemoryUsage =
         (uint64_t)order.size() * instructionCount * 5 / 8;
     if (instructionCount < fastPassThreshold ||
@@ -646,7 +646,7 @@ void RegisterAllocator::allocate(ArrayRef<BasicBlock *> order) {
     }
   }
 
-  // Number instructions:
+                         
   for (auto *BB : order) {
     for (auto &it : *BB) {
       Instruction *I = &it;
@@ -656,8 +656,8 @@ void RegisterAllocator::allocate(ArrayRef<BasicBlock *> order) {
     }
   }
 
-  // Init the basic block liveness data structure and calculate the local
-  // liveness for each basic block.
+                                                                         
+                                   
   unsigned maxIdx = getMaxInstrIndex();
   for (auto *BB : order) {
     blockLiveness_[BB].init(maxIdx);
@@ -666,30 +666,30 @@ void RegisterAllocator::allocate(ArrayRef<BasicBlock *> order) {
     calculateLocalLiveness(blockLiveness_[BB], BB);
   }
 
-  // Propagate the local liveness information across the whole function.
+                                                                        
   calculateGlobalLiveness(order);
 
-  // Calculate the live intervals for each instruction.
+                                                       
   calculateLiveIntervals(order);
 
-  // Free the memory used for liveness.
+                                       
   blockLiveness_.clear();
 
-  // Maps coalesced instructions. First uses the register allocated for Second.
+                                                                               
   DenseMap<Instruction *, Instruction *> coalesced;
 
   coalesce(coalesced, order);
 
-  // Compare two intervals and return the one that starts first.
+                                                                
   auto startsFirst = [&](unsigned a, unsigned b) {
     Interval &IA = instructionInterval_[a];
     Interval &IB = instructionInterval_[b];
     return IA.start() < IB.start() || (IA.start() == IB.start() && a < b);
   };
 
-  // Compare two intervals and return the one that starts first. If two
-  // intervals end at the same place, schedule the instruction before the
-  // operands.
+                                                                       
+                                                                         
+              
 
   auto endsFirst = [&](unsigned a, unsigned b) {
     auto &aInterval = instructionInterval_[a];
@@ -713,7 +713,7 @@ void RegisterAllocator::allocate(ArrayRef<BasicBlock *> order) {
   std::priority_queue<unsigned, InstList, decltype(startsFirst)>
       liveIntervalsQueue(startsFirst);
 
-  // Perform the register allocation:
+                                     
   while (!intervals.empty()) {
     unsigned instIdx = intervals.top();
     intervals.pop();
@@ -725,7 +725,7 @@ void RegisterAllocator::allocate(ArrayRef<BasicBlock *> order) {
         dbgs() << "Looking at index " << currentIndex << ": " << instInterval
                << " " << inst->getName() << "\n");
 
-    // Free all of the intervals that start after the current index.
+                                                                    
     while (!liveIntervalsQueue.empty()) {
       LLVM_DEBUG(
           dbgs() << "\t Cleaning up for index " << currentIndex << " PQ("
@@ -735,7 +735,7 @@ void RegisterAllocator::allocate(ArrayRef<BasicBlock *> order) {
       Interval &range = instructionInterval_[topIdx];
       LLVM_DEBUG(dbgs() << "\t Earliest interval: " << range << "\n");
 
-      // Flush empty intervals and intervals that finished after our index.
+                                                                           
       bool nonEmptyInterval = range.size();
       if (range.start() < currentIndex && nonEmptyInterval) {
         break;
@@ -754,24 +754,24 @@ void RegisterAllocator::allocate(ArrayRef<BasicBlock *> order) {
       handleInstruction(I);
     }
 
-    // Don't try to allocate registers that were merged into other live
-    // intervals.
+                                                                       
+                 
     if (coalesced.count(inst)) {
       continue;
     }
 
-    // Allocate a register for the live interval that we are currently handling.
+                                                                                
     if (!isAllocated(inst)) {
       Register R = file.allocateRegister();
       updateRegister(inst, R);
     }
 
-    // Mark the current instruction as live and remember to perform target
-    // specific calls when we are done with the bundle.
+                                                                          
+                                                       
     liveIntervalsQueue.push(instIdx);
-  } // For each instruction in the function.
+  }                                         
 
-  // Free the remaining intervals.
+                                  
   while (!liveIntervalsQueue.empty()) {
     Instruction *I = instructionsByNumbers_[liveIntervalsQueue.top()];
     LLVM_DEBUG(
@@ -781,7 +781,7 @@ void RegisterAllocator::allocate(ArrayRef<BasicBlock *> order) {
     liveIntervalsQueue.pop();
   }
 
-  // Allocate registers for the coalesced registers.
+                                                    
   for (auto &RP : coalesced) {
     assert(!isAllocated(RP.first) && "Register should not be allocated");
     Instruction *dest = RP.second;
@@ -790,24 +790,24 @@ void RegisterAllocator::allocate(ArrayRef<BasicBlock *> order) {
 }
 
 void RegisterAllocator::calculateLiveIntervals(ArrayRef<BasicBlock *> order) {
-  /// Calculate the live intervals for each instruction. Start with a list of
-  /// intervals that only contain the instruction itself.
+                                                                             
+                                                         
   for (int i = 0, e = instructionsByNumbers_.size(); i < e; ++i) {
-    // The instructions are ordered consecutively. The start offset of the
-    // instruction is the index in the array plus one because the value starts
-    // to live on the next instruction.
+                                                                          
+                                                                              
+                                       
     instructionInterval_[i] = Interval(i + 1, i + 1);
   }
 
-  // For each basic block in the liveness map:
+                                              
   for (BasicBlock *BB : order) {
     BlockLifetimeInfo &liveness = blockLiveness_[BB];
 
     auto startOffset = getInstructionNumber(&*BB->begin());
     auto endOffset = getInstructionNumber(BB->getTerminator());
 
-    // Register fly-through basic blocks (basic blocks where the value enters)
-    // and leavs without doing anything to any of the operands.
+                                                                              
+                                                               
     for (int i = 0, e = liveness.liveOut_.size(); i < e; i++) {
       bool leavs = liveness.liveOut_.test(i);
       bool enters = liveness.liveIn_.test(i);
@@ -816,11 +816,11 @@ void RegisterAllocator::calculateLiveIntervals(ArrayRef<BasicBlock *> order) {
       }
     }
 
-    // For each instruction in the block:
+                                         
     for (auto &it : *BB) {
       auto instOffset = getInstructionNumber(&it);
-      // The instruction is defined in this basic block. Check if it is leaving
-      // the basic block extend the interval until the end of the block.
+                                                                               
+                                                                        
       if (liveness.liveOut_.test(instOffset)) {
         instructionInterval_[instOffset].add(
             Segment(instOffset + 1, endOffset + 1));
@@ -829,7 +829,7 @@ void RegisterAllocator::calculateLiveIntervals(ArrayRef<BasicBlock *> order) {
             "Livein but also killed in this block?");
       }
 
-      // Extend the lifetime of the operands.
+                                             
       for (int i = 0, e = it.getNumOperands(); i < e; i++) {
         auto instOp = llvh::dyn_cast<Instruction>(it.getOperand(i));
         if (!instOp)
@@ -843,9 +843,9 @@ void RegisterAllocator::calculateLiveIntervals(ArrayRef<BasicBlock *> order) {
         }
 
         auto operandIdx = getInstructionNumber(instOp);
-        // Extend the lifetime of the interval to reach this instruction.
-        // Include this instruction in the interval in order to make sure that
-        // the register is not freed before the use.
+                                                                         
+                                                                              
+                                                    
 
         auto start = operandIdx + 1;
         auto end = instOffset + 1;
@@ -855,13 +855,13 @@ void RegisterAllocator::calculateLiveIntervals(ArrayRef<BasicBlock *> order) {
         }
       }
 
-      // Extend the lifetime of the PHI to include the source basic blocks.
+                                                                           
       if (auto *P = llvh::dyn_cast<PhiInst>(&it)) {
         for (int i = 0, e = P->getNumEntries(); i < e; i++) {
           auto E = P->getEntry(i);
-          // PhiInsts may reference instructions from dead code blocks
-          // (which will be unnumbered and unallocated). Since the edge
-          // is necessarily also dead, we can just skip it.
+                                                                      
+                                                                       
+                                                           
           if (!hasInstructionNumber(E.second->getTerminator()))
             continue;
 
@@ -869,17 +869,17 @@ void RegisterAllocator::calculateLiveIntervals(ArrayRef<BasicBlock *> order) {
           Segment S(termIdx, termIdx + 1);
           instructionInterval_[instOffset].add(S);
 
-          // Extend the lifetime of the predecessor to the end of the BB.
+                                                                         
           if (auto *instOp = llvh::dyn_cast<Instruction>(E.first)) {
             auto predIdx = getInstructionNumber(instOp);
             auto S2 = Segment(predIdx + 1, termIdx);
             instructionInterval_[predIdx].add(S2);
           }
-        } // each pred.
+        }              
       }
 
-    } // for each instruction in the block.
-  } // for each block.
+    }                                      
+  }                   
 }
 
 struct LivenessRegAllocIRPrinter : IRPrinter {
@@ -984,20 +984,20 @@ namespace {
 static bool preallocateScopeRegisters(const Context &c) {
   return c.getDebugInfoSetting() == DebugInfoSetting::ALL;
 }
-} // namespace
+}             
 
 ScopeRegisterAnalysis::ScopeRegisterAnalysis(Function *F, RegisterAllocator &RA)
     : RA_(RA) {
-  // Initialize the ScopeDesc -> ScopeCreationInst map; if emitting full debug
-  // info, scopeCreationInsts will be used to reserve/pre-allocate the
-  // environment registers for scopes in F.
+                                                                              
+                                                                      
+                                           
   llvh::SmallVector<Value *, 4> scopeCreationInsts;
   for (BasicBlock &BB : *F) {
     for (Instruction &I : BB) {
       if (llvh::isa<HBCResolveEnvironment>(I)) {
-        // HBCResolveEnvironment instructions are used to fetch an environment
-        // outside of F. The debugger doesn't need access to these "resolved"
-        // environment.
+                                                                              
+                                                                             
+                       
         continue;
       } else if (auto *SCI = llvh::dyn_cast<ScopeCreationInst>(&I)) {
         assert(
@@ -1022,22 +1022,22 @@ ScopeRegisterAnalysis::ScopeRegisterAnalysis(Function *F, RegisterAllocator &RA)
 std::pair<Register, ScopeDesc *> ScopeRegisterAnalysis::registerAndScopeAt(
     Instruction *Value,
     ScopeCreationInst *SCI) {
-  // If SCI's value is available in a register, ensure that the register is
-  // holding SCI's result at loc.
+                                                                           
+                                 
   Register sciReg = RA_.getRegisterForInstructionAt(Value, SCI);
   if (sciReg.isValid()) {
     return std::make_pair(sciReg, SCI->getCreatedScopeDesc());
   }
 
-  // sciReg is not alive at Value, so try to see if SCI's parent scope is.
+                                                                          
   auto parentIt =
       scopeCreationInsts_.find(SCI->getCreatedScopeDesc()->getParent());
   if (parentIt == scopeCreationInsts_.end()) {
-    // SCI's Parent scope is not available in any register.
+                                                           
     return std::make_pair(Register{}, nullptr);
   }
 
-  // Try again, this time on SCI's parent Environment.
+                                                      
   return registerAndScopeAt(Value, parentIt->second);
 }
 
@@ -1050,10 +1050,10 @@ ScopeRegisterAnalysis::registerAndScopeForInstruction(Instruction *Inst) {
       if (!preallocateScopeRegisters(Inst->getContext())) {
         return registerAndScopeAt(Inst, originalScopeCreation);
       }
-      // Use the pre-allocated registers. This is needed because RA_ could have
-      // decided to use fast allocation, in which case instructions won't be
-      // numbered (and intervals won't be computed), meaning registerAndScopeAt
-      // above will not find the scope register.
+                                                                               
+                                                                            
+                                                                               
+                                                
       assert(RA_.isAllocated(originalScopeCreation) && "should be allocated");
       Register sciReg = RA_.getRegister(originalScopeCreation);
       assert(sciReg.isValid() && "scope register should be valid.");

@@ -58,12 +58,12 @@ void VTable::HeapSnapshotMetadata::addLocations(
     addLocations_(cell, gc, snap);
   }
 }
-#endif // HERMES_MEMORY_INSTRUMENTATION
+#endif                                 
 
 llvh::raw_ostream &operator<<(llvh::raw_ostream &os, const VTable &vt) {
   return os << "VTable: {\n\tsize: " << vt.size
             << ", finalize: " << reinterpret_cast<void *>(vt.finalize_) << "}";
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

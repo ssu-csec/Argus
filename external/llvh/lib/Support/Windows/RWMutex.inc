@@ -11,26 +11,26 @@
 //
 //===----------------------------------------------------------------------===//
 
-//===----------------------------------------------------------------------===//
-//=== WARNING: Implementation here must contain only generic Win32 code that
-//===          is guaranteed to work on *all* Win32 variants.
-//===----------------------------------------------------------------------===//
+                                                                                
+                                                                            
+                                                             
+                                                                                
 
 #include "WindowsSupport.h"
 
 namespace llvh {
 
-// Windows has slim read-writer lock support on Vista and higher, so we
-// will attempt to load the APIs.  If they exist, we will use them, and
-// if not, we will fall back on critical sections.  When we drop support
-// for XP, we can stop lazy-loading these APIs and just use them directly.
+                                                                       
+                                                                       
+                                                                        
+                                                                          
 #if defined(__MINGW32__)
-  // Taken from WinNT.h
+                       
   typedef struct _RTL_SRWLOCK {
     PVOID Ptr;
   } RTL_SRWLOCK, *PRTL_SRWLOCK;
 
-  // Taken from WinBase.h
+                         
   typedef RTL_SRWLOCK SRWLOCK, *PSRWLOCK;
 #endif
 
@@ -85,7 +85,7 @@ sys::RWMutexImpl::RWMutexImpl() {
 sys::RWMutexImpl::~RWMutexImpl() {
   if (!sHasSRW)
     DeleteCriticalSection(static_cast<LPCRITICAL_SECTION>(data_));
-  // Nothing to do in the case of slim reader/writers except free the memory.
+                                                                             
   free(data_);
 }
 

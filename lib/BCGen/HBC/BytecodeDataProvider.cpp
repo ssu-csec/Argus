@@ -18,15 +18,15 @@ namespace hbc {
 
 namespace {
 
-/// Given a valid bytecode buffer aref, returns whether its stored fileHash
-/// matches the actual hash of the buffer.
+                                                                           
+                                          
 static bool hashIsValid(llvh::ArrayRef<uint8_t> aref) {
   const auto *header =
       reinterpret_cast<const hbc::BytecodeFileHeader *>(aref.data());
   assert(
       header->version == hbc::BYTECODE_VERSION &&
       "must perform basic checks first");
-  // Use fileLength rather than aref.end() since there may be an epilogue.
+                                                                          
   const auto *footer = reinterpret_cast<const hbc::BytecodeFileFooter *>(
       aref.data() + header->fileLength - sizeof(BytecodeFileFooter));
   SHA1 actual = llvh::SHA1::hash(
@@ -41,7 +41,7 @@ static void updateHash(llvh::MutableArrayRef<uint8_t> aref) {
   assert(
       header->version == hbc::BYTECODE_VERSION &&
       "must perform basic checks first");
-  // Use fileLength rather than aref.end() since there may be an epilogue.
+                                                                          
   auto *footer = reinterpret_cast<hbc::BytecodeFileFooter *>(
       aref.data() + header->fileLength - sizeof(BytecodeFileFooter));
   SHA1 actual = llvh::SHA1::hash(
@@ -50,8 +50,8 @@ static void updateHash(llvh::MutableArrayRef<uint8_t> aref) {
   std::copy(actual.begin(), actual.end(), footer->fileHash);
 }
 
-/// Returns if aref points to valid bytecode and specifies why it may not
-/// in errorMessage (if supplied).
+                                                                         
+                                  
 static bool sanityCheck(
     llvh::ArrayRef<uint8_t> aref,
     BytecodeForm form,
@@ -66,7 +66,7 @@ static bool sanityCheck(
     return false;
   }
 
-  // Ensure the data is aligned to be able to read an int from the start.
+                                                                         
   if (llvh::alignAddr(aref.data(), BYTECODE_ALIGNMENT) !=
       (uintptr_t)aref.data()) {
     if (errorMessage) {
@@ -119,13 +119,13 @@ static bool sanityCheck(
   return true;
 }
 
-/// Assert that \p buf has the proper alignment for T, and then cast it to a
-/// pointer to T. \return the pointer to T.
+                                                                            
+                                           
 template <typename T>
 const T *alignCheckCast(const uint8_t *buf) {
-  // We pad the offset of each data structure by BYTECODE_ALIGNMENT bytes, hence
-  // we cannot support casting to any data structure that requires more than 4
-  // bytes alignment, which may lead to undefined behavior.
+                                                                                
+                                                                              
+                                                           
   static_assert(
       alignof(T) <= BYTECODE_ALIGNMENT, "Cannot handle the alignment");
   assert(
@@ -134,7 +134,7 @@ const T *alignCheckCast(const uint8_t *buf) {
   return reinterpret_cast<const T *>(buf);
 }
 
-/// Variant of alignCheckCast() for non-const pointers.
+                                                       
 template <typename T>
 T *alignCheckCast(uint8_t *buf) {
   static_assert(
@@ -145,8 +145,8 @@ T *alignCheckCast(uint8_t *buf) {
   return reinterpret_cast<T *>(buf);
 }
 
-/// Cast the pointer at \p buf to type T, increment \p buf by
-/// the size of T.
+                                                             
+                  
 template <typename T>
 const T *castData(const uint8_t *&buf) {
   auto ret = alignCheckCast<T>(buf);
@@ -154,7 +154,7 @@ const T *castData(const uint8_t *&buf) {
   return ret;
 }
 
-/// Variant of castData() for non-const pointers.
+                                                 
 template <typename T>
 T *castData(uint8_t *&buf) {
   auto ret = alignCheckCast<T>(buf);
@@ -162,9 +162,9 @@ T *castData(uint8_t *&buf) {
   return ret;
 }
 
-/// Cast the pointer at \p buf to an array of type T, with \p size.
-/// Fatals if the end of the array extends past \p end.
-/// Increment \p buf by the total size of the array.
+                                                                   
+                                                       
+                                                    
 template <typename T>
 llvh::ArrayRef<T>
 castArrayRef(const uint8_t *&buf, size_t size, const uint8_t *end) {
@@ -175,7 +175,7 @@ castArrayRef(const uint8_t *&buf, size_t size, const uint8_t *end) {
   return {ptr, size};
 }
 
-/// Variant of castArrayRef() for non-const pointers.
+                                                     
 template <typename T>
 llvh::MutableArrayRef<T>
 castArrayRef(uint8_t *&buf, size_t size, const uint8_t *end) {
@@ -186,18 +186,18 @@ castArrayRef(uint8_t *&buf, size_t size, const uint8_t *end) {
   return {ptr, size};
 }
 
-/// Align \p buf with the \p alignment.
-/// \p buf is passed by pointer reference and will be modified.
+                                       
+                                                               
 void align(const uint8_t *&buf, uint32_t alignment = BYTECODE_ALIGNMENT) {
   buf = (const uint8_t *)llvh::alignAddr(buf, alignment);
 }
 
-/// Variant of align() for non-const pointers.
+                                              
 void align(uint8_t *&buf, uint32_t alignment = BYTECODE_ALIGNMENT) {
   buf = (uint8_t *)llvh::alignAddr(buf, alignment);
 }
 
-} // namespace
+}             
 
 template <bool Mutable>
 bool BytecodeFileFields<Mutable>::populateFromBuffer(
@@ -208,19 +208,19 @@ bool BytecodeFileFields<Mutable>::populateFromBuffer(
     return false;
   }
 
-  // Helper type which populates a BytecodeFileFields. This is nested inside the
-  // function so we can leverage BytecodeFileFields template types.
+                                                                                
+                                                                   
   struct BytecodeFileFieldsPopulator {
-    /// The fields being populated.
+                                   
     BytecodeFileFields &f;
 
-    /// Current buffer position.
+                                
     Pointer<uint8_t> buf;
 
-    /// A pointer to the bytecode file header.
+                                              
     const BytecodeFileHeader *h;
 
-    /// End of buffer.
+                      
     const uint8_t *end;
 
     BytecodeFileFieldsPopulator(
@@ -302,11 +302,11 @@ bool BytecodeFileFields<Mutable>::populateFromBuffer(
     void visitCJSModuleTable() {
       align(buf);
       if (h->options.cjsModulesStaticallyResolved) {
-        // Modules have been statically resolved.
+                                                 
         f.cjsModuleTableStatic = castArrayRef<std::pair<uint32_t, uint32_t>>(
             buf, h->cjsModuleCount, end);
       } else {
-        // Modules are not resolved, use the filename -> function ID mapping.
+                                                                             
         f.cjsModuleTable = castArrayRef<std::pair<uint32_t, uint32_t>>(
             buf, h->cjsModuleCount, end);
       }
@@ -323,7 +323,7 @@ bool BytecodeFileFields<Mutable>::populateFromBuffer(
   return true;
 }
 
-// Explicit instantiations of BytecodeFileFields.
+                                                 
 template struct BytecodeFileFields<false>;
 template struct BytecodeFileFields<true>;
 
@@ -337,7 +337,7 @@ int32_t BCProviderBase::findCatchTargetOffset(
       return exceptions[i].target;
     }
   }
-  // No handler is found.
+                         
   return -1;
 }
 
@@ -370,18 +370,18 @@ llvh::Optional<SourceMapTextLocation> BCProviderBase::getLocationForAddress(
   return llvh::None;
 }
 
-/// Read [data, data + size) sequentially into the OS page cache, but
-/// abort ASAP if another thread sets \p abortFlag.
+                                                                     
+                                                   
 static void
 warmup(const uint8_t *data, uint32_t size, std::atomic<bool> *abortFlag) {
-  // The readahead/madvise syscalls are not always enough, so actually read
-  // a byte from every page in the range.
+                                                                           
+                                         
   const uint32_t PS = oscompat::page_size();
-  // Check abort flag every this many bytes, to ensure timely termination.
+                                                                          
   const uint32_t kAbortCheckInterval = 64 * PS;
   uint32_t nextAbortCheckPoint = kAbortCheckInterval;
   for (uint32_t i = 0; i < size; i += PS) {
-    // volatile to prevent the compiler from optimizing the read away.
+                                                                      
     (void)(((volatile const uint8_t *)data)[i]);
     if (i >= nextAbortCheckPoint) {
       if (abortFlag->load(std::memory_order_acquire)) {
@@ -416,15 +416,15 @@ void BCProviderFromBuffer::startWarmup(uint8_t percent) {
 
 namespace {
 
-/// Cast a pointer of any type to a uint8_t pointer.
+                                                    
 template <typename T>
 constexpr uint8_t *rawptr_cast(T *p) {
   return const_cast<uint8_t *>(reinterpret_cast<const uint8_t *>(p));
 }
 
-/// Align \p *ptr down to the start of the page it is pointing in to, and
-/// simultaneously adjust \p *byteLen up by the amount the ptr was shifted down
-/// by.
+                                                                         
+                                                                               
+       
 inline void pageAlignDown(uint8_t **ptr, size_t &byteLen) {
   const auto PS = oscompat::page_size();
 
@@ -435,7 +435,7 @@ inline void pageAlignDown(uint8_t **ptr, size_t &byteLen) {
 
 #ifndef NDEBUG
 
-/// Returns the total size of all array contents in bytes.
+                                                          
 constexpr size_t totalByteSize() {
   return 0;
 }
@@ -449,7 +449,7 @@ constexpr size_t totalByteSize(
 
 #endif
 
-} // namespace
+}             
 
 void BCProviderFromBuffer::madvise(oscompat::MAdvice advice) {
   (void)oscompat::vm_madvise(
@@ -492,10 +492,10 @@ void BCProviderFromBuffer::adviseStringTableRandom() {
   llvh::ArrayRef<SmallStringTableEntry> smallStringTableEntries{
       stringTableEntries_, stringCount_};
 
-  // We only advise the small string table entries, overflow string table
-  // entries and storage.  We do not give advice about the identifier
-  // hashes or string kinds because they are not referred to after
-  // initialisation.
+                                                                         
+                                                                     
+                                                                  
+                    
 
   auto *tableStart = rawptr_cast(stringTableEntries_);
   auto *tableEnd = rawptr_cast(overflowStringTableEntries_.end());
@@ -650,9 +650,9 @@ BCProviderFromBuffer::getExceptionTableAndDebugOffsets(
   const auto &header = functionHeaders_[functionID];
   const auto *buf = bufferPtr_;
 
-  // Get the correct offset for function info depending on overflow flag. Skip
-  // large header if any (we don't need to parse it, since we're only using
-  // flags below, which are also valid for overflowed small headers).
+                                                                              
+                                                                           
+                                                                     
   if (header.flags.overflowed) {
     buf += header.getLargeHeaderOffset();
     buf += sizeof(hbc::FunctionHeader);
@@ -660,7 +660,7 @@ BCProviderFromBuffer::getExceptionTableAndDebugOffsets(
     buf += header.infoOffset;
   }
 
-  // Deserialize exception table.
+                                 
   llvh::ArrayRef<hbc::HBCExceptionHandlerInfo> exceptionTable{};
   if (header.flags.hasExceptionHandler) {
     align(buf);
@@ -670,7 +670,7 @@ BCProviderFromBuffer::getExceptionTableAndDebugOffsets(
         buf, exceptionHeader->count, end_);
   }
 
-  // Deserialize debug offsets.
+                               
   const hbc::DebugOffsets *debugOffsets = nullptr;
   if (header.flags.hasDebugInfo) {
     align(buf);
@@ -681,18 +681,18 @@ BCProviderFromBuffer::getExceptionTableAndDebugOffsets(
 
 namespace {
 void prefetchRegion(const uint8_t *p, size_t sz) {
-  // Extend start of region down to a page boundary. The region is still inside
-  // the file since we assert below that the file starts on a page boundary.
+                                                                               
+                                                                            
   auto PS = oscompat::page_size();
   auto roundDownDelta = reinterpret_cast<uintptr_t>(p) & (PS - 1);
   oscompat::vm_prefetch(
       const_cast<uint8_t *>(p - roundDownDelta), sz + roundDownDelta);
 }
-} // namespace
+}             
 
 void BCProviderFromBuffer::prefetch(llvh::ArrayRef<uint8_t> aref) {
-  // We require file start be page-aligned so we can safely round down to page
-  // size in prefetchRegion.
+                                                                              
+                            
   assert(
       reinterpret_cast<uintptr_t>(aref.data()) % oscompat::page_size() == 0 &&
       "Precondition: pointer is page-aligned.");
@@ -707,7 +707,7 @@ void BCProviderFromBuffer::prefetch(llvh::ArrayRef<uint8_t> aref) {
   }
   const hbc::BytecodeFileHeader *fileHeader = fields.header;
 
-  // String table.
+                  
   auto stringCount = fileHeader->stringCount;
   const hbc::SmallStringTableEntry *stringTableEntries =
       fields.stringTableEntries.data();
@@ -715,7 +715,7 @@ void BCProviderFromBuffer::prefetch(llvh::ArrayRef<uint8_t> aref) {
       reinterpret_cast<const uint8_t *>(stringTableEntries),
       stringCount * sizeof(*stringTableEntries));
 
-  // Global function bytecode.
+                              
   auto globalFunctionIndex = fileHeader->globalCodeIndex;
   auto functionHeaders = fields.functionHeaders.data();
   const SmallFuncHeader &globalSmall = functionHeaders[globalFunctionIndex];
@@ -742,5 +742,5 @@ void BCProviderFromBuffer::updateBytecodeHash(
   updateHash(aref);
 }
 
-} // namespace hbc
-} // namespace hermes
+}                 
+}                    

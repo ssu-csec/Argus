@@ -51,37 +51,37 @@ class ValueMapIterator;
 template<typename DenseMapT, typename KeyT>
 class ValueMapConstIterator;
 
-/// This class defines the default behavior for configurable aspects of
-/// ValueMap<>.  User Configs should inherit from this class to be as compatible
-/// as possible with future versions of ValueMap.
+                                                                       
+                                                                                
+                                                 
 template<typename KeyT, typename MutexT = sys::Mutex>
 struct ValueMapConfig {
   using mutex_type = MutexT;
 
-  /// If FollowRAUW is true, the ValueMap will update mappings on RAUW. If it's
-  /// false, the ValueMap will leave the original mapping in place.
+                                                                               
+                                                                   
   enum { FollowRAUW = true };
 
-  // All methods will be called with a first argument of type ExtraData.  The
-  // default implementations in this class take a templated first argument so
-  // that users' subclasses can use any type they want without having to
-  // override all the defaults.
+                                                                             
+                                                                             
+                                                                        
+                               
   struct ExtraData {};
 
   template<typename ExtraDataT>
-  static void onRAUW(const ExtraDataT & /*Data*/, KeyT /*Old*/, KeyT /*New*/) {}
+  static void onRAUW(const ExtraDataT &         , KeyT        , KeyT        ) {}
   template<typename ExtraDataT>
-  static void onDelete(const ExtraDataT &/*Data*/, KeyT /*Old*/) {}
+  static void onDelete(const ExtraDataT &        , KeyT        ) {}
 
-  /// Returns a mutex that should be acquired around any changes to the map.
-  /// This is only acquired from the CallbackVH (and held around calls to onRAUW
-  /// and onDelete) and not inside other ValueMap methods.  NULL means that no
-  /// mutex is necessary.
+                                                                            
+                                                                                
+                                                                              
+                         
   template<typename ExtraDataT>
-  static mutex_type *getMutex(const ExtraDataT &/*Data*/) { return nullptr; }
+  static mutex_type *getMutex(const ExtraDataT &        ) { return nullptr; }
 };
 
-/// See the file comment.
+                         
 template<typename KeyT, typename ValueT, typename Config =ValueMapConfig<KeyT>>
 class ValueMap {
   friend class ValueMapCallbackVH<KeyT, ValueT, Config>;
@@ -106,8 +106,8 @@ public:
       : Map(NumInitBuckets), Data() {}
   explicit ValueMap(const ExtraData &Data, unsigned NumInitBuckets = 64)
       : Map(NumInitBuckets), Data(Data) {}
-  // ValueMap can't be copied nor moved, beucase the callbacks store pointer
-  // to it.
+                                                                            
+           
   ValueMap(const ValueMap &) = delete;
   ValueMap(ValueMap &&) = delete;
   ValueMap &operator=(const ValueMap &) = delete;
@@ -125,7 +125,7 @@ public:
   void enableMapMetadata() { MayMapMetadata = true; }
   void disableMapMetadata() { MayMapMetadata = false; }
 
-  /// Get the mapped metadata, if it's in the map.
+                                                  
   Optional<Metadata *> getMappedMD(const Metadata *MD) const {
     if (!MDMap)
       return None;
@@ -146,7 +146,7 @@ public:
   bool empty() const { return Map.empty(); }
   size_type size() const { return Map.size(); }
 
-  /// Grow the map so that it has at least Size buckets. Does not shrink
+                                                                        
   void resize(size_t Size) { Map.resize(Size); }
 
   void clear() {
@@ -154,7 +154,7 @@ public:
     MDMap.reset();
   }
 
-  /// Return 1 if the specified key is in the map, 0 otherwise.
+                                                               
   size_type count(const KeyT &Val) const {
     return Map.find_as(Val) == Map.end() ? 0 : 1;
   }
@@ -166,16 +166,16 @@ public:
     return const_iterator(Map.find_as(Val));
   }
 
-  /// lookup - Return the entry for the specified key, or a default
-  /// constructed value if no such entry exists.
+                                                                   
+                                                
   ValueT lookup(const KeyT &Val) const {
     typename MapT::const_iterator I = Map.find_as(Val);
     return I != Map.end() ? I->second : ValueT();
   }
 
-  // Inserts key,value pair into the map if the key isn't already in the map.
-  // If the key is already in the map, it returns false and doesn't update the
-  // value.
+                                                                             
+                                                                              
+           
   std::pair<iterator, bool> insert(const std::pair<KeyT, ValueT> &KV) {
     auto MapResult = Map.insert(std::make_pair(Wrap(KV.first), KV.second));
     return std::make_pair(iterator(MapResult.first), MapResult.second);
@@ -187,7 +187,7 @@ public:
     return std::make_pair(iterator(MapResult.first), MapResult.second);
   }
 
-  /// insert - Range insertion of pairs.
+                                        
   template<typename InputIt>
   void insert(InputIt I, InputIt E) {
     for (; I != E; ++I)
@@ -214,35 +214,35 @@ public:
     return Map[Wrap(Key)];
   }
 
-  /// isPointerIntoBucketsArray - Return true if the specified pointer points
-  /// somewhere into the ValueMap's array of buckets (i.e. either to a key or
-  /// value in the ValueMap).
+                                                                             
+                                                                             
+                             
   bool isPointerIntoBucketsArray(const void *Ptr) const {
     return Map.isPointerIntoBucketsArray(Ptr);
   }
 
-  /// getPointerIntoBucketsArray() - Return an opaque pointer into the buckets
-  /// array.  In conjunction with the previous method, this can be used to
-  /// determine whether an insertion caused the ValueMap to reallocate.
+                                                                              
+                                                                          
+                                                                       
   const void *getPointerIntoBucketsArray() const {
     return Map.getPointerIntoBucketsArray();
   }
 
 private:
-  // Takes a key being looked up in the map and wraps it into a
-  // ValueMapCallbackVH, the actual key type of the map.  We use a helper
-  // function because ValueMapCVH is constructed with a second parameter.
+                                                               
+                                                                         
+                                                                         
   ValueMapCVH Wrap(KeyT key) const {
-    // The only way the resulting CallbackVH could try to modify *this (making
-    // the const_cast incorrect) is if it gets inserted into the map.  But then
-    // this function must have been called from a non-const method, making the
-    // const_cast ok.
+                                                                              
+                                                                               
+                                                                              
+                     
     return ValueMapCVH(key, const_cast<ValueMap*>(this));
   }
 };
 
-// This CallbackVH updates its ValueMap when the contained Value changes,
-// according to the user's preferences expressed through the Config object.
+                                                                         
+                                                                           
 template <typename KeyT, typename ValueT, typename Config>
 class ValueMapCallbackVH final : public CallbackVH {
   friend class ValueMap<KeyT, ValueT, Config>;
@@ -257,27 +257,27 @@ class ValueMapCallbackVH final : public CallbackVH {
       : CallbackVH(const_cast<Value*>(static_cast<const Value*>(Key))),
         Map(Map) {}
 
-  // Private constructor used to create empty/tombstone DenseMap keys.
+                                                                      
   ValueMapCallbackVH(Value *V) : CallbackVH(V), Map(nullptr) {}
 
 public:
   KeyT Unwrap() const { return cast_or_null<KeySansPointerT>(getValPtr()); }
 
   void deleted() override {
-    // Make a copy that won't get changed even when *this is destroyed.
+                                                                       
     ValueMapCallbackVH Copy(*this);
     typename Config::mutex_type *M = Config::getMutex(Copy.Map->Data);
     unique_lock<typename Config::mutex_type> Guard;
     if (M)
       Guard = unique_lock<typename Config::mutex_type>(*M);
-    Config::onDelete(Copy.Map->Data, Copy.Unwrap());  // May destroy *this.
-    Copy.Map->Map.erase(Copy);  // Definitely destroys *this.
+    Config::onDelete(Copy.Map->Data, Copy.Unwrap());                       
+    Copy.Map->Map.erase(Copy);                               
   }
 
   void allUsesReplacedWith(Value *new_key) override {
     assert(isa<KeySansPointerT>(new_key) &&
            "Invalid RAUW on key of ValueMap<>");
-    // Make a copy that won't get changed even when *this is destroyed.
+                                                                       
     ValueMapCallbackVH Copy(*this);
     typename Config::mutex_type *M = Config::getMutex(Copy.Map->Data);
     unique_lock<typename Config::mutex_type> Guard;
@@ -285,15 +285,15 @@ public:
       Guard = unique_lock<typename Config::mutex_type>(*M);
 
     KeyT typed_new_key = cast<KeySansPointerT>(new_key);
-    // Can destroy *this:
+                         
     Config::onRAUW(Copy.Map->Data, Copy.Unwrap(), typed_new_key);
     if (Config::FollowRAUW) {
       typename ValueMapT::MapT::iterator I = Copy.Map->Map.find(Copy);
-      // I could == Copy.Map->Map.end() if the onRAUW callback already
-      // removed the old mapping.
+                                                                      
+                                 
       if (I != Copy.Map->Map.end()) {
         ValueT Target(std::move(I->second));
-        Copy.Map->Map.erase(I);  // Definitely destroys *this.
+        Copy.Map->Map.erase(I);                               
         Copy.Map->insert(std::make_pair(typed_new_key, std::move(Target)));
       }
     }
@@ -374,11 +374,11 @@ public:
     return I != RHS.I;
   }
 
-  inline ValueMapIterator& operator++() {  // Preincrement
+  inline ValueMapIterator& operator++() {                 
     ++I;
     return *this;
   }
-  ValueMapIterator operator++(int) {  // Postincrement
+  ValueMapIterator operator++(int) {                  
     ValueMapIterator tmp = *this; ++*this; return tmp;
   }
 };
@@ -428,15 +428,15 @@ public:
     return I != RHS.I;
   }
 
-  inline ValueMapConstIterator& operator++() {  // Preincrement
+  inline ValueMapConstIterator& operator++() {                 
     ++I;
     return *this;
   }
-  ValueMapConstIterator operator++(int) {  // Postincrement
+  ValueMapConstIterator operator++(int) {                  
     ValueMapConstIterator tmp = *this; ++*this; return tmp;
   }
 };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_IR_VALUEMAP_H
+#endif                      

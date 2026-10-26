@@ -34,7 +34,7 @@ SerialExecutor::SerialExecutor(size_t stackSize) {
 }
 
 SerialExecutor::~SerialExecutor() {
-  // Tell the worker thread to stop, then wait for it to do so.
+                                                               
   {
     std::unique_lock<std::mutex> lock(mutex_);
     shouldStop_ = true;
@@ -60,10 +60,10 @@ void SerialExecutor::run() {
       wakeUpSig_.wait(lock, [this] { return !tasks_.empty() || shouldStop_; });
     }
 
-    // Make sure we do *NOT* hold a lock to mutex_ as we execute the given
-    // task. Otherwise, this can lead to a deadlock if the given task calls
-    // add(), which in turn requests a lock to mutex_.  However, we do want to
-    // hold the lock anytime that we interact with the tasks queue.
+                                                                          
+                                                                           
+                                                                              
+                                                                   
     std::unique_lock<std::mutex> lock(mutex_);
 
     while (!tasks_.empty()) {
@@ -88,4 +88,4 @@ void *SerialExecutor::threadMain(void *p) {
 }
 #endif
 
-} // namespace hermes
+}                    

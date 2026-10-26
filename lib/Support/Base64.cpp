@@ -9,7 +9,7 @@
 
 namespace hermes {
 
-// A lookup table that map (Base64-encoded) Ascii back to binary.
+                                                                 
 static constexpr unsigned char decMap[128] = {
     64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
     64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
@@ -22,19 +22,19 @@ static constexpr unsigned char decMap[128] = {
 llvh::Optional<std::string> base64Decode(llvh::StringRef input) {
   size_t inputLen = input.size();
 
-  // Approximate output length.
-  // Every four Ascii are converted back to 3 bytes.
+                               
+                                                    
   size_t outputLen = inputLen / 4 * 3;
 
-  // Adjust output length according to padding.
+                                               
   if (inputLen % 4 == 0) {
-    // Multiples of four are treated as padded so trailing '=' are excluded.
+                                                                            
     if (input[inputLen - 1] == '=')
       outputLen--;
     if (input[inputLen - 2] == '=')
       outputLen--;
   } else {
-    // Otherwise, treat as unpadded and calculate length via reminder.
+                                                                      
     switch (inputLen % 4) {
       case 1:
         return llvh::None;
@@ -47,12 +47,12 @@ llvh::Optional<std::string> base64Decode(llvh::StringRef input) {
     }
   }
 
-  // Pre-allocate fixed length string to be faster.
+                                                   
   std::string output(outputLen, '\0');
 
-  /// Iterate over the \p input, decode every \c c into a sextet and store into
-  /// a buffer \c buf of capacity 32 bits. \c bufSize is maintained to track
-  /// how many bits are actually buffered.
+                                                                               
+                                                                            
+                                          
   unsigned buf = 0;
   unsigned bufSize = 0;
   size_t i = 0;
@@ -61,7 +61,7 @@ llvh::Optional<std::string> base64Decode(llvh::StringRef input) {
       return llvh::None;
 
     if (LLVM_UNLIKELY(c == '=')) {
-      // Errors on '=' in the middle.
+                                     
       if (i < outputLen) {
         return llvh::None;
       } else {
@@ -73,11 +73,11 @@ llvh::Optional<std::string> base64Decode(llvh::StringRef input) {
     if (LLVM_UNLIKELY(sextet >= 64)) {
       return llvh::None;
     } else {
-      // Making rooms for the new sextet.
+                                         
       buf = (buf << 6) + sextet;
       bufSize += 6;
 
-      // Once buffer is filled over a byte, evacuate a byte to the output.
+                                                                          
       if (bufSize >= 8) {
         output[i++] = (char)(buf >> (bufSize - 8));
         bufSize -= 8;
@@ -89,22 +89,22 @@ llvh::Optional<std::string> base64Decode(llvh::StringRef input) {
 }
 
 llvh::Optional<std::string> parseJSONBase64DataURL(llvh::StringRef url) {
-  // data:
+          
   if (!url.consume_front("data:"))
     return llvh::None;
 
-  // [<mediatype>]
-  // This is limited to JSON at this moment.
+                  
+                                            
   if (!url.consume_front("application/json"))
     return llvh::None;
 
-  // [;base64],
-  // This is required to be presented in our case.
+               
+                                                  
   if (!url.consume_front(";base64,"))
     return llvh::None;
 
-  // <data>
+           
   return base64Decode(url);
 }
 
-} // namespace hermes
+}                    

@@ -20,12 +20,12 @@ namespace platform_intl {
 bool isUnicodeExtensionType(const std::u16string &);
 
 struct ParsedLocaleIdentifier {
-  // Parses \p localeId and returns ParsedLocaleIdentifier if it is a
-  // structurally valid language tag.
+                                                                     
+                                     
   static std::optional<ParsedLocaleIdentifier> parse(
       const std::u16string &localeId);
-  // Returns a string containing the canonicalized representation of this
-  // identifier.
+                                                                         
+                
   std::u16string canonicalize() const;
 
   struct ParsedLanguageIdentifier {
@@ -44,7 +44,7 @@ struct ParsedLocaleIdentifier {
   std::u16string puExtensions;
 };
 
-} // namespace platform_intl
-} // namespace hermes
+}                           
+}                    
 
 #endif

@@ -1,53 +1,20 @@
-*~
-*#
-TAGS
-
-# Howtoeven
-.howtoeven
-
-# buck
-buck-out
-.buckd
-.buckconfig.local
-
-# Python
-*.pyc
-
-# Mac
+/build/
+/node_modules/
+/crawler/node_modules/
+/crawler/runs/
+/runs/
+/results/
+/outputs/
+/dist/
+/data/
+/report/
+__pycache__/
+*.py[cod]
+*.core
+*.log
+.env
+.env.*
+.venv/
+*.pem
+*.key
 .DS_Store
-
-# CocoaPods testing
-build
-build_*
-destroot
-test/ApplePlatformsIntegrationTestApp/Podfile.lock
-test/ApplePlatformsIntegrationTestApp/Pods
-test/ApplePlatformsIntegrationTestApp/**/xcuserdata
-test/ApplePlatformsIntegrationTestApp/ApplePlatformsIntegrationTestApp.xcworkspace
-
-# Intl testing
-android/intltest/java/com/facebook/hermes/test/assets/**
-
-# VS Code and Visual Studio
-.vs
-.vscode
-
-# clangd cache
-.cache/
-
-# crawler data and test code
-node_modules/
-crawler/fail_scripts/
-crawler/node_modules/
-crawler/*.py
-*.dot
-*.png
-mixed-hermes
-crawler/trancolist/
-crawler/raw_easylist2/
-report
-pipeline_results
-build/bin/report/
-csv_reports/
-/test/
-/testcode/

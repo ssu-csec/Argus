@@ -24,28 +24,28 @@ PassManager::PassManager(const CodeGenerationSettings &settings)
 PassManager::~PassManager() = default;
 
 namespace {
-/// \return true if dump output should be generated before/after pass \p P.
+                                                                           
 bool shouldDump(
     const CodeGenerationSettings::DumpSettings &dumpSettings,
     const Pass &P) {
   return dumpSettings.all || dumpSettings.passes.count(P.getName()) != 0;
 }
 
-/// Used to controle Module-level dumping. \return true if the \p cgSettings
-/// specify full-module dump.
+                                                                            
+                             
 bool dumpFullModule(const CodeGenerationSettings &cgSettings) {
   return cgSettings.functionsToDump.empty();
 }
 
-/// \return true if \p cgSettings allow \p F's IR to be dumped.
+                                                               
 bool shouldDumpFunction(const CodeGenerationSettings &cgSettings, Function *F) {
   return cgSettings.functionsToDump.empty() ||
       cgSettings.functionsToDump.count(F->getOriginalOrInferredName().str()) !=
       0;
 }
 
-/// Wraps a ModulePass MP, and dumps the IR before/after MP runs. This pass is
-/// created with the same name as MP so dumping is "invisible".
+                                                                              
+                                                               
 class DumpModule : public ModulePass {
  public:
   DumpModule(
@@ -75,10 +75,10 @@ class DumpModule : public ModulePass {
       const CodeGenerationSettings::DumpSettings &settings,
       llvh::StringRef prefix) const {
     if (shouldDump(settings, *pass_)) {
-      // Module-level dumping may be disabled via the command-line flag
-      // -Xfunctions-to-dump. If that option is not specified in the command
-      // line, then the entire module will be dumped. Otherwise, only the
-      // functions in M that were specified in the option will be output.
+                                                                       
+                                                                            
+                                                                         
+                                                                         
       outs_ << "\n" << prefix << " " << pass_->getName() << "\n\n";
       if (dumpFullModule(cgSettings_)) {
         M->dump(outs_);
@@ -93,8 +93,8 @@ class DumpModule : public ModulePass {
   }
 };
 
-/// Wraps a FunctionPass FP, and dumps the IR before/after FP runs. This pass is
-/// created with the same name as FP so dumping is "invisible".
+                                                                                
+                                                               
 class DumpFunction : public FunctionPass {
  public:
   DumpFunction(
@@ -131,7 +131,7 @@ class DumpFunction : public FunctionPass {
     }
   }
 };
-} // namespace
+}             
 
 std::unique_ptr<Pass> PassManager::makeDumpPass(std::unique_ptr<Pass> pass) {
   if (auto *MP = llvh::dyn_cast<ModulePass>(pass.get())) {
@@ -161,7 +161,7 @@ void PassManager::run(Function *F) {
   if (F->isLazy())
     return;
 
-  // For each pass:
+                   
   for (const std::unique_ptr<Pass> &P : pipeline_) {
     auto *FP = llvh::dyn_cast<FunctionPass>(P.get());
     assert(FP && "Invalid pass kind");
@@ -180,14 +180,14 @@ void PassManager::run(Module *M) {
     timerGroup.reset(new TimerGroup("", "PassManager Timers"));
   }
 
-  // For each pass:
+                   
   for (std::unique_ptr<Pass> &P : pipeline_) {
     TimeRegion timeRegion(
         timerGroup ? timers.emplace_back("", P->getName(), *timerGroup),
         &timers.back()
                    : nullptr);
 
-    /// Handle function passes:
+                               
     if (auto *FP = llvh::dyn_cast<FunctionPass>(P.get())) {
       LLVM_DEBUG(
           llvh::dbgs() << "Running the function pass " << FP->getName()
@@ -203,22 +203,22 @@ void PassManager::run(Module *M) {
         FP->runOnFunction(F);
       }
 
-      // Move to the next pass.
+                               
       continue;
     }
 
-    /// Handle module passes:
+                             
     if (auto *MP = llvh::dyn_cast<ModulePass>(P.get())) {
       LLVM_DEBUG(
           llvh::dbgs() << "Running the module pass " << MP->getName() << "\n");
       MP->runOnModule(M);
-      // Move to the next pass.
+                               
       continue;
     }
 
     llvm_unreachable("Unknown pass kind");
   }
 }
-} // namespace hermes
+}                    
 
 #undef DEBUG_TYPE

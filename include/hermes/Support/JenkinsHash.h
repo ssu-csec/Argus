@@ -28,11 +28,11 @@ constexpr JenkinsHash jenkinsMix1(JenkinsHash hash) {
 constexpr JenkinsHash jenkinsMix2(JenkinsHash hash) {
   return hash ^ (hash >> 6);
 }
-} // namespace jenkins_details
+}                             
 
-/// Incorporates the character \p c to the given \p hash, using the classic
-/// Jenkins algorithm.
-/// \return the new hash value.
+                                                                           
+                      
+                               
 template <typename CharT>
 constexpr JenkinsHash updateJenkinsHash(JenkinsHash hash, CharT c) {
   using namespace jenkins_details;
@@ -42,6 +42,6 @@ constexpr JenkinsHash updateJenkinsHash(JenkinsHash hash, CharT c) {
   return jenkinsMix2(jenkinsMix1(jenkinsAdd(hash, c)));
 }
 
-} // namespace hermes
+}                    
 
 #endif

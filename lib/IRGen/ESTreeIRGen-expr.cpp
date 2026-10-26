@@ -14,55 +14,438 @@
 namespace hermes {
 namespace irgen {
 
+static llvh::StringRef propertyKeyAsString(
+    llvh::SmallVectorImpl<char> &storage, ESTree::Node *Key);
+
 Value *ESTreeIRGen::genExpression(ESTree::Node *expr, Identifier nameHint) {
   LLVM_DEBUG(
       llvh::dbgs() << "IRGen expression of type " << expr->getNodeName()
                    << "\n");
   IRBuilder::ScopedLocationChange slc(Builder, expr->getDebugLoc());
 
-  // Handle identifiers.
+  if (auto *op = llvh::dyn_cast<ESTree::NativeDerivedSuperOperationNode>(expr)) {
+    const bool forward = op->_operation->str() == "default_super";
+    if (!curFunction()->derivedThis ||
+        (!forward && op->_operation->str() != "super") ||
+        op->_arguments.size() < 2 || (forward && op->_arguments.size() != 3)) {
+      Builder.getModule()->getContext().getSourceErrorManager().error(
+          expr->getSourceRange(), "[NATIVE_DERIVED_INVALID_IR] CONSTRUCTOR_CONTEXT");
+      return Builder.getLiteralUndefined();
+    }
+    auto it = op->_arguments.begin();
+    auto *ctor = &*it++; auto *initialize = &*it++;
+    if (!llvh::isa<ESTree::IdentifierNode>(ctor) ||
+        !llvh::isa<ESTree::IdentifierNode>(initialize)) {
+      Builder.getModule()->getContext().getSourceErrorManager().error(
+          expr->getSourceRange(), "[NATIVE_DERIVED_INVALID_IR] IDENTITY_BINDING");
+      return Builder.getLiteralUndefined();
+    }
+    auto *parent = genBuiltinCall(BuiltinMethod::HermesBuiltin_getSuperConstructor,
+        {genExpression(ctor)});
+    auto *newTarget = cast<Variable>(curFunction()->capturedNewTarget);
+    auto *target = Builder.createLoadFrameInst(newTarget, currentIRScope_);
+    Value *constructed;
+    bool spread = false;
+    for (auto arg = it; arg != op->_arguments.end(); ++arg)
+      spread |= llvh::isa<ESTree::SpreadElementNode>(&*arg);
+    if (forward) {
+                                                                             
+      constructed = genBuiltinCall(BuiltinMethod::HermesBuiltin_constructWithNewTarget,
+          {parent, genExpression(&*it), target});
+    } else if (spread) {
+                                                                               
+      ESTree::NodeList arguments;
+      arguments.splice(arguments.end(), op->_arguments, it, op->_arguments.end());
+      auto *array = genArrayFromElements(arguments);
+      op->_arguments.splice(op->_arguments.end(), arguments);
+      constructed = genBuiltinCall(BuiltinMethod::HermesBuiltin_constructWithNewTarget,
+          {parent, array, target});
+    } else {
+      ConstructInst::ArgumentList arguments;
+      for (; it != op->_arguments.end(); ++it) arguments.push_back(genExpression(&*it));
+      constructed = Builder.createConstructInst(parent, target, arguments);
+    }
+    genBuiltinCall(BuiltinMethod::HermesBuiltin_assertDerivedUninitialized,
+        {Builder.createLoadFrameInst(curFunction()->derivedThis, currentIRScope_)});
+    emitStore(constructed, curFunction()->derivedThis, false);
+    Builder.createCallInst(CallInst::kNoTextifiedCallee,
+        genExpression(initialize), constructed, {});
+    return constructed;
+  }
+
+                                                                           
+  if (auto *op = llvh::dyn_cast<ESTree::NativeClassDefinitionOperationNode>(expr)) {
+    const auto name = op->_operation->str();
+    if(name=="anonymous_expression") {
+      if(op->_arguments.size()!=1 ||
+         !llvh::isa<ESTree::ArrowFunctionExpressionNode>(&op->_arguments.front())) {
+        Builder.getModule()->getContext().getSourceErrorManager().error(
+            expr->getSourceRange(),"[NATIVE_CLASS_INVALID_IR] EXPRESSION_WRAPPER");
+        return Builder.getLiteralUndefined();
+      }
+      auto *wrapper=genExpression(&op->_arguments.front());
+      Value *hint=nameHint.isValid()?Builder.getLiteralString(nameHint):Builder.getLiteralString("");
+      return Builder.createCallInst(CallInst::kNoTextifiedCallee,wrapper,
+          Builder.getLiteralUndefined(),{hint});
+    }
+    if(name=="run_static_block") {
+      if(op->_arguments.size()!=2) {
+        Builder.getModule()->getContext().getSourceErrorManager().error(
+            expr->getSourceRange(),"[NATIVE_CLASS_INVALID_IR] STATIC_BLOCK_ARITY");
+        return Builder.getLiteralUndefined();
+      }
+      auto it=op->_arguments.begin();
+      auto *fn=genExpression(&*it++);auto *receiver=genExpression(&*it);
+      return Builder.createCallInst(CallInst::kNoTextifiedCallee,fn,receiver,{});
+    }
+    if(name=="set_super_literal_property") {
+      if(op->_arguments.size()!=4){
+        Builder.getModule()->getContext().getSourceErrorManager().error(expr->getSourceRange(),"[NATIVE_CLASS_INVALID_IR] SUPER_SET_ARITY");
+        return Builder.getLiteralUndefined();
+      }
+      auto it=op->_arguments.begin();auto *receiver=genExpression(&*it++);
+      auto *home=genExpression(&*it++);auto *key=genExpression(&*it++);auto *rhs=genExpression(&*it);
+                                                                                 
+                                                                             
+      return genBuiltinCall(BuiltinMethod::HermesBuiltin_superPropertyGet,{home,key,receiver,rhs});
+    }
+    if(name=="get_super_property" || name=="call_super_property" ||
+       name=="get_super_computed_property" || name=="call_super_computed_property") {
+      const bool computed=name=="get_super_computed_property" || name=="call_super_computed_property";
+      const bool invoke=name=="call_super_property" || name=="call_super_computed_property";
+      if(op->_arguments.size()<3 || (!invoke && op->_arguments.size()!=3)) {
+        Builder.getModule()->getContext().getSourceErrorManager().error(
+            expr->getSourceRange(),"[NATIVE_CLASS_INVALID_IR] SUPER_PROPERTY_ARITY");
+        return Builder.getLiteralUndefined();
+      }
+      auto it=op->_arguments.begin();
+      auto *receiverNode=&*it++;
+      auto *homeNode=&*it++;
+      auto *keyNode=&*it++;
+                                                                       
+                                                                            
+                                                                         
+      auto *receiver=genExpression(receiverNode);
+      auto *home=genExpression(homeNode);
+      auto *key=genExpression(keyNode);
+      if(computed)
+        key=genBuiltinCall(BuiltinMethod::HermesBuiltin_classElementKey,{key});
+      auto *value=genBuiltinCall(BuiltinMethod::HermesBuiltin_superPropertyGet,{home,key,receiver});
+      if(!invoke)return value;
+      bool spread=false;
+      for(auto arg=it;arg!=op->_arguments.end();++arg)
+        spread|=llvh::isa<ESTree::SpreadElementNode>(&*arg);
+      if(spread) {
+        ESTree::NodeList arguments;
+        arguments.splice(arguments.end(),op->_arguments,it,op->_arguments.end());
+        auto *array=genArrayFromElements(arguments);
+        op->_arguments.splice(op->_arguments.end(),arguments);
+        return genBuiltinCall(BuiltinMethod::HermesBuiltin_apply,{value,array,receiver});
+      }
+      CallInst::ArgumentList arguments;
+      for(;it!=op->_arguments.end();++it)arguments.push_back(genExpression(&*it));
+      return Builder.createCallInst(CallInst::kNoTextifiedCallee,value,receiver,arguments);
+    }
+    const bool derived = name == "init_derived";
+    const bool heritage = name == "heritage_prototype";
+    const bool initialize = name == "init_base";
+    if (derived || heritage) {
+      if (op->_arguments.size() != (derived ? 3u : 1u)) {
+        Builder.getModule()->getContext().getSourceErrorManager().error(
+            expr->getSourceRange(), "[NATIVE_DERIVED_INVALID_IR] DEFINITION_ARITY");
+        return Builder.getLiteralUndefined();
+      }
+      llvh::SmallVector<Value *, 3> values;
+      for (auto &argument : op->_arguments) values.push_back(genExpression(&argument));
+      return genBuiltinCall(derived ? BuiltinMethod::HermesBuiltin_initDerivedClass
+          : BuiltinMethod::HermesBuiltin_classHeritagePrototype, values);
+    }
+    const bool staticMethod = name == "define_static_method";
+    const bool instanceGetter = name == "define_instance_getter";
+    const bool instanceSetter = name == "define_instance_setter";
+    const bool staticGetter = name == "define_static_getter";
+    const bool staticSetter = name == "define_static_setter";
+    const bool method = staticMethod || name == "define_instance_method" ||
+        instanceGetter || instanceSetter || staticGetter || staticSetter;
+    if ((!initialize && !method) ||
+        op->_arguments.size() != (initialize ? 1u : 3u)) {
+      Builder.getModule()->getContext().getSourceErrorManager().error(
+          expr->getSourceRange(), "[NATIVE_CLASS_INVALID_IR] OPERATION_OR_ARITY");
+      return Builder.getLiteralUndefined();
+    }
+    auto it = op->_arguments.begin();
+    if (!llvh::isa<ESTree::IdentifierNode>(&*it)) {
+      Builder.getModule()->getContext().getSourceErrorManager().error(
+          expr->getSourceRange(), "[NATIVE_CLASS_INVALID_IR] CONSTRUCTOR_REFERENCE");
+      return Builder.getLiteralUndefined();
+    }
+    if (method) {
+      auto *key = &*++it;
+      auto *function = llvh::dyn_cast<ESTree::FunctionExpressionNode>(&*++it);
+      if (!(llvh::isa<ESTree::StringLiteralNode>(key) ||
+            llvh::isa<ESTree::NumericLiteralNode>(key) || llvh::isa<ESTree::IdentifierNode>(key)) || !function ||
+          function->loweredClassFunctionKind != ESTree::LoweredClassFunctionKind::Method ||
+          (function->_async && (instanceGetter || instanceSetter ||
+                               staticGetter || staticSetter)) ||
+          (function->_generator && (!(staticMethod || name == "define_instance_method") || function->_async))) {
+        Builder.getModule()->getContext().getSourceErrorManager().error(
+            expr->getSourceRange(), "[NATIVE_CLASS_INVALID_IR] METHOD_OR_KEY");
+        return Builder.getLiteralUndefined();
+      }
+    }
+    llvh::SmallVector<Value *, 3> args;
+    for (auto &arg : op->_arguments)
+      args.push_back(genExpression(&arg));
+    auto *definition = genBuiltinCall(
+        initialize ? BuiltinMethod::HermesBuiltin_initBaseClass
+        : instanceGetter ? BuiltinMethod::HermesBuiltin_defineInstanceClassGetter
+        : instanceSetter ? BuiltinMethod::HermesBuiltin_defineInstanceClassSetter
+        : staticGetter ? BuiltinMethod::HermesBuiltin_defineStaticClassGetter
+        : staticSetter ? BuiltinMethod::HermesBuiltin_defineStaticClassSetter
+        : staticMethod ? BuiltinMethod::HermesBuiltin_defineStaticClassMethod
+                       : BuiltinMethod::HermesBuiltin_defineInstanceClassMethod,
+        args);
+                                                                            
+                                                                            
+    return definition;
+  }
+
+                                                                             
+  if (auto *op = llvh::dyn_cast<ESTree::NativePublicFieldOperationNode>(expr)) {
+    const auto name = op->_operation->str();
+    if(name=="to_key" || name=="named_function_dynamic") {
+      const bool naming=name=="named_function_dynamic";
+      if(op->_arguments.size()!=(naming?2u:1u)) {
+        Builder.getModule()->getContext().getSourceErrorManager().error(
+            expr->getSourceRange(),"[NATIVE_PUBLIC_FIELD_INVALID_IR] KEY_OPERATION_ARITY");
+        return Builder.getLiteralUndefined();
+      }
+      llvh::SmallVector<Value *,2> args;
+      for(auto &arg:op->_arguments)args.push_back(genExpression(&arg));
+      return genBuiltinCall(naming?BuiltinMethod::HermesBuiltin_namePublicFieldFunction
+          :BuiltinMethod::HermesBuiltin_classElementKey,args);
+    }
+    if(name=="named_function") {
+      if(op->_arguments.size()!=2) {
+        Builder.getModule()->getContext().getSourceErrorManager().error(
+            expr->getSourceRange(),"[NATIVE_PUBLIC_FIELD_INVALID_IR] FUNCTION_NAME_ARITY");
+        return Builder.getLiteralUndefined();
+      }
+      auto it=op->_arguments.begin();auto *key=&*it++;auto *value=&*it;
+      auto *fn=llvh::dyn_cast<ESTree::FunctionExpressionNode>(value);
+      if(!(llvh::isa<ESTree::StringLiteralNode>(key)||llvh::isa<ESTree::NumericLiteralNode>(key))||
+         !(llvh::isa<ESTree::ArrowFunctionExpressionNode>(value)||(fn&&!fn->_id))) {
+        Builder.getModule()->getContext().getSourceErrorManager().error(
+            expr->getSourceRange(),"[NATIVE_PUBLIC_FIELD_INVALID_IR] FUNCTION_NAME_OPERANDS");
+        return Builder.getLiteralUndefined();
+      }
+      llvh::SmallVector<char,32> storage;
+      return genExpression(value,Builder.createIdentifier(propertyKeyAsString(storage,key)));
+    }
+    const unsigned arity = name == "evaluate" ? 2
+        : (name == "define" || name == "define_instance") ? 3 : 0;
+    if (!arity || op->_arguments.size() != arity) {
+      Builder.getModule()->getContext().getSourceErrorManager().error(
+          expr->getSourceRange(), "[NATIVE_PUBLIC_FIELD_INVALID_IR] OPERATION_OR_ARITY");
+      return Builder.getLiteralUndefined();
+    }
+    if (name == "evaluate") {
+      auto it = op->_arguments.begin();
+      Value *closure = genExpression(&*it++);
+      Value *receiver = genExpression(&*it);
+      CallInst::ArgumentList noArguments;
+                                                                              
+                                                                                   
+      return Builder.createCallInst(CallInst::kNoTextifiedCallee,
+          closure, receiver, noArguments);
+    }
+    if (name=="define_instance" &&
+        !llvh::isa<ESTree::ThisExpressionNode>(&op->_arguments.front())) {
+      Builder.getModule()->getContext().getSourceErrorManager().error(
+          expr->getSourceRange(), "[NATIVE_PUBLIC_FIELD_INVALID_IR] INSTANCE_RECEIVER");
+      return Builder.getLiteralUndefined();
+    }
+                                                                               
+                                                                    
+    auto key = op->_arguments.begin();
+    ++key;
+    if (!llvh::isa<ESTree::StringLiteralNode>(&*key) &&
+        !llvh::isa<ESTree::NumericLiteralNode>(&*key) && !llvh::isa<ESTree::IdentifierNode>(&*key)) {
+      Builder.getModule()->getContext().getSourceErrorManager().error(
+          expr->getSourceRange(), "[NATIVE_PUBLIC_FIELD_INVALID_IR] NONLITERAL_KEY");
+      return Builder.getLiteralUndefined();
+    }
+    llvh::SmallVector<Value *, 3> args;
+    for (auto &arg : op->_arguments)
+      args.push_back(genExpression(&arg));
+                                                                          
+                                                                              
+    return genBuiltinCall(name=="define_instance"
+        ? BuiltinMethod::HermesBuiltin_definePublicInstanceClassField
+        : BuiltinMethod::HermesBuiltin_definePublicClassField, args);
+  }
+
+                                                                           
+                                                                           
+  if (auto *op = llvh::dyn_cast<ESTree::NativePrivateOperationNode>(expr)) {
+    auto name=op->_operation->str();
+    if(name=="add_field"||name=="add_accessor"||name=="add_readonly"||
+       name=="multiply_field"||name=="multiply_accessor"||name=="multiply_readonly") {
+      const bool multiply=name.startswith("multiply_");
+      const bool accessor=name=="add_accessor"||name=="multiply_accessor",readonly=name=="add_readonly"||name=="multiply_readonly";
+      if(op->_arguments.size()!=(accessor?4u:3u)) {
+        Builder.getModule()->getContext().getSourceErrorManager().error(expr->getSourceRange(),"[NATIVE_PRIVATE_INVALID_IR] ADD_ARITY");
+        return Builder.getLiteralUndefined();
+      }
+      auto it=op->_arguments.begin();auto *receiver=genExpression(&*it++);auto *token=genExpression(&*it++);
+      auto *old=genBuiltinCall(BuiltinMethod::HermesBuiltin_privateFieldGet,{receiver,token});
+      if(accessor)old=Builder.createCallInst(CallInst::kNoTextifiedCallee,old,receiver,{});
+      ESTree::Node *setterNode=accessor?&*it++:nullptr;
+      auto *rhs=genExpression(&*it);
+                                                                                
+      auto *next=Builder.createBinaryOperatorInst(old,rhs,multiply?BinaryOperatorInst::OpKind::MultiplyKind:BinaryOperatorInst::OpKind::AddKind);
+      if(readonly)genBuiltinCall(BuiltinMethod::HermesBuiltin_throwTypeError,{Builder.getLiteralString("Cannot assign private method")});
+      else if(accessor){
+        auto *setterToken=genExpression(setterNode);
+        auto *setter=genBuiltinCall(BuiltinMethod::HermesBuiltin_privateFieldGet,{receiver,setterToken});
+        Builder.createCallInst(CallInst::kNoTextifiedCallee,setter,receiver,{next});
+      }else genBuiltinCall(BuiltinMethod::HermesBuiltin_privateFieldSet,{receiver,token,next});
+      return next;
+    }
+    if(name.startswith("update_")) {
+      const bool accessor=name.startswith("update_accessor_");
+      const bool readonly=name.startswith("update_readonly_");
+      const bool increment=name.contains("_inc_");
+      const bool prefix=name.endswith("_prefix");
+      if(op->_arguments.size()!=(accessor?3u:2u)) {
+        Builder.getModule()->getContext().getSourceErrorManager().error(
+            expr->getSourceRange(),"[NATIVE_PRIVATE_INVALID_IR] UPDATE_ARITY");
+        return Builder.getLiteralUndefined();
+      }
+      auto it=op->_arguments.begin();
+      Value *receiver=genExpression(&*it++),*token=genExpression(&*it++);
+      Value *old=genBuiltinCall(BuiltinMethod::HermesBuiltin_privateFieldGet,{receiver,token});
+      if(accessor)old=Builder.createCallInst(CallInst::kNoTextifiedCallee,old,receiver,{});
+                                                                              
+      old=Builder.createAsNumericInst(old);
+      auto *next=Builder.createUnaryOperatorInst(old,increment?
+          UnaryOperatorInst::OpKind::IncKind:UnaryOperatorInst::OpKind::DecKind);
+      if(readonly)genBuiltinCall(BuiltinMethod::HermesBuiltin_throwTypeError,
+          {Builder.getLiteralString("Private method is not writable")});
+      else if(accessor) {
+        auto *setterToken=genExpression(&*it);
+        auto *setter=genBuiltinCall(BuiltinMethod::HermesBuiltin_privateFieldGet,{receiver,setterToken});
+        Builder.createCallInst(CallInst::kNoTextifiedCallee,setter,receiver,{next});
+      } else genBuiltinCall(BuiltinMethod::HermesBuiltin_privateFieldSet,{receiver,token,next});
+      return prefix?next:old;
+    }
+    if (name=="evaluate") {
+      if (op->_arguments.size()!=2) {
+        Builder.getModule()->getContext().getSourceErrorManager().error(
+            expr->getSourceRange(),"[NATIVE_PRIVATE_INVALID_IR] INITIALIZER_CALL_ARITY");
+        return Builder.getLiteralUndefined();
+      }
+      auto it=op->_arguments.begin();
+      Value *closure=genExpression(&*it++);
+      Value *receiver=genExpression(&*it);
+      CallInst::ArgumentList noArguments;
+                                                                         
+      return Builder.createCallInst(CallInst::kNoTextifiedCallee,
+          closure,receiver,noArguments);
+    }
+    if(name=="call" || name=="accessor_call" || name=="accessor_get" ||
+       name=="accessor_set" || name=="readonly_set") {
+      const bool calling=name=="call" || name=="accessor_call";
+      const bool writing=name=="accessor_set" || name=="readonly_set";
+      if(op->_arguments.size()<2 || (!calling && op->_arguments.size()!=(writing?3u:2u))) {
+        Builder.getModule()->getContext().getSourceErrorManager().error(
+            expr->getSourceRange(),"[NATIVE_PRIVATE_INVALID_IR] MEMBER_ARITY");
+        return Builder.getLiteralUndefined();
+      }
+      auto it=op->_arguments.begin();
+      Value *receiver=genExpression(&*it++);
+      Value *token=genExpression(&*it++);
+                                                                              
+                                                                            
+      Value *rhs=writing?genExpression(&*it++):nullptr;
+      Value *fn=genBuiltinCall(BuiltinMethod::HermesBuiltin_privateFieldGet,{receiver,token});
+      CallInst::ArgumentList args;
+      if(name=="readonly_set")
+        return genBuiltinCall(BuiltinMethod::HermesBuiltin_throwTypeError,
+            {Builder.getLiteralString("Private method is not writable")});
+      if(name=="accessor_get" || name=="accessor_call") {
+        fn=Builder.createCallInst(CallInst::kNoTextifiedCallee,fn,receiver,args);
+        if(name=="accessor_get")return fn;
+      }
+      if(writing)args.push_back(rhs);
+      else for(;it!=op->_arguments.end();++it)args.push_back(genExpression(&*it));
+      Value *result=Builder.createCallInst(CallInst::kNoTextifiedCallee,fn,receiver,args);
+      return writing?rhs:result;
+    }
+    BuiltinMethod::Enum builtin;
+    unsigned expected;
+    if (name=="create") { builtin=BuiltinMethod::HermesBuiltin_privateNameCreate;expected=0; }
+    else if (name=="init" || name=="init_member") { builtin=BuiltinMethod::HermesBuiltin_privateFieldInit;expected=3; }
+    else if (name=="get") { builtin=BuiltinMethod::HermesBuiltin_privateFieldGet;expected=2; }
+    else if (name=="set") { builtin=BuiltinMethod::HermesBuiltin_privateFieldSet;expected=3; }
+    else {
+      Builder.getModule()->getContext().getSourceErrorManager().error(
+          expr->getSourceRange(), "[NATIVE_PRIVATE_INVALID_IR] UNKNOWN_OPERATION");
+      return Builder.getLiteralUndefined();
+    }
+    if (op->_arguments.size()!=expected) {
+      Builder.getModule()->getContext().getSourceErrorManager().error(
+          expr->getSourceRange(), "[NATIVE_PRIVATE_INVALID_IR] OPERAND_ARITY");
+      return Builder.getLiteralUndefined();
+    }
+    llvh::SmallVector<Value *,3> args;
+    for (auto &arg:op->_arguments) args.push_back(genExpression(&arg));
+    return genBuiltinCall(builtin,args);
+  }
+
+                        
   if (auto *Iden = llvh::dyn_cast<ESTree::IdentifierNode>(expr)) {
     return genIdentifierExpression(Iden, false);
   }
 
-  // Handle Null Literals.
-  // http://www.ecma-international.org/ecma-262/6.0/#sec-null-literals
+                          
+                                                                      
   if (llvh::isa<ESTree::NullLiteralNode>(expr)) {
     return Builder.getLiteralNull();
   }
 
-  // Handle String Literals.
-  // http://www.ecma-international.org/ecma-262/6.0/#sec-literals-string-literals
+                            
+                                                                                 
   if (auto *Lit = llvh::dyn_cast<ESTree::StringLiteralNode>(expr)) {
     LLVM_DEBUG(
         llvh::dbgs() << "Loading String Literal \"" << Lit->_value << "\"\n");
     return Builder.getLiteralString(Lit->_value->str());
   }
 
-  // Handle Regexp Literals.
-  // http://www.ecma-international.org/ecma-262/6.0/#sec-literals-regular-expression-literals
+                            
+                                                                                             
   if (auto *Lit = llvh::dyn_cast<ESTree::RegExpLiteralNode>(expr)) {
     return genRegExpLiteral(Lit);
   }
 
-  // Handle Boolean Literals.
-  // http://www.ecma-international.org/ecma-262/6.0/#sec-boolean-literals
+                             
+                                                                         
   if (auto *Lit = llvh::dyn_cast<ESTree::BooleanLiteralNode>(expr)) {
     LLVM_DEBUG(
         llvh::dbgs() << "Loading String Literal \"" << Lit->_value << "\"\n");
     return Builder.getLiteralBool(Lit->_value);
   }
 
-  // Handle Number Literals.
-  // http://www.ecma-international.org/ecma-262/6.0/#sec-literals-numeric-literals
+                            
+                                                                                  
   if (auto *Lit = llvh::dyn_cast<ESTree::NumericLiteralNode>(expr)) {
     LLVM_DEBUG(
         llvh::dbgs() << "Loading Numeric Literal \"" << Lit->_value << "\"\n");
     return Builder.getLiteralNumber(Lit->_value);
   }
 
-  // Handle BigInt Literals.
-  // https://262.ecma-international.org/#sec-ecmascript-language-types-bigint-type
+                            
+                                                                                  
   if (auto *Lit = llvh::dyn_cast<ESTree::BigIntLiteralNode>(expr)) {
     LLVM_DEBUG(
         llvh::dbgs() << "Loading BitInt Literal \"" << Lit->_bigint->str()
@@ -70,65 +453,68 @@ Value *ESTreeIRGen::genExpression(ESTree::Node *expr, Identifier nameHint) {
     return Builder.getLiteralBigInt(Lit->_bigint);
   }
 
-  // Handle the assignment expression.
+                                      
   if (auto Assign = llvh::dyn_cast<ESTree::AssignmentExpressionNode>(expr)) {
     return genAssignmentExpr(Assign);
   }
 
-  // Handle Call expressions.
+                             
   if (auto *call = llvh::dyn_cast<ESTree::CallExpressionNode>(expr)) {
     return genCallExpr(call);
   }
 
-  // Handle Call expressions.
+                             
   if (auto *call = llvh::dyn_cast<ESTree::OptionalCallExpressionNode>(expr)) {
     return genOptionalCallExpr(call, nullptr);
   }
 
-  // Handle the 'new' expressions.
+                                  
   if (auto *newExp = llvh::dyn_cast<ESTree::NewExpressionNode>(expr)) {
     return genNewExpr(newExp);
   }
 
-  // Handle MemberExpression expressions for access property.
+                                                             
   if (auto *Mem = llvh::dyn_cast<ESTree::MemberExpressionNode>(expr)) {
     return genMemberExpression(Mem, MemberExpressionOperation::Load).result;
   }
 
-  // Handle MemberExpression expressions for access property.
+                                                             
   if (auto *mem = llvh::dyn_cast<ESTree::OptionalMemberExpressionNode>(expr)) {
     return genOptionalMemberExpression(
                mem, nullptr, MemberExpressionOperation::Load)
         .result;
   }
 
-  // Handle Array expressions (syntax: [1,2,3]).
+                                                
   if (auto *Arr = llvh::dyn_cast<ESTree::ArrayExpressionNode>(expr)) {
     return genArrayExpr(Arr);
   }
 
-  // Handle object expressions (syntax: {"1" : "2"}).
+                                                     
   if (auto *Obj = llvh::dyn_cast<ESTree::ObjectExpressionNode>(expr)) {
     return genObjectExpr(Obj);
   }
 
-  // Handle logical expressions (short circuiting).
+                                                   
   if (auto *L = llvh::dyn_cast<ESTree::LogicalExpressionNode>(expr)) {
     return genLogicalExpression(L);
   }
 
-  // Handle Binary Expressions.
+                               
   if (auto *Bin = llvh::dyn_cast<ESTree::BinaryExpressionNode>(expr)) {
     return genBinaryExpression(Bin);
   }
 
-  // Handle Unary operator Expressions.
+                                       
   if (auto *U = llvh::dyn_cast<ESTree::UnaryExpressionNode>(expr)) {
     return genUnaryExpression(U);
   }
 
-  // Handle the 'this' keyword.
+                               
   if (llvh::isa<ESTree::ThisExpressionNode>(expr)) {
+    if (curFunction()->derivedThis)
+      return genBuiltinCall(BuiltinMethod::HermesBuiltin_assertDerivedThis,
+          {Builder.createLoadFrameInst(curFunction()->derivedThis, currentIRScope_)});
     if (curFunction()->function->getDefinitionKind() ==
         Function::DefinitionKind::ES6Arrow) {
       assert(
@@ -144,7 +530,7 @@ Value *ESTreeIRGen::genExpression(ESTree::Node *expr, Identifier nameHint) {
     return genMetaProperty(MP);
   }
 
-  // Handle function expressions.
+                                 
   if (auto *FE = llvh::dyn_cast<ESTree::FunctionExpressionNode>(expr)) {
     return genFunctionExpression(FE, nameHint);
   }
@@ -182,7 +568,8 @@ Value *ESTreeIRGen::genExpression(ESTree::Node *expr, Identifier nameHint) {
   }
 
   Builder.getModule()->getContext().getSourceErrorManager().error(
-      expr->getSourceRange(), Twine("Invalid expression encountered"));
+      expr->getSourceRange(),
+      Twine("Invalid expression encountered AST=") + expr->getNodeName());
   return Builder.getLiteralUndefined();
 }
 
@@ -203,7 +590,7 @@ void ESTreeIRGen::genExpressionBranch(
       auto *e = cast<ESTree::UnaryExpressionNode>(expr);
       switch (UnaryOperatorInst::parseOperator(e->_operator->str())) {
         case UnaryOperatorInst::OpKind::BangKind:
-          // Do not propagate onNullish here because !expr cannot be nullish.
+                                                                             
           return genExpressionBranch(e->_argument, onFalse, onTrue, nullptr);
         default:
           break;
@@ -247,9 +634,9 @@ Value *ESTreeIRGen::genArrayFromElements(ESTree::NodeList &list) {
   LLVM_DEBUG(llvh::dbgs() << "Initializing a new array\n");
   AllocArrayInst::ArrayValueList elements;
 
-  // Precalculate the minimum number of elements in case we need to call
-  // AllocArrayInst at some point, as well as find out whether we have a spread
-  // element (which will result in the final array having variable length).
+                                                                        
+                                                                               
+                                                                           
   unsigned minElements = 0;
   bool variableLength = false;
   for (auto &E : list) {
@@ -260,18 +647,18 @@ Value *ESTreeIRGen::genArrayFromElements(ESTree::NodeList &list) {
     ++minElements;
   }
 
-  // We store consecutive elements until we encounter elision,
-  // or we enounter a non-literal in limited-register mode.
-  // The rest of them has to be initialized through property sets.
+                                                              
+                                                           
+                                                                  
 
-  // If we have a variable length array, then we store the next index in
-  // a stack location `nextIndex`, to be updated when we encounter spread
-  // elements. Otherwise, we simply count them in `count`.
+                                                                        
+                                                                         
+                                                          
   unsigned count = 0;
   AllocStackInst *nextIndex = nullptr;
   if (variableLength) {
-    // Avoid emitting the extra instructions unless we actually need to,
-    // to simplify tests and because it's easy.
+                                                                        
+                                               
     nextIndex = Builder.createAllocStackInst("nextIndex");
     Builder.createStoreStackInst(Builder.getLiteralPositiveZero(), nextIndex);
   }
@@ -293,27 +680,27 @@ Value *ESTreeIRGen::genArrayFromElements(ESTree::NodeList &list) {
     if (!value ||
         (!llvh::isa<Literal>(value) && !codeGenOpts.unlimitedRegisters) ||
         isSpread) {
-      // This is either an elision,
-      // or a non-literal in limited-register mode,
-      // or a spread element.
+                                   
+                                                   
+                             
       if (consecutive) {
-        // So far we have been storing elements consecutively,
-        // but not anymore, time to create the array.
+                                                              
+                                                     
         allocArrayInst = Builder.createAllocArrayInst(elements, minElements);
         consecutive = false;
       }
     }
     if (isSpread) {
-      // Spread the SpreadElement argument into the array.
-      // HermesInternal.arraySpread returns the new value of nextIndex,
-      // so update nextIndex accordingly and finish this iteration of the loop.
+                                                          
+                                                                       
+                                                                               
       auto *newNextIndex = genBuiltinCall(
           BuiltinMethod::HermesBuiltin_arraySpread,
           {allocArrayInst, value, Builder.createLoadStackInst(nextIndex)});
       Builder.createStoreStackInst(newNextIndex, nextIndex);
       continue;
     }
-    // The element is not a spread element, so perform the store here.
+                                                                      
     if (value) {
       if (consecutive) {
         elements.push_back(value);
@@ -326,12 +713,12 @@ Value *ESTreeIRGen::genArrayFromElements(ESTree::NodeList &list) {
             IRBuilder::PropEnumerable::Yes);
       }
     }
-    // Update the next index or the count depending on if it's a variable length
-    // array.
+                                                                                
+             
     if (variableLength) {
-      // We perform this update on any leading elements before the first spread
-      // element as well, but the optimizer will eliminate the extra adds
-      // because we know the initial value (0) and how incrementing works.
+                                                                               
+                                                                         
+                                                                          
       Builder.createStoreStackInst(
           Builder.createBinaryOperatorInst(
               Builder.createLoadStackInst(nextIndex),
@@ -350,8 +737,8 @@ Value *ESTreeIRGen::genArrayFromElements(ESTree::NodeList &list) {
     allocArrayInst = Builder.createAllocArrayInst(elements, list.size());
   }
   if (!list.empty() && llvh::isa<ESTree::EmptyNode>(&list.back())) {
-    // Last element is an elision, VM cannot derive the length properly.
-    // We have to explicitly set it.
+                                                                        
+                                    
     Value *newLength;
     if (variableLength)
       newLength = Builder.createLoadStackInst(nextIndex);
@@ -370,7 +757,7 @@ Value *ESTreeIRGen::genArrayExpr(ESTree::ArrayExpressionNode *Expr) {
 Value *ESTreeIRGen::genCallExpr(ESTree::CallExpressionNode *call) {
   LLVM_DEBUG(llvh::dbgs() << "IRGen 'call' statement/expression.\n");
 
-  // Check for a direct call to eval().
+                                       
   if (auto *identNode = llvh::dyn_cast<ESTree::IdentifierNode>(call->_callee)) {
     if (Identifier::getFromPointer(identNode->_name) == identEval_) {
       auto *evalVar = nameTable_.lookup(identEval_);
@@ -382,12 +769,12 @@ Value *ESTreeIRGen::genCallExpr(ESTree::CallExpressionNode *call) {
   Value *thisVal;
   Value *callee;
 
-  // Handle MemberExpression expression calls that sets the 'this' property.
+                                                                            
   if (auto *Mem = llvh::dyn_cast<ESTree::MemberExpressionNode>(call->_callee)) {
     MemberExpressionResult memResult =
         genMemberExpression(Mem, MemberExpressionOperation::Load);
 
-    // Call the callee with obj as the 'this' pointer.
+                                                      
     thisVal = memResult.base;
     callee = memResult.result;
   } else if (
@@ -396,7 +783,7 @@ Value *ESTreeIRGen::genCallExpr(ESTree::CallExpressionNode *call) {
     MemberExpressionResult memResult = genOptionalMemberExpression(
         Mem, nullptr, MemberExpressionOperation::Load);
 
-    // Call the callee with obj as the 'this' pointer.
+                                                      
     thisVal = memResult.base;
     callee = memResult.result;
   } else {
@@ -413,18 +800,18 @@ Value *ESTreeIRGen::genOptionalCallExpr(
   PhiInst::ValueListType values;
   PhiInst::BasicBlockListType blocks;
 
-  // true when this is the genOptionalCallExpr call containing
-  // the logic for shortCircuitBB.
+                                                              
+                                  
   bool isFirstOptional = shortCircuitBB == nullptr;
 
-  // If isFirstOptional, the final result will be computed in continueBB and
-  // returned.
+                                                                            
+              
   BasicBlock *continueBB = nullptr;
 
   if (!shortCircuitBB) {
-    // If shortCircuitBB is null, then this is the outermost in the optional
-    // chain, so we must create it here and pass it through to every other
-    // OptionalCallExpression and OptionalMemberExpression in the chain.
+                                                                            
+                                                                          
+                                                                        
     continueBB = Builder.createBasicBlock(Builder.getFunction());
     auto *insertionBB = Builder.getInsertionBlock();
     shortCircuitBB = Builder.createBasicBlock(Builder.getFunction());
@@ -438,12 +825,12 @@ Value *ESTreeIRGen::genOptionalCallExpr(
   Value *thisVal;
   Value *callee;
 
-  // Handle MemberExpression expression calls that sets the 'this' property.
+                                                                            
   if (auto *me = llvh::dyn_cast<ESTree::MemberExpressionNode>(call->_callee)) {
     MemberExpressionResult memResult =
         genMemberExpression(me, MemberExpressionOperation::Load);
 
-    // Call the callee with obj as the 'this' pointer.
+                                                      
     thisVal = memResult.base;
     callee = memResult.result;
   } else if (
@@ -452,7 +839,7 @@ Value *ESTreeIRGen::genOptionalCallExpr(
     MemberExpressionResult memResult = genOptionalMemberExpression(
         ome, shortCircuitBB, MemberExpressionOperation::Load);
 
-    // Call the callee with obj as the 'this' pointer.
+                                                      
     thisVal = memResult.base;
     callee = memResult.result;
   } else if (
@@ -460,6 +847,22 @@ Value *ESTreeIRGen::genOptionalCallExpr(
           llvh::dyn_cast<ESTree::OptionalCallExpressionNode>(call->_callee)) {
     thisVal = Builder.getLiteralUndefined();
     callee = genOptionalCallExpr(oce, shortCircuitBB);
+  } else if (auto *op = llvh::dyn_cast<ESTree::NativePrivateOperationNode>(call->_callee)) {
+    const auto name=op->_operation->str();
+    if((name!="call_reference" && name!="accessor_call_reference") || op->_arguments.size()!=2) {
+      Builder.getModule()->getContext().getSourceErrorManager().error(
+          call->getSourceRange(),"[NATIVE_PRIVATE_INVALID_IR] OPTIONAL_REFERENCE");
+      return Builder.getLiteralUndefined();
+    }
+    auto it=op->_arguments.begin();
+    thisVal=genExpression(&*it++);
+    Value *token=genExpression(&*it);
+                                                                              
+    callee=genBuiltinCall(BuiltinMethod::HermesBuiltin_privateFieldGet,{thisVal,token});
+    if(name=="accessor_call_reference") {
+      CallInst::ArgumentList noArguments;
+      callee=Builder.createCallInst(CallInst::kNoTextifiedCallee,callee,thisVal,noArguments);
+    }
   } else {
     thisVal = Builder.getLiteralUndefined();
     callee = genExpression(getCallee(call));
@@ -468,8 +871,8 @@ Value *ESTreeIRGen::genOptionalCallExpr(
   if (call->_optional) {
     BasicBlock *evalRHSBB = Builder.createBasicBlock(Builder.getFunction());
 
-    // If callee is undefined or null, then return undefined.
-    // NOTE: We use `obj == null` to account for both null and undefined.
+                                                             
+                                                                         
     Builder.createCondBranchInst(
         Builder.createBinaryOperatorInst(
             callee,
@@ -478,7 +881,7 @@ Value *ESTreeIRGen::genOptionalCallExpr(
         shortCircuitBB,
         evalRHSBB);
 
-    // baseValue is not undefined or null.
+                                          
     Builder.setInsertionBlock(evalRHSBB);
   }
 
@@ -493,61 +896,61 @@ Value *ESTreeIRGen::genOptionalCallExpr(
     return Builder.createPhiInst(values, blocks);
   }
 
-  // If this isn't the first optional, no Phi needed, just return the
-  // callResult.
+                                                                     
+                
   return callResult;
 }
 
-/// \return a LiteralString with a textual representation of given \p call
-/// expression. This representation is built from the original source code, with
-/// some changes:
-///
-/// 1. unprintable character, new line, and spaces following new lines, are not
-///    emitted.
-/// 2. output is limited to kMaxTextifiedCalleeSizeUTF8Chars. If the source code
-/// is longer than the maximum number of characters, then the returned callee
-/// will look like
-///
-///  source code     : aaaaaaaaaa[.]+bbbbbbbbbb
-///  textified callee: "aaaaaaaaaa(...)bbbbbbbbbb"
+                                                                          
+                                                                                
+                 
+   
+                                                                               
+               
+                                                                                
+                                                                             
+                  
+   
+                                               
+                                                  
 static LiteralString *getTextifiedCallExpr(
     IRBuilder &builder,
     ESTree::Node *callee) {
   constexpr uint32_t kMaxTextifiedCalleeSizeUTF8Chars = 64;
-  // Pessimizing the maximum buffer size for the textified callee as if all
-  // characters were 4 bytes.
+                                                                           
+                             
   llvh::SmallVector<char, kMaxTextifiedCalleeSizeUTF8Chars * 4> textifiedCallee;
   llvh::raw_svector_ostream OS(textifiedCallee);
 
-  // Count of how many UTF8 character are on the textified callee string.
+                                                                         
   uint32_t numUTF8Chars = 0;
   const char *begin = callee->getSourceRange().Start.getPointer();
   const char *end = callee->getSourceRange().End.getPointer();
 
   const char *pos = begin;
 
-  /// Helper function that scans the input source code searching for the next
-  /// UTF8 char starting at \p iter. \return a StringRef with the chars that
-  /// form the next UTF8 char on the input, or None if the input has been
-  /// exhausted. Upon return, \p iter will be modified 1-past the last char
-  /// consumed from the input.
+                                                                             
+                                                                            
+                                                                         
+                                                                           
+                              
   auto nextUTF8Char = [end](const char *&iter) -> OptValue<llvh::StringRef> {
     assert(iter < end && "iter is past end");
     const char *start;
     bool skipSpace = false;
     bool newLine;
     bool unprintableChar;
-    // The function may need to decode several UTF8 charaters to skip new lines,
-    // spaces following new lines, and unprintable characters.
+                                                                                
+                                                              
     do {
       if (iter == end) {
         return llvh::None;
       }
 
-      // From start, where does the current UTF8 character ends?
+                                                                
       start = iter;
       for (++iter; iter < end && isUTF8ContinuationByte(*iter); ++iter) {
-        // nothing
+                  
       }
 
       newLine = *start == '\n';
@@ -559,22 +962,22 @@ static LiteralString *getTextifiedCallExpr(
     return llvh::StringRef{start, utf8CharLength};
   };
 
-  // The algorithm is split in three separate steps:
-  // 1. Find the range in the input source that contains the first half of the
-  //    UTF8 characters that should be present on the output.
-  // 2. Find the window into the input source starting at the end of the range
-  //    computed in 1. and containing another half of the maximum output length.
-  //    This window is [mark, pos).
-  // 3. Slide the [mark, pos) window found in 2 until pos equals end.
-  //
-  // If the input is exhausted in 1. or 2., then the output string will contain
-  // a "copy" of the input source (minus the characters listed above); it will
-  // otherwise be prefix"(...)"suffix, with prefix being the first
-  // kMaxTextifiedCalleeSizeUTF8Chars / 2 UTF8 chars in the input source, and
-  // suffix, the last kMaxTextifiedCalleeSizeUTF8Chars / 2 UTF8 chars.
+                                                    
+                                                                              
+                                                             
+                                                                              
+                                                                                
+                                   
+                                                                     
+    
+                                                                               
+                                                                              
+                                                                  
+                                                                             
+                                                                      
 
-  // Scan the input string starting from the first position until half of the
-  // maximum of allowed character have been scanned.
+                                                                             
+                                                    
   while (pos < end && numUTF8Chars < kMaxTextifiedCalleeSizeUTF8Chars / 2) {
     if (auto ch = nextUTF8Char(pos)) {
       ++numUTF8Chars;
@@ -586,8 +989,8 @@ static LiteralString *getTextifiedCallExpr(
       (pos == end || numUTF8Chars == kMaxTextifiedCalleeSizeUTF8Chars / 2) &&
       "Invalid source range");
 
-  // Now save the current position, and advance it until the end of the buffer,
-  // or until enough UTF8 characters are found.
+                                                                               
+                                               
   const char *mark = pos;
   while (pos < end && numUTF8Chars < kMaxTextifiedCalleeSizeUTF8Chars) {
     if (nextUTF8Char(pos)) {
@@ -600,7 +1003,7 @@ static LiteralString *getTextifiedCallExpr(
       "Invalid source range");
 
   if (pos < end) {
-    // Slide the suffix window if pos is not at the end of the input.
+                                                                     
     OS << "(...)";
 
     while (pos < end) {
@@ -611,11 +1014,11 @@ static LiteralString *getTextifiedCallExpr(
     }
   }
 
-  // The input should be exhausted by now, and pos should be equal to end --
-  // meaning all characters have been decoded.
+                                                                            
+                                              
   assert(pos == end && "Invalid source range");
 
-  // Now add all characters between mark and end to the textified callable.
+                                                                           
   while (mark < end) {
     auto ch = nextUTF8Char(mark);
     assert(ch && "should have a character");
@@ -646,10 +1049,10 @@ Value *ESTreeIRGen::emitCall(
         getTextifiedCallExpr(Builder, getCallee(call)), callee, thisVal, args);
   }
 
-  // Otherwise, there exists a spread argument, so the number of arguments
-  // is variable.
-  // Generate IR for this by creating an array and populating it with the
-  // arguments, then calling HermesInternal.apply.
+                                                                          
+                 
+                                                                         
+                                                  
   auto *args = genArrayFromElements(getArguments(call));
   return genBuiltinCall(
       BuiltinMethod::HermesBuiltin_apply, {callee, args, thisVal});
@@ -678,18 +1081,18 @@ ESTreeIRGen::MemberExpressionResult ESTreeIRGen::genOptionalMemberExpression(
   PhiInst::ValueListType values;
   PhiInst::BasicBlockListType blocks;
 
-  // true when this is the genOptionalMemberExpression call containing
-  // the logic for shortCircuitBB.
+                                                                      
+                                  
   bool isFirstOptional = shortCircuitBB == nullptr;
 
-  // If isFirstOptional, the final result will be computed in continueBB and
-  // returned.
+                                                                            
+              
   BasicBlock *continueBB = nullptr;
 
   if (isFirstOptional) {
-    // If shortCircuitBB is null, then this is the outermost in the optional
-    // chain, so we must create it here and pass it through to every other
-    // OptionalCallExpression and OptionalMemberExpression in the chain.
+                                                                            
+                                                                          
+                                                                        
     continueBB = Builder.createBasicBlock(Builder.getFunction());
     auto *insertionBB = Builder.getInsertionBlock();
     shortCircuitBB = Builder.createBasicBlock(Builder.getFunction());
@@ -717,8 +1120,8 @@ ESTreeIRGen::MemberExpressionResult ESTreeIRGen::genOptionalMemberExpression(
   if (mem->_optional) {
     BasicBlock *evalRHSBB = Builder.createBasicBlock(Builder.getFunction());
 
-    // If baseValue is undefined or null, then return undefined.
-    // NOTE: We use `obj == null` to account for both null and undefined.
+                                                                
+                                                                         
     Builder.createCondBranchInst(
         Builder.createBinaryOperatorInst(
             baseValue,
@@ -727,7 +1130,7 @@ ESTreeIRGen::MemberExpressionResult ESTreeIRGen::genOptionalMemberExpression(
         shortCircuitBB,
         evalRHSBB);
 
-    // baseValue is not undefined, look up the property properly.
+                                                                 
     Builder.setInsertionBlock(evalRHSBB);
   }
 
@@ -752,7 +1155,7 @@ ESTreeIRGen::MemberExpressionResult ESTreeIRGen::genOptionalMemberExpression(
     return {Builder.createPhiInst(values, blocks), baseValue};
   }
 
-  // If this isn't the first optional, no Phi needed, just return the result.
+                                                                             
   return {result, baseValue};
 }
 
@@ -783,27 +1186,27 @@ Value *ESTreeIRGen::genCallEvalExpr(ESTree::CallExpressionNode *call) {
       args[0], Builder.getLiteralBool(isStrict));
 }
 
-/// Convert a property key node to its JavaScript string representation.
+                                                                        
 static llvh::StringRef propertyKeyAsString(
     llvh::SmallVectorImpl<char> &storage,
     ESTree::Node *Key) {
-  // Handle String Literals.
-  // http://www.ecma-international.org/ecma-262/6.0/#sec-literals-string-literals
+                            
+                                                                                 
   if (auto *Lit = llvh::dyn_cast<ESTree::StringLiteralNode>(Key)) {
     LLVM_DEBUG(
         llvh::dbgs() << "Loading String Literal \"" << Lit->_value << "\"\n");
     return Lit->_value->str();
   }
 
-  // Handle identifiers as if they are String Literals.
+                                                       
   if (auto *Iden = llvh::dyn_cast<ESTree::IdentifierNode>(Key)) {
     LLVM_DEBUG(
         llvh::dbgs() << "Loading String Literal \"" << Iden->_name << "\"\n");
     return Iden->_name->str();
   }
 
-  // Handle Number Literals.
-  // http://www.ecma-international.org/ecma-262/6.0/#sec-literals-numeric-literals
+                            
+                                                                                  
   if (auto *Lit = llvh::dyn_cast<ESTree::NumericLiteralNode>(Key)) {
     LLVM_DEBUG(
         llvh::dbgs() << "Loading Numeric Literal \"" << Lit->_value << "\"\n");
@@ -819,19 +1222,19 @@ static llvh::StringRef propertyKeyAsString(
 Value *ESTreeIRGen::genObjectExpr(ESTree::ObjectExpressionNode *Expr) {
   LLVM_DEBUG(llvh::dbgs() << "Initializing a new object\n");
 
-  /// Store information about a property. Is it an accessor (getter/setter) or
-  /// a value, and the actual value.
+                                                                              
+                                    
   class PropertyValue {
    public:
-    /// Is this a getter/setter value.
+                                      
     bool isAccessor = false;
-    /// Tracks the state of generating IR for this value.
+                                                         
     enum { None, Placeholder, IRGenerated } state{None};
-    /// The value, if this is a regular property
+                                                
     ESTree::Node *valueNode{};
-    /// Getter accessor, if this is an accessor property.
+                                                         
     ESTree::FunctionExpressionNode *getterNode{};
-    /// Setter accessor, if this is an accessor property.
+                                                         
     ESTree::FunctionExpressionNode *setterNode{};
 
     SMRange getSourceRange() {
@@ -873,16 +1276,16 @@ Value *ESTreeIRGen::genObjectExpr(ESTree::ObjectExpressionNode *Expr) {
     }
   };
 
-  // First accumulate all getters and setters. We walk all properties, convert
-  // them to string and store the value into propMap, possibly overwriting the
-  // previous value.
-  // Note that computed properties are not stored in the propMap as we do not
-  // know the keys at compilation time.
+                                                                              
+                                                                              
+                    
+                                                                             
+                                       
   llvh::StringMap<PropertyValue> propMap;
-  // The first location where a given property name is encountered.
+                                                                   
   llvh::StringMap<SMRange> firstLocMap;
   llvh::SmallVector<char, 32> stringStorage;
-  /// The optional __proto__ property.
+                                      
   ESTree::PropertyNode *protoProperty = nullptr;
 
   uint32_t numComputed = 0;
@@ -892,22 +1295,22 @@ Value *ESTreeIRGen::genObjectExpr(ESTree::ObjectExpressionNode *Expr) {
       continue;
     }
 
-    // We are reusing the storage, so make sure it is cleared at every
-    // iteration.
+                                                                      
+                 
     stringStorage.clear();
 
     auto *prop = cast<ESTree::PropertyNode>(&P);
     if (prop->_computed) {
-      // Can't store any useful information if the name is computed.
-      // Just generate the code in the next loop.
+                                                                    
+                                                 
       ++numComputed;
       continue;
     }
 
     auto propName = propertyKeyAsString(stringStorage, prop->_key);
 
-    // protoProperty should only be recorded if the property is not a method
-    // nor a shorthand value.
+                                                                            
+                             
     if (prop->_kind->str() == "init" && propName == "__proto__" &&
         !prop->_method && !prop->_shorthand) {
       if (!protoProperty) {
@@ -929,7 +1332,7 @@ Value *ESTreeIRGen::genObjectExpr(ESTree::ObjectExpressionNode *Expr) {
       propValue->setSetter(cast<ESTree::FunctionExpressionNode>(prop->_value));
     } else {
       assert(prop->_kind->str() == "init" && "invalid PropertyNode kind");
-      // We record the propValue if this is a regular property
+                                                              
       propValue->setValue(prop->_value);
     }
 
@@ -946,13 +1349,13 @@ Value *ESTreeIRGen::genObjectExpr(ESTree::ObjectExpressionNode *Expr) {
     }
   }
 
-  /// Attempt to determine whether we can directly use the value of the
-  /// __proto__ property as a parent when creating the object for an object
-  /// initializer, instead of setting it later with
-  /// HermesInternal.silentSetPrototypeOf(). That is not possible to determine
-  /// statically in the general case, but we can check for the simple cases:
-  /// - __proto__ property is first.
-  /// - the value of __proto__ is constant.
+                                                                       
+                                                                           
+                                                   
+                                                                              
+                                                                            
+                                    
+                                           
   Value *objectParent = nullptr;
   if (protoProperty &&
       (&Expr->_properties.front() == protoProperty ||
@@ -960,22 +1363,22 @@ Value *ESTreeIRGen::genObjectExpr(ESTree::ObjectExpressionNode *Expr) {
     objectParent = genExpression(protoProperty->_value);
   }
 
-  // Allocate a new javascript object on the heap.
+                                                  
   auto Obj =
       Builder.createAllocObjectInst(propMap.size() + numComputed, objectParent);
 
-  // haveSeenComputedProp tracks whether we have processed a computed property.
-  // Once we do, for all future properties, we can no longer generate
-  // StoreNewOwnPropertyInst because the computed property could have already
-  // defined any property.
+                                                                               
+                                                                     
+                                                                             
+                          
   bool haveSeenComputedProp = false;
 
-  // Initialize all properties. We check whether the value of each property
-  // will be overwritten (by comparing against what we have saved in propMap).
-  // In that case we still compute the value (it could have side effects), but
-  // we don't store it. The exception to this are accessor functions - there
-  // is no need to create them if we don't use them because creating a function
-  // has no side effects.
+                                                                           
+                                                                              
+                                                                              
+                                                                            
+                                                                               
+                         
   for (auto &P : Expr->_properties) {
     if (auto *spread = llvh::dyn_cast<ESTree::SpreadElementNode>(&P)) {
       genBuiltinCall(
@@ -985,15 +1388,15 @@ Value *ESTreeIRGen::genObjectExpr(ESTree::ObjectExpressionNode *Expr) {
       continue;
     }
 
-    // We are reusing the storage, so make sure it is cleared at every
-    // iteration.
+                                                                      
+                 
     stringStorage.clear();
 
     auto *prop = cast<ESTree::PropertyNode>(&P);
 
     if (prop->_computed) {
-      // TODO (T46136220): Set the .name property for anonymous functions that
-      // are values for computed property keys.
+                                                                              
+                                               
       auto *key = genExpression(prop->_key);
       auto *value = genExpression(prop->_value);
       if (prop->_kind->str() == "get") {
@@ -1021,10 +1424,10 @@ Value *ESTreeIRGen::genObjectExpr(ESTree::ObjectExpressionNode *Expr) {
     llvh::StringRef keyStr = propertyKeyAsString(stringStorage, prop->_key);
 
     if (prop == protoProperty) {
-      // This is the first definition of __proto__. If we already used it
-      // as an object parent we just skip it, but otherwise we must
-      // explicitly set the parent now by calling \c
-      // HermesInternal.silentSetPrototypeOf().
+                                                                         
+                                                                   
+                                                    
+                                               
       if (!objectParent) {
         auto *parent = genExpression(prop->_value);
 
@@ -1040,9 +1443,9 @@ Value *ESTreeIRGen::genObjectExpr(ESTree::ObjectExpressionNode *Expr) {
 
     PropertyValue *propValue = &propMap[keyStr];
 
-    // For any node that has a corresponding propValue, we need to ensure that
-    // the we insert either a placeholder or the final IR before the end of this
-    // iteration.
+                                                                              
+                                                                                
+                 
     auto checkState = llvh::make_scope_exit(
         [&] { assert(propValue->state != PropertyValue::None); });
 
@@ -1050,8 +1453,8 @@ Value *ESTreeIRGen::genObjectExpr(ESTree::ObjectExpressionNode *Expr) {
 
     auto maybeInsertPlaceholder = [&] {
       if (propValue->state == PropertyValue::None) {
-        // This value is going to be overwritten, but insert a placeholder in
-        // order to maintain insertion order.
+                                                                             
+                                             
         if (haveSeenComputedProp) {
           Builder.createStoreOwnPropertyInst(
               Builder.getLiteralNull(),
@@ -1070,7 +1473,7 @@ Value *ESTreeIRGen::genObjectExpr(ESTree::ObjectExpressionNode *Expr) {
     };
 
     if (prop->_kind->str() == "get" || prop->_kind->str() == "set") {
-      // If  we already generated it, skip.
+                                           
       if (propValue->state == PropertyValue::IRGenerated)
         continue;
 
@@ -1102,11 +1505,11 @@ Value *ESTreeIRGen::genObjectExpr(ESTree::ObjectExpressionNode *Expr) {
       continue;
     }
 
-    // Always generate the values, even if we don't need it, for the side
-    // effects.
+                                                                         
+               
     auto value = genExpression(prop->_value, Builder.createIdentifier(keyStr));
 
-    // Only store the value if it won't be overwritten.
+                                                       
     if (propMap[keyStr].valueNode == prop->_value) {
       assert(
           propValue->state != PropertyValue::IRGenerated &&
@@ -1125,15 +1528,15 @@ Value *ESTreeIRGen::genObjectExpr(ESTree::ObjectExpressionNode *Expr) {
     }
   }
 
-  // Return the newly allocated object (because this is an expression, not a
-  // statement).
+                                                                            
+                
   return Obj;
 }
 
 Value *ESTreeIRGen::genSequenceExpr(ESTree::SequenceExpressionNode *Sq) {
   Value *result = Builder.getLiteralUndefined();
 
-  // Generate all expressions in the sequence, but take only the last one.
+                                                                          
   for (auto &Ex : Sq->_expressions) {
     result = genExpression(&Ex);
   }
@@ -1146,11 +1549,17 @@ Value *ESTreeIRGen::genYieldExpr(ESTree::YieldExpressionNode *Y) {
 
   Value *value = Y->_argument ? genExpression(Y->_argument)
                               : Builder.getLiteralUndefined();
+  if (curFunction()->asyncGeneratorBody) value = genAwaitValue(value);
   return genYieldOrAwaitExpr(value);
 }
 
 Value *ESTreeIRGen::genAwaitExpr(ESTree::AwaitExpressionNode *A) {
-  Value *value = genExpression(A->_argument);
+  return genAwaitValue(genExpression(A->_argument));
+}
+
+Value *ESTreeIRGen::genAwaitValue(Value *value) {
+  if (curFunction()->asyncGeneratorBody)
+    value = genBuiltinCall(BuiltinMethod::HermesBuiltin_asyncGeneratorAwait, {value});
   return genYieldOrAwaitExpr(value);
 }
 
@@ -1169,77 +1578,80 @@ Value *ESTreeIRGen::genYieldOrAwaitExpr(Value *value) {
       Builder.createBasicBlock(bb->getParent()));
 }
 
-/// Generate the code for `yield* value`.
-/// We use some stack locations to store state while iterating:
-/// - received (the value passed by the user to .next(), etc)
-/// - result (the final result of the yield* expression)
-///
-/// iteratorRecord stores the iterator which we are iterating over.
-///
-/// Final IR has the following basic blocks for normal control flow:
-///
-/// getNext: Get the next value from the iterator.
-/// - Call next() on the iteratorRecord and stores to `result`
-/// - If done, go to exit
-/// - Otherwise, go to body
-///
-/// resume: Runs the ResumeGenerator instruction.
-/// - Code for `finally` is also emitted here.
-///
-/// body: Yield the result of the next() call
-/// - Calls HermesInternal.generatorSetDelegated so that the result is not
-///   wrapped by the VM in an IterResult object.
-///
-/// exit: Returns `result` which should have the final results stored in it.
-///
-/// When the user calls `.return`, the finalizer is executed to call
-/// `iteratorRecord.return` if it exists. The code for that is contained within
-/// the SurroundingTry. If the .return function is defined, it is called and the
-/// 'done' property of the result of the call is used to either branch back to
-/// the 'resume' block or to propagate the return.
-///
-/// When the user calls '.throw', the code in emitHandler is executed. All
-/// generators used as delegates must have a .throw() method, so that is checked
-/// for and called. The result is then used to either resume if not done, or to
-/// return immediately by branching to the 'exit' block.
+                                         
+                                                               
+                                                             
+                                                        
+   
+                                                                   
+   
+                                                                    
+   
+                                                  
+                                                              
+                         
+                           
+   
+                                                 
+                                              
+   
+                                             
+                                                                          
+                                                
+   
+                                                                            
+   
+                                                                    
+                                                                               
+                                                                                
+                                                                              
+                                                  
+   
+                                                                          
+                                                                                
+                                                                               
+                                                        
 Value *ESTreeIRGen::genYieldStarExpr(ESTree::YieldExpressionNode *Y) {
   assert(Y->_delegate && "must use genYieldExpr for yield");
+  if (curFunction()->asyncGeneratorBody)
+    return genYieldOrAwaitExpr(genBuiltinCall(
+        BuiltinMethod::HermesBuiltin_asyncGeneratorDelegate, {genExpression(Y->_argument)}));
   auto *function = Builder.getInsertionBlock()->getParent();
   auto *getNextBlock = Builder.createBasicBlock(function);
   auto *bodyBlock = Builder.createBasicBlock(function);
   auto *exitBlock = Builder.createBasicBlock(function);
 
-  // Calls ResumeGenerator and returns or throws if requested.
+                                                              
   auto *resumeBB = Builder.createBasicBlock(function);
 
   auto *exprValue = genExpression(Y->_argument);
   IteratorRecordSlow iteratorRecord = emitGetIteratorSlow(exprValue);
 
-  // The "received" value when the user resumes the generator.
-  // Initialized to undefined on the first run, then stored to immediately
-  // following any genResumeGenerator.
+                                                              
+                                                                          
+                                      
   auto *received =
       Builder.createAllocStackInst(genAnonymousLabelName("received"));
   Builder.createStoreStackInst(Builder.getLiteralUndefined(), received);
 
-  // The "isReturn" value when the user resumes the generator.
-  // Stored to immediately following any genResumeGenerator.
+                                                              
+                                                            
   auto *resumeIsReturn =
       Builder.createAllocStackInst(genAnonymousLabelName("isReturn"));
 
-  // The final result of the `yield*` expression.
-  // This can be set from either the body or the handler, so it is placed
-  // in the stack to allow populating it from anywhere.
+                                                 
+                                                                         
+                                                       
   auto *result = Builder.createAllocStackInst(genAnonymousLabelName("result"));
 
   Builder.createBranchInst(getNextBlock);
 
-  // 7.a.i.  Let innerResult be ? Call(
-  //   iteratorRecord.[[NextMethod]],
-  //   iteratorRecord.[[Iterator]],
-  //   <received.[[Value]]>
-  // )
-  // Avoid using emitIteratorNext here because the spec does not.
+                                       
+                                     
+                                   
+                           
+      
+                                                                 
   Builder.setInsertionBlock(getNextBlock);
   auto *nextResult = Builder.createCallInst(
       CallInst::kNoTextifiedCallee,
@@ -1256,7 +1668,7 @@ Value *ESTreeIRGen::genYieldStarExpr(ESTree::YieldExpressionNode *Y) {
 
   emitTryCatchScaffolding(
       getNextBlock,
-      // emitBody.
+                  
       [this,
        Y,
        resumeIsReturn,
@@ -1265,7 +1677,7 @@ Value *ESTreeIRGen::genYieldStarExpr(ESTree::YieldExpressionNode *Y) {
        nextResult,
        received,
        &iteratorRecord]() {
-        // Generate IR for the body of Try
+                                          
         SurroundingTry thisTry{
             curFunction(),
             Y,
@@ -1273,15 +1685,15 @@ Value *ESTreeIRGen::genYieldStarExpr(ESTree::YieldExpressionNode *Y) {
             [this, resumeBB, received, &iteratorRecord](
                 ESTree::Node *, ControlFlowChange cfc, BasicBlock *) {
               if (cfc == ControlFlowChange::Break) {
-                // This finalizer block is executed upon early return during
-                // the yield*, which happens when the user requests a .return().
+                                                                            
+                                                                                
                 auto *function = Builder.getFunction();
                 auto *haveReturnBB = Builder.createBasicBlock(function);
                 auto *noReturnBB = Builder.createBasicBlock(function);
                 auto *isDoneBB = Builder.createBasicBlock(function);
                 auto *isNotDoneBB = Builder.createBasicBlock(function);
 
-                // Check if "returnMethod" is undefined.
+                                                        
                 auto *returnMethod = genBuiltinCall(
                     BuiltinMethod::HermesBuiltin_getMethod,
                     {iteratorRecord.iterator,
@@ -1294,66 +1706,66 @@ Value *ESTreeIRGen::genYieldStarExpr(ESTree::YieldExpressionNode *Y) {
                     haveReturnBB);
 
                 Builder.setInsertionBlock(haveReturnBB);
-                // iv. Let innerReturnResult be
-                // ? Call(return, iterator, received.[[Value]]).
+                                               
+                                                                
                 auto *innerReturnResult = Builder.createCallInst(
                     CallInst::kNoTextifiedCallee,
                     returnMethod,
                     iteratorRecord.iterator,
                     {Builder.createLoadStackInst(received)});
-                // vi. If Type(innerReturnResult) is not Object,
-                // throw a TypeError exception.
+                                                                
+                                               
                 emitEnsureObject(
                     innerReturnResult,
                     "iterator.return() did not return an object");
-                // vii. Let done be ? IteratorComplete(innerReturnResult).
+                                                                          
                 auto *done = emitIteratorCompleteSlow(innerReturnResult);
                 Builder.createCondBranchInst(done, isDoneBB, isNotDoneBB);
 
                 Builder.setInsertionBlock(isDoneBB);
-                // viii. 1. Let value be ? IteratorValue(innerReturnResult).
+                                                                            
                 auto *value = emitIteratorValueSlow(innerReturnResult);
                 genFinallyBeforeControlChange(
                     curFunction()->surroundingTry,
                     nullptr,
                     ControlFlowChange::Break);
-                // viii. 2. Return Completion
-                // { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
+                                             
+                                                                             
                 Builder.createReturnInst(value);
 
-                // x. Else, set received to GeneratorYield(innerReturnResult).
+                                                                              
                 Builder.setInsertionBlock(isNotDoneBB);
                 genBuiltinCall(
                     BuiltinMethod::HermesBuiltin_generatorSetDelegated, {});
                 Builder.createSaveAndYieldInst(innerReturnResult, resumeBB);
 
-                // If return is undefined, return Completion(received).
+                                                                       
                 Builder.setInsertionBlock(noReturnBB);
               }
             }};
 
-        // The primary call path for yielding the next result.
+                                                              
         genBuiltinCall(BuiltinMethod::HermesBuiltin_generatorSetDelegated, {});
         Builder.createSaveAndYieldInst(nextResult, resumeBB);
 
-        // Note that resumeBB was created above to allow all SaveAndYield insts
-        // to have the same resume point (including SaveAndYield in the catch
-        // handler), but we must populate it inside the scaffolding so that the
-        // SurroundingTry is correct for the genFinallyBeforeControlChange
-        // call emitted by genResumeGenerator.
+                                                                               
+                                                                             
+                                                                               
+                                                                          
+                                              
         Builder.setInsertionBlock(resumeBB);
         genResumeGenerator(
             GenFinally::Yes, resumeIsReturn, getNextBlock, received);
 
-        // SaveAndYieldInst is a Terminator, but emitTryCatchScaffolding
-        // needs a block from which to Branch to the TryEnd instruction.
-        // Make a dummy block which can do that.
+                                                                        
+                                                                        
+                                                
         Builder.setInsertionBlock(
             Builder.createBasicBlock(Builder.getFunction()));
       },
-      // emitNormalCleanup.
+                           
       []() {},
-      // emitHandler.
+                     
       [this, resumeBB, exitBlock, result, &iteratorRecord](
           BasicBlock *getNextBlock) {
         auto *catchReg = Builder.createCatchInst();
@@ -1364,7 +1776,7 @@ Value *ESTreeIRGen::genYieldStarExpr(ESTree::YieldExpressionNode *Y) {
         auto *isDoneBB = Builder.createBasicBlock(function);
         auto *isNotDoneBB = Builder.createBasicBlock(function);
 
-        // b.i. Let throw be ? GetMethod(iterator, "throw").
+                                                            
         auto *throwMethod = genBuiltinCall(
             BuiltinMethod::HermesBuiltin_getMethod,
             {iteratorRecord.iterator, Builder.getLiteralString("throw")});
@@ -1375,47 +1787,47 @@ Value *ESTreeIRGen::genYieldStarExpr(ESTree::YieldExpressionNode *Y) {
             noThrowMethodBB,
             hasThrowMethodBB);
 
-        // ii. If throw is not undefined, then
+                                              
         Builder.setInsertionBlock(hasThrowMethodBB);
-        // ii. 1. Let innerResult be
-        //        ? Call(throw, iterator, « received.[[Value]] »).
-        // ii. 3. NOTE: Exceptions from the inner iterator throw method are
-        // propagated. Normal completions from an inner throw method are
-        // processed similarly to an inner next.
+                                    
+                                                                  
+                                                                           
+                                                                        
+                                                
         auto *innerResult = Builder.createCallInst(
             CallInst::kNoTextifiedCallee,
             throwMethod,
             iteratorRecord.iterator,
             {catchReg});
-        // ii. 4. If Type(innerResult) is not Object,
-        //        throw a TypeError exception.
+                                                     
+                                              
         emitEnsureObject(
             innerResult, "iterator.throw() did not return an object");
-        // ii. 5. Let done be ? IteratorComplete(innerResult).
+                                                              
         auto *throwDone = emitIteratorCompleteSlow(innerResult);
         Builder.createCondBranchInst(throwDone, isDoneBB, isNotDoneBB);
 
-        // ii. 6. If done is true, then return ? IteratorValue(innerResult).
+                                                                            
         Builder.setInsertionBlock(isDoneBB);
         Builder.createStoreStackInst(innerResult, result);
         Builder.createBranchInst(exitBlock);
 
-        // ii. 8. Else, set received to GeneratorYield(innerResult).
+                                                                    
         Builder.setInsertionBlock(isNotDoneBB);
         genBuiltinCall(BuiltinMethod::HermesBuiltin_generatorSetDelegated, {});
         Builder.createSaveAndYieldInst(innerResult, resumeBB);
 
-        // NOTE: If iterator does not have a throw method, this throw is
-        // going to terminate the yield* loop. But first we need to give
-        // iterator a chance to clean up.
+                                                                        
+                                                                        
+                                         
         Builder.setInsertionBlock(noThrowMethodBB);
         emitIteratorCloseSlow(iteratorRecord, false);
         genBuiltinCall(
             BuiltinMethod::HermesBuiltin_throwTypeError,
             {Builder.getLiteralString(
                 "yield* delegate must have a .throw() method")});
-        // HermesInternal.throwTypeError will necessarily throw, but we need to
-        // have a terminator on this BB to allow proper optimization.
+                                                                               
+                                                                     
         Builder.createThrowInst(Builder.getLiteralUndefined());
       });
 
@@ -1454,7 +1866,7 @@ Value *ESTreeIRGen::genResumeGenerator(
 }
 
 Value *ESTreeIRGen::genBinaryExpression(ESTree::BinaryExpressionNode *bin) {
-  // Handle long chains of +/- non-recursively.
+                                               
   if (bin->_operator->str() == "+" || bin->_operator->str() == "-") {
     auto list = linearizeLeft(bin, {"+", "-"});
 
@@ -1485,7 +1897,7 @@ Value *ESTreeIRGen::genBinaryExpression(ESTree::BinaryExpressionNode *bin) {
 Value *ESTreeIRGen::genUnaryExpression(ESTree::UnaryExpressionNode *U) {
   auto kind = UnaryOperatorInst::parseOperator(U->_operator->str());
 
-  // Handle the delete unary expression. https://es5.github.io/#x11.4.1
+                                                                       
   if (kind == UnaryOperatorInst::OpKind::DeleteKind) {
     if (auto *memberExpr =
             llvh::dyn_cast<ESTree::MemberExpressionNode>(U->_argument)) {
@@ -1504,37 +1916,37 @@ Value *ESTreeIRGen::genUnaryExpression(ESTree::UnaryExpressionNode *U) {
           .result;
     }
 
-    // Check for "delete identifier". Note that deleting unqualified identifiers
-    // is prohibited in strict mode, so that case is handled earlier in the
-    // semantic validator. Here we are left to handle the non-strict mode case.
+                                                                                
+                                                                           
+                                                                               
     if (auto *iden = llvh::dyn_cast<ESTree::IdentifierNode>(U->_argument)) {
       assert(
           !curFunction()->function->isStrictMode() &&
           "delete identifier encountered in strict mode");
-      // Check if this is a known variable.
+                                           
       Identifier name = getNameFieldFromID(iden);
       auto *var = nameTable_.lookup(name);
 
       if (!var || llvh::isa<GlobalObjectProperty>(var)) {
-        // If the variable doesn't exist or if it is global, we must generate
-        // a delete global property instruction.
+                                                                             
+                                                
         return Builder.createDeletePropertyInst(
             Builder.getGlobalObject(), Builder.getLiteralString(name));
       } else {
-        // Otherwise it is a local variable which can't be deleted and we just
-        // return false.
+                                                                              
+                        
         return Builder.getLiteralBool(false);
       }
     }
 
-    // Generate the code for the delete operand.
+                                                
     genExpression(U->_argument);
 
-    // Deleting any value or a result of an expression returns True.
+                                                                    
     return Builder.getLiteralBool(true);
   }
 
-  // Need to handle the special case of "typeof <undefined variable>".
+                                                                      
   if (kind == UnaryOperatorInst::OpKind::TypeofKind) {
     if (auto *id = llvh::dyn_cast<ESTree::IdentifierNode>(U->_argument)) {
       Value *argument = genIdentifierExpression(id, true);
@@ -1542,7 +1954,7 @@ Value *ESTreeIRGen::genUnaryExpression(ESTree::UnaryExpressionNode *U) {
     }
   }
 
-  // Generate the unary operand:
+                                
   Value *argument = genExpression(U->_argument);
   auto *cookie = instrumentIR_.preUnaryExpression(U, argument);
 
@@ -1569,23 +1981,23 @@ Value *ESTreeIRGen::genUpdateExpr(ESTree::UpdateExpressionNode *updateExpr) {
 
   LReference lref = createLRef(updateExpr->_argument, false);
 
-  // Load the original value. Postfix updates need to convert it toNumeric
-  // before Inc/Dec to ensure the updateExpr has the proper result value.
+                                                                          
+                                                                         
   Value *original =
       isPrefix ? lref.emitLoad() : Builder.createAsNumericInst(lref.emitLoad());
 
-  // Create the inc or dec.
+                           
   Value *result = Builder.createUnaryOperatorInst(original, opKind);
 
-  // Store the result.
+                      
   lref.emitStore(result);
 
-  // Depending on the prefixness return the previous value or the modified
-  // value.
+                                                                          
+           
   return (isPrefix ? result : original);
 }
 
-/// Extract a name hint from a LReference.
+                                          
 static Identifier extractNameHint(const LReference &lref) {
   Identifier nameHint{};
   if (auto *var = lref.castAsVariable()) {
@@ -1601,11 +2013,11 @@ Value *ESTreeIRGen::genAssignmentExpr(ESTree::AssignmentExpressionNode *AE) {
 
   auto opStr = AE->_operator->str();
 
-  // Handle nested normal assignments non-recursively.
+                                                      
   if (opStr == "=") {
     auto list = ESTree::linearizeRight(AE, {"="});
 
-    // Create an LReference for every assignment left side.
+                                                           
     llvh::SmallVector<LReference, 1> lrefs;
     lrefs.reserve(list.size());
     for (auto *e : list) {
@@ -1640,10 +2052,10 @@ Value *ESTreeIRGen::genAssignmentExpr(ESTree::AssignmentExpressionNode *AE) {
   }
 
   assert(AssignmentKind != BinaryOperatorInst::OpKind::IdentityKind);
-  // Section 11.13.1 specifies that we should first load the
-  // LHS before materializing the RHS. Unlike in C, this
-  // code is well defined: "x+= x++".
-  // https://es5.github.io/#x11.13.1
+                                                            
+                                                        
+                                     
+                                    
   auto V = lref.emitLoad();
   auto *RHS = genExpression(AE->_right, nameHint);
   auto *cookie = instrumentIR_.preAssignment(AE, V, RHS);
@@ -1652,7 +2064,7 @@ Value *ESTreeIRGen::genAssignmentExpr(ESTree::AssignmentExpressionNode *AE) {
 
   lref.emitStore(result);
 
-  // Return the value that we stored as the result of the expression.
+                                                                     
   return result;
 }
 
@@ -1700,10 +2112,10 @@ Value *ESTreeIRGen::genLogicalAssignmentExpr(
     BinaryOperatorInst::OpKind AssignmentKind,
     LReference lref,
     Identifier nameHint) {
-  // Logical assignment expressions must use short-circuiting logic.
-  // BB which actually performs the assignment.
+                                                                    
+                                               
   BasicBlock *assignBB = Builder.createBasicBlock(Builder.getFunction());
-  // BB which simply continues without performing the assignment.
+                                                                 
   BasicBlock *continueBB = Builder.createBasicBlock(Builder.getFunction());
   auto *lhs = lref.emitLoad();
 
@@ -1743,8 +2155,8 @@ Value *ESTreeIRGen::genLogicalAssignmentExpr(
   Builder.createBranchInst(continueBB);
 
   Builder.setInsertionBlock(continueBB);
-  // Final result is either the original value or the value assigned,
-  // depending on which branch was taken.
+                                                                     
+                                         
   return Builder.createPhiInst(std::move(values), std::move(blocks));
 }
 
@@ -1758,24 +2170,24 @@ Value *ESTreeIRGen::genConditionalExpr(ESTree::ConditionalExpressionNode *C) {
   auto consequentBlock = Builder.createBasicBlock(parentFunc);
   auto continueBlock = Builder.createBasicBlock(parentFunc);
 
-  // Implement the ternary operator using control flow. We must use control
-  // flow because the expressions may have side effects.
+                                                                           
+                                                        
   genExpressionBranch(C->_test, consequentBlock, alternateBlock, nullptr);
 
-  // The 'then' side:
+                     
   Builder.setInsertionBlock(consequentBlock);
 
   values.push_back(genExpression(C->_consequent));
   blocks.push_back(Builder.getInsertionBlock());
   Builder.createBranchInst(continueBlock);
 
-  // The 'else' side:
+                     
   Builder.setInsertionBlock(alternateBlock);
   values.push_back(genExpression(C->_alternate));
   blocks.push_back(Builder.getInsertionBlock());
   Builder.createBranchInst(continueBlock);
 
-  // Continue:
+              
   Builder.setInsertionBlock(continueBlock);
   return Builder.createPhiInst(values, blocks);
 }
@@ -1786,12 +2198,12 @@ Value *ESTreeIRGen::genIdentifierExpression(
   LLVM_DEBUG(
       llvh::dbgs() << "Looking for identifier \"" << Iden->_name << "\"\n");
 
-  // 'arguments' is an array-like object holding all function arguments.
-  // If one of the parameters is called "arguments" then it shadows the
-  // arguments keyword.
+                                                                        
+                                                                       
+                       
   if (Iden->_name->str() == "arguments" &&
       !nameTable_.count(getNameFieldFromID(Iden))) {
-    // If it is captured, we must use the captured value.
+                                                         
     if (curFunction()->capturedArguments) {
       return Builder.createLoadFrameInst(
           curFunction()->capturedArguments, currentIRScope_);
@@ -1800,13 +2212,13 @@ Value *ESTreeIRGen::genIdentifierExpression(
     return curFunction()->createArgumentsInst;
   }
 
-  // Lookup variable name.
+                          
   auto StrName = getNameFieldFromID(Iden);
 
   auto *Var = ensureVariableExists(Iden);
 
-  // For uses of undefined as the global property, we make an optimization
-  // to always return undefined constant.
+                                                                          
+                                         
   if (llvh::isa<GlobalObjectProperty>(Var) && StrName.str() == "undefined") {
     return Builder.getLiteralUndefined();
   }
@@ -1821,12 +2233,12 @@ Value *ESTreeIRGen::genIdentifierExpression(
                                  ->getInternalNameStr())
                    << "\"\n");
 
-  // Typeof <variable> does not throw.
+                                      
   return emitLoad(Var, afterTypeOf);
 }
 
 Value *ESTreeIRGen::genMetaProperty(ESTree::MetaPropertyNode *MP) {
-  // Recognize "new.target"
+                           
   if (cast<ESTree::IdentifierNode>(MP->_meta)->_name->str() == "new") {
     if (cast<ESTree::IdentifierNode>(MP->_property)->_name->str() == "target") {
       Value *value;
@@ -1840,7 +2252,7 @@ Value *ESTreeIRGen::genMetaProperty(ESTree::MetaPropertyNode *MP) {
         value = Builder.createGetNewTargetInst();
       }
 
-      // If it is a variable, we must issue a load.
+                                                   
       if (auto *V = llvh::dyn_cast<Variable>(value))
         return Builder.createLoadFrameInst(V, currentIRScope_);
 
@@ -1872,10 +2284,10 @@ Value *ESTreeIRGen::genNewExpr(ESTree::NewExpressionNode *N) {
     return Builder.createConstructInst(callee, callee, args);
   }
 
-  // Otherwise, there exists a spread argument, so the number of arguments
-  // is variable.
-  // Generate IR for this by creating an array and populating it with the
-  // arguments, then calling HermesInternal.apply.
+                                                                          
+                 
+                                                                         
+                                                  
   auto *args = genArrayFromElements(N->_arguments);
 
   return genBuiltinCall(BuiltinMethod::HermesBuiltin_apply, {callee, args});
@@ -1887,9 +2299,9 @@ Value *ESTreeIRGen::genLogicalExpression(
   LLVM_DEBUG(llvh::dbgs() << "IRGen of short circuiting: " << opStr << ".\n");
 
   enum class Kind {
-    And, // &&
-    Or, // ||
-    Coalesce, // ??
+    And,      
+    Or,      
+    Coalesce,      
   };
 
   Kind kind;
@@ -1904,7 +2316,7 @@ Value *ESTreeIRGen::genLogicalExpression(
     llvm_unreachable("Invalid update operator");
   }
 
-  // Generate a new temporary stack allocation.
+                                               
   auto tempVarName = genAnonymousLabelName("logical");
   auto parentFunc = Builder.getInsertionBlock()->getParent();
   auto tempVar = Builder.createAllocStackInst(tempVarName);
@@ -1914,25 +2326,25 @@ Value *ESTreeIRGen::genLogicalExpression(
 
   auto LHS = genExpression(logical->_left);
 
-  // Store the LHS value of the expression in preparation for the case where we
-  // won't need to evaluate the RHS side of the expression. In that case, we
-  // jump to continueBlock, which returns tempVar.
+                                                                               
+                                                                            
+                                                  
   Builder.createStoreStackInst(LHS, tempVar);
 
-  // Notice that instead of negating the condition we swap the operands of the
-  // branch.
+                                                                              
+            
   switch (kind) {
     case Kind::And:
-      // Evaluate RHS only when the LHS is true.
+                                                
       Builder.createCondBranchInst(LHS, evalRHSBlock, continueBlock);
       break;
     case Kind::Or:
-      // Evaluate RHS only when the LHS is false.
+                                                 
       Builder.createCondBranchInst(LHS, continueBlock, evalRHSBlock);
       break;
     case Kind::Coalesce:
-      // Evaluate RHS only if the value is undefined or null.
-      // Use == instead of === to account for both values at once.
+                                                             
+                                                                  
       Builder.createCondBranchInst(
           Builder.createBinaryOperatorInst(
               LHS,
@@ -1944,17 +2356,17 @@ Value *ESTreeIRGen::genLogicalExpression(
       break;
   }
 
-  // Continue the evaluation of the right-hand-side of the expression.
+                                                                      
   Builder.setInsertionBlock(evalRHSBlock);
   auto RHS = genExpression(logical->_right);
 
-  // Evaluate the RHS and store the result into the temporary variable.
+                                                                       
   Builder.createStoreStackInst(RHS, tempVar);
 
-  // Finally, jump to the continuation block.
+                                             
   Builder.createBranchInst(continueBlock);
 
-  // Load the content of the temp variable that was set in one of the branches.
+                                                                               
   Builder.setInsertionBlock(continueBlock);
   return Builder.createLoadStackInst(tempVar);
 }
@@ -1991,17 +2403,17 @@ Value *ESTreeIRGen::genTemplateLiteralExpr(ESTree::TemplateLiteralNode *Expr) {
       Expr->_quasis.size() == Expr->_expressions.size() + 1 &&
       "The string count should always be one more than substitution count.");
 
-  // Construct an argument list for calling HermesInternal.concat():
-  // cookedStr0, substitution0, cookedStr1, ..., substitutionN, cookedStrN + 1,
-  // skipping any empty string, except for the first cooked string, which is
-  // going to be the `this` to the concat call.
+                                                                    
+                                                                               
+                                                                            
+                                               
 
-  // Get the first cooked string.
+                                 
   auto strItr = Expr->_quasis.begin();
   auto *tempEltNode = cast<ESTree::TemplateElementNode>(&*strItr);
   auto *firstCookedStr = Builder.getLiteralString(tempEltNode->_cooked->str());
   ++strItr;
-  // If the template literal is effectively only one string, directly return it.
+                                                                                
   if (strItr == Expr->_quasis.end()) {
     return firstCookedStr;
   }
@@ -2022,20 +2434,20 @@ Value *ESTreeIRGen::genTemplateLiteralExpr(ESTree::TemplateLiteralNode *Expr) {
       exprItr == Expr->_expressions.end() &&
       "All the substitutions must have been collected.");
 
-  // Generate a function call to HermesInternal.concat() with these arguments.
+                                                                              
   return genHermesInternalCall("concat", firstCookedStr, argList);
 }
 
 Value *ESTreeIRGen::genTaggedTemplateExpr(
     ESTree::TaggedTemplateExpressionNode *Expr) {
   LLVM_DEBUG(llvh::dbgs() << "IRGen 'TaggedTemplateExpression' expression.\n");
-  // Step 1: get the template object.
+                                     
   auto *templateLit = cast<ESTree::TemplateLiteralNode>(Expr->_quasi);
 
-  // Construct an argument list for calling HermesInternal.getTemplateObject():
-  // [template object ID, dup, raw strings, (optional) cooked strings].
+                                                                               
+                                                                       
   CallInst::ArgumentList argList;
-  // Retrieve template object ID.
+                                 
   Module::RawStringList rawStrings;
   for (auto &n : templateLit->_quasis) {
     auto element = cast<ESTree::TemplateElementNode>(&n);
@@ -2044,10 +2456,10 @@ Value *ESTreeIRGen::genTaggedTemplateExpr(
   uint32_t templateObjID = Mod->getTemplateObjectID(std::move(rawStrings));
   argList.push_back(Builder.getLiteralNumber(templateObjID));
 
-  // dup is true if the cooked strings and raw strings are duplicated.
+                                                                      
   bool dup = true;
-  // Add the argument dup first as a placeholder which we overwrite with
-  // the correct value later.
+                                                                        
+                             
   argList.push_back(Builder.getLiteralBool(dup));
   for (auto &node : templateLit->_quasis) {
     auto *templateElt = cast<ESTree::TemplateElementNode>(&node);
@@ -2057,8 +2469,8 @@ Value *ESTreeIRGen::genTaggedTemplateExpr(
     argList.push_back(Builder.getLiteralString(templateElt->_raw->str()));
   }
   argList[1] = Builder.getLiteralBool(dup);
-  // If the cooked strings are not the same as raw strings, append them to
-  // argument list.
+                                                                          
+                   
   if (!dup) {
     for (auto &node : templateLit->_quasis) {
       auto *templateElt = cast<ESTree::TemplateElementNode>(&node);
@@ -2071,13 +2483,13 @@ Value *ESTreeIRGen::genTaggedTemplateExpr(
     }
   }
 
-  // Generate a function call to HermesInternal.getTemplateObject() with these
-  // arguments.
+                                                                              
+               
   auto *templateObj =
       genBuiltinCall(BuiltinMethod::HermesBuiltin_getTemplateObject, argList);
 
-  // Step 2: call the tag function, passing the template object followed by a
-  // list of substitutions as arguments.
+                                                                             
+                                        
   CallInst::ArgumentList tagFuncArgList;
   tagFuncArgList.push_back(templateObj);
   for (auto &sub : templateLit->_expressions) {
@@ -2086,11 +2498,11 @@ Value *ESTreeIRGen::genTaggedTemplateExpr(
 
   Value *callee;
   Value *thisVal;
-  // Tag function is a member expression.
+                                         
   if (auto *Mem = llvh::dyn_cast<ESTree::MemberExpressionNode>(Expr->_tag)) {
     Value *obj = genExpression(Mem->_object);
     Value *prop = genMemberExpressionProperty(Mem);
-    // Call the callee with obj as the 'this'.
+                                              
     thisVal = obj;
     callee = Builder.createLoadPropertyInst(obj, prop);
   } else {
@@ -2102,5 +2514,5 @@ Value *ESTreeIRGen::genTaggedTemplateExpr(
       CallInst::kNoTextifiedCallee, callee, thisVal, tagFuncArgList);
 }
 
-} // namespace irgen
-} // namespace hermes
+}                   
+}                    

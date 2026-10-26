@@ -27,7 +27,7 @@ namespace vm {
 InlineCacheProfiler::ICMiss &InlineCacheProfiler::getICMissBySourceLocation(
     CodeBlock *codeblock,
     uint32_t instOffset) {
-  // if not exist, create inline caching entry for the source location
+                                                                      
   ICSrcKey icKey(instOffset, codeblock);
   auto it = cacheMisses_.find(icKey);
   if (it == cacheMisses_.end()) {
@@ -46,7 +46,7 @@ bool InlineCacheProfiler::insertICMiss(
     ClassId objectHiddenClassId,
     ClassId cachedHiddenClassId) {
   ICMiss &icMiss = getICMissBySourceLocation(codeblock, instOffset);
-  // record the hidden class pair for the source location
+                                                         
   auto hcPair =
       std::pair<ClassId, ClassId>(objectHiddenClassId, cachedHiddenClassId);
   auto icRecord =
@@ -60,7 +60,7 @@ bool InlineCacheProfiler::insertICMiss(
 bool InlineCacheProfiler::insertICHit(
     CodeBlock *codeblock,
     uint32_t instOffset) {
-  // if not exist, create inline caching entry for the source location
+                                                                      
   ICMiss &icMiss = getICMissBySourceLocation(codeblock, instOffset);
   icMiss.incrementHit();
 
@@ -118,13 +118,13 @@ std::unique_ptr<InlineCacheProfiler::ICMissList>
 InlineCacheProfiler::getRankedInlineCachingMisses() {
   std::unique_ptr<InlineCacheProfiler::ICMissList> icInfoList =
       std::make_unique<InlineCacheProfiler::ICMissList>();
-  // rank inline caching miss information
+                                         
   for (auto itr = cacheMisses_.begin(); itr != cacheMisses_.end(); ++itr) {
     icInfoList->push_back(*itr);
   }
   auto compare = [](std::pair<ICSrcKey, ICMiss> &a,
                     std::pair<ICSrcKey, ICMiss> &b) {
-    // sort in descending order
+                               
     return a.second.missCount > b.second.missCount;
   };
   std::sort(icInfoList->begin(), icInfoList->end(), compare);
@@ -138,13 +138,13 @@ void InlineCacheProfiler::dumpInlineCachingMissRecord(
     llvh::raw_ostream &ostream) {
   GCScope gcscope(runtime);
 
-  // dump get property name and frequency
+                                         
   auto propSymbolID = SymbolID::unsafeCreate(icInfo.first);
   auto propName = runtime.convertSymbolToUTF8(propSymbolID);
   ostream << "\tproperty: " << propName << ", inline cache misses: " << icMiss
           << "\n";
 
-  // dump the information of hidden class layout to ostream
+                                                           
   HiddenClassPair hcPair = icInfo.second;
   HiddenClass *objectHiddenClass = runtime.resolveHiddenClassId(hcPair.first);
   HiddenClass *cachedHiddenClass = runtime.resolveHiddenClassId(hcPair.second);
@@ -159,18 +159,18 @@ void InlineCacheProfiler::dumpInfoOfSourceLocation(
     ICMiss &icMiss,
     Runtime &runtime,
     llvh::raw_ostream &ostream) {
-  // get filename, line number, and column number
+                                                 
   auto locOrNull = runtime.getIPSourceLocation(
       srcLoc.second, srcLoc.second->getOffsetPtr(srcLoc.first));
 
-  // output information at the source location
+                                              
   if (locOrNull.hasValue()) {
-    // output the source location info
+                                      
     auto loc = locOrNull.getValue();
     ostream << "[" << std::get<0>(loc) << ":" << std::get<1>(loc) << ":"
             << std::get<2>(loc) << "] ";
 
-    // output inline caching statistics
+                                       
     std::stringstream stream;
     stream << std::fixed << std::setprecision(1)
            << (1. * icMiss.missCount) / (icMiss.missCount + icMiss.hitCount);
@@ -182,42 +182,42 @@ void InlineCacheProfiler::dumpInfoOfSourceLocation(
   }
 }
 
-/// Dumps most frequent inline caching miss source locations and their
-/// detailed information, which include inline caching statistics and
-/// hidden class layouts at the source location.
-/// The source locations are ranked in the descending order of IC misses.
-///
-/// An example of output for a specific source location is as follows:
-/// [filename:line:column] total access: 2661, miss ratio: 0.3
-///  property: children, inline cache misses: 427
-///    <type, domNamespace, children, childIndex, context, footer>
-///    <domNamespace, type, children, childIndex, context, footer>
-///
-///  property: children, inline cache misses: 427
-///    <domNamespace, type, children, childIndex, context, footer>
-///    <type, domNamespace, children, childIndex, context, footer>
-///  ...
+                                                                      
+                                                                     
+                                                
+                                                                         
+   
+                                                                      
+                                                              
+                                                 
+                                                                  
+                                                                  
+   
+                                                 
+                                                                  
+                                                                  
+        
 void InlineCacheProfiler::dumpRankedInlineCachingMisses(
     Runtime &runtime,
     llvh::raw_ostream &ostream) {
-  // rank the inline caching misses
+                                   
   std::shared_ptr<InlineCacheProfiler::ICMissList> icInfoList =
       getRankedInlineCachingMisses();
 
   uint64_t recordPrinted = 0;
-  // enumerate each source location where inline caching miss happens
+                                                                     
   for (auto &cacheMissEntry : *icInfoList) {
     ICMiss &icMiss = cacheMissEntry.second;
-    // print only top 10 location
+                                 
     if (recordPrinted++ >= 10) {
       break;
     }
 
-    // dump general information at the source location
+                                                      
     ICSrcKey &srcLoc = cacheMissEntry.first;
     dumpInfoOfSourceLocation(srcLoc, icMiss, runtime, ostream);
 
-    // dump details of each type of inline caching misses at the source location
+                                                                                
     for (auto &missHCEntry : icMiss.hiddenClasses) {
       ICMissKey &icInfo = missHCEntry.first;
       uint64_t icMiss = missHCEntry.second;
@@ -226,7 +226,7 @@ void InlineCacheProfiler::dumpRankedInlineCachingMisses(
   }
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 #endif
 #endif

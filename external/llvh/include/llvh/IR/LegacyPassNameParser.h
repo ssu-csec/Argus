@@ -35,10 +35,10 @@
 
 namespace llvh {
 
-//===----------------------------------------------------------------------===//
-// PassNameParser class - Make use of the pass registration mechanism to
-// automatically add a command line argument to opt for each pass.
-//
+                                                                                
+                                                                        
+                                                                  
+  
 class PassNameParser : public PassRegistrationListener,
                        public cl::parser<const PassInfo*> {
 public:
@@ -48,24 +48,24 @@ public:
   void initialize() {
     cl::parser<const PassInfo*>::initialize();
 
-    // Add all of the passes to the map that got initialized before 'this' did.
+                                                                               
     enumeratePasses();
   }
 
-  // ignorablePassImpl - Can be overriden in subclasses to refine the list of
-  // which passes we want to include.
-  //
+                                                                             
+                                     
+    
   virtual bool ignorablePassImpl(const PassInfo *P) const { return false; }
 
   inline bool ignorablePass(const PassInfo *P) const {
-    // Ignore non-selectable and non-constructible passes!  Ignore
-    // non-optimizations.
+                                                                  
+                         
     return P->getPassArgument().empty() || P->getNormalCtor() == nullptr ||
            ignorablePassImpl(P);
   }
 
-  // Implement the PassRegistrationListener callbacks used to populate our map
-  //
+                                                                              
+    
   void passRegistered(const PassInfo *P) override {
     if (ignorablePass(P)) return;
     if (findOption(P->getPassArgument().data()) != getNumOptions()) {
@@ -77,8 +77,8 @@ public:
   }
   void passEnumerate(const PassInfo *P) override { passRegistered(P); }
 
-  // printOptionInfo - Print out information about this option.  Override the
-  // default implementation to sort the table before we print...
+                                                                             
+                                                                
   void printOptionInfo(const cl::Option &O, size_t GlobalWidth) const override {
     PassNameParser *PNP = const_cast<PassNameParser*>(this);
     array_pod_sort(PNP->Values.begin(), PNP->Values.end(), ValCompare);
@@ -86,19 +86,19 @@ public:
   }
 
 private:
-  // ValCompare - Provide a sorting comparator for Values elements...
+                                                                     
   static int ValCompare(const PassNameParser::OptionInfo *VT1,
                         const PassNameParser::OptionInfo *VT2) {
     return VT1->Name.compare(VT2->Name);
   }
 };
 
-///===----------------------------------------------------------------------===//
-/// FilteredPassNameParser class - Make use of the pass registration
-/// mechanism to automatically add a command line argument to opt for
-/// each pass that satisfies a filter criteria.  Filter should return
-/// true for passes to be registered as command-line options.
-///
+                                                                                 
+                                                                    
+                                                                     
+                                                                     
+                                                             
+   
 template<typename Filter>
 class FilteredPassNameParser : public PassNameParser {
 private:
@@ -110,22 +110,22 @@ public:
   }
 };
 
-///===----------------------------------------------------------------------===//
-/// PassArgFilter - A filter for use with PassNameFilterParser that only
-/// accepts a Pass whose Arg matches certain strings.
-///
-/// Use like this:
-///
-/// extern const char AllowedPassArgs[] = "-anders_aa -dse";
-///
-/// static cl::list<
-///   const PassInfo*,
-///   bool,
-///   FilteredPassNameParser<PassArgFilter<AllowedPassArgs> > >
-/// PassList(cl::desc("Passes available:"));
-///
-/// Only the -anders_aa and -dse options will be available to the user.
-///
+                                                                                 
+                                                                        
+                                                     
+   
+                  
+   
+                                                            
+   
+                    
+                      
+           
+                                                               
+                                            
+   
+                                                                       
+   
 template<const char *Args>
 class PassArgFilter {
 public:
@@ -134,6 +134,6 @@ public:
   }
 };
 
-} // End llvm namespace
+}                      
 
 #endif

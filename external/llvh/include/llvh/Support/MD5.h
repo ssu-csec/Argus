@@ -39,7 +39,7 @@ namespace llvh {
 template <typename T> class ArrayRef;
 
 class MD5 {
-  // Any 32-bit or wider unsigned integer data type will do.
+                                                            
   typedef uint32_t MD5_u32plus;
 
   MD5_u32plus a = 0x67452301;
@@ -63,8 +63,8 @@ public:
     SmallString<32> digest() const;
 
     uint64_t low() const {
-      // Our MD5 implementation returns the result in little endian, so the low
-      // word is first.
+                                                                               
+                       
       using namespace support;
       return endian::read<uint64_t, little, unaligned>(Bytes.data());
     }
@@ -81,20 +81,20 @@ public:
 
   MD5();
 
-  /// Updates the hash for the byte stream provided.
+                                                    
   void update(ArrayRef<uint8_t> Data);
 
-  /// Updates the hash for the StringRef provided.
+                                                  
   void update(StringRef Str);
 
-  /// Finishes off the hash and puts the result in result.
+                                                          
   void final(MD5Result &Result);
 
-  /// Translates the bytes in \p Res to a hex string that is
-  /// deposited into \p Str. The result will be of length 32.
+                                                            
+                                                             
   static void stringifyResult(MD5Result &Result, SmallString<32> &Str);
 
-  /// Computes the hash for a given bytes.
+                                          
   static std::array<uint8_t, 16> hash(ArrayRef<uint8_t> Data);
 
 private:
@@ -105,7 +105,7 @@ inline bool operator==(const MD5::MD5Result &LHS, const MD5::MD5Result &RHS) {
   return LHS.Bytes == RHS.Bytes;
 }
 
-/// Helper to compute and return lower 64 bits of the given string's MD5 hash.
+                                                                              
 inline uint64_t MD5Hash(StringRef Str) {
   using namespace support;
 
@@ -113,10 +113,10 @@ inline uint64_t MD5Hash(StringRef Str) {
   Hash.update(Str);
   MD5::MD5Result Result;
   Hash.final(Result);
-  // Return the least significant word.
+                                       
   return Result.low();
 }
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_SUPPORT_MD5_H
+#endif                      

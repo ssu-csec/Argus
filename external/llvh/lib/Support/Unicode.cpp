@@ -21,8 +21,8 @@ namespace sys {
 namespace unicode {
 
 bool isPrintable(int UCS) {
-  // Sorted list of non-overlapping intervals of code points that are not
-  // supposed to be printable.
+                                                                         
+                              
   static const UnicodeCharRange NonPrintableRanges[] = {
     { 0x0000, 0x001F }, { 0x007F, 0x009F }, { 0x034F, 0x034F },
     { 0x0378, 0x0379 }, { 0x037F, 0x0383 }, { 0x038B, 0x038B },
@@ -213,25 +213,25 @@ bool isPrintable(int UCS) {
   return UCS >= 0 && UCS <= 0x10FFFF && !NonPrintables.contains(UCS);
 }
 
-/// Gets the number of positions a character is likely to occupy when output
-/// on a terminal ("character width"). This depends on the implementation of the
-/// terminal, and there's no standard definition of character width.
-/// The implementation defines it in a way that is expected to be compatible
-/// with a generic Unicode-capable terminal.
-/// \return Character width:
-///   * ErrorNonPrintableCharacter (-1) for non-printable characters (as
-///     identified by isPrintable);
-///   * 0 for non-spacing and enclosing combining marks;
-///   * 2 for CJK characters excluding halfwidth forms;
-///   * 1 for all remaining characters.
+                                                                            
+                                                                                
+                                                                    
+                                                                            
+                                            
+                            
+                                                                        
+                                   
+                                                        
+                                                       
+                                       
 static inline int charWidth(int UCS)
 {
   if (!isPrintable(UCS))
     return ErrorNonPrintableCharacter;
 
-  // Sorted list of non-spacing and enclosing combining mark intervals as
-  // defined in "3.6 Combination" of
-  // http://www.unicode.org/versions/Unicode6.2.0/UnicodeStandard-6.2.pdf
+                                                                         
+                                    
+                                                                         
   static const UnicodeCharRange CombiningCharacterRanges[] = {
     { 0x0300, 0x036F }, { 0x0483, 0x0489 }, { 0x0591, 0x05BD },
     { 0x05BF, 0x05BF }, { 0x05C1, 0x05C2 }, { 0x05C4, 0x05C5 },
@@ -313,24 +313,24 @@ static inline int charWidth(int UCS)
     return 0;
 
   static const UnicodeCharRange DoubleWidthCharacterRanges[] = {
-    // Hangul Jamo
+                  
     { 0x1100, 0x11FF },
-    // Deprecated fullwidth angle brackets
+                                          
     { 0x2329, 0x232A },
-    // CJK Misc, CJK Unified Ideographs, Yijing Hexagrams, Yi
-    // excluding U+303F (IDEOGRAPHIC HALF FILL SPACE)
+                                                             
+                                                     
     { 0x2E80, 0x303E }, { 0x3040, 0xA4CF },
-    // Hangul
+             
     { 0xAC00, 0xD7A3 }, { 0xD7B0, 0xD7C6 }, { 0xD7CB, 0xD7FB },
-    // CJK Unified Ideographs
+                             
     { 0xF900, 0xFAFF },
-    // Vertical forms
+                     
     { 0xFE10, 0xFE19 },
-    // CJK Compatibility Forms + Small Form Variants
+                                                    
     { 0xFE30, 0xFE6F },
-    // Fullwidth forms
+                      
     { 0xFF01, 0xFF60 }, { 0xFFE0, 0xFFE6 },
-    // CJK Unified Ideographs
+                             
     { 0x20000, 0x2A6DF }, { 0x2A700, 0x2B81F }, { 0x2F800, 0x2FA1F }
   };
   static const UnicodeCharSet DoubleWidthCharacters(DoubleWidthCharacterRanges);
@@ -361,7 +361,7 @@ int columnWidthUTF8(StringRef Text) {
   return ColumnWidth;
 }
 
-} // namespace unicode
-} // namespace sys
-} // namespace llvh
+}                     
+}                 
+}                  
 

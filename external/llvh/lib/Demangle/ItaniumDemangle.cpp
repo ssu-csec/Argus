@@ -7,9 +7,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-// FIXME: (possibly) incomplete list of features that clang mangles that this
-// file does not yet support:
-//   - C++ modules TS
+                                                                             
+                             
+                     
 
 #include "llvh/Demangle/Demangle.h"
 #include "llvh/Demangle/ItaniumDemangle.h"
@@ -31,12 +31,12 @@ constexpr const char *itanium_demangle::FloatData<float>::spec;
 constexpr const char *itanium_demangle::FloatData<double>::spec;
 constexpr const char *itanium_demangle::FloatData<long double>::spec;
 
-// <discriminator> := _ <non-negative number>      # when number < 10
-//                 := __ <non-negative number> _   # when number >= 10
-//  extension      := decimal-digit+               # at the end of string
+                                                                     
+                                                                      
+                                                                         
 const char *itanium_demangle::parse_discriminator(const char *first,
                                                   const char *last) {
-  // parse but ignore discriminator
+                                   
   if (first != last) {
     if (*first == '_') {
       const char *t1 = first + 1;
@@ -112,7 +112,7 @@ struct DumpVisitor {
     printStr("}");
     --Depth;
   }
-  // Overload used when T is exactly 'bool', not merely convertible to 'bool'.
+                                                                              
   template<typename T, T * = (bool*)nullptr>
   void print(T B) {
     printStr(B ? "true" : "false");
@@ -310,11 +310,11 @@ public:
     return Alloc.allocate(sizeof(Node *) * sz);
   }
 };
-}  // unnamed namespace
+}                      
 
-//===----------------------------------------------------------------------===//
-// Code beyond this point should not be synchronized with libc++abi.
-//===----------------------------------------------------------------------===//
+                                                                                
+                                                                    
+                                                                                
 
 using Demangler = itanium_demangle::Db<DefaultAllocator>;
 
@@ -379,7 +379,7 @@ operator=(ItaniumPartialDemangler &&Other) {
   return *this;
 }
 
-// Demangle MangledName into an AST, storing it into this->RootNode.
+                                                                    
 bool ItaniumPartialDemangler::partialDemangle(const char *MangledName) {
   Demangler *Parser = static_cast<Demangler *>(Context);
   size_t Len = std::strlen(MangledName);

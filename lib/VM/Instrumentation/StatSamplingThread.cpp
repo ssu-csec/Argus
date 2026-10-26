@@ -16,7 +16,7 @@ StatSamplingThread::StatSamplingThread(StatSamplingThread::Duration interval)
     : mExit_(),
       interval_(interval),
       stats_(),
-      // Sampler thread executes this.run()
+                                           
       sampler_(&StatSamplingThread::run, this) {}
 
 StatSamplingThread::~StatSamplingThread() {
@@ -57,5 +57,5 @@ void StatSamplingThread::run() {
   }
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

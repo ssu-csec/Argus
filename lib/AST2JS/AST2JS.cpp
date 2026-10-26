@@ -46,30 +46,30 @@ Precedence getBinaryPrecedence(llvh::StringRef op) {
       .Default(kAlwaysParenPrec);
 }
 
-/// Precedence and associativity of an operator.
+                                                
 struct PrecRTL {
-  Precedence prec; // Higher value means higher precedence.
-  bool rtl; // right to left.
+  Precedence prec;                                         
+  bool rtl;                  
 
-  /* implicit */ PrecRTL(Precedence prec, bool rtl = false)
+                 PrecRTL(Precedence prec, bool rtl = false)
       : prec(prec), rtl(rtl) {}
 };
 
-/// Child position for the purpose of determining whether the child needs
-/// parenthesis.
+                                                                         
+                
 enum class ChildPos {
   left,
   anywhere,
   right,
 };
 
-/// Whether parenthesis are needed around something.
+                                                    
 enum class NeedParens {
-  // Parens are not needed.
+                           
   no,
-  // Parens are needed.
+                       
   yes,
-  // Space is sufficient.
+                         
   space
 };
 
@@ -78,14 +78,14 @@ NeedParens np(bool x) {
 }
 
 class GenJS {
-  /// Output the generated JS here.
+                                   
   llvh::raw_ostream &OS_;
-  /// Pretty print or not.
+                          
   bool const pretty_;
-  /// Indentation step. In the future it may be configurable.
+                                                             
   static constexpr int indentStep_ = 2;
 
-  /// Current indentation level. Only used in "pretty" mode.
+                                                            
   int indent_ = 0;
 
  public:
@@ -96,15 +96,15 @@ class GenJS {
     OS_ << '\n';
   }
 
-  /// Needed by RecursiveVisitorDispatch. Optionally can protect against too
-  /// deep nesting.
+                                                                            
+                   
   bool incRecursionDepth(Node *) {
     return true;
   }
   void decRecursionDepth() {}
 
-  // TODO: remove this catch all function to find out which visitors need to be
-  // TODO:   defined at compile time.
+                                                                               
+                                     
   void visit(Node *n) {
     llvh::errs() << "Unsupported AST node kind: " << n->getNodeName() << " ";
     abort();
@@ -125,7 +125,7 @@ class GenJS {
     OS_ << '"';
   }
   void visit(RegExpLiteralNode *node) {
-    // FIXME: escaping, etc?
+                            
     OS_ << '/';
     OS_ << node->_pattern->str();
     OS_ << '/';
@@ -196,7 +196,7 @@ class GenJS {
     bool needSep = false;
 
     if (node->_kind->str() != "init") {
-      // get/set
+                
       OS_ << node->_kind->str();
       needSep = true;
     } else if (node->_method) {
@@ -228,11 +228,11 @@ class GenJS {
       return;
 
     if (node->_kind->str() != "init" || node->_method) {
-      // getter/setter or method.
+                                 
       auto *fe = llvh::cast<FunctionExpressionNode>(node->_value);
       visitFuncParamsAndBody(fe->_params, fe->_body, fe);
     } else {
-      // Regular property.
+                          
       OS_ << ':';
       space();
       printCommaExpression(node->_value, node);
@@ -450,9 +450,9 @@ class GenJS {
     visitStmtOrBlock(node->_alternate, false, node);
   }
 
-  /// Visit a statement node which is the body of a loop or a clause in an if.
-  /// It could be a block statement.
-  /// \return true if block
+                                                                              
+                                    
+                           
   bool visitStmtOrBlock(Node *node, bool forceBlock, Node *parent) {
     auto *block = llvh::dyn_cast<BlockStatementNode>(node);
     if ((block && block->_body.empty()) ||
@@ -700,9 +700,9 @@ class GenJS {
         node->_static, isComputed, isPrivate, node->_key, node->_value, node);
   }
   void visit(ClassPropertyNode *node) {
-    // node should not be a private identifier (i.e., a #id member); but if it
-    // is, visitClassProperty will visit it, and visit(PrivateNameNode *) below
-    // will print the '#' appropriately.
+                                                                              
+                                                                               
+                                        
     constexpr bool isPrivate = false;
     visitClassProperty(
         node->_static,
@@ -769,8 +769,8 @@ class GenJS {
       OS_ << "async";
       needSep = true;
     }
-    // Single parameter doesn't need parens. But only in expression mode,
-    // otherwise it is ugly.
+                                                                         
+                            
     if ((node->_expression || !pretty_) && node->_params.size() == 1) {
       if (needSep)
         OS_ << ' ';
@@ -860,8 +860,8 @@ class GenJS {
     printParens(child, parent, needParens(parent, child, childPosition));
   }
 
-  /// Print one expression in a sequence separated by comma. It needs parens
-  /// if its precedence is <= comma.
+                                                                            
+                                    
   void printCommaExpression(Node *child, Node *parent) {
     printParens(
         child,
@@ -880,45 +880,45 @@ class GenJS {
       OS_ << ')';
   }
 
-  /// Print the escaped contents of the specified string.
-  /// \param esc1 Additional character to escape. This is the string separator.
-  /// \param esc2 An optional string to escape. It this string is non-empty and
-  ///     it is encountered, its first character will be escaped.
+                                                         
+                                                                               
+                                                                               
+                                                                 
   void printEscapedStringContents(
       llvh::StringRef str,
       char esc1,
       llvh::StringRef esc2 = {});
 
-  /// \return the precendence and associativity of an operator.
+                                                               
   PrecRTL getPrecedence(Node *node);
 
-  /// Check whether we need parens for the child, when rendered in the parent
-  /// @param childPosition where the child is printed relative to the parent.
+                                                                             
+                                                                             
   NeedParens needParens(Node *parent, Node *child, ChildPos childPosition);
 
-  /// \return true if the node (which could be null) is an IfStatement without
-  /// an else.
+                                                                              
+              
   static bool isIfWithoutElse(Node *node) {
     auto *ifN = llvh::dyn_cast_or_null<IfStatementNode>(node);
     return ifN && !ifN->_alternate;
   }
 
-  /// \return true if the AST expression starts with a node satisfying the
-  ///     predicate \pred when rendered. This involves recursively checking the
-  ///     left children.
-  /// \param parent only set when the function is calling itself recursively
-  ///     with the parent of the \c expr node.
+                                                                          
+                                                                               
+                        
+                                                                            
+                                              
   bool _exprStartsWith(Node *expr, Node *parent, bool (*pred)(Node *));
 
-  /// \return true if the AST expression starts with a node satisfying the
-  ///     predicate \pred when rendered. This involves recursively checking the
-  ///     left children.
+                                                                          
+                                                                               
+                        
   bool exprStartsWith(Node *expr, bool (*pred)(Node *)) {
     return _exprStartsWith(expr, nullptr, pred);
   }
 
-  /// \return true if the node ends with a block (so we don't need to generate
-  /// a semi-colon).
+                                                                              
+                    
   static bool endsWithBlock(Node *node);
 };
 
@@ -928,7 +928,7 @@ void GenJS::printEscapedStringContents(
     llvh::StringRef esc2) {
   for (const char *cur = str.data(), *e = str.data() + str.size(); cur < e;) {
     uint32_t cp = decodeUTF8<true>(cur, [](const llvh::Twine &) {});
-    // Check for classic escapes first.
+                                       
     switch (cp) {
       case '\\':
         OS_ << "\\\\";
@@ -952,7 +952,7 @@ void GenJS::printEscapedStringContents(
         OS_ << "\\v";
         continue;
     }
-    // Check for escaping.
+                          
     if (cp == (unsigned char)esc1) {
       OS_ << '\\' << esc1;
       continue;
@@ -965,22 +965,22 @@ void GenJS::printEscapedStringContents(
         continue;
       }
     }
-    // Printable.
+                 
     if (cp >= 0x20 && cp <= 0x7f) {
       OS_.write((char)cp);
       continue;
     }
-    // Non-printable single byte
+                                
     if (cp < 0x100) {
       OS_ << "\\x" << llvh::format_hex_no_prefix(cp, 2);
       continue;
     }
-    // Non-printable two bytes.
+                               
     if (cp < 0x10000) {
       OS_ << "\\u" << llvh::format_hex_no_prefix(cp, 4);
       continue;
     }
-    // utf-32 encoded. Decode into a surrogate pair.
+                                                    
     uint16_t u16buf[2], *p = u16buf;
     encodeUTF16(p, cp);
     OS_ << "\\u" << llvh::format_hex_no_prefix(u16buf[0], 4) << "\\u"
@@ -989,8 +989,8 @@ void GenJS::printEscapedStringContents(
 }
 
 PrecRTL GenJS::getPrecedence(Node *node) {
-  // Precedence order taken from
-  // https://github.com/facebook/flow/blob/master/src/parser_utils/output/js_layout_generator.ml
+                                
+                                                                                                
 
   if (llvh::isa<IdentifierNode>(node) || llvh::isa<NullLiteralNode>(node) ||
       llvh::isa<BooleanLiteralNode>(node) ||
@@ -1011,8 +1011,8 @@ PrecRTL GenJS::getPrecedence(Node *node) {
   if (llvh::isa<MemberExpressionNode>(node) ||
       llvh::isa<MetaPropertyNode>(node) ||
       llvh::isa<CallExpressionNode>(node) ||
-      // `new foo()` has higher precedence than `new foo`. In pretty mode we
-      // always append the `()`, but otherwise we must check the number of args.
+                                                                            
+                                                                                
       (llvh::isa<NewExpressionNode>(node) &&
        (pretty_ || !llvh::cast<NewExpressionNode>(node)->_arguments.empty()))) {
     return kMemberPrec;
@@ -1089,24 +1089,24 @@ static bool checkMinus(Node *node) {
 
 NeedParens
 GenJS::needParens(Node *parent, Node *child, ChildPos childPosition) {
-  // The explicit checks taken from
-  // https://github.com/facebook/flow/blob/master/src/parser_utils/output/js_layout_generator.ml
+                                   
+                                                                                                
 
-  // (x) => ({x: 10}) needs parens to avoid confusing it with a block and a
-  // labelled statement.
+                                                                           
+                        
   if (llvh::isa<ArrowFunctionExpressionNode>(parent)) {
     if (childPosition == ChildPos::right &&
         llvh::isa<ObjectExpressionNode>(child)) {
       return NeedParens::yes;
     }
   }
-  // for((a in b);..;..) needs parens to avoid confusing it with for(a in b).
+                                                                             
   else if (llvh::isa<ForStatementNode>(parent)) {
     return np(
         llvh::isa<BinaryExpressionNode>(child) &&
         llvh::cast<BinaryExpressionNode>(child)->_operator->str() == "in");
   }
-  // Expression statement like (function () {} + 1) needs parens.
+                                                                 
   else if (llvh::isa<ExpressionStatementNode>(parent)) {
     return np(exprStartsWith(child, [](Node *expr) {
       return llvh::isa<FunctionExpressionNode>(expr) ||
@@ -1115,21 +1115,21 @@ GenJS::needParens(Node *parent, Node *child, ChildPos childPosition) {
           llvh::isa<ObjectPatternNode>(expr);
     }));
   }
-  // -(-x) or -(--x) or -(-5)
+                             
   else if (isUnary(parent, "-") && exprStartsWith(child, checkMinus)) {
     return pretty_ ? NeedParens::yes : NeedParens::space;
   }
-  // +(+x) or +(++x)
+                    
   else if (isUnary(parent, "+") && exprStartsWith(child, checkPlus)) {
     return pretty_ ? NeedParens::yes : NeedParens::space;
   }
-  // a-(-x) or a-(--x) or a-(-5)
+                                
   else if (
       childPosition == ChildPos::right && isBinary(parent, "-") &&
       exprStartsWith(child, checkMinus)) {
     return pretty_ ? NeedParens::yes : NeedParens::space;
   }
-  // a+(+x) or a+(++x)
+                      
   else if (
       childPosition == ChildPos::right && isBinary(parent, "+") &&
       exprStartsWith(child, checkPlus)) {
@@ -1143,29 +1143,29 @@ GenJS::needParens(Node *parent, Node *child, ChildPos childPosition) {
   auto parentPr = getPrecedence(parent);
 
   if (childPr.prec < parentPr.prec) {
-    // Child is definitely a danger.
+                                    
     return NeedParens::yes;
   }
   if (childPr.prec > parentPr.prec) {
-    // Definitely cool.
+                       
     return NeedParens::no;
   }
-  // Equal precedence, so associativity (rtl/ltr) is what matters.
+                                                                  
   if (childPosition == ChildPos::anywhere) {
-    // Child could be anywhere, so always paren.
+                                                
     return NeedParens::yes;
   }
   if (childPr.prec == kTopPrec) {
-    // Both precedences are safe.
+                                 
     return NeedParens::no;
   }
-  // Check if child is on the dangerous side.
+                                             
   return parentPr.rtl ? np(childPosition == ChildPos::left)
                       : np(childPosition == ChildPos::right);
 }
 
 bool GenJS::_exprStartsWith(Node *expr, Node *parent, bool (*pred)(Node *)) {
-  // NOTE: I hope this function is converted into a loop.
+                                                         
   if (parent && needParens(parent, expr, ChildPos::left) == NeedParens::yes)
     return false;
 
@@ -1197,7 +1197,7 @@ bool GenJS::_exprStartsWith(Node *expr, Node *parent, bool (*pred)(Node *)) {
 }
 
 bool GenJS::endsWithBlock(Node *node) {
-  // NOTE: I hope this function is converted into a loop.
+                                                         
   if (!node)
     return false;
   if (llvh::isa<BlockStatementNode>(node))
@@ -1229,11 +1229,11 @@ bool GenJS::endsWithBlock(Node *node) {
   return false;
 }
 
-} // Anonymous namespace
+}                       
 
 void generateJS(llvh::raw_ostream &OS, Node *root, bool pretty) {
   GenJS genJS{OS, pretty};
   genJS.doIt(root);
 }
 
-} // namespace hermes
+}                    

@@ -22,7 +22,7 @@ void SourceMapTranslator::addSourceMap(
 void SourceMapTranslator::translate(SourceErrorManager::SourceCoords &coords) {
   auto result = sourceMaps_.find(coords.bufId);
   if (result == sourceMaps_.end()) {
-    // No input source map for coords.bufId.
+                                            
     return;
   }
   const std::shared_ptr<SourceMap> &sourceMap = result->second;
@@ -37,4 +37,4 @@ void SourceMapTranslator::translate(SourceErrorManager::SourceCoords &coords) {
   }
 }
 
-} // namespace hermes
+}                    

@@ -5,17 +5,17 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//===----------------------------------------------------------------------===//
-/// \file
-/// Check at compile time that instructions declared as having the same layout
-/// actually do.
-//===----------------------------------------------------------------------===//
+                                                                                
+         
+                                                                              
+                
+                                                                                
 
 namespace hermes {
 namespace vm {
 
-/// \return true if the sequence v1, v2, v3... is monotone increasing, that is,
-/// satisfies v1 <= v2 <= v3...
+                                                                               
+                               
 static constexpr bool monotoneIncreasing(size_t v1, size_t v2) {
   return v1 <= v2;
 }
@@ -25,7 +25,7 @@ static constexpr bool monotoneIncreasing(size_t v1, size_t v2, Args... rest) {
   return v1 <= v2 && monotoneIncreasing(v2, rest...);
 }
 
-// Ensure that some instructions have matching layouts.
+                                                       
 namespace validate_inst_layout {
 
 enum OperandType {
@@ -92,7 +92,7 @@ enum InstOperands {
 
 #undef ASSERT_LAYOUT
 
-// Ensure the ordering of opcodes.
+                                  
 namespace OpCode {
 enum {
 #define DEFINE_OPCODE_0(name, ...) name,
@@ -104,7 +104,7 @@ enum {
 #define DEFINE_OPCODE_6(name, ...) name,
 
 #include "hermes/BCGen/HBC/BytecodeList.def"
-}; // anonymous enum
+};                  
 
 #define ASSERT_MONOTONE_INCREASING(first, ...) \
   static_assert(                               \
@@ -113,8 +113,8 @@ enum {
 
 #include "hermes/BCGen/HBC/BytecodeList.def"
 
-} // namespace OpCode
+}                    
 
-} // namespace validate_inst_layout
-} // namespace vm
-} // namespace hermes
+}                                  
+}                
+}                    

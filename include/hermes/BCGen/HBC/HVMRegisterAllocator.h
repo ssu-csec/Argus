@@ -26,9 +26,9 @@ class HVMRegisterAllocator : public RegisterAllocator {
   bool hasTargetSpecificLowering(Instruction *I) override;
 
  public:
-  /// Number of additional registers that must be allocated to the call
-  /// instruction, after the argument registers, for internal VM usage (the VM
-  /// builds the call frame in those additional register slots).
+                                                                       
+                                                                              
+                                                                
   static constexpr unsigned CALL_EXTRA_REGISTERS =
       StackFrameLayout::CallerExtraRegistersAtEnd;
 
@@ -38,13 +38,13 @@ class HVMRegisterAllocator : public RegisterAllocator {
     return Register(getMaxRegisterUsage() - 1);
   }
 
-  /// Get the maximum number of registers used.
+                                               
   unsigned getMaxRegisterUsage() override {
     return getMaxInstructionRegister() + spill_count_ + max_parameter_count_;
   }
 
-  /// Get the maximum register allocated to regular instructions
-  /// (i.e. not including parameter lists or spilling).
+                                                                
+                                                       
   unsigned getMaxInstructionRegister() {
     return RegisterAllocator::getMaxRegisterUsage();
   }
@@ -62,7 +62,7 @@ class HVMRegisterAllocator : public RegisterAllocator {
   }
 };
 
-} // namespace hbc
-} // namespace hermes
+}                 
+}                    
 
-#endif // HERMES_BCGEN_HBC_HVMREGISTERALLOCATOR_H
+#endif                                           

@@ -37,9 +37,9 @@ std::string convertBCP47toICULocale(std::u16string_view localeBCP47) {
         &errForLanguageTag);
   }
   if (U_FAILURE(errForLanguageTag)) {
-    // ICU can kind of deal with BCP-47 Language Tags, though not all cases are
-    // covered if it's not first converted to ICU locale using forLanguageTag().
-    // Return original input as fallback.
+                                                                               
+                                                                                
+                                         
     return localeBCP47Str;
   }
   return std::string(localeICU.data(), outputLength);
@@ -70,6 +70,6 @@ std::string convertICUtoBCP47Locale(const char *localeICU) {
   return std::string(localeBCP47.data(), outputLength);
 }
 
-} // namespace impl_icu
-} // namespace platform_intl
-} // namespace hermes
+}                      
+}                           
+}                    

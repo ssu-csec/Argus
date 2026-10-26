@@ -11,7 +11,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-// NOTE: NO INCLUDE GUARD DESIRED!
+                                  
 
 #ifndef ARM_FPU
 #define ARM_FPU(NAME, KIND, VERSION, NEON_SUPPORT, RESTRICTION)
@@ -119,7 +119,7 @@ ARM_ARCH("armv8-m.base", ARMV8MBaseline, "8-M.Baseline", "v8m.base",
           ARMBuildAttrs::CPUArch::v8_M_Base, FK_NONE, ARM::AEK_HWDIVTHUMB)
 ARM_ARCH("armv8-m.main", ARMV8MMainline, "8-M.Mainline", "v8m.main",
           ARMBuildAttrs::CPUArch::v8_M_Main, FK_FPV5_D16, ARM::AEK_HWDIVTHUMB)
-// Non-standard Arch names.
+                           
 ARM_ARCH("iwmmxt", IWMMXT, "iwmmxt", "", ARMBuildAttrs::CPUArch::v5TE,
           FK_NONE, ARM::AEK_NONE)
 ARM_ARCH("iwmmxt2", IWMMXT2, "iwmmxt2", "", ARMBuildAttrs::CPUArch::v5TE,
@@ -135,7 +135,7 @@ ARM_ARCH("armv7k", ARMV7K, "7-K", "v7k", ARMBuildAttrs::CPUArch::v7,
 #ifndef ARM_ARCH_EXT_NAME
 #define ARM_ARCH_EXT_NAME(NAME, ID, FEATURE, NEGFEATURE)
 #endif
-// FIXME: This would be nicer were it tablegen
+                                              
 ARM_ARCH_EXT_NAME("invalid",  ARM::AEK_INVALID,  nullptr,  nullptr)
 ARM_ARCH_EXT_NAME("none",     ARM::AEK_NONE,     nullptr,  nullptr)
 ARM_ARCH_EXT_NAME("crc",      ARM::AEK_CRC,      "+crc",   "-crc")
@@ -267,11 +267,11 @@ ARM_CPU_NAME("exynos-m2", ARMV8A, FK_CRYPTO_NEON_FP_ARMV8, false, ARM::AEK_CRC)
 ARM_CPU_NAME("exynos-m3", ARMV8A, FK_CRYPTO_NEON_FP_ARMV8, false, ARM::AEK_CRC)
 ARM_CPU_NAME("exynos-m4", ARMV8A, FK_CRYPTO_NEON_FP_ARMV8, false, ARM::AEK_CRC)
 ARM_CPU_NAME("kryo", ARMV8A, FK_CRYPTO_NEON_FP_ARMV8, false, ARM::AEK_CRC)
-// Non-standard Arch names.
+                           
 ARM_CPU_NAME("iwmmxt", IWMMXT, FK_NONE, true, ARM::AEK_NONE)
 ARM_CPU_NAME("xscale", XSCALE, FK_NONE, true, ARM::AEK_NONE)
 ARM_CPU_NAME("swift", ARMV7S, FK_NEON_VFPV4, true,
              (ARM::AEK_HWDIVARM | ARM::AEK_HWDIVTHUMB))
-// Invalid CPU
+              
 ARM_CPU_NAME("invalid", INVALID, FK_INVALID, true, ARM::AEK_INVALID)
 #undef ARM_CPU_NAME

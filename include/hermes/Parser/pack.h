@@ -11,21 +11,21 @@
 namespace hermes {
 namespace parser {
 
-/// This contraption allows us to allocate an object and an array of values
-/// together and provides access to the values from the object pointer.
-/// We have to jump through significant hoops to avoid the "non-standard layout
-/// offsetof()" warning.
+                                                                           
+                                                                       
+                                                                               
+                        
 template <class Obj, typename Value>
 struct Pack {
   struct Pack1 {
-    // Here are forced to work around bogus compiler warnings about offsetof().
-    // Even though the layout of Obj not be known (in theory), the layout of
-    // this struct is!
+                                                                               
+                                                                            
+                      
     char obj[sizeof(Obj)];
     Value values[1];
   };
 
-  // This second struct needed for correct alignment determination.
+                                                                   
   struct Pack2 {
     Obj obj;
     Value values[1];
@@ -50,7 +50,7 @@ struct Pack {
   }
 };
 
-} // namespace parser
-} // namespace hermes
+}                    
+}                    
 
-#endif // HERMES_PARSER_PACK_H
+#endif                        

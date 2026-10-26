@@ -1,9 +1,9 @@
-# CMake module for finding libpfm4.
-#
-# If successful, the following variables will be defined:
-# HAVE_LIBPFM
-#
-# Libpfm can be disabled by setting LLVM_ENABLE_LIBPFM to 0.
+                                   
+ 
+                                                         
+             
+ 
+                                                            
 
 include(CheckIncludeFile)
 include(CheckLibraryExists)

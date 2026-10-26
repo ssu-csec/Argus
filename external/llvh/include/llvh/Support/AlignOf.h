@@ -19,17 +19,17 @@
 
 namespace llvh {
 
-/// \struct AlignedCharArray
-/// Helper for building an aligned character array type.
-///
-/// This template is used to explicitly build up a collection of aligned
-/// character array types. We have to build these up using a macro and explicit
-/// specialization to cope with MSVC (at least till 2015) where only an
-/// integer literal can be used to specify an alignment constraint. Once built
-/// up here, we can then begin to indirect between these using normal C++
-/// template parameters.
+                            
+                                                        
+   
+                                                                        
+                                                                               
+                                                                       
+                                                                              
+                                                                         
+                        
 
-// MSVC requires special handling here.
+                                       
 #ifndef _MSC_VER
 
 template<std::size_t Alignment, std::size_t Size>
@@ -37,19 +37,19 @@ struct AlignedCharArray {
   alignas(Alignment) char buffer[Size];
 };
 
-#else // _MSC_VER
+#else            
 
-/// Create a type with an aligned char buffer.
+                                              
 template<std::size_t Alignment, std::size_t Size>
 struct AlignedCharArray;
 
-// We provide special variations of this template for the most common
-// alignments because __declspec(align(...)) doesn't actually work when it is
-// a member of a by-value function argument in MSVC, even if the alignment
-// request is something reasonably like 8-byte or 16-byte. Note that we can't
-// even include the declspec with the union that forces the alignment because
-// MSVC warns on the existence of the declspec despite the union member forcing
-// proper alignment.
+                                                                     
+                                                                             
+                                                                          
+                                                                             
+                                                                             
+                                                                               
+                    
 
 template<std::size_t Size>
 struct AlignedCharArray<1, Size> {
@@ -84,8 +84,8 @@ struct AlignedCharArray<8, Size> {
 };
 
 
-// The rest of these are provided with a __declspec(align(...)) and we simply
-// can't pass them by-value as function arguments on MSVC.
+                                                                             
+                                                          
 
 #define LLVM_ALIGNEDCHARARRAY_TEMPLATE_ALIGNMENT(x) \
   template<std::size_t Size> \
@@ -100,7 +100,7 @@ LLVM_ALIGNEDCHARARRAY_TEMPLATE_ALIGNMENT(128)
 
 #undef LLVM_ALIGNEDCHARARRAY_TEMPLATE_ALIGNMENT
 
-#endif // _MSC_VER
+#endif            
 
 namespace detail {
 template <typename T1,
@@ -122,15 +122,15 @@ union SizerImpl {
        arr5[sizeof(T5)], arr6[sizeof(T6)], arr7[sizeof(T7)], arr8[sizeof(T8)],
        arr9[sizeof(T9)], arr10[sizeof(T10)];
 };
-} // end namespace detail
+}                        
 
-/// This union template exposes a suitably aligned and sized character
-/// array member which can hold elements of any of up to ten types.
-///
-/// These types may be arrays, structs, or any other types. The goal is to
-/// expose a char array buffer member which can be used as suitable storage for
-/// a placement new of any of these types. Support for more than ten types can
-/// be added at the cost of more boilerplate.
+                                                                      
+                                                                   
+   
+                                                                          
+                                                                               
+                                                                              
+                                             
 template <typename T1,
           typename T2 = char, typename T3 = char, typename T4 = char,
           typename T5 = char, typename T6 = char, typename T7 = char,
@@ -141,6 +141,6 @@ struct AlignedCharArrayUnion : llvh::AlignedCharArray<
     sizeof(::llvh::detail::SizerImpl<T1, T2, T3, T4, T5,
                                      T6, T7, T8, T9, T10>)> {
 };
-} // end namespace llvh
+}                      
 
-#endif // LLVM_SUPPORT_ALIGNOF_H
+#endif                          

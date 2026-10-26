@@ -25,7 +25,7 @@ UTF16Ref StringView::getUTF16Ref(
   }
   const char16_t *ptr = castToChar16Ptr();
   if (alwaysCopy) {
-    // If alwaysCopy is true, we always copy even it's already UTF16 string.
+                                                                            
     allocator.append(ptr, ptr + length());
     return UTF16Ref(allocator.data() + existingLen, length());
   }
@@ -40,5 +40,5 @@ llvh::raw_ostream &operator<<(llvh::raw_ostream &os, const StringView &sv) {
   }
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

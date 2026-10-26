@@ -18,12 +18,12 @@ class BasicBlock;
 
 namespace hbc {
 
-/// Insert profile point at the beginning of each basic block.
+                                                              
 class InsertProfilePoint : public FunctionPass {
  private:
-  /// \returns the instruction in basic block \p BB which profile instruction
-  /// will insert before. It needs to skip over certain instructions which
-  /// are expected to be at the beginning of a block.
+                                                                             
+                                                                          
+                                                     
   Instruction *findInsertionPoint(BasicBlock &BB) const;
 
  public:
@@ -32,7 +32,7 @@ class InsertProfilePoint : public FunctionPass {
   bool runOnFunction(Function *F) override;
 };
 
-} // namespace hbc
-} // namespace hermes
+}                 
+}                    
 
-#endif // HERMES_BCGEN_HBC_PASSES_INSERTPROFILEPOINT_H
+#endif                                                

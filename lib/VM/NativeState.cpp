@@ -22,7 +22,7 @@ void NativeStateBuildMeta(const GCCell *cell, Metadata::Builder &mb) {
   mb.setVTable(&NativeState::vt);
 }
 
-/* static */
+            
 NativeState *NativeState::create(
     Runtime &runtime,
     void *context,
@@ -36,5 +36,5 @@ void NativeState::_finalizeImpl(GCCell *cell, GC &gc) {
   self->finalizePtr_(gc, self);
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

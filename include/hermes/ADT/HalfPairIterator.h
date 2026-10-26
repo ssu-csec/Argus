@@ -12,7 +12,7 @@
 
 namespace hermes {
 
-/// Declare iterators over a single field in a tuple.
+                                                     
 #define HERMES_DECLARE_PARTIAL_ITERATOR(Field, FIELD)                          \
   template <class IT>                                                          \
   class Pair##Field##Iterator {                                                \
@@ -53,11 +53,11 @@ namespace hermes {
     return Pair##Field##Iterator<IT>(it);                                      \
   }
 
-/// PairFirstIterator: iterate over pair::first.
+                                                
 HERMES_DECLARE_PARTIAL_ITERATOR(First, first);
-/// PairSecondIterator: iterate over pair::second.
+                                                  
 HERMES_DECLARE_PARTIAL_ITERATOR(Second, second);
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_ADT_HALFPAIRITERATOR_H
+#endif                                 

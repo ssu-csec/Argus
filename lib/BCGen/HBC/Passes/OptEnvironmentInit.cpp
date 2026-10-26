@@ -28,10 +28,10 @@ bool OptEnvironmentInit::runOnFunction(Function *F) {
   for (auto &BB : *F) {
     IRBuilder::InstructionDestroyer destroyer{};
 
-    // Environments created in the current BB.
+                                              
     llvh::SmallPtrSet<Value *, 2> createdEnvs{};
 
-    // Environment slots that have already been written to.
+                                                           
     llvh::SmallPtrSet<Variable *, 8> writtenSlots{};
 
     for (auto &I : BB) {
@@ -42,35 +42,35 @@ bool OptEnvironmentInit::runOnFunction(Function *F) {
         continue;
       }
 
-      // Note that in practice we don't currently generate code to exercise
-      // these checks below.
+                                                                           
+                            
       if (auto *SE = llvh::dyn_cast<HBCStoreToEnvironmentInst>(inst)) {
-        // Are we storing in one of the environments created in this BB?
-        // If not, we could be storing anywhere, including in the created
-        // envs, so unfortunately we have to abort. This could happen if the
-        // same environment is resolved with a separate instructtion.
+                                                                        
+                                                                         
+                                                                            
+                                                                     
         if (!createdEnvs.count(SE->getEnvironment()))
           break;
 
-        // If we are not storing undefined, mark the slot as written.
+                                                                     
         if (!llvh::isa<LiteralUndefined>(SE->getStoredValue())) {
           writtenSlots.insert(SE->getResolvedName());
           continue;
         }
 
-        // If that slot has already been written to, ignore it.
+                                                               
         if (writtenSlots.count(SE->getResolvedName()))
           continue;
 
-        // Success! We can eliminate this store.
+                                                
         ++NumStoreUndefinedRemoved;
         changed = true;
         destroyer.add(SE);
         continue;
       }
 
-      // If we encounter an instruction that can execute arbitrary code,
-      // stop scanning this BB.
+                                                                        
+                               
       if (inst->mayExecute())
         break;
     }
@@ -79,7 +79,7 @@ bool OptEnvironmentInit::runOnFunction(Function *F) {
   return changed;
 }
 
-} // namespace hbc
-} // namespace hermes
+}                 
+}                    
 
 #undef DEBUG_TYPE

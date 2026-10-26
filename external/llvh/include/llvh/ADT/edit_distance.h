@@ -22,39 +22,39 @@
 
 namespace llvh {
 
-/// Determine the edit distance between two sequences.
-///
-/// \param FromArray the first sequence to compare.
-///
-/// \param ToArray the second sequence to compare.
-///
-/// \param AllowReplacements whether to allow element replacements (change one
-/// element into another) as a single operation, rather than as two operations
-/// (an insertion and a removal).
-///
-/// \param MaxEditDistance If non-zero, the maximum edit distance that this
-/// routine is allowed to compute. If the edit distance will exceed that
-/// maximum, returns \c MaxEditDistance+1.
-///
-/// \returns the minimum number of element insertions, removals, or (if
-/// \p AllowReplacements is \c true) replacements needed to transform one of
-/// the given sequences into the other. If zero, the sequences are identical.
+                                                      
+   
+                                                   
+   
+                                                  
+   
+                                                                              
+                                                                              
+                                 
+   
+                                                                           
+                                                                        
+                                          
+   
+                                                                       
+                                                                            
+                                                                             
 template<typename T>
 unsigned ComputeEditDistance(ArrayRef<T> FromArray, ArrayRef<T> ToArray,
                              bool AllowReplacements = true,
                              unsigned MaxEditDistance = 0) {
-  // The algorithm implemented below is the "classic"
-  // dynamic-programming algorithm for computing the Levenshtein
-  // distance, which is described here:
-  //
-  //   http://en.wikipedia.org/wiki/Levenshtein_distance
-  //
-  // Although the algorithm is typically described using an m x n
-  // array, only one row plus one element are used at a time, so this
-  // implementation just keeps one vector for the row.  To update one entry,
-  // only the entries to the left, top, and top-left are needed.  The left
-  // entry is in Row[x-1], the top entry is what's in Row[x] from the last
-  // iteration, and the top-left entry is stored in Previous.
+                                                     
+                                                                
+                                       
+    
+                                                        
+    
+                                                                 
+                                                                     
+                                                                            
+                                                                          
+                                                                          
+                                                             
   typename ArrayRef<T>::size_type m = FromArray.size();
   typename ArrayRef<T>::size_type n = ToArray.size();
 
@@ -98,6 +98,6 @@ unsigned ComputeEditDistance(ArrayRef<T> FromArray, ArrayRef<T> ToArray,
   return Result;
 }
 
-} // End llvm namespace
+}                      
 
 #endif

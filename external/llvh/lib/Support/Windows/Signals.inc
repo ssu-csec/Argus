@@ -23,7 +23,7 @@
 #include "llvh/Support/Format.h"
 #include "llvh/Support/raw_ostream.h"
 
-// The Windows.h header must be after LLVM and standard headers.
+                                                                
 #include "WindowsSupport.h"
 
 #ifdef __MINGW32__
@@ -37,22 +37,22 @@
 #ifdef _MSC_VER
  #pragma comment(lib, "psapi.lib")
 #elif __MINGW32__
- // The version of g++ that comes with MinGW does *not* properly understand
- // the ll format specifier for printf. However, MinGW passes the format
- // specifiers on to the MSVCRT entirely, and the CRT understands the ll
- // specifier. So these warnings are spurious in this case. Since we compile
- // with -Wall, this will generate these warnings which should be ignored. So
- // we will turn off the warnings for this just file. However, MinGW also does
- // not support push and pop for diagnostics, so we have to manually turn it
- // back on at the end of the file.
+                                                                           
+                                                                        
+                                                                        
+                                                                            
+                                                                             
+                                                                              
+                                                                            
+                                   
  #pragma GCC diagnostic ignored "-Wformat"
  #pragma GCC diagnostic ignored "-Wformat-extra-args"
 
  #if !defined(__MINGW64_VERSION_MAJOR)
- // MinGW.org does not have updated support for the 64-bit versions of the
- // DebugHlp APIs. So we will have to load them manually. The structures and
- // method signatures were pulled from DbgHelp.h in the Windows Platform SDK,
- // and adjusted for brevity.
+                                                                          
+                                                                            
+                                                                             
+                             
  typedef struct _IMAGEHLP_LINE64 {
    DWORD    SizeOfStruct;
    PVOID    Key;
@@ -104,8 +104,8 @@
    DWORD64     Reserved[3];
    KDHELP64    KdHelp;
  } STACKFRAME64, *LPSTACKFRAME64;
- #endif // !defined(__MINGW64_VERSION_MAJOR)
-#endif // __MINGW32__
+ #endif                                     
+#endif               
 
 typedef BOOL (__stdcall *PREAD_PROCESS_MEMORY_ROUTINE64)(HANDLE hProcess,
                       DWORD64 qwBaseAddress, PVOID lpBuffer, DWORD nSize,
@@ -187,11 +187,11 @@ static bool load64BitDebugHelp(void) {
 
 using namespace llvh;
 
-// Forward declare.
+                   
 static LONG WINAPI LLVMUnhandledExceptionFilter(LPEXCEPTION_POINTERS ep);
 static BOOL WINAPI LLVMConsoleCtrlHandler(DWORD dwCtrlType);
 
-// The function to call if ctrl-c is pressed.
+                                             
 static void (*InterruptFunction)() = 0;
 
 static std::vector<std::string> *FilesToRemove = NULL;
@@ -199,9 +199,9 @@ static bool RegisteredUnhandledExceptionFilter = false;
 static bool CleanupExecuted = false;
 static PTOP_LEVEL_EXCEPTION_FILTER OldFilter = NULL;
 
-// Windows creates a new thread to execute the console handler when an event
-// (such as CTRL/C) occurs.  This causes concurrency issues with the above
-// globals which this critical section addresses.
+                                                                            
+                                                                          
+                                                 
 static CRITICAL_SECTION CriticalSection;
 static bool CriticalSectionInitialized = false;
 
@@ -225,13 +225,13 @@ static bool printStackTraceWithLLVMSymbolizer(llvh::raw_ostream &OS,
                                               HANDLE hProcess, HANDLE hThread,
                                               STACKFRAME64 &StackFrameOrig,
                                               CONTEXT *ContextOrig) {
-  // StackWalk64 modifies the incoming stack frame and context, so copy them.
+                                                                             
   STACKFRAME64 StackFrame = StackFrameOrig;
 
-  // Copy the register context so that we don't modify it while we unwind. We
-  // could use InitializeContext + CopyContext, but that's only required to get
-  // at AVX registers, which typically aren't needed by StackWalk64. Reduce the
-  // flag set to indicate that there's less data.
+                                                                             
+                                                                               
+                                                                               
+                                                 
   CONTEXT Context = *ContextOrig;
   Context.ContextFlags = CONTEXT_CONTROL | CONTEXT_INTEGER;
 
@@ -297,13 +297,13 @@ static bool findModulesAndOffsets(void **StackTrace, int Depth,
 static void PrintStackTraceForThread(llvh::raw_ostream &OS, HANDLE hProcess,
                                      HANDLE hThread, STACKFRAME64 &StackFrame,
                                      CONTEXT *Context) {
-  // Initialize the symbol handler.
+                                   
   fSymSetOptions(SYMOPT_DEFERRED_LOADS | SYMOPT_LOAD_LINES);
   fSymInitialize(hProcess, NULL, TRUE);
 
-  // Try llvm-symbolizer first. llvm-symbolizer knows how to deal with both PDBs
-  // and DWARF, so it should do a good job regardless of what debug info or
-  // linker is in use.
+                                                                                
+                                                                           
+                      
   if (printStackTraceWithLLVMSymbolizer(OS, hProcess, hThread, StackFrame,
                                         Context)) {
     return;
@@ -320,7 +320,7 @@ static void PrintStackTraceForThread(llvh::raw_ostream &OS, HANDLE hProcess,
       break;
 
     using namespace llvh;
-    // Print the PC in hexadecimal.
+                                   
     DWORD64 PC = StackFrame.AddrPC.Offset;
 #if defined(_M_X64) || defined(_M_ARM64)
     OS << format("0x%016llX", PC);
@@ -328,7 +328,7 @@ static void PrintStackTraceForThread(llvh::raw_ostream &OS, HANDLE hProcess,
     OS << format("0x%08lX", static_cast<DWORD>(PC));
 #endif
 
-// Print the parameters.  Assume there are four.
+                                                
 #if defined(_M_X64) || defined(_M_ARM64)
     OS << format(" (0x%016llX 0x%016llX 0x%016llX 0x%016llX)",
             StackFrame.Params[0], StackFrame.Params[1], StackFrame.Params[2],
@@ -340,13 +340,13 @@ static void PrintStackTraceForThread(llvh::raw_ostream &OS, HANDLE hProcess,
             static_cast<DWORD>(StackFrame.Params[2]),
             static_cast<DWORD>(StackFrame.Params[3]));
 #endif
-    // Verify the PC belongs to a module in this process.
+                                                         
     if (!fSymGetModuleBase64(hProcess, PC)) {
       OS << " <unknown module>\n";
       continue;
     }
 
-    // Print the symbol name.
+                             
     char buffer[512];
     IMAGEHLP_SYMBOL64 *symbol = reinterpret_cast<IMAGEHLP_SYMBOL64 *>(buffer);
     memset(symbol, 0, sizeof(IMAGEHLP_SYMBOL64));
@@ -366,7 +366,7 @@ static void PrintStackTraceForThread(llvh::raw_ostream &OS, HANDLE hProcess,
     else
       OS << format(", %s", (const char*)symbol->Name);
 
-    // Print the source file and line number information.
+                                                         
     IMAGEHLP_LINE64 line = {};
     DWORD dwLineDisp;
     line.SizeOfStruct = sizeof(line);
@@ -382,23 +382,23 @@ static void PrintStackTraceForThread(llvh::raw_ostream &OS, HANDLE hProcess,
 
 namespace llvh {
 
-//===----------------------------------------------------------------------===//
-//=== WARNING: Implementation here must contain only Win32 specific code
-//===          and must not be UNIX code
-//===----------------------------------------------------------------------===//
+                                                                                
+                                                                        
+                                        
+                                                                                
 
 #ifdef _MSC_VER
-/// Emulates hitting "retry" from an "abort, retry, ignore" CRT debug report
-/// dialog. "retry" raises an exception which ultimately triggers our stack
-/// dumper.
+                                                                            
+                                                                           
+           
 static LLVM_ATTRIBUTE_UNUSED int
 AvoidMessageBoxHook(int ReportType, char *Message, int *Return) {
-  // Set *Return to the retry code for the return value of _CrtDbgReport:
-  // http://msdn.microsoft.com/en-us/library/8hyw4sy7(v=vs.71).aspx
-  // This may also trigger just-in-time debugging via DebugBreak().
+                                                                         
+                                                                   
+                                                                   
   if (Return)
     *Return = 1;
-  // Don't call _CrtDbgReport.
+                              
   return TRUE;
 }
 
@@ -414,16 +414,16 @@ static void InitializeThreading() {
   if (CriticalSectionInitialized)
     return;
 
-  // Now's the time to create the critical section. This is the first time
-  // through here, and there's only one thread.
+                                                                          
+                                               
   InitializeCriticalSection(&CriticalSection);
   CriticalSectionInitialized = true;
 }
 
 static void RegisterHandler() {
-  // If we cannot load up the APIs (which would be unexpected as they should
-  // exist on every version of Windows we support), we will bail out since
-  // there would be nothing to report.
+                                                                            
+                                                                          
+                                      
   if (!load64BitDebugHelp()) {
     assert(false && "These APIs should always be available");
     return;
@@ -436,19 +436,19 @@ static void RegisterHandler() {
 
   InitializeThreading();
 
-  // Enter it immediately.  Now if someone hits CTRL/C, the console handler
-  // can't proceed until the globals are updated.
+                                                                           
+                                                 
   EnterCriticalSection(&CriticalSection);
 
   RegisteredUnhandledExceptionFilter = true;
   OldFilter = SetUnhandledExceptionFilter(LLVMUnhandledExceptionFilter);
   SetConsoleCtrlHandler(LLVMConsoleCtrlHandler, TRUE);
 
-  // IMPORTANT NOTE: Caller must call LeaveCriticalSection(&CriticalSection) or
-  // else multi-threading problems will ensue.
+                                                                               
+                                              
 }
 
-// The public API
+                 
 bool sys::RemoveFileOnSignal(StringRef Filename, std::string* ErrMsg) {
   RegisterHandler();
 
@@ -467,7 +467,7 @@ bool sys::RemoveFileOnSignal(StringRef Filename, std::string* ErrMsg) {
   return false;
 }
 
-// The public API
+                 
 void sys::DontRemoveFileOnSignal(StringRef Filename) {
   if (FilesToRemove == NULL)
     return;
@@ -483,26 +483,26 @@ void sys::DontRemoveFileOnSignal(StringRef Filename) {
 }
 
 void sys::DisableSystemDialogsOnCrash() {
-  // Crash to stack trace handler on abort.
+                                           
   signal(SIGABRT, HandleAbort);
 
-  // The following functions are not reliably accessible on MinGW.
+                                                                  
 #ifdef _MSC_VER
-  // We're already handling writing a "something went wrong" message.
+                                                                     
   _set_abort_behavior(0, _WRITE_ABORT_MSG);
-  // Disable Dr. Watson.
+                        
   _set_abort_behavior(0, _CALL_REPORTFAULT);
   _CrtSetReportHook(AvoidMessageBoxHook);
 #endif
 
-  // Disable standard error dialog box.
+                                       
   SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX |
                SEM_NOOPENFILEERRORBOX);
   _set_error_mode(_OUT_TO_STDERR);
 }
 
-/// When an error signal (such as SIGABRT or SIGSEGV) is delivered to the
-/// process, print a stack trace and then exit.
+                                                                         
+                                               
 void sys::PrintStackTraceOnErrorSignal(StringRef Argv0,
                                        bool DisableCrashReporting) {
   ::Argv0 = Argv0;
@@ -517,8 +517,8 @@ void sys::PrintStackTraceOnErrorSignal(StringRef Argv0,
 }
 
 #if defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR)
-// Provide a prototype for RtlCaptureContext, mingw32 from mingw.org is
-// missing it but mingw-w64 has it.
+                                                                       
+                                   
 extern "C" VOID WINAPI RtlCaptureContext(PCONTEXT ContextRecord);
 #endif
 
@@ -558,9 +558,9 @@ void llvh::sys::SetInterruptFunction(void (*IF)()) {
 }
 
 
-/// Add a function to be called when a signal is delivered to the process. The
-/// handler can have a cookie passed to it to identify what instance of the
-/// handler it is.
+                                                                              
+                                                                           
+                  
 void llvh::sys::AddSignalHandler(sys::SignalHandlerCallback FnPtr,
                                  void *Cookie) {
   insertSignalHandler(FnPtr, Cookie);
@@ -574,11 +574,11 @@ static void Cleanup() {
 
   EnterCriticalSection(&CriticalSection);
 
-  // Prevent other thread from registering new files and directories for
-  // removal, should we be executing because of the console handler callback.
+                                                                        
+                                                                             
   CleanupExecuted = true;
 
-  // FIXME: open files cannot be deleted.
+                                         
   if (FilesToRemove != NULL)
     while (!FilesToRemove->empty()) {
       llvh::sys::fs::remove(FilesToRemove->back());
@@ -589,17 +589,17 @@ static void Cleanup() {
 }
 
 void llvh::sys::RunInterruptHandlers() {
-  // The interrupt handler may be called from an interrupt, but it may also be
-  // called manually (such as the case of report_fatal_error with no registered
-  // error handler). We must ensure that the critical section is properly
-  // initialized.
+                                                                              
+                                                                               
+                                                                         
+                 
   InitializeThreading();
   Cleanup();
 }
 
-/// Find the Windows Registry Key for a given location.
-///
-/// \returns a valid HKEY if the location exists, else NULL.
+                                                       
+   
+                                                            
 static HKEY FindWERKey(const llvh::Twine &RegistryLocation) {
   HKEY Key;
   if (ERROR_SUCCESS != ::RegOpenKeyExA(HKEY_LOCAL_MACHINE,
@@ -610,10 +610,10 @@ static HKEY FindWERKey(const llvh::Twine &RegistryLocation) {
   return Key;
 }
 
-/// Populate ResultDirectory with the value for "DumpFolder" for a given
-/// Windows Registry key.
-///
-/// \returns true if a valid value for DumpFolder exists, false otherwise.
+                                                                        
+                         
+   
+                                                                          
 static bool GetDumpFolder(HKEY Key,
                           llvh::SmallVectorImpl<char> &ResultDirectory) {
   using llvh::sys::windows::UTF16ToUTF8;
@@ -651,19 +651,19 @@ static bool GetDumpFolder(HKEY Key,
   return true;
 }
 
-/// Populate ResultType with a valid MINIDUMP_TYPE based on the value of
-/// "DumpType" for a given Windows Registry key.
-///
-/// According to
-/// https://msdn.microsoft.com/en-us/library/windows/desktop/bb787181(v=vs.85).aspx
-/// valid values for DumpType are:
-///   * 0: Custom dump
-///   * 1: Mini dump
-///   * 2: Full dump
-/// If "Custom dump" is specified then the "CustomDumpFlags" field is read
-/// containing a bitwise combination of MINIDUMP_TYPE values.
-///
-/// \returns true if a valid value for ResultType can be set, false otherwise.
+                                                                        
+                                                
+   
+                
+                                                                                   
+                                  
+                      
+                    
+                    
+                                                                          
+                                                             
+   
+                                                                              
 static bool GetDumpType(HKEY Key, MINIDUMP_TYPE &ResultType) {
   if (!Key)
     return false;
@@ -698,11 +698,11 @@ static bool GetDumpType(HKEY Key, MINIDUMP_TYPE &ResultType) {
   return true;
 }
 
-/// Write a Windows dump file containing process information that can be
-/// used for post-mortem debugging.
-///
-/// \returns zero error code if a mini dump created, actual error code
-/// otherwise.
+                                                                        
+                                   
+   
+                                                                      
+              
 static std::error_code WINAPI
 WriteWindowsDumpFile(PMINIDUMP_EXCEPTION_INFORMATION ExceptionInfo) {
   using namespace llvh;
@@ -712,45 +712,45 @@ WriteWindowsDumpFile(PMINIDUMP_EXCEPTION_INFORMATION ExceptionInfo) {
   StringRef ProgramName;
 
   if (MainExecutableName.empty()) {
-    // If we can't get the executable filename,
-    // things are in worse shape than we realize
-    // and we should just bail out.
+                                               
+                                                
+                                   
     return mapWindowsError(::GetLastError());
   }
 
   ProgramName = path::filename(MainExecutableName.c_str());
 
-  // The Windows Registry location as specified at
-  // https://msdn.microsoft.com/en-us/library/windows/desktop/bb787181%28v=vs.85%29.aspx
-  // "Collecting User-Mode Dumps" that may optionally be set to collect crash
-  // dumps in a specified location.
+                                                  
+                                                                                        
+                                                                             
+                                   
   StringRef LocalDumpsRegistryLocation =
       "SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\\LocalDumps";
 
-  // The key pointing to the Registry location that may contain global crash
-  // dump settings.  This will be NULL if the location can not be found.
+                                                                            
+                                                                        
   ScopedRegHandle DefaultLocalDumpsKey(FindWERKey(LocalDumpsRegistryLocation));
 
-  // The key pointing to the Registry location that may contain
-  // application-specific crash dump settings.  This will be NULL if the
-  // location can not be found.
+                                                               
+                                                                        
+                               
   ScopedRegHandle AppSpecificKey(
       FindWERKey(Twine(LocalDumpsRegistryLocation) + "\\" + ProgramName));
 
-  // Look to see if a dump type is specified in the registry; first with the
-  // app-specific key and failing that with the global key.  If none are found
-  // default to a normal dump (GetDumpType will return false either if the key
-  // is NULL or if there is no valid DumpType value at its location).
+                                                                            
+                                                                              
+                                                                              
+                                                                     
   MINIDUMP_TYPE DumpType;
   if (!GetDumpType(AppSpecificKey, DumpType))
     if (!GetDumpType(DefaultLocalDumpsKey, DumpType))
       DumpType = MiniDumpNormal;
 
-  // Look to see if a dump location is specified in the registry; first with the
-  // app-specific key and failing that with the global key.  If none are found
-  // we'll just create the dump file in the default temporary file location
-  // (GetDumpFolder will return false either if the key is NULL or if there is
-  // no valid DumpFolder value at its location).
+                                                                                
+                                                                              
+                                                                           
+                                                                              
+                                                
   bool ExplicitDumpDirectorySet = true;
   SmallString<MAX_PATH> DumpDirectory;
   if (!GetDumpFolder(AppSpecificKey, DumpDirectory))
@@ -771,7 +771,7 @@ WriteWindowsDumpFile(PMINIDUMP_EXCEPTION_INFORMATION ExceptionInfo) {
                  fs::createTemporaryFile(ProgramName, "dmp", FD, DumpPath))
     return EC;
 
-  // Our support functions return a file descriptor but Windows wants a handle.
+                                                                               
   ScopedCommonHandle FileHandle(reinterpret_cast<HANDLE>(_get_osfhandle(FD)));
 
   if (!fMiniDumpWriteDump(::GetCurrentProcess(), ::GetCurrentProcessId(),
@@ -785,10 +785,10 @@ WriteWindowsDumpFile(PMINIDUMP_EXCEPTION_INFORMATION ExceptionInfo) {
 static LONG WINAPI LLVMUnhandledExceptionFilter(LPEXCEPTION_POINTERS ep) {
   Cleanup();
 
-  // We'll automatically write a Minidump file here to help diagnose
-  // the nasty sorts of crashes that aren't 100% reproducible from a set of
-  // inputs (or in the event that the user is unable or unwilling to provide a
-  // reproducible case).
+                                                                    
+                                                                           
+                                                                              
+                        
   if (!llvh::sys::Process::AreCoreFilesPrevented()) {
     MINIDUMP_EXCEPTION_INFORMATION ExceptionInfo;
     ExceptionInfo.ThreadId = ::GetCurrentThreadId();
@@ -800,7 +800,7 @@ static LONG WINAPI LLVMUnhandledExceptionFilter(LPEXCEPTION_POINTERS ep) {
                    << "\n";
   }
 
-  // Initialize the STACKFRAME structure.
+                                         
   STACKFRAME64 StackFrame = {};
 
 #if defined(_M_X64)
@@ -839,33 +839,33 @@ static LONG WINAPI LLVMUnhandledExceptionFilter(LPEXCEPTION_POINTERS ep) {
 }
 
 static BOOL WINAPI LLVMConsoleCtrlHandler(DWORD dwCtrlType) {
-  // We are running in our very own thread, courtesy of Windows.
+                                                                
   EnterCriticalSection(&CriticalSection);
   Cleanup();
 
-  // If an interrupt function has been set, go and run one it; otherwise,
-  // the process dies.
+                                                                         
+                      
   void (*IF)() = InterruptFunction;
-  InterruptFunction = 0;      // Don't run it on another CTRL-C.
+  InterruptFunction = 0;                                        
 
   if (IF) {
-    // Note: if the interrupt function throws an exception, there is nothing
-    // to catch it in this thread so it will kill the process.
-    IF();                     // Run it now.
+                                                                            
+                                                              
+    IF();                                   
     LeaveCriticalSection(&CriticalSection);
-    return TRUE;              // Don't kill the process.
+    return TRUE;                                        
   }
 
-  // Allow normal processing to take place; i.e., the process dies.
+                                                                   
   LeaveCriticalSection(&CriticalSection);
   return FALSE;
 }
 
 #if __MINGW32__
- // We turned these warnings off for this file so that MinGW-g++ doesn't
- // complain about the ll format specifiers used.  Now we are turning the
- // warnings back on.  If MinGW starts to support diagnostic stacks, we can
- // replace this with a pop.
+                                                                        
+                                                                         
+                                                                           
+                            
  #pragma GCC diagnostic warning "-Wformat"
  #pragma GCC diagnostic warning "-Wformat-extra-args"
 #endif

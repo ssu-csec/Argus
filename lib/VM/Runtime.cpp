@@ -63,9 +63,9 @@
 #endif
 
 #ifdef __EMSCRIPTEN__
-/// Provide implementations with weak linkage that can serve as the default in a
-/// wasm build, while allowing them to be overridden depending on the target.
-/// Since Emscripten will effectively LTO, these should be inlined.
+                                                                                
+                                                                             
+                                                                   
 __attribute__((__weak__)) extern "C" bool test_wasm_host_timeout() {
   return false;
 }
@@ -79,12 +79,12 @@ namespace vm {
 
 namespace {
 
-/// The maximum number of registers that can be requested in a RuntimeConfig.
+                                                                             
 static constexpr uint32_t kMaxSupportedNumRegisters =
     UINT32_MAX / sizeof(PinnedHermesValue);
 
 #ifdef HERMES_CHECK_NATIVE_STACK
-/// The minimum stack gap allowed from RuntimeConfig.
+                                                     
 static constexpr uint32_t kMinSupportedNativeStackGap =
 #if LLVM_ADDRESS_SANITIZER_BUILD
     256 * 1024;
@@ -93,8 +93,8 @@ static constexpr uint32_t kMinSupportedNativeStackGap =
 #endif
 #endif
 
-// Only track I/O for buffers > 64 kB (which excludes things like
-// Runtime::generateSpecialRuntimeBytecode).
+                                                                 
+                                            
 static constexpr size_t MIN_IO_TRACKING_SIZE = 64 * 1024;
 
 static const Predefined::Str fixedPropCacheNames[(size_t)PropCacheID::_COUNT] =
@@ -104,13 +104,13 @@ static const Predefined::Str fixedPropCacheNames[(size_t)PropCacheID::_COUNT] =
 #undef V
 };
 
-} // namespace
+}             
 
-// Minidumps include stack memory, not heap memory.  If we want to be
-// able to inspect the Runtime object in a minidump, we can do that by
-// arranging for it to be allocated on a stack.  No existing stack is
-// a good candidate, so we achieve this by creating a thread just to
-// hold the Runtime.
+                                                                     
+                                                                      
+                                                                     
+                                                                    
+                    
 class Runtime::StackRuntime {
  public:
   StackRuntime(const vm::RuntimeConfig &runtimeConfig)
@@ -139,22 +139,22 @@ class Runtime::StackRuntime {
     stack->shutdown_.get_future().get();
   }
 
-  // The order here matters.
-  // * Set up the promises
-  // * Initialize runtime_ to null
-  // * Start the thread which uses them
-  // * Initialize runtime_ from that thread
+                            
+                          
+                                  
+                                       
+                                           
   std::promise<void> startup_;
   std::promise<void> shutdown_;
   Runtime *runtime_{nullptr};
   std::thread thread_;
 };
 
-/* static */
+            
 std::shared_ptr<Runtime> Runtime::create(const RuntimeConfig &runtimeConfig) {
 #if defined(HERMESVM_CONTIGUOUS_HEAP)
   uint64_t maxHeapSize = runtimeConfig.getGCConfig().getMaxHeapSize();
-  // Allow some extra segments for the runtime, and as a buffer for the GC.
+                                                                           
   uint64_t providerSize =
       std::min<uint64_t>(1ULL << 32, maxHeapSize + AlignedStorage::size() * 4);
   std::shared_ptr<StorageProvider> sp =
@@ -164,7 +164,7 @@ std::shared_ptr<Runtime> Runtime::create(const RuntimeConfig &runtimeConfig) {
   return rt;
 #elif defined(HERMES_FACEBOOK_BUILD) && !defined(HERMES_FBCODE_BUILD) && \
     !defined(__EMSCRIPTEN__)
-  // TODO (T84179835): Disable this once it is no longer useful for debugging.
+                                                                              
   return StackRuntime::create(runtimeConfig);
 #else
   return std::shared_ptr<Runtime>{
@@ -178,7 +178,7 @@ CallResult<PseudoHandle<>> Runtime::getNamed(
   CompressedPointer clazzPtr{obj->getClassGCPtr()};
   auto *cacheEntry = &fixedPropCache_[static_cast<int>(id)];
   if (LLVM_LIKELY(cacheEntry->clazz == clazzPtr)) {
-    // The slot is cached, so it is safe to use the Internal function.
+                                                                      
     return createPseudoHandle(
         JSObject::getNamedSlotValueUnsafe<PropStorage::Inline::Yes>(
             *obj, *this, cacheEntry->slot)
@@ -186,15 +186,15 @@ CallResult<PseudoHandle<>> Runtime::getNamed(
   }
   auto sym = Predefined::getSymbolID(fixedPropCacheNames[static_cast<int>(id)]);
   NamedPropertyDescriptor desc;
-  // Check writable and internalSetter flags since the cache slot is shared for
-  // get/put.
+                                                                               
+             
   if (LLVM_LIKELY(
           JSObject::tryGetOwnNamedDescriptorFast(*obj, *this, sym, desc)) &&
       !desc.flags.accessor && desc.flags.writable &&
       !desc.flags.internalSetter) {
     HiddenClass *clazz = vmcast<HiddenClass>(clazzPtr.getNonNull(*this));
     if (LLVM_LIKELY(!clazz->isDictionary())) {
-      // Cache the class, id and property slot.
+                                               
       cacheEntry->clazz = clazzPtr;
       cacheEntry->slot = desc.slot;
     }
@@ -222,7 +222,7 @@ ExecutionStatus Runtime::putNamedThrowOnError(
       !desc.flags.internalSetter) {
     HiddenClass *clazz = vmcast<HiddenClass>(clazzPtr.getNonNull(*this));
     if (LLVM_LIKELY(!clazz->isDictionary())) {
-      // Cache the class and property slot.
+                                           
       cacheEntry->clazz = clazzPtr;
       cacheEntry->slot = desc.slot;
     }
@@ -238,7 +238,7 @@ ExecutionStatus Runtime::putNamedThrowOnError(
 Runtime::Runtime(
     std::shared_ptr<StorageProvider> provider,
     const RuntimeConfig &runtimeConfig)
-    // The initial heap size can't be larger than the max.
+                                                          
     : enableEval(runtimeConfig.getEnableEval()),
       verifyEvalIR(runtimeConfig.getVerifyEvalIR()),
       optimizedEval(runtimeConfig.getOptimizedEval()),
@@ -294,9 +294,9 @@ Runtime::Runtime(
   }
   registerStackStart_ = runtimeConfig.getRegisterStack();
   if (!registerStackStart_) {
-    // registerStackAllocation_ should not be allocated with new, because then
-    // default constructors would run for the whole stack space.
-    // Round up to page size as required by vm_allocate.
+                                                                              
+                                                                
+                                                        
     const uint32_t numBytesForRegisters = llvh::alignTo(
         sizeof(PinnedHermesValue) * maxNumRegisters, oscompat::page_size());
     auto result = oscompat::vm_allocate(numBytesForRegisters);
@@ -317,18 +317,18 @@ Runtime::Runtime(
   }
   stackPointer_ = registerStackStart_;
 
-  // Setup the "root" stack frame.
+                                  
   setCurrentFrameToTopOfStack();
-  // Allocate the "reserved" registers in the root frame.
+                                                         
   allocStack(
       StackFrameLayout::CalleeExtraRegistersAtStart,
       HermesValue::encodeUndefinedValue());
 
-  // Initialize Predefined Strings.
-  // This function does not do any allocations.
+                                   
+                                               
   initPredefinedStrings();
-  // Initialize special code blocks pointing to their own runtime module.
-  // specialCodeBlockRuntimeModule_ will be owned by runtimeModuleList_.
+                                                                         
+                                                                        
   RuntimeModuleFlags flags;
   flags.hidesEpilogue = true;
   specialCodeBlockDomain_ = Domain::create(*this).getHermesValue();
@@ -338,15 +338,15 @@ Runtime::Runtime(
       &runtimeModuleList_.back() == specialCodeBlockRuntimeModule_ &&
       "specialCodeBlockRuntimeModule_ not added to runtimeModuleList_");
 
-  // At this point, allocations can begin, as all the roots are markable.
+                                                                         
 
-  // Initialize the pre-allocated character strings.
+                                                    
   initCharacterStrings();
 
   GCScope scope(*this);
 
-  // Explicitly initialize the specialCodeBlockRuntimeModule_ without CJS
-  // modules.
+                                                                         
+             
   specialCodeBlockRuntimeModule_->initializeWithoutCJSModulesMayAllocate(
       hbc::BCProviderFromBuffer::createBCProviderFromBuffer(
           generateSpecialRuntimeBytecode())
@@ -355,7 +355,7 @@ Runtime::Runtime(
   returnThisCodeBlock_ =
       specialCodeBlockRuntimeModule_->getCodeBlockMayAllocate(1);
 
-  // Initialize the root hidden class and its variants.
+                                                       
   {
     MutableHandle<HiddenClass> clazz(
         *this,
@@ -382,12 +382,12 @@ Runtime::Runtime(
       runtimeConfig.getEnableHermesInternalTestMethods();
   initGlobalObject(*this, jsLibFlags);
 
-  // Once the global object has been initialized, populate native builtins to
-  // the builtins table.
+                                                                             
+                        
   initNativeBuiltins();
 
-  // Set the prototype of the global object to the standard object prototype,
-  // which has now been defined.
+                                                                             
+                                
   ignoreAllocationFailure(
       JSObject::setParent(
           vmcast<JSObject>(global_),
@@ -397,24 +397,25 @@ Runtime::Runtime(
 
   symbolRegistry_.init(*this);
 
-  // BB Profiler need to be ready before running internal bytecode.
+                                                                   
 #ifdef HERMESVM_PROFILER_BB
   inlineCacheProfiler_.setHiddenClassArray(
       ignoreAllocationFailure(JSArray::create(*this, 4, 4)).get());
 #endif
 
   codeCoverageProfiler_->disable();
-  // Execute our internal bytecode.
+                                   
   auto jsBuiltinsObj = runInternalBytecode();
   codeCoverageProfiler_->restore();
 
-  // Populate JS builtins returned from internal bytecode to the builtins table.
+                                                                                
   initJSBuiltins(builtins_, jsBuiltinsObj);
+  populateAsyncGeneratorPrototype(*this);
 
 #if HERMESVM_SAMPLING_PROFILER_AVAILABLE
   if (runtimeConfig.getEnableSampleProfiling())
     samplingProfiler = SamplingProfiler::create(*this);
-#endif // HERMESVM_SAMPLING_PROFILER_AVAILABLE
+#endif                                        
 
   LLVM_DEBUG(llvh::dbgs() << "Runtime initialized\n");
 }
@@ -422,22 +423,22 @@ Runtime::Runtime(
 Runtime::~Runtime() {
 #if HERMESVM_SAMPLING_PROFILER_AVAILABLE
   samplingProfiler.reset();
-#endif // HERMESVM_SAMPLING_PROFILER_AVAILABLE
+#endif                                        
 
   getHeap().finalizeAll();
-  // Remove inter-module dependencies so we can delete them in any order.
+                                                                         
   for (auto &module : runtimeModuleList_) {
     module.prepareForDestruction();
   }
-  // All RuntimeModules must be destroyed before the next assertion, to untrack
-  // all native IDs related to it (e.g., CodeBlock).
+                                                                               
+                                                    
   while (!runtimeModuleList_.empty()) {
-    // Calling delete will automatically remove it from the list.
+                                                                 
     delete &runtimeModuleList_.back();
   }
-  // Now that all objects are finalized, there shouldn't be any native memory
-  // keys left in the ID tracker for memory profiling. Assert that the only IDs
-  // left are JS heap pointers.
+                                                                             
+                                                                               
+                               
   assert(
       !getHeap().getIDTracker().hasNativeIDs() &&
       "A pointer is left in the ID tracker that is from non-JS memory. "
@@ -453,8 +454,8 @@ Runtime::~Runtime() {
       !formattingStackTrace_ &&
       "Runtime is being destroyed while exception is being formatted");
 
-  // Unwatch the runtime from the time limit monitor in case the latter still
-  // has any references to this.
+                                                                             
+                                
   if (timeLimitMonitor) {
     timeLimitMonitor->unwatchRuntime(*this);
   }
@@ -462,15 +463,15 @@ Runtime::~Runtime() {
   crashMgr_->unregisterMemory(this);
 }
 
-/// A helper class used to measure the duration of GC marking different roots.
-/// It accumulates the times in \c Runtime::markRootsPhaseTimes[] and \c
-/// Runtime::totalMarkRootsTime.
+                                                                              
+                                                                        
+                                
 class Runtime::MarkRootsPhaseTimer {
  public:
   MarkRootsPhaseTimer(Runtime &rt, RootAcceptor::Section section)
       : rt_(rt), section_(section), start_(std::chrono::steady_clock::now()) {
     if (static_cast<unsigned>(section) == 0) {
-      // The first phase; record the start as the start of markRoots.
+                                                                     
       rt_.startOfMarkRoots_ = start_;
     }
   }
@@ -496,8 +497,8 @@ class Runtime::MarkRootsPhaseTimer {
 void Runtime::markRoots(
     RootAndSlotAcceptorWithNames &acceptor,
     bool markLongLived) {
-  // The body of markRoots should be sequence of blocks, each of which starts
-  // with the declaration of an appropriate RootSection instance.
+                                                                             
+                                                                 
   {
     MarkRootsPhaseTimer timer(*this, RootAcceptor::Section::Registers);
     acceptor.beginRootSection(RootAcceptor::Section::Registers);
@@ -571,7 +572,7 @@ void Runtime::markRoots(
   {
     MarkRootsPhaseTimer timer(*this, RootAcceptor::Section::Prototypes);
     acceptor.beginRootSection(RootAcceptor::Section::Prototypes);
-    // Prototypes.
+                  
 #define RUNTIME_HV_FIELD_PROTOTYPE(name) MARK(name);
 #include "hermes/VM/RuntimeHermesValueFields.def"
 #undef RUNTIME_HV_FIELD_PROTOTYPE
@@ -585,8 +586,8 @@ void Runtime::markRoots(
     MarkRootsPhaseTimer timer(*this, RootAcceptor::Section::IdentifierTable);
     if (markLongLived) {
 #ifdef HERMES_MEMORY_INSTRUMENTATION
-      // Need to add nodes before the root section, and edges during the root
-      // section.
+                                                                             
+                 
       acceptor.provideSnapshot([this](HeapSnapshot &snap) {
         identifierTable_.snapshotAddNodes(snap);
       });
@@ -644,14 +645,14 @@ void Runtime::markRoots(
 
   {
     MarkRootsPhaseTimer timer(*this, RootAcceptor::Section::Custom);
-    // Define nodes before the root section starts.
+                                                   
     for (auto &fn : customSnapshotNodeFuncs_) {
       acceptor.provideSnapshot(fn);
     }
     acceptor.beginRootSection(RootAcceptor::Section::Custom);
     for (auto &fn : customMarkRootFuncs_)
       fn(&getHeap(), acceptor);
-    // Define edges while inside the root section.
+                                                  
     for (auto &fn : customSnapshotEdgeFuncs_) {
       acceptor.provideSnapshot(fn);
     }
@@ -662,8 +663,8 @@ void Runtime::markRoots(
 void Runtime::markWeakRoots(WeakRootAcceptor &acceptor, bool markLongLived) {
   MarkRootsPhaseTimer timer(*this, RootAcceptor::Section::WeakRefs);
   acceptor.beginRootSection(RootAcceptor::Section::WeakRefs);
-  // Call this first so that it can remove RuntimeModules whose owning Domain is
-  // dead from runtimeModuleList_, before marking long-lived WeakRoots in them.
+                                                                                
+                                                                               
   markDomainRefInRuntimeModules(acceptor);
   if (markLongLived) {
     for (auto &entry : fixedPropCache_) {
@@ -681,23 +682,23 @@ void Runtime::markDomainRefInRuntimeModules(WeakRootAcceptor &acceptor) {
   std::vector<RuntimeModule *> modulesToDelete;
   for (auto &rm : runtimeModuleList_) {
     rm.markDomainRef(acceptor);
-    // If the owning domain is dead, store the RuntimeModule pointer for
-    // destruction later.
+                                                                        
+                         
     if (LLVM_UNLIKELY(rm.isOwningDomainDead())) {
-      // Prepare these RuntimeModules for destruction so that we don't rely on
-      // their relative order in runtimeModuleList_.
+                                                                              
+                                                    
       rm.prepareForDestruction();
       modulesToDelete.push_back(&rm);
     }
   }
 
-  // We need to destroy these RuntimeModules after we call
-  // prepareForDestruction() on all of them, otherwise, it may cause
-  // use-after-free when checking the ownership of a CodeBlock in the destructor
-  // of a RuntimeModule (which may refer a CodeBlock that is owned and deleted
-  // by another RuntimeModule).
+                                                          
+                                                                    
+                                                                                
+                                                                              
+                               
   for (auto *rm : modulesToDelete) {
-    // Calling delete will automatically remove it from the list.
+                                                                 
     delete rm;
   }
 }
@@ -710,7 +711,7 @@ void Runtime::markRootsForCompleteMarking(
   if (samplingProfiler) {
     samplingProfiler->markRootsForCompleteMarking(acceptor);
   }
-#endif // HERMESVM_SAMPLING_PROFILER_AVAILABLE
+#endif                                        
   acceptor.endRootSection();
 }
 
@@ -777,9 +778,9 @@ void Runtime::removeRuntimeModule(RuntimeModule *rm) {
 
 #ifndef NDEBUG
 void Runtime::printArrayCensus(llvh::raw_ostream &os) {
-  // Do array capacity histogram.
-  // Map from array size to number of arrays that are that size.
-  // Arrays includes ArrayStorage and SegmentedArray.
+                                 
+                                                                
+                                                     
   std::map<std::pair<size_t, size_t>, std::pair<size_t, size_t>>
       arraySizeToCountAndWastedSlots;
   auto printTable = [&os](
@@ -925,15 +926,15 @@ const void *Runtime::getStringForSymbol(SymbolID id) {
 #endif
 
 size_t Runtime::mallocSize() const {
-  // Register stack uses mmap and RuntimeModules are tracked by their owning
-  // Domains. So this only considers IdentifierTable size.
+                                                                            
+                                                          
   return sizeof(IdentifierTable) + identifierTable_.additionalMemorySize();
 }
 
 #ifdef HERMESVM_SANITIZE_HANDLES
 void Runtime::potentiallyMoveHeap() {
-  // Do a dummy allocation which could force a heap move if handle sanitization
-  // is on.
+                                                                               
+           
   FillerCell::create(
       *this,
       std::max<size_t>(
@@ -947,7 +948,7 @@ static CallResult<HermesValue> interpretFunctionWithRandomStack(
     CodeBlock *globalCode) {
   static void *volatile dummy;
   const unsigned amount = std::random_device()() % oscompat::page_size();
-  // Prevent compiler from optimizing alloca away by assigning to volatile
+                                                                          
   dummy = alloca(amount);
   (void)dummy;
   return runtime.interpretFunction(globalCode);
@@ -1028,7 +1029,7 @@ CallResult<HermesValue> Runtime::runBytecode(
   if (flags.persistent) {
     persistentBCProviders_.push_back(bytecode);
     if (bytecodeWarmupPercent_ > 0) {
-      // Start the warmup thread for this bytecode if it's a buffer.
+                                                                    
       bytecode->startWarmup(bytecodeWarmupPercent_);
     }
     if (getVMExperimentFlags() & experiments::MAdviseRandom) {
@@ -1038,7 +1039,7 @@ CallResult<HermesValue> Runtime::runBytecode(
     }
     if (getVMExperimentFlags() & experiments::VerifyBytecodeChecksum) {
       llvh::ArrayRef<uint8_t> buf = bytecode->getRawBuffer();
-      // buf is empty for non-buffer providers
+                                              
       if (!buf.empty()) {
         if (!hbc::BCProviderFromBuffer::bytecodeHashIsValid(buf)) {
           const char *msg = "Bytecode checksum verification failed";
@@ -1048,8 +1049,8 @@ CallResult<HermesValue> Runtime::runBytecode(
       }
     }
   }
-  // Only track I/O for buffers > 64 kB (which excludes things like
-  // Runtime::generateSpecialRuntimeBytecode).
+                                                                   
+                                              
   if (flags.persistent && trackIO_ &&
       bytecode->getRawBuffer().size() > MIN_IO_TRACKING_SIZE) {
     bytecode->startPageAccessTracker();
@@ -1074,7 +1075,7 @@ CallResult<HermesValue> Runtime::runBytecode(
   auto globalCode = runtimeModule->getCodeBlockMayAllocate(globalFunctionIndex);
 
 #ifdef HERMES_ENABLE_DEBUGGER
-  // If the debugger is configured to pause on load, give it a chance to pause.
+                                                                               
   getDebugger().willExecuteModule(runtimeModule, globalCode);
 #endif
 
@@ -1093,10 +1094,10 @@ CallResult<HermesValue> Runtime::runBytecode(
         domain,
         *domain->getCJSModuleOffset(*this, domain->getCJSEntryModuleID()));
   } else {
-    // Create a JSFunction which will reference count the runtime module.
-    // Note that its handle gets registered in the scope, so we don't need to
-    // save it. Also note that environment will often be null here, except if
-    // this is local eval.
+                                                                         
+                                                                             
+                                                                             
+                          
     auto func = JSFunction::create(
         *this,
         domain,
@@ -1145,16 +1146,16 @@ Handle<JSObject> Runtime::runInternalBytecode() {
                   bcResult.second.c_str())
                      .str());
   }
-  // The bytes backing our buffer are immortal, so we can be persistent.
+                                                                        
   RuntimeModuleFlags flags;
   flags.persistent = true;
   flags.hidesEpilogue = true;
   auto res = runBytecode(
       std::move(bcResult.first),
       flags,
-      /*sourceURL*/ "InternalBytecode.js",
+                    "InternalBytecode.js",
       makeNullHandle<Environment>());
-  // It is a fatal error for the internal bytecode to throw an exception.
+                                                                         
   assert(
       res != ExecutionStatus::EXCEPTION && "Internal bytecode threw exception");
   assert(
@@ -1168,7 +1169,7 @@ void Runtime::printException(llvh::raw_ostream &os, Handle<> valueHandle) {
   os << "Uncaught ";
   clearThrownValue();
 
-  // Try to fetch the stack trace.
+                                  
   CallResult<PseudoHandle<>> propRes{ExecutionStatus::EXCEPTION};
   if (auto objHandle = Handle<JSObject>::dyn_vmcast(valueHandle)) {
     if (LLVM_UNLIKELY(
@@ -1177,7 +1178,7 @@ void Runtime::printException(llvh::raw_ostream &os, Handle<> valueHandle) {
                  *this,
                  Predefined::getSymbolID(Predefined::stack))) ==
             ExecutionStatus::EXCEPTION)) {
-      // Suppress prepareStackTrace using the recursion-breaking flag and retry.
+                                                                                
       bool wasFormattingStackTrace = formattingStackTrace();
       if (LLVM_LIKELY(!wasFormattingStackTrace)) {
         setFormattingStackTrace(true);
@@ -1203,7 +1204,7 @@ void Runtime::printException(llvh::raw_ostream &os, Handle<> valueHandle) {
   SmallU16String<32> tmp;
   if (LLVM_UNLIKELY(
           propRes == ExecutionStatus::EXCEPTION || (*propRes)->isUndefined())) {
-    // If stack trace is unavailable, we just print error.toString.
+                                                                   
     auto strRes = toString_RJS(*this, valueHandle);
     if (LLVM_UNLIKELY(strRes == ExecutionStatus::EXCEPTION)) {
       os << "exception thrown in toString of original exception\n";
@@ -1214,7 +1215,7 @@ void Runtime::printException(llvh::raw_ostream &os, Handle<> valueHandle) {
     os << tmp << "\n";
     return;
   }
-  // stack trace is available, try to convert it to string.
+                                                           
   auto strRes = toString_RJS(*this, makeHandle(std::move(*propRes)));
   if (LLVM_UNLIKELY(strRes == ExecutionStatus::EXCEPTION)) {
     os << "exception thrown in toString of stack trace\n";
@@ -1223,8 +1224,8 @@ void Runtime::printException(llvh::raw_ostream &os, Handle<> valueHandle) {
   PseudoHandle<StringPrimitive> str = std::move(*strRes);
   if (str->getStringLength() == 0) {
     str.invalidate();
-    // If the final value is the empty string,
-    // fall back to just printing the error.toString directly.
+                                              
+                                                              
     auto errToStringRes = toString_RJS(*this, valueHandle);
     if (LLVM_UNLIKELY(errToStringRes == ExecutionStatus::EXCEPTION)) {
       os << "exception thrown in toString of original exception\n";
@@ -1254,7 +1255,7 @@ std::vector<llvh::ArrayRef<uint8_t>> Runtime::getEpilogues() {
 
 llvh::Optional<Runtime::StackFrameInfo> Runtime::stackFrameInfoByIndex(
     uint32_t frameIdx) const {
-  // Locate the frame.
+                      
   auto frames = getStackFrames();
   auto it = frames.begin();
   for (; frameIdx && it != frames.end(); ++it, --frameIdx) {
@@ -1268,16 +1269,16 @@ llvh::Optional<Runtime::StackFrameInfo> Runtime::stackFrameInfoByIndex(
   return info;
 }
 
-/// Calculate and \return the offset between the location of the specified
-/// frame and the start of the stack. This value increases with every nested
-/// call.
+                                                                          
+                                                                            
+         
 uint32_t Runtime::calcFrameOffset(ConstStackFrameIterator it) const {
   assert(it != getStackFrames().end() && "invalid frame");
   return it->ptr() - registerStackStart_;
 }
 
-/// \return the offset between the location of the current frame and the
-///   start of the stack. This value increases with every nested call.
+                                                                        
+                                                                      
 uint32_t Runtime::getCurrentFrameOffset() const {
   return calcFrameOffset(getStackFrames().begin());
 }
@@ -1291,28 +1292,28 @@ raisePlaceholder(Runtime &runtime, Handle<JSError> errorObj, Handle<> message) {
   return runtime.setThrownValue(errorObj.getHermesValue());
 }
 
-/// A placeholder used to construct a Error Object that takes in a the specified
-/// message.
+                                                                                
+            
 static ExecutionStatus raisePlaceholder(
     Runtime &runtime,
     Handle<JSObject> prototype,
     Handle<> message) {
   GCScopeMarkerRAII gcScope{runtime};
 
-  // Create the error object, initialize stack property and set message.
+                                                                        
   auto errorObj = runtime.makeHandle(JSError::create(runtime, prototype));
   return raisePlaceholder(runtime, errorObj, message);
 }
 
-/// A placeholder used to construct a Error Object that takes in a const
-/// message. A new StringPrimitive is created each time.
-// TODO: Predefine each error message.
+                                                                        
+                                                        
+                                      
 static ExecutionStatus raisePlaceholder(
     Runtime &runtime,
     Handle<JSObject> prototype,
     const TwineChar16 &msg) {
-  // Since this happens unexpectedly and rarely, don't rely on the parent
-  // GCScope.
+                                                                         
+             
   GCScope gcScope{runtime};
 
   SmallU16String<64> buf;
@@ -1333,8 +1334,8 @@ ExecutionStatus Runtime::raiseError(const TwineChar16 &msg) {
 }
 
 ExecutionStatus Runtime::raiseTypeError(Handle<> message) {
-  // Since this happens unexpectedly and rarely, don't rely on the parent
-  // GCScope.
+                                                                         
+             
   GCScope gcScope{*this};
   return raisePlaceholder(
       *this, Handle<JSObject>::vmcast(&TypeErrorPrototype), message);
@@ -1381,8 +1382,8 @@ ExecutionStatus Runtime::raiseTypeErrorForCallable(Handle<> callable) {
   if (CodeBlock *curCodeBlock = getCurrentFrame().getCalleeCodeBlock(*this)) {
     if (OptValue<uint32_t> textifiedCalleeOffset =
             curCodeBlock->getTextifiedCalleeOffset()) {
-      // Look up the textified callee for the current IP in the debug
-      // information. If one is available, use that in the error message.
+                                                                     
+                                                                         
       OptValue<llvh::StringRef> tCallee =
           curCodeBlock->getRuntimeModule()
               ->getBytecode()
@@ -1391,17 +1392,17 @@ ExecutionStatus Runtime::raiseTypeErrorForCallable(Handle<> callable) {
                   *textifiedCalleeOffset,
                   curCodeBlock->getOffsetOf(getCurrentIP()));
       if (tCallee.hasValue()) {
-        // The textified callee is UTF8, so it may need to be converted to
-        // UTF16.
+                                                                          
+                 
         if (isAllASCII(tCallee->begin(), tCallee->end())) {
-          // All ASCII means no conversion is needed.
+                                                     
           return raiseTypeErrorForValue(
               TwineChar16(*tCallee) + " is not a function (it is ",
               callable,
               ")");
         }
 
-        // Convert UTF8 to UTF16 before creating the Error.
+                                                           
         llvh::SmallVector<char16_t, 16> tCalleeUTF16;
         convertUTF8WithSurrogatesToUTF16(
             std::back_inserter(tCalleeUTF16), tCallee->begin(), tCallee->end());
@@ -1594,11 +1595,11 @@ void Runtime::initCharacterStrings() {
 }
 
 Handle<StringPrimitive> Runtime::allocateCharacterString(char16_t ch) {
-  // This can in theory throw when called out of initialization phase.
-  // However there is only that many character strings and in practice this
-  // is not a problem.  Note that we allocate these as "long-lived" objects,
-  // so we don't have to scan the charStrings_ array in
-  // young-generation collections.
+                                                                      
+                                                                           
+                                                                            
+                                                       
+                                  
 
   PinnedHermesValue strRes;
   if (LLVM_LIKELY(ch < 128)) {
@@ -1619,7 +1620,7 @@ Handle<StringPrimitive> Runtime::getCharacterString(char16_t ch) {
       ignoreAllocationFailure(StringPrimitive::create(*this, UTF16Ref(ch))));
 }
 
-// Store all object and symbol ids in a static table to conserve code size.
+                                                                           
 static const struct {
   uint16_t object, method;
 #ifndef NDEBUG
@@ -1656,14 +1657,14 @@ ExecutionStatus Runtime::forEachPublicNativeBuiltin(
        ++methodIndex) {
     GCScopeMarkerRAII marker{*this};
     LLVM_DEBUG(llvh::dbgs() << publicNativeBuiltins[methodIndex].name << "\n");
-    // Find the object first, if it changed.
+                                            
     auto objectName = (Predefined::Str)publicNativeBuiltins[methodIndex].object;
     if (objectName != lastObjectName) {
       auto objectID = Predefined::getSymbolID(objectName);
-      // Avoid running any JS here to avoid modifying the builtins while
-      // iterating them.
+                                                                        
+                        
       NamedPropertyDescriptor desc;
-      // Check if the builtin is overridden.
+                                            
       if (!JSObject::getOwnNamedDescriptor(
               getGlobal(), *this, objectID, desc)) {
         return raiseTypeError(
@@ -1671,13 +1672,13 @@ ExecutionStatus Runtime::forEachPublicNativeBuiltin(
                 "Cannot execute a bytecode compiled with -fstatic-builtins: "} +
             getPredefinedString(objectName) + " was deleted");
       }
-      // Doesn't run accessors.
+                               
       auto cr = JSObject::getNamedSlotValue(getGlobal(), *this, desc);
       if (LLVM_UNLIKELY(cr == ExecutionStatus::EXCEPTION)) {
         return ExecutionStatus::EXCEPTION;
       }
-      // This is known to not be PropertyAccessor, so check that casting it to
-      // JSObject is allowed.
+                                                                              
+                             
       if (LLVM_UNLIKELY(!vmisa<JSObject>(cr->get()))) {
         return raiseTypeError(
             TwineChar16{
@@ -1689,7 +1690,7 @@ ExecutionStatus Runtime::forEachPublicNativeBuiltin(
       lastObjectName = objectName;
     }
 
-    // Find the method.
+                       
     auto methodName = (Predefined::Str)publicNativeBuiltins[methodIndex].method;
     auto methodID = Predefined::getSymbolID(methodName);
 
@@ -1709,7 +1710,7 @@ void Runtime::initNativeBuiltins() {
 
   (void)forEachPublicNativeBuiltin([this](
                                        unsigned methodIndex,
-                                       Predefined::Str /* objectName */,
+                                       Predefined::Str                 ,
                                        Handle<JSObject> &currentObject,
                                        SymbolID methodID) {
     auto cr = JSObject::getNamed_RJS(currentObject, *this, methodID);
@@ -1723,10 +1724,10 @@ void Runtime::initNativeBuiltins() {
     return ExecutionStatus::RETURNED;
   });
 
-  // Now add the private native builtins.
+                                         
   createHermesBuiltins(*this, builtins_);
 #ifndef NDEBUG
-  // Make sure native builtins are all defined.
+                                               
   for (unsigned i = 0; i < BuiltinMethod::_firstJS; ++i) {
     assert(builtins_[i] && "native builtin not initialized");
   }
@@ -1739,7 +1740,7 @@ static const struct JSBuiltin {
 #define BUILTIN_METHOD(object, method)
 #define PRIVATE_BUILTIN(name)
 #define JS_BUILTIN(name) \
-  {(uint16_t)Predefined::name, (uint16_t)BuiltinMethod::HermesBuiltin##_##name}
+  {(uint16_t)Predefined::name, (uint16_t)BuiltinMethod::HermesBuiltin##_##name},
 #include "hermes/FrontEndDefs/Builtins.def"
 };
 
@@ -1750,7 +1751,7 @@ void Runtime::initJSBuiltins(
     auto symID = jsBuiltin.symID;
     auto builtinIndex = jsBuiltin.builtinIndex;
 
-    // Try to get the JS function from jsBuiltinsObj.
+                                                     
     auto getRes = JSObject::getNamed_RJS(
         jsBuiltinsObj, *this, Predefined::getSymbolID((Predefined::Str)symID));
     assert(getRes == ExecutionStatus::RETURNED && "Failed to get JS builtin.");
@@ -1770,11 +1771,11 @@ ExecutionStatus Runtime::assertBuiltinsUnmodified() {
                                         Predefined::Str objectName,
                                         Handle<JSObject> &currentObject,
                                         SymbolID methodID) {
-    // Avoid running any JS here to avoid modifying the builtins while iterating
-    // them.
+                                                                                
+            
     NamedPropertyDescriptor desc;
-    // Check if the builtin is overridden.
-    // Need to check for flags which could result in JS execution.
+                                          
+                                                                  
     if (!JSObject::getOwnNamedDescriptor(
             currentObject, *this, methodID, desc) ||
         desc.flags.proxyObject || desc.flags.hostObject) {
@@ -1804,14 +1805,14 @@ void Runtime::freezeBuiltins() {
   assert(!builtinsFrozen_ && "Builtins are already frozen.");
   GCScope gcScope{*this};
 
-  // A list storing all the object ids that we will freeze on the global object
-  // in the end.
+                                                                               
+                
   std::vector<SymbolID> objectList;
-  // A list storing all the method ids on the same object that we will freeze on
-  // each object.
+                                                                                
+                 
   std::vector<SymbolID> methodList;
 
-  // Masks for setting the property a static builtin and read-only.
+                                                                   
   PropertyFlags clearFlags;
   clearFlags.configurable = 1;
   clearFlags.writable = 1;
@@ -1825,14 +1826,14 @@ void Runtime::freezeBuiltins() {
           Handle<JSObject> &currentObject,
           SymbolID methodID) {
         methodList.push_back(methodID);
-        // This is the last method on current object.
+                                                     
         if (methodIndex + 1 == BuiltinMethod::_publicCount ||
             objectName != publicNativeBuiltins[methodIndex + 1].object) {
-          // Store the object id in the object set.
+                                                   
           SymbolID objectID = Predefined::getSymbolID(objectName);
           objectList.push_back(objectID);
-          // Freeze all methods and mark them as static builtins on the current
-          // object.
+                                                                               
+                    
           JSObject::updatePropertyFlagsWithoutTransitions(
               currentObject,
               *this,
@@ -1844,8 +1845,8 @@ void Runtime::freezeBuiltins() {
         return ExecutionStatus::RETURNED;
       });
 
-  // Freeze all builtin objects and mark them as static builtins on the global
-  // object.
+                                                                              
+            
   JSObject::updatePropertyFlagsWithoutTransitions(
       getGlobal(),
       *this,
@@ -1859,19 +1860,19 @@ void Runtime::freezeBuiltins() {
 ExecutionStatus Runtime::drainJobs() {
   GCScope gcScope{*this};
   MutableHandle<Callable> job{*this};
-  // Note that new jobs can be enqueued during the draining.
+                                                            
   while (!jobQueue_.empty()) {
     GCScopeMarkerRAII marker{gcScope};
 
     job = jobQueue_.front();
     jobQueue_.pop_front();
 
-    // Jobs are guaranteed to behave as thunks.
+                                               
     auto callRes =
         Callable::executeCall0(job, *this, Runtime::getUndefinedValue());
 
-    // Early return to signal the caller. Note that the exceptional job has been
-    // popped, so re-invocation would pick up from the next available job.
+                                                                                
+                                                                          
     if (LLVM_UNLIKELY(callRes == ExecutionStatus::EXCEPTION)) {
       return ExecutionStatus::EXCEPTION;
     }
@@ -1880,7 +1881,7 @@ ExecutionStatus Runtime::drainJobs() {
 }
 
 ExecutionStatus Runtime::addToKeptObjects(Handle<JSObject> obj) {
-  // Lazily create the map for keptObjects_
+                                           
   if (keptObjects_.isUndefined()) {
     auto mapRes = OrderedHashMap::create(*this);
     if (LLVM_UNLIKELY(mapRes == ExecutionStatus::EXCEPTION)) {
@@ -1899,18 +1900,18 @@ void Runtime::clearKeptObjects() {
 uint64_t Runtime::gcStableHashHermesValue(Handle<HermesValue> value) {
   switch (value->getTag()) {
     case HermesValue::Tag::Object: {
-      // For objects, because pointers can move, we need a unique ID
-      // that does not change for each object.
+                                                                    
+                                              
       auto id = JSObject::getObjectID(vmcast<JSObject>(*value), *this);
       return llvh::hash_value(id);
     }
     case HermesValue::Tag::BigInt: {
-      // For bigints, we hash the string content.
+                                                 
       auto bytes = Handle<BigIntPrimitive>::vmcast(value)->getRawDataCompact();
       return llvh::hash_combine_range(bytes.begin(), bytes.end());
     }
     case HermesValue::Tag::Str: {
-      // For strings, we hash the string content.
+                                                 
       auto strView = StringPrimitive::createStringView(
           *this, Handle<StringPrimitive>::vmcast(value));
       return llvh::hash_combine_range(strView.begin(), strView.end());
@@ -1918,15 +1919,15 @@ uint64_t Runtime::gcStableHashHermesValue(Handle<HermesValue> value) {
     default:
       assert(!value->isPointer() && "Unhandled pointer type");
       if (value->isNumber()) {
-        // We need to check for NaNs because they may differ in the sign bit,
-        // but they should have the same hash value.
+                                                                             
+                                                    
         if (LLVM_UNLIKELY(value->isNaN()))
           return llvh::hash_value(HermesValue::encodeNaNValue().getRaw());
-        // To normalize -0 to 0.
+                                
         if (value->getNumber() == 0)
           return 0;
       }
-      // For everything else, we just take advantage of HermesValue.
+                                                                    
       return llvh::hash_value(value->getRaw());
   }
 }
@@ -1938,13 +1939,13 @@ bool Runtime::symbolEqualsToStringPrim(SymbolID id, StringPrimitive *strPrim) {
 
 LLVM_ATTRIBUTE_NOINLINE
 void Runtime::allocStack(uint32_t count, HermesValue initValue) {
-  // Note: it is important that allocStack be defined out-of-line. If inline,
-  // constants are propagated into initValue, which enables clang to use
-  // memset_pattern_16. This ends up being a significant loss as it is an
-  // indirect call.
+                                                                             
+                                                                        
+                                                                         
+                   
   auto *oldStackPointer = stackPointer_;
   allocUninitializedStack(count);
-  // Initialize the new registers.
+                                  
   std::uninitialized_fill_n(oldStackPointer, count, initValue);
 }
 
@@ -1970,7 +1971,7 @@ void Runtime::dumpCallFrames() {
   dumpCallFrames(llvh::errs());
 }
 
-/// Serialize a SymbolID.
+                         
 llvh::raw_ostream &operator<<(
     llvh::raw_ostream &OS,
     Runtime::FormatSymbolID format) {
@@ -1986,17 +1987,17 @@ llvh::raw_ostream &operator<<(
   return OS << "\")";
 }
 
-/****************************************************************************
- * WARNING: This code is run after a crash. Avoid walking data structures,
- *          doing memory allocation, or using libc etc. as much as possible
- ****************************************************************************/
+                                                                             
+                                                                          
+                                                                           
+                                                                              
 void Runtime::crashCallback(int fd) {
   llvh::raw_fd_ostream jsonStream(fd, false);
   JSONEmitter json(jsonStream);
 
-  // Temporary buffer for pointers converted to strings. 20 bytes is enough,
-  // since an 8 byte pointer is 16 characters, plus the "0x" and the null
-  // terminator.
+                                                                            
+                                                                         
+                
   char hexBuf[20];
   auto writeHex = [&hexBuf](void *ptr) {
     unsigned len = snprintf(hexBuf, sizeof(hexBuf), "%p", ptr);
@@ -2017,10 +2018,10 @@ void Runtime::crashCallback(int fd) {
   json.closeDict();
 }
 
-/****************************************************************************
- * WARNING: This code is run after a crash. Avoid walking data structures,
- *          doing memory allocation, or using libc etc. as much as possible
- ****************************************************************************/
+                                                                             
+                                                                          
+                                                                           
+                                                                              
 void Runtime::crashWriteCallStack(JSONEmitter &json) {
   json.openArray();
   for (auto frame : getStackFrames()) {
@@ -2048,8 +2049,8 @@ void Runtime::crashWriteCallStack(JSONEmitter &json) {
               file.c_str(),
               sourceLocation->line,
               sourceLocation->column);
-          // The length is either the return value of snprintf, or the buffer
-          // size without the null terminator, whichever is smaller.
+                                                                             
+                                                                    
           llvh::StringRef str{buf, std::min<size_t>(len, sizeof(buf) - 1)};
           json.emitKeyValue("SourceLocation", str);
         }
@@ -2061,22 +2062,22 @@ void Runtime::crashWriteCallStack(JSONEmitter &json) {
     } else {
       json.emitKeyValue("NativeCode", true);
     }
-    json.closeDict(); // frame
+    json.closeDict();         
   }
-  json.closeArray(); // frames
+  json.closeArray();          
 }
 
 std::string Runtime::getCallStackNoAlloc(const Inst *ip) {
   NoAllocScope noAlloc(*this);
   std::string res;
-  // Note that the order of iteration is youngest (leaf) frame to oldest.
+                                                                         
   for (auto frame : getStackFrames()) {
     auto codeBlock = frame->getCalleeCodeBlock(*this);
     if (codeBlock) {
       res += codeBlock->getNameString(*this);
-      // Default to the function entrypoint, this
-      // ensures source location is provided for leaf frame even
-      // if ip is not available.
+                                                 
+                                                                
+                                
       const uint32_t bytecodeOffs =
           ip != nullptr ? codeBlock->getOffsetOf(ip) : 0;
       auto blockSourceCode = codeBlock->getDebugSourceLocationsOffset();
@@ -2095,8 +2096,8 @@ std::string Runtime::getCallStackNoAlloc(const Inst *ip) {
     } else {
       res += "<Native code>\n";
     }
-    // Get the ip of the caller frame -- which will then be correct for the
-    // next iteration.
+                                                                           
+                      
     ip = frame.getSavedIP();
   }
   return res;
@@ -2117,7 +2118,7 @@ void Runtime::onGCEvent(GCEventKind kind, const std::string &extraInfo) {
         llvm_unreachable("unknown GCEventKind");
     }
   }
-#endif // HERMESVM_SAMPLING_PROFILER_AVAILABLE
+#endif                                        
   if (gcEventCallback_) {
     gcEventCallback_(kind, extraInfo.c_str());
   }
@@ -2165,25 +2166,25 @@ void Runtime::recordHiddenClass(
     HiddenClass *cachedHiddenClass) {
   auto offset = codeBlock->getOffsetOf(cacheMissInst);
 
-  // inline caching hit
+                       
   if (objectHiddenClass == cachedHiddenClass) {
     inlineCacheProfiler_.insertICHit(codeBlock, offset);
     return;
   }
 
-  // inline caching miss
+                        
   assert(objectHiddenClass != nullptr && "object hidden class should exist");
-  // prevent object hidden class from being GC-ed
+                                                 
   preventHCGC(objectHiddenClass);
   ClassId objectHiddenClassId = getHeap().getObjectID(objectHiddenClass);
-  // prevent cached hidden class from being GC-ed
+                                                 
   ClassId cachedHiddenClassId =
       static_cast<ClassId>(GCBase::IDTracker::kInvalidNode);
   if (cachedHiddenClass != nullptr) {
     preventHCGC(cachedHiddenClass);
     cachedHiddenClassId = getHeap().getObjectID(cachedHiddenClass);
   }
-  // add the record to inline caching profiler
+                                              
   inlineCacheProfiler_.insertICMiss(
       codeBlock, offset, symbolID, objectHiddenClassId, cachedHiddenClassId);
 }
@@ -2206,7 +2207,7 @@ HiddenClass *Runtime::resolveHiddenClassId(ClassId classId) {
 #endif
 
 ExecutionStatus Runtime::notifyTimeout() {
-  // TODO: allow a vector of callbacks.
+                                       
   return raiseTimeoutError();
 }
 
@@ -2292,7 +2293,7 @@ void Runtime::pushCallStackImpl(
   stackTracesTree_->pushCallStack(*this, codeBlock, ip);
 }
 
-#endif // HERMES_MEMORY_INSTRUMENTATION
+#endif                                 
 
 void ScopedNativeDepthReducer::staticAsserts() {
 #ifdef HERMES_CHECK_NATIVE_STACK
@@ -2302,7 +2303,7 @@ void ScopedNativeDepthReducer::staticAsserts() {
 #endif
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
 #undef DEBUG_TYPE

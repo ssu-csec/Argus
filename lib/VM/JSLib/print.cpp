@@ -15,7 +15,7 @@
 namespace hermes {
 namespace vm {
 
-/// Convert all arguments to string and print them followed by new line.
+                                                                        
 CallResult<HermesValue> print(void *, Runtime &runtime, NativeArgs args) {
   GCScope scope(runtime);
   auto marker = scope.createMarker();
@@ -41,5 +41,5 @@ CallResult<HermesValue> print(void *, Runtime &runtime, NativeArgs args) {
   return HermesValue::encodeUndefinedValue();
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

@@ -1,4 +1,4 @@
-/* in libgcc.a */
+                 
 
 #ifdef HAVE__ALLOCA
   EXPLICIT_SYMBOL(_alloca)
@@ -20,7 +20,7 @@
   EXPLICIT_SYMBOL(___chkstk_ms)
 #endif
 #ifdef HAVE___MAIN
-  EXPLICIT_SYMBOL(__main) // FIXME: Don't call it.
+  EXPLICIT_SYMBOL(__main)                         
 #endif
 
 #ifdef HAVE___ASHLDI3
@@ -29,7 +29,7 @@
 #ifdef HAVE___ASHRDI3
   EXPLICIT_SYMBOL(__ashrdi3)
 #endif
-#ifdef HAVE___CMPDI2 // FIXME: unused
+#ifdef HAVE___CMPDI2                 
   EXPLICIT_SYMBOL(__cmpdi2)
 #endif
 #ifdef HAVE___DIVDI3
@@ -66,7 +66,7 @@
   EXPLICIT_SYMBOL(__umoddi3)
 #endif
 
-/* msvcrt */
+            
 #if defined(_MSC_VER)
   EXPLICIT_SYMBOL2(alloca, _alloca_probe)
 
@@ -90,7 +90,7 @@
   INLINE_DEF_FLOAT_SYMBOL(tanf, 1)
   INLINE_DEF_FLOAT_SYMBOL(tanhf, 1)
 
-  // These were added in VS 2013.
+                                 
 #if (1800 <= _MSC_VER && _MSC_VER < 1900)
   INLINE_DEF_FLOAT_SYMBOL(copysignf, 2)
   INLINE_DEF_FLOAT_SYMBOL(fminf, 2)

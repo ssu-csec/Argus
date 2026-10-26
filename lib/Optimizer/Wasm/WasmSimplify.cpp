@@ -36,7 +36,7 @@ Value *simplifyAsUint32(Value *operand) {
   auto *lhs = binary->getLeftHandSide();
   auto *rhs = binary->getRightHandSide();
   auto *amount = llvh::dyn_cast<LiteralNumber>(rhs);
-  // Left hand should be int32/uint32, and shift amount should be 0.
+                                                                    
   if (!amount || amount->asUInt32() != 0 || !lhs->getType().isIntegerType())
     return operand;
 
@@ -74,12 +74,12 @@ OptValue<Value *> simplifyBinOpWasm(BinaryOperatorInst *binary) {
           builder.createCallIntrinsicInst(WasmIntrinsics::__uasm_sub32, args);
       break;
     case OpKind::DivideKind:
-      // Asm.js will have both oprands in the same type
+                                                       
       if (leftTy.isInt32Type()) {
         intrinsic = builder.createCallIntrinsicInst(
             WasmIntrinsics::__uasm_divi32, args);
       } else {
-        // Try removing URshift (x >>> 0)
+                                         
         auto lhs_pealed = simplifyAsUint32(lhs);
         auto rhs_pealed = simplifyAsUint32(rhs);
         args.clear();
@@ -91,7 +91,7 @@ OptValue<Value *> simplifyBinOpWasm(BinaryOperatorInst *binary) {
       break;
 
     default:
-      // TODO: handle other binary operations.
+                                              
       return llvh::None;
       break;
   }
@@ -99,9 +99,9 @@ OptValue<Value *> simplifyBinOpWasm(BinaryOperatorInst *binary) {
   return intrinsic;
 }
 
-// Replace memory loads with Wasm intrinsics.
-// Note: this is not 100% safe. We assume memory typed arrays, such as
-// HEAP8, are pseudo-keywords.
+                                             
+                                                                      
+                              
 OptValue<Value *> simplifyLoad(LoadPropertyInst *load) {
   auto *loadHeapInst = llvh::dyn_cast<LoadFrameInst>(load->getObject());
   if (!loadHeapInst)
@@ -111,7 +111,7 @@ OptValue<Value *> simplifyLoad(LoadPropertyInst *load) {
     return llvh::None;
   LLVM_DEBUG(llvh::dbgs() << "found a heap access to " << heapStr << "\n");
 
-  // Remove addr right shift. E.g., HEAP8[addr >> 0]
+                                                    
   auto *addrInst = llvh::dyn_cast<BinaryOperatorInst>(load->getProperty());
   if (!addrInst)
     return llvh::None;
@@ -122,7 +122,7 @@ OptValue<Value *> simplifyLoad(LoadPropertyInst *load) {
   if (!amount)
     return llvh::None;
 
-  // Replace with __uasm.load
+                             
   IRBuilder builder(load->getParent()->getParent());
   builder.setInsertionPoint(load);
   llvh::SmallVector<Value *, 2> args{};
@@ -161,7 +161,7 @@ OptValue<Value *> simplifyLoad(LoadPropertyInst *load) {
     intrinsic =
         builder.createCallIntrinsicInst(WasmIntrinsics::__uasm_loadu32, args);
   } else {
-    // Some other global object that starts with HEAP.
+                                                      
     return llvh::None;
   }
   intrinsic->setType(Type::createInt32());
@@ -177,7 +177,7 @@ OptValue<Value *> simplifyStore(StorePropertyInst *store) {
     return llvh::None;
   LLVM_DEBUG(llvh::dbgs() << "found a heap access to " << heapStr << "\n");
 
-  // Remove addr right shift. E.g., HEAP8[addr >> 0]
+                                                    
   auto *addrInst = llvh::dyn_cast<BinaryOperatorInst>(store->getProperty());
   if (!addrInst)
     return llvh::None;
@@ -188,7 +188,7 @@ OptValue<Value *> simplifyStore(StorePropertyInst *store) {
   if (!amount)
     return llvh::None;
 
-  // Replace with __uasm.store
+                              
   IRBuilder builder(store->getParent()->getParent());
   builder.setInsertionPoint(store);
   llvh::SmallVector<Value *, 3> args{};
@@ -213,7 +213,7 @@ OptValue<Value *> simplifyStore(StorePropertyInst *store) {
     intrinsic =
         builder.createCallIntrinsicInst(WasmIntrinsics::__uasm_store32, args);
   } else {
-    // Some other global object that starts with HEAP.
+                                                      
     return llvh::None;
   }
   return intrinsic;
@@ -230,12 +230,12 @@ OptValue<Value *> simplifyCall(CallInst *call) {
   llvh::SmallVector<Value *, 2> args{};
 
   if (heapStr == "Math_imul") {
-    // This, lhs, rhs.
+                      
     if (call->getNumArguments() != 3)
       return llvh::None;
     Value *lhs = call->getArgument(1);
     Value *rhs = call->getArgument(2);
-    // lhs and rhs must be integers.
+                                    
     if (!(lhs->getType().isIntegerType() && rhs->getType().isIntegerType()))
       return llvh::None;
     args.push_back(lhs);
@@ -249,14 +249,14 @@ OptValue<Value *> simplifyCall(CallInst *call) {
   return llvh::None;
 }
 
-/// Try to simplify the instruction \p I by replacing it
-/// with Wasm Intrinsics.
-/// \returns one of:
-///   - llvh::None if the instruction cannot be simplified.
-///   - a new instruction to replace the original one
-///   - nullptr if the instruction should be deleted.
+                                                        
+                         
+                    
+                                                           
+                                                     
+                                                     
 OptValue<Value *> wasmSimplifyInstruction(Instruction *I) {
-  // Dispatch the different simplification kinds:
+                                                 
   switch (I->getKind()) {
     case ValueKind::BinaryOperatorInstKind:
       return simplifyBinOpWasm(cast<BinaryOperatorInst>(I));
@@ -267,28 +267,28 @@ OptValue<Value *> wasmSimplifyInstruction(Instruction *I) {
     case ValueKind::CallInstKind:
       return simplifyCall(cast<CallInst>(I));
     default:
-      // Other kinds of instructions we cannot handle.
+                                                      
       return llvh::None;
   }
 }
 
-} // namespace
+}             
 
 bool WasmSimplify::runOnFunction(Function *F) {
   bool changed = false;
   IRBuilder::InstructionDestroyer destroyer;
 
-  // For all blocks in the function:
+                                    
   for (BasicBlock &BB : *F) {
-    // For all instructions:
+                            
     for (auto instIter = BB.begin(), e = BB.end(); instIter != e;) {
       Instruction *II = &*instIter;
       ++instIter;
 
-      // replace arithmetic expressions with Wasm intrinsics.
+                                                             
       auto optNewVal = wasmSimplifyInstruction(II);
 
-      // optNewVal is llvh::None, nothing can be done.
+                                                      
       if (!optNewVal.hasValue())
         continue;
 
@@ -296,13 +296,13 @@ bool WasmSimplify::runOnFunction(Function *F) {
       changed = true;
       NumWasmSimp++;
 
-      // We have a better and simpler instruction. Replace the original
-      // instruction.
+                                                                       
+                     
       if (newVal) {
         II->replaceAllUsesWith(newVal);
       }
-      // The instruction should be deleted, since it is either optimized away
-      // or replaced.
+                                                                             
+                     
       destroyer.add(II);
     }
   }

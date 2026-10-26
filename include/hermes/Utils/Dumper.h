@@ -15,7 +15,7 @@
 
 namespace llvh {
 class raw_ostream;
-} // namespace llvh
+}                  
 
 namespace hermes {
 class Value;
@@ -31,11 +31,11 @@ class ReturnInst;
 class Parameter;
 class BranchInst;
 
-/// Display a nice dotty graph that depicts the function.
+                                                         
 void viewGraph(Function *F);
 
-/// A utility class for naming instructions. This should only be used for
-/// pretty-printing instructions.
+                                                                         
+                                 
 struct InstructionNamer {
   InstructionNamer() = default;
   std::map<Value *, unsigned> InstrMap;
@@ -47,14 +47,14 @@ struct InstructionNamer {
 using llvh::raw_ostream;
 
 struct IRPrinter : public IRVisitor<IRPrinter, void> {
-  /// Indentation level.
+                        
   unsigned Indent;
 
   SourceErrorManager &sm_;
-  /// Output stream.
+                    
   llvh::raw_ostream &os;
-  /// If set to true then we need to escape the quote mark because the output of
-  /// this printer may be printed as a quoted label.
+                                                                                
+                                                    
   bool needEscape;
 
   InstructionNamer InstNamer;
@@ -83,13 +83,13 @@ struct IRPrinter : public IRVisitor<IRPrinter, void> {
   void printScopeRange(ScopeDesc *Start, ScopeDesc *End);
   void printScopeChain(ScopeDesc *S);
 
-  /// Prints \p F's name in the following format:
-  ///
-  ///   name#a#b#c(params?)#d
-  ///
-  /// which means name is declared in scope "c"( which is an inner scope of "b",
-  /// itself an inner scope of "a"), and its "function" scope is "d". "params"
-  /// are omitted if \p printFunctionParams == PrintFunctionParams::No.
+                                                 
+     
+                             
+     
+                                                                                
+                                                                              
+                                                                       
   enum class PrintFunctionParams { No, Yes };
   void printFunctionName(Function *F, PrintFunctionParams printFunctionParams);
   void printVariableName(Variable *V);
@@ -98,13 +98,13 @@ struct IRPrinter : public IRVisitor<IRPrinter, void> {
     return needEscape ? R"(\")" : R"(")";
   }
 
-  /// Quote the string if it has spaces.
+                                        
   std::string quoteStr(llvh::StringRef name);
 
-  /// Escapes the string if it has non-printable characters.
+                                                            
   std::string escapeStr(llvh::StringRef name);
 
-  /// Declare the functions we are going to reimplement.
+                                                        
   void visitInstruction(const Instruction &I);
   void visitBasicBlock(const BasicBlock &BB);
   void visitFunction(const Function &F);
@@ -112,6 +112,6 @@ struct IRPrinter : public IRVisitor<IRPrinter, void> {
   void visitModule(const Module &M);
 };
 
-} // namespace hermes
+}                    
 
 #endif

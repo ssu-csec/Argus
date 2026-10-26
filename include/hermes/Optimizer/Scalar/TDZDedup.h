@@ -13,7 +13,7 @@
 
 namespace hermes {
 
-/// Eliminate TDZ checks dominated by the same TDZ check.
+                                                         
 class TDZDedup : public FunctionPass {
  public:
   explicit TDZDedup() : FunctionPass("TDZDedup") {}
@@ -22,6 +22,6 @@ class TDZDedup : public FunctionPass {
   bool runOnFunction(Function *F) override;
 };
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_OPTIMIZER_SCALAR_TDZDEDUP_H
+#endif                                      

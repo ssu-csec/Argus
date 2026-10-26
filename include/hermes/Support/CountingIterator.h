@@ -12,7 +12,7 @@
 
 namespace hermes {
 
-// Iterator that counts number of operator++ invocations
+                                                        
 template <typename T>
 class CountingIterator {
  public:
@@ -55,6 +55,6 @@ class CountingIterator {
   T dummy_{};
 };
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_SUPPORT_COUNTINGITERATOR_H
+#endif                                     

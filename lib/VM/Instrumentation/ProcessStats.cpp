@@ -8,11 +8,11 @@
 #include "hermes/VM/instrumentation/ProcessStats.h"
 
 #if defined(_WINDOWS)
-// Include windows.h first because other includes from windows API need it.
-// The blank line after the include is necessary to avoid lint error.
+                                                                           
+                                                                     
 #define WIN32_LEAN_AND_MEAN
 #ifndef NOMINMAX
-#define NOMINMAX // do not define min/max macros
+#define NOMINMAX                                
 #endif
 #include <windows.h>
 
@@ -22,7 +22,7 @@
 #elif defined(__linux__)
 #include <unistd.h>
 #include <fstream>
-#endif // __MACH__, __linux__
+#endif                       
 
 namespace hermes {
 namespace vm {
@@ -65,7 +65,7 @@ ProcessStats::Info getProcessStatSnapshot() {
   std::ifstream statm("/proc/self/statm");
   statm >> va >> rss;
 
-  // Linux outputs these metrics as a number of pages, correct for that.
+                                                                        
   const size_t PS = getpagesize();
   rss *= PS / 1024;
   va *= PS / 1024;
@@ -81,7 +81,7 @@ ProcessStats::Info getProcessStatSnapshot() {
   return result;
 }
 
-} // namespace
+}             
 
 void ProcessStats::Info::printJSON(llvh::raw_ostream &os) {
   os << "{\n " << "\t\"Integral of RSS kBms\": " << RSSkB << ",\n"
@@ -108,5 +108,5 @@ ProcessStats::Info ProcessStats::getIntegratedInfo() const {
   return ret;
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

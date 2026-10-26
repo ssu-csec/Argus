@@ -10,9 +10,9 @@
 #include "hermes/VM/StringPrimitive.h"
 
 using namespace hermes::vm::detail;
-// In GCC/CLANG, method definitions can refer to ancestor namespaces of
-// the namespace that the class is declared in without namespace qualifiers.
-// This is not allowed in MSVC.
+                                                                       
+                                                                            
+                               
 using hermes::vm::StringPrimitive;
 using hermes::vm::SymbolID;
 
@@ -32,15 +32,15 @@ uint32_t IdentifierHashTable::lookupString(
 #endif
   uint32_t idx = hash & (cap - 1);
   uint32_t base = 1;
-  // deletedIndex tracks the index of a deleted entry found in the conflict
-  // chain. If we could not find an entry that matches str, we would return
-  // the deleted slot for insertion to be able to reuse deleted space.
+                                                                           
+                                                                           
+                                                                      
   OptValue<uint32_t> deletedIndex;
-  // The loop will always terminate as long as the hash table is not full.
+                                                                          
   while (1) {
     if (table_.isEmpty(idx)) {
-      // Found an empty entry, meaning that str does not exist in the table.
-      // If deletedIndex is available, return it, otherwise return idx.
+                                                                            
+                                                                       
       return deletedIndex ? *deletedIndex : idx;
     } else if (table_.isDeleted(idx)) {
       assert(
@@ -48,8 +48,8 @@ uint32_t IdentifierHashTable::lookupString(
           "mustBeNew should never be set if there are deleted entries");
       deletedIndex = idx;
     } else if (!mustBeNew) {
-      // If mustBeNew is set, we know this string does not exist in the table.
-      // There is no need to compare.
+                                                                              
+                                     
 
       auto &lookupTableEntry =
           identifierTable_->getLookupTableEntry(table_.get(idx));
@@ -66,27 +66,27 @@ uint32_t IdentifierHashTable::lookupString(
             }
           }
         } else if (lookupTableEntry.isLazyASCII()) {
-          // Lazy ASCII string.
+                               
           if (stringRefEquals(str, lookupTableEntry.getLazyASCIIRef())) {
             return idx;
           }
         } else {
-          // UTF16 string.
+                          
           if (stringRefEquals(str, lookupTableEntry.getLazyUTF16Ref())) {
             return idx;
           }
         }
       }
     }
-    /// Use quadratic probing to find next probe index in the hash table.
-    /// h(k, i) = (h(k) + 1/2 * i + 1/2 * i^2) mod m.
-    /// This guarantees the values of h(k,i) for i in [0,m-1] are all distinct.
+                                                                         
+                                                     
+                                                                               
     idx = (idx + base) & (cap - 1);
     ++base;
   }
 }
 
-// Instantiate the templated method so it can be called from other files.
+                                                                         
 
 template uint32_t IdentifierHashTable::lookupString(
     llvh::ArrayRef<char> str,
@@ -138,7 +138,7 @@ void IdentifierHashTable::remove(const StringPrimitive *str) {
 }
 
 void IdentifierHashTable::growAndRehash(uint32_t newCapacity) {
-  // Guard against potential overflow in the calculation of new capacity.
+                                                                         
   if (LLVM_UNLIKELY(newCapacity <= capacity())) {
     hermes_fatal("too many identifiers created");
   }
@@ -149,7 +149,7 @@ void IdentifierHashTable::growAndRehash(uint32_t newCapacity) {
     if (!tmpTable.isValid(oldIdx)) {
       continue;
     }
-    // Pass true as second argument as we know this string is not in the table.
+                                                                               
     uint32_t idx = 0;
     uint32_t oldVal = tmpTable.get(oldIdx);
     auto &lookupTableEntry = identifierTable_->getLookupTableEntry(oldVal);

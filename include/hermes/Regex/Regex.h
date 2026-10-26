@@ -34,7 +34,7 @@ namespace regex {
 
 template <class Traits>
 class Regex {
-  // Enable the Parser to add nodes to us.
+                                          
   template <class A, class B>
   friend class Parser;
 
@@ -47,40 +47,40 @@ class Regex {
   Traits traits_;
   SyntaxFlags flags_ = {};
 
-  // Number of capture groups encountered so far.
+                                                 
   uint16_t markedCount_ = 0;
 
-  // Number of loops encountered so far.
+                                        
   uint32_t loopCount_ = 0;
 
-  // The list of nodes so far.
+                              
   NodeList nodes_;
 
-  // List of all unique_ptrs to all nodes created by this Regex, used to defer
-  // destructors and avoid a stack overflow.
+                                                                              
+                                            
   NodeHolder nodeHolder_;
 
-  // The error, which may be set after parsing.
+                                               
   constants::ErrorType error_ = constants::ErrorType::None;
 
-  // Constraints on the type of strings that can match this regex.
+                                                                  
   MatchConstraintSet matchConstraints_ = 0;
 
-  // This holds the named capture groups in the order they were defined.
+                                                                        
   std::deque<llvh::SmallVector<char16_t, 5>> orderedGroupNames_{};
 
   ParsedGroupNamesMapping nameMapping_{};
 
-  // We can skip double parsing if there were no named backreferences used
-  // before the definition of the first named capture group.
+                                                                          
+                                                            
   bool sawNamedBackrefBeforeGroup_{false};
 
-  // Named backrefs that might be invalid.
+                                          
   std::vector<std::pair<GroupName, BackRefNode *>> unresolvedNamedBackRefs_;
 
-  /// Construct and and append a node of type NodeType at the end of the nodes_
-  /// list. The node should be constructible from \p args.
-  /// \return an observer pointer to the new node.
+                                                                               
+                                                          
+                                                  
   template <typename NodeType, typename... Args>
   NodeType *appendNode(Args &&...args) {
     std::unique_ptr<NodeType> node =
@@ -91,18 +91,18 @@ class Regex {
     return nodePtr;
   }
 
-  /// \return the "current" node, which is the last (rightmost) node created.
+                                                                             
   Node *currentNode() {
     return nodes_.back();
   }
 
-  /// \return the number of marked subexpressions.
+                                                  
   uint16_t markedCount() const {
     return markedCount_;
   }
 
-  /// Increment the number of marked subexpressions.
-  /// \return the previous value of markedCount_.
+                                                    
+                                                 
   uint16_t incrementMarkedCount() {
     assert(
         markedCount_ < std::numeric_limits<uint16_t>::max() &&
@@ -110,19 +110,19 @@ class Regex {
     return markedCount_++;
   }
 
-  /// Given that the node \p splicePoint is in our node list, remove all nodes
-  /// after it. \return a list of the removed nodes.
+                                                                              
+                                                    
   NodeList spliceOut(Node *splicePoint) {
     assert(splicePoint && "null node in spliceOut");
-    // Find the index of the splice point. We expect it to be towards the end.
+                                                                              
     size_t spliceIndex = nodes_.size();
     while (spliceIndex--) {
       if (nodes_[spliceIndex] == splicePoint)
         break;
     }
     assert(spliceIndex < nodes_.size() && "Node not in node list");
-    // Move all nodes after the splice index into a new vector.
-    // Note this may be empty.
+                                                               
+                              
     auto firstToMove = nodes_.begin() + spliceIndex + 1;
     NodeList result;
     std::move(firstToMove, nodes_.end(), std::back_inserter(result));
@@ -131,11 +131,11 @@ class Regex {
   }
 
  public:
-  /// Compile the regex into bytecode. Return the resulting bytecode.
+                                                                     
   std::vector<uint8_t> compile() const {
     assert(valid() && "Cannot compile invalid regex.");
-    // TODO: add validation for the loop and reduce the size of loopCount_ to
-    // uint16_t.
+                                                                             
+                
     assert(
         markedCount_ <= constants::kMaxCaptureGroupCount &&
         "Too many capture groups");
@@ -150,7 +150,7 @@ class Regex {
     return bcs.acquireBytecode();
   }
 
-  // Constructors
+                 
   explicit Regex(const CharT *p, const char16_t *f = u"")
       : Regex(
             {p, p + std::char_traits<CharT>::length(p)},
@@ -159,7 +159,7 @@ class Regex {
   Regex(
       const llvh::ArrayRef<CharT> pattern,
       const llvh::ArrayRef<char16_t> flags = {}) {
-    // Compute the SyntaxFlags based on the flags string.
+                                                         
     auto sflags = SyntaxFlags::fromString(flags);
     if (!sflags) {
       error_ = constants::ErrorType::InvalidFlags;
@@ -169,15 +169,15 @@ class Regex {
     error_ = parse(pattern.begin(), pattern.end());
   }
 
-  // Disallow copy-assignment and copy-construction.
+                                                    
   Regex &operator=(const Regex &) = delete;
   Regex(const Regex &) = delete;
 
-  /// Move-assignment and move-construction.
+                                            
   Regex &operator=(Regex &&) = default;
   Regex(Regex &&) = default;
 
-  // Accessors.
+               
   unsigned markCount() const {
     return markedCount_;
   }
@@ -205,17 +205,17 @@ class Regex {
     sawNamedBackrefBeforeGroup_ = true;
   }
 
-  /// \return any errors produced during parsing, or ErrorType::None if none.
+                                                                             
   constants::ErrorType getError() const {
     return error_;
   }
 
-  /// \return whether the regex was parsed successfully.
+                                                        
   bool valid() const {
     return error_ == constants::ErrorType::None;
   }
 
-  /// \return the set of match constraints for the regex.
+                                                         
   MatchConstraintSet matchConstraints() const {
     return matchConstraints_;
   }
@@ -224,11 +224,11 @@ class Regex {
   template <class ForwardIterator>
   constants::ErrorType parse(ForwardIterator first, ForwardIterator last);
 
-  /// Attempt to parse the regex from the range [\p first, \p last), using
-  /// \p backRefLimit as the maximum decimal escape to interpret as a
-  /// backreference.  The maximum backreference that was in fact encountered
-  /// is returned by reference in \p out_max_back_ref, if that is larger than
-  /// its current value. \return an error code.
+                                                                          
+                                                                     
+                                                                            
+                                                                             
+                                               
   template <class ForwardIterator>
   constants::ErrorType parseWithBackRefLimit(
       ForwardIterator first,
@@ -237,8 +237,8 @@ class Regex {
       bool hasNamedGroups,
       uint32_t *outMaxBackRef);
 
-  // Note- this method does not insert into the AST, it populates a different
-  // datastructure. Returns false if the given name was already defined.
+                                                                             
+                                                                        
   bool addNamedCaptureGroup(GroupName &&identifier, uint32_t groupNum);
 
   bool resolveNamedBackRefs();
@@ -287,22 +287,22 @@ constants::ErrorType Regex<Traits>::parse(
       hasNamedGroups,
       &maxBackRef);
 
-  // Validate loop and capture group count.
+                                           
   if (loopCount_ > constants::kMaxLoopCount) {
     return constants::ErrorType::PatternExceedsParseLimits;
   }
 
-  // See comment --DecimalEscape--
-  // We parsed without a backreference limit because we had to parse to discover
-  // the limit. Now we know that we wrongly interpreted a decimal escape as a
-  // backreference. See ES6 Annex B.1.4 DecimalEscape "but only if the integer
-  // value DecimalEscape is <= NCapturingParens". Now that we know the true
-  // capture group count, either produce an error (if Unicode) or re-parse with
-  // that as the limit so overlarge decimal escapes will be ignored.
+                                  
+                                                                                
+                                                                             
+                                                                              
+                                                                           
+                                                                               
+                                                                    
   bool reparseForNumberedBackref =
       result == constants::ErrorType::None && maxBackRef > markedCount_;
-  // We must also reparse if there were any named capture groups used and it is
-  // not unicode mode.
+                                                                               
+                      
   bool reparseForNamedBackref = false;
   if (!flags_.unicode && nameMapping_.size() > 0 &&
       sawNamedBackrefBeforeGroup_) {
@@ -340,14 +340,14 @@ constants::ErrorType Regex<Traits>::parseWithBackRefLimit(
     uint32_t backRefLimit,
     bool hasNamedGroups,
     uint32_t *outMaxBackRef) {
-  // Initialize our node list with a single no-op node (it must never be empty.)
+                                                                                
   nodes_.clear();
   appendNode<Node>();
   auto result = parseRegex(
       first, last, this, flags_, backRefLimit, hasNamedGroups, outMaxBackRef);
 
-  // If we succeeded, add a goal node as the last node and perform optimizations
-  // on the list.
+                                                                                
+                 
   if (result == constants::ErrorType::None) {
     appendNode<GoalNode>();
     Node::optimizeNodeList(nodes_, flags_, nodeHolder_);
@@ -356,7 +356,7 @@ constants::ErrorType Regex<Traits>::parseWithBackRefLimit(
     }
   }
 
-  // Compute any match constraints.
+                                   
   matchConstraints_ = Node::matchConstraintsForList(nodes_);
 
   return result;
@@ -440,10 +440,10 @@ template <class Traits>
 void Regex<Traits>::pushNamedBackRef(GroupName &&identifier) {
   auto search = nameMapping_.find(identifier);
   if (search == nameMapping_.end()) {
-    // If this name hasn't been defined yet, we have a case of an ambiguous
-    // named backref. It could be valid or not, because the group name could be
-    // defined in the future. We will revist these nodes at the end to see if
-    // they are valid.
+                                                                           
+                                                                               
+                                                                             
+                      
     BackRefNode *backRef = appendNode<BackRefNode>(0);
     unresolvedNamedBackRefs_.emplace_back(std::move(identifier), backRef);
     return;
@@ -482,16 +482,16 @@ template <class Traits>
 bool Regex<Traits>::addNamedCaptureGroup(
     GroupName &&identifier,
     uint32_t groupNum) {
-  // Add one to the given group number because later on this is used to index
-  // into the whole matches array, which will be prepended with the entire match
-  // string so all these group numbers will be off by one if we don't offset it
-  // here.
+                                                                             
+                                                                                
+                                                                               
+          
   auto &elm = orderedGroupNames_.emplace_back(std::move(identifier));
   auto res = nameMapping_.try_emplace(elm, groupNum + 1);
   return res.second;
 }
 
-} // namespace regex
-} // namespace hermes
+}                   
+}                    
 
-#endif // HERMES_REGEX_COMPILER_H
+#endif                           

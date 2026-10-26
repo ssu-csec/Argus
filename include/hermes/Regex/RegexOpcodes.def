@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// This file defines the opcodes that regex supports.
-// Clients are expected to #define the REOP macro, #include this file,
-// and then #undef the macro.
+                                                     
+                                                                      
+                             
 
 REOP(Goal)
 REOP(LeftAnchor)

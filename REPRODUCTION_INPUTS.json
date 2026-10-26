@@ -1,0 +1,77 @@
+{
+  "inputs": [
+    {
+      "file": "final_classification.json.gz",
+      "sha256": "22e268b87dec229d7bfcd68db294c7ac5f0f05930c7ebadb350257e12fc73153",
+      "bytes": 20739454,
+      "in_source_package": false,
+      "required_for": "CSV/overlap and host-list reproduction",
+      "availability": "Separate archived data; no public download URL configured"
+    },
+    {
+      "file": "easyprivacy_tracker_domains.txt",
+      "sha256": "8b360b8d543ca98d7e94bf6b17bb83beaffefc60045f9ff6306211d684091f94",
+      "bytes": 138842,
+      "in_source_package": false,
+      "required_for": "CSV/overlap and host-list reproduction",
+      "availability": "Separate archived data; no public download URL configured"
+    },
+    {
+      "file": "local_network.json.gz",
+      "sha256": "756ece033bd18f525edeaf62be3bdda9de22399ce116eaceca90c5371676be2e",
+      "bytes": 16350217,
+      "in_source_package": false,
+      "required_for": "CSV/overlap and host-list reproduction",
+      "availability": "Separate archived data; no public download URL configured"
+    },
+    {
+      "file": "argus1_network.json.gz",
+      "sha256": "44b2dcf6ce9b9fa354e664763240cedbc77bd27364441145aa3fe8dde596a8f3",
+      "bytes": 34040948,
+      "in_source_package": false,
+      "required_for": "CSV/overlap and host-list reproduction",
+      "availability": "Separate archived data; no public download URL configured"
+    },
+    {
+      "file": "argus2_network.json.gz",
+      "sha256": "4b57846a5a23b0d3b7e870283035fbacbb04b0caf57e1d1c776e2b02130d2aca",
+      "bytes": 20857569,
+      "in_source_package": false,
+      "required_for": "CSV/overlap and host-list reproduction",
+      "availability": "Separate archived data; no public download URL configured"
+    },
+    {
+      "file": "argus3_network.json.gz",
+      "sha256": "54c75e11a40ae00070f00da4c4043585603c55e1cfcc270b165ce82c330989b7",
+      "bytes": 18220211,
+      "in_source_package": false,
+      "required_for": "CSV/overlap and host-list reproduction",
+      "availability": "Separate archived data; no public download URL configured"
+    },
+    {
+      "file": "combined_1-100000.csv",
+      "sha256": "0d32c2f5172040690e7d6fc4a0fbaad7f99aef450ee1c025cb36dec51a91c795",
+      "in_source_package": false,
+      "required_for": "Optional old-study comparison only",
+      "verified_this_review": false,
+      "availability": "Optional historical file; access unavailable in this review"
+    },
+    {
+      "file": "all_11124_domain_comparison.csv",
+      "sha256": "710d49a6a30d52a5f79e972f4b8f09b35021426af583ebcc62ce6860c910d0ef",
+      "bytes": 4814826,
+      "in_source_package": false,
+      "required_for": "Appendix replay from precomputed list comparison",
+      "availability": "Separate archived data; no public download URL configured"
+    },
+    {
+      "file": "comparison_summary.json",
+      "sha256": "7c7e931c258cffbbcf223d7843525a52a456e17849d80593d69473a6becd0822",
+      "bytes": 8888,
+      "in_source_package": false,
+      "required_for": "Appendix replay from precomputed list comparison",
+      "availability": "Separate archived data; no public download URL configured"
+    }
+  ],
+  "source_package_is_self_contained_reproduction": false
+}

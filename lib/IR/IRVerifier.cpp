@@ -26,29 +26,29 @@ namespace {
 
 #define INCLUDE_ALL_INSTRS
 
-/// IR Verifier - the verifier checks some basic properties of the IR to make
-/// sure that it is not incorrect. For example, it checks that instructions are
-/// dominated by their oparands and that the entry block has no predecessors.
-///
-/// The verifier also checks if the IR is in optimized form that allows bytecode
-/// generation. For example, it checks that there are no unreachable basic
-/// blocks.
+                                                                             
+                                                                               
+                                                                             
+   
+                                                                                
+                                                                          
+           
 class Verifier : public InstructionVisitor<Verifier, void> {
-  class FunctionState; // Forward declaration of inner class.
+  class FunctionState;                                       
 
   bool valid{true};
   Context *Ctx{nullptr};
   raw_ostream &OS;
   VerificationMode verificationMode;
-  /// State for the function currently being verified.
+                                                      
   FunctionState *functionState{};
-  /// Cached users of each value, lazily computed.
+                                                  
   llvh::DenseMap<const Value *, llvh::DenseSet<const Value *>> cachedUsers{};
 
-  /// Verifier state per-function is kept here.
+                                               
   class FunctionState {
     Verifier *verifier;
-    /// Save the previous state here so we can restore it in our destructor.
+                                                                            
     FunctionState *oldState;
 
    public:
@@ -85,7 +85,7 @@ class Verifier : public InstructionVisitor<Verifier, void> {
     return valid;
   };
 
-  /// Reimplement in Verifier class for custom behavior.
+                                                        
   void beforeVisitInstruction(const Instruction &I);
 
   void visitModule(const Module &M);
@@ -97,17 +97,17 @@ class Verifier : public InstructionVisitor<Verifier, void> {
 #include "hermes/IR/Instrs.def"
 
  private:
-  /// Implement verification for a switch-like instruction.
+                                                           
   template <class T>
   void visitSwitchLikeInst(const T &Inst);
-  /// Implement verification for a conditional branch-like instruction.
+                                                                       
   template <class T>
   void visitCondBranchLikeInst(const T &Inst);
-  /// Implement verification for a binaryoperator-like instruction.
+                                                                   
   template <class T>
   void visitBinaryOperatorLikeInst(const T &Inst);
 
-  /// \return a DenseSet of users for a Value, computed lazily.
+                                                               
   const llvh::DenseSet<const Value *> &getUsersSetForValue(const Value *V) {
     auto &users = cachedUsers[V];
     if (users.empty()) {
@@ -117,7 +117,7 @@ class Verifier : public InstructionVisitor<Verifier, void> {
   }
 };
 
-// TODO: Need to make this accept format strings
+                                                
 #define Assert(C, ...)                                              \
   do {                                                              \
     if (!(C)) {                                                     \
@@ -151,7 +151,7 @@ void Verifier::visitModule(const Module &M) {
     visitScope(*S);
   }
 
-  // Verify all functions are valid
+                                   
   for (Module::const_iterator I = M.begin(); I != M.end(); I++) {
     Assert(I->getParent() == &M, "Function's parent does not match module");
     visitFunction(*I);
@@ -166,53 +166,53 @@ void Verifier::visitFunction(const Function &F) {
 
   FunctionState newFunctionState(this, F);
 
-  // Verify all basic blocks are valid
+                                      
   for (auto I = F.begin(); I != F.end(); I++) {
     Assert(
         I->getParent() == &F, "Basic Block's parent does not match functiion");
     visitBasicBlock(*I);
   }
 
-  // Verify all parameters are valid
+                                    
   for (auto I = F.arg_begin(); I != F.arg_end(); I++) {
     Assert(
         (*I)->getParent() == &F, "Parameter's parent does not match function");
   }
 
-  // Verify Dominance Tree is valid
+                                   
   DominanceInfo D(const_cast<Function *>(&F));
   Assert(
       D.getRoot() == &*F.begin(),
       "Root node in dominance tree should be the entry basic block");
   for (const auto &I : F) {
     if (isVerifyingOptimalIR()) {
-      // Check for unreachable blocks.
+                                      
       Assert(
           D.isReachableFromEntry(&I),
           "Basic Block unreachable from entry in the Dominance Tree");
     }
 
-    // Domination checks within a block are linear, so for huge blocks we get
-    // quadratic runtime. To avoid this, we store a set of instructions we've
-    // seen so far in the current block.
+                                                                             
+                                                                             
+                                        
     llvh::SmallPtrSet<const Instruction *, 32> seen;
 
-    // Instruction dominance check
+                                  
     for (BasicBlock::const_iterator II = I.begin(); II != I.end(); II++) {
-      // Check that incoming phi node values are dominated in their incoming
-      // blocks.
+                                                                            
+                
       if (auto *Phi = llvh::dyn_cast<PhiInst>(&*II)) {
         for (int i = 0, e = Phi->getNumEntries(); i < e; ++i) {
           auto pair = Phi->getEntry(i);
           BasicBlock *block = pair.second;
           auto *inst = llvh::dyn_cast<Instruction>(pair.first);
 
-          // Non-instructions always dominate everything. Move on.
+                                                                  
           if (!inst) {
             continue;
           }
 
-          // Make sure that the incoming value dominates the incoming block.
+                                                                            
           Assert(
               D.dominates(inst->getParent(), block),
               "Incoming PHI value must dominate incoming basic block");
@@ -220,7 +220,7 @@ void Verifier::visitFunction(const Function &F) {
         continue;
       }
 
-      // Check that all instructions are dominated by their operands.
+                                                                     
       for (unsigned i = 0; i < II->getNumOperands(); i++) {
         auto Operand = II->getOperand(i);
         if (auto *InstOp = llvh::dyn_cast<Instruction>(Operand)) {
@@ -239,7 +239,7 @@ void Verifier::visitBasicBlock(const BasicBlock &BB) {
 
   Assert(BB.getTerminator(), "Basic block must have a terminator.");
 
-  // Verify the mutual predecessor/successor relationship
+                                                         
   for (auto I = succ_begin(&BB), E = succ_end(&BB); I != E; ++I) {
     Assert(
         pred_contains(*I, &BB),
@@ -251,22 +251,22 @@ void Verifier::visitBasicBlock(const BasicBlock &BB) {
         "Cannot find self in the successors of a predecessor");
   }
 
-  // Verify each instruction
+                            
   for (BasicBlock::const_iterator I = BB.begin(); I != BB.end(); I++) {
     Assert(
         I->getParent() == &BB,
         "Instruction's parent does not match basic block");
-    // Use the instruction using the InstructionVisitor::visit();
+                                                                 
     visit(*I);
   }
 }
 
 void Verifier::beforeVisitInstruction(const Instruction &Inst) {
-  // TODO: Verify the instruction is valid, need switch/case on each
-  // actual Instruction type
+                                                                    
+                            
   Assert(&Inst.getContext() == Ctx, "Instruction has wrong context");
 
-  // Verify all operands are valid
+                                  
   for (unsigned i = 0; i < Inst.getNumOperands(); i++) {
     auto Operand = Inst.getOperand(i);
     Assert(Operand != nullptr, "Invalid operand");
@@ -298,7 +298,7 @@ void Verifier::beforeVisitInstruction(const Instruction &Inst) {
     }
   }
 
-  // Verify that terminator instructions never need to return a value.
+                                                                      
   if (llvh::isa<TerminatorInst>(Inst)) {
     Assert(Inst.getNumUsers() == 0, "Terminator Inst cannot return value.");
   }
@@ -346,14 +346,14 @@ void Verifier::visitBranchInst(const BranchInst &Inst) {
 
 void Verifier::visitHBCStoreToEnvironmentInst(
     const HBCStoreToEnvironmentInst &Inst) {
-  // Nothing to verify at this point.
+                                     
 }
 void Verifier::visitHBCLoadFromEnvironmentInst(
     const HBCLoadFromEnvironmentInst &Inst) {
-  // Nothing to verify at this point.
+                                     
 }
 void Verifier::visitHBCResolveEnvironment(const HBCResolveEnvironment &Inst) {
-  // Nothing to verify at this point.
+                                     
 }
 
 void Verifier::visitAsNumberInst(const AsNumberInst &Inst) {
@@ -422,7 +422,7 @@ void Verifier::visitCondBranchInst(const CondBranchInst &Inst) {
 }
 
 void Verifier::visitUnaryOperatorInst(const UnaryOperatorInst &Inst) {
-  // Nothing to verify at this point.
+                                     
 }
 
 void Verifier::visitTryStartInst(const TryStartInst &Inst) {
@@ -454,16 +454,16 @@ void Verifier::visitStoreFrameInst(const StoreFrameInst &Inst) {
 }
 
 void Verifier::visitLoadFrameInst(const LoadFrameInst &Inst) {
-  // Nothing to verify at this point.
+                                     
 }
 
 void Verifier::visitLoadStackInst(const LoadStackInst &Inst) {
-  // Nothing to verify at this point.
+                                     
 }
 
 void Verifier::visitThrowIfHasRestrictedGlobalPropertyInst(
     const ThrowIfHasRestrictedGlobalPropertyInst &Inst) {
-  // Nothing to verify at this point.
+                                     
 }
 
 void Verifier::visitCreateScopeInst(const CreateScopeInst &Inst) {
@@ -487,11 +487,11 @@ void Verifier::visitCreateInnerScopeInst(const CreateInnerScopeInst &Inst) {
 }
 
 void Verifier::visitCreateFunctionInst(const CreateFunctionInst &Inst) {
-  // Nothing to verify at this point.
+                                     
 }
 
 void Verifier::visitCallInst(const CallInst &Inst) {
-  // Nothing to verify at this point.
+                                     
 }
 
 void Verifier::visitHBCCallNInst(const HBCCallNInst &Inst) {
@@ -533,7 +533,7 @@ void Verifier::visitHBCCallDirectInst(HBCCallDirectInst const &Inst) {
 }
 
 void Verifier::visitLoadPropertyInst(const LoadPropertyInst &Inst) {
-  // Nothing to verify at this point.
+                                     
 }
 
 void Verifier::visitTryLoadGlobalPropertyInst(
@@ -542,11 +542,11 @@ void Verifier::visitTryLoadGlobalPropertyInst(
 }
 
 void Verifier::visitDeletePropertyInst(const DeletePropertyInst &Inst) {
-  // Nothing to verify at this point.
+                                     
 }
 
 void Verifier::visitStorePropertyInst(const StorePropertyInst &Inst) {
-  // Nothing to verify at this point.
+                                     
 }
 
 void Verifier::visitTryStoreGlobalPropertyInst(
@@ -580,7 +580,7 @@ void Verifier::visitStoreGetterSetterInst(const StoreGetterSetterInst &Inst) {
 }
 
 void Verifier::visitAllocObjectInst(const hermes::AllocObjectInst &Inst) {
-  // Nothing to verify at this point.
+                                     
 }
 
 void Verifier::visitAllocArrayInst(const hermes::AllocArrayInst &Inst) {
@@ -616,12 +616,12 @@ void Verifier::visitCreateArgumentsInst(const CreateArgumentsInst &Inst) {
 }
 
 void Verifier::visitCreateRegExpInst(CreateRegExpInst const &Inst) {
-  // Nothing to verify at this point.
+                                     
 }
 
 template <class T>
 void Verifier::visitBinaryOperatorLikeInst(const T &Inst) {
-  // Nothing to verify at this point.
+                                     
 }
 
 void Verifier::visitBinaryOperatorInst(const hermes::BinaryOperatorInst &Inst) {
@@ -645,7 +645,7 @@ void Verifier::visitThrowInst(const ThrowInst &Inst) {
 }
 
 void Verifier::visitConstructInst(const ConstructInst &Inst) {
-  // Nothing to verify at this point.
+                                     
 }
 
 void Verifier::visitGetNextPNameInst(const GetNextPNameInst &Inst) {
@@ -686,24 +686,24 @@ void Verifier::visitGetPNamesInst(const GetPNamesInst &Inst) {
 }
 
 void Verifier::visitMovInst(const hermes::MovInst &Inst) {
-  // Nothing to verify at this point.
+                                     
 }
 
 void Verifier::visitImplicitMovInst(const hermes::ImplicitMovInst &Inst) {
-  // Nothing to verify at this point.
+                                     
 }
 
 void Verifier::visitCoerceThisNSInst(CoerceThisNSInst const &Inst) {
-  // Nothing to verify at this point.
+                                     
 }
 
 void Verifier::visitPhiInst(const hermes::PhiInst &Inst) {
-  // We verify the dominance property when we scan the whole function. In here
-  // we only verify local properties.
+                                                                              
+                                     
 
   llvh::DenseMap<BasicBlock *, Value *> entries(8);
 
-  // Check that every input block enters only once:
+                                                   
   for (int i = 0, e = Inst.getNumEntries(); i < e; ++i) {
     auto pair = Inst.getEntry(i);
     BasicBlock *block = pair.second;
@@ -759,7 +759,7 @@ void Verifier::visitSwitchLikeInst(const T &Inst) {
         "SwitchInst block must be a predecessor of case target");
   }
 
-  // Verify that each case is unique.
+                                     
   llvh::SmallPtrSet<Literal *, 8> values;
   for (unsigned idx = 0, e = Inst.getNumCasePair(); idx < e; ++idx) {
     Assert(
@@ -789,7 +789,7 @@ void Verifier::visitCheckHasInstanceInst(const CheckHasInstanceInst &Inst) {
 }
 
 void Verifier::visitDebuggerInst(DebuggerInst const &Inst) {
-  // Nothing to verify at this point.
+                                     
 }
 
 void Verifier::visitTerminatorInst(const TerminatorInst &Inst) {
@@ -797,7 +797,7 @@ void Verifier::visitTerminatorInst(const TerminatorInst &Inst) {
 }
 
 void Verifier::visitDirectEvalInst(DirectEvalInst const &Inst) {
-  // Nothing to verify at this point.
+                                     
 }
 
 void Verifier::visitHBCCreateEnvironmentInst(
@@ -823,7 +823,7 @@ void Verifier::visitHBCCreateInnerEnvironmentInst(
 }
 
 void Verifier::visitHBCProfilePointInst(const HBCProfilePointInst &Inst) {
-  // Nothing to verify at this point.
+                                     
 }
 
 void Verifier::visitHBCAllocObjectFromBufferInst(
@@ -838,11 +838,11 @@ void Verifier::visitHBCAllocObjectFromBufferInst(
 }
 
 void Verifier::visitHBCGetGlobalObjectInst(const HBCGetGlobalObjectInst &Inst) {
-  // Nothing to verify at this point.
+                                     
 }
 
 void Verifier::visitHBCLoadConstInst(hermes::HBCLoadConstInst const &Inst) {
-  // Nothing to verify at this point.
+                                     
 }
 
 void Verifier::visitHBCLoadParamInst(hermes::HBCLoadParamInst const &Inst) {
@@ -864,7 +864,7 @@ void Verifier::visitStartGeneratorInst(const StartGeneratorInst &Inst) {
   BasicBlock::iterator it = Inst.getParent()->begin();
 
   if (&Inst == &*it) {
-    // First instruction in the basic block, OK.
+                                                
     return;
   }
 
@@ -887,18 +887,18 @@ void Verifier::visitHBCCreateGeneratorInst(const HBCCreateGeneratorInst &Inst) {
 }
 
 void Verifier::visitHBCGetThisNSInst(const HBCGetThisNSInst &Inst) {
-  // Nothing to verify at this point.
+                                     
 }
 void Verifier::visitHBCGetArgumentsPropByValInst(
     const HBCGetArgumentsPropByValInst &Inst) {
-  // Nothing to verify at this point.
+                                     
 }
 void Verifier::visitHBCGetArgumentsLengthInst(
     const HBCGetArgumentsLengthInst &Inst) {
-  // Nothing to verify at this point.
+                                     
 }
 void Verifier::visitHBCReifyArgumentsInst(const HBCReifyArgumentsInst &Inst) {
-  // Nothing to verify at this point.
+                                     
 }
 void Verifier::visitHBCConstructInst(const HBCConstructInst &Inst) {}
 void Verifier::visitHBCCreateThisInst(const HBCCreateThisInst &Inst) {}
@@ -932,13 +932,14 @@ void Verifier::visitGetNewTargetInst(GetNewTargetInst const &Inst) {
   auto definitionKind = Inst.getParent()->getParent()->getDefinitionKind();
   Assert(
       definitionKind == Function::DefinitionKind::ES5Function ||
-          definitionKind == Function::DefinitionKind::ES6Constructor,
+          definitionKind == Function::DefinitionKind::ES6Constructor ||
+          definitionKind == Function::DefinitionKind::ES6DerivedConstructor,
       "GetNewTargetInst can only be used in ES6 constructors and ES5 functions");
 }
 
 void Verifier::visitThrowIfEmptyInst(const ThrowIfEmptyInst &Inst) {}
 
-} // namespace
+}             
 
 #endif
 

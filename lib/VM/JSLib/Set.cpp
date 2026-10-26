@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//===----------------------------------------------------------------------===//
-/// \file
-/// ES6.0 23.2 Initialize the Set constructor.
-//===----------------------------------------------------------------------===//
+                                                                                
+         
+                                              
+                                                                                
 
 #include "JSLibInternal.h"
 
@@ -20,7 +20,7 @@ namespace vm {
 Handle<JSObject> createSetConstructor(Runtime &runtime) {
   auto setPrototype = Handle<JSObject>::vmcast(&runtime.setPrototype);
 
-  // Set.prototype.xxx methods.
+                               
   defineMethod(
       runtime,
       setPrototype,
@@ -89,7 +89,7 @@ Handle<JSObject> createSetConstructor(Runtime &runtime) {
 
   DefinePropertyFlags dpf = DefinePropertyFlags::getNewNonEnumerableFlags();
 
-  // Use the same valuesMethod for both keys() and values().
+                                                            
   Handle<NativeFunction> propValue = Handle<NativeFunction>::vmcast(
       runtime.makeHandle(runtime.ignoreAllocationFailure(
           JSObject::getNamed_RJS(
@@ -156,7 +156,7 @@ setConstructor(void *, Runtime &runtime, NativeArgs args) {
     return ExecutionStatus::EXCEPTION;
   }
 
-  // ES6.0 23.2.1.1.7: Cache adder across all iterations of the loop.
+                                                                     
   auto adder =
       Handle<Callable>::dyn_vmcast(runtime.makeHandle(std::move(*propRes)));
   if (!adder) {
@@ -169,12 +169,12 @@ setConstructor(void *, Runtime &runtime, NativeArgs args) {
   }
   auto iteratorRecord = *iterRes;
 
-  // Iterate the array and add every element.
+                                             
   MutableHandle<JSObject> tmpHandle{runtime};
   auto marker = gcScope.createMarker();
 
-  // Check the length of the array after every iteration,
-  // to allow for the fact that the length could be modified during iteration.
+                                                         
+                                                                              
   for (;;) {
     gcScope.flushToMarker(marker);
     CallResult<Handle<JSObject>> nextRes =
@@ -183,7 +183,7 @@ setConstructor(void *, Runtime &runtime, NativeArgs args) {
       return ExecutionStatus::EXCEPTION;
     }
     if (!*nextRes) {
-      // Done with iteration.
+                             
       return selfHandle.getHermesValue();
     }
     tmpHandle = vmcast<JSObject>(nextRes->getHermesValue());
@@ -204,7 +204,7 @@ setConstructor(void *, Runtime &runtime, NativeArgs args) {
   return selfHandle.getHermesValue();
 }
 
-// ES12 23.2.3.1 Set.prototype.add ( value )
+                                            
 CallResult<HermesValue>
 setPrototypeAdd(void *, Runtime &runtime, NativeArgs args) {
   auto selfHandle = args.dyncastThis<JSSet>();
@@ -212,9 +212,9 @@ setPrototypeAdd(void *, Runtime &runtime, NativeArgs args) {
     return runtime.raiseTypeError("Non-Set object called on Set.prototype.add");
   }
   auto valueHandle = args.getArgHandle(0);
-  // 5. If value is -0, set value to +0.
-  // N.B. in the case of Set, the value is used as both the value and the key of
-  // the entry. They are both observed as normalized from Set iterators.
+                                        
+                                                                                
+                                                                        
   auto value = valueHandle->isNumber() && valueHandle->getNumber() == 0
       ? HandleRootOwner::getZeroValue()
       : valueHandle;
@@ -350,5 +350,5 @@ setIteratorPrototypeNext(void *, Runtime &runtime, NativeArgs args) {
   }
   return *cr;
 }
-} // namespace vm
-} // namespace hermes
+}                
+}                    

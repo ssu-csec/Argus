@@ -5,16 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//===----------------------------------------------------------------------===//
-//
-// This file defines macros used for macro-metaprogramming with Hermes Passes.
-//
-//===----------------------------------------------------------------------===//
+                                                                                
+  
+                                                                              
+  
+                                                                                
 
-/// PASS(Id, Name, Description)
-///   There exists a global function hermes::create##Id().
-///
-///   This macro must be defined by the includer.
+                               
+                                                          
+   
+                                                 
 #ifndef PASS
 #error "Macro must be defined by includer"
 #endif

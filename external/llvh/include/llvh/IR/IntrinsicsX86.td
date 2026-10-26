@@ -11,32 +11,32 @@
 //
 //===----------------------------------------------------------------------===//
 
-//===----------------------------------------------------------------------===//
-// Interrupt traps
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                                                                                
+                  
+let TargetPrefix = "x86" in {                                           
   def int_x86_int : Intrinsic<[], [llvm_i8_ty]>;
 }
 
-//===----------------------------------------------------------------------===//
-// SEH intrinsics for Windows
+                                                                                
+                             
 let TargetPrefix = "x86" in {
   def int_x86_seh_lsda : Intrinsic<[llvm_ptr_ty], [llvm_ptr_ty], [IntrNoMem]>;
 
-  // Marks the EH registration node created in LLVM IR prior to code generation.
+                                                                                
   def int_x86_seh_ehregnode : Intrinsic<[], [llvm_ptr_ty], []>;
 
-  // Marks the EH guard slot node created in LLVM IR prior to code generation.
+                                                                              
   def int_x86_seh_ehguard : Intrinsic<[], [llvm_ptr_ty], []>;
 
-  // Given a pointer to the end of an EH registration object, returns the true
-  // parent frame address that can be used with llvm.localrecover.
+                                                                              
+                                                                  
   def int_x86_seh_recoverfp : Intrinsic<[llvm_ptr_ty],
                                         [llvm_ptr_ty, llvm_ptr_ty],
                                         [IntrNoMem]>;
 }
 
-//===----------------------------------------------------------------------===//
-// FLAGS.
+                                                                                
+         
 let TargetPrefix = "x86" in {
   def int_x86_flags_read_u32 : GCCBuiltin<"__builtin_ia32_readeflags_u32">,
         Intrinsic<[llvm_i32_ty], [], []>;
@@ -48,8 +48,8 @@ let TargetPrefix = "x86" in {
         Intrinsic<[], [llvm_i64_ty], []>;
 }
 
-//===----------------------------------------------------------------------===//
-// Read Time Stamp Counter.
+                                                                                
+                           
 let TargetPrefix = "x86" in {
   def int_x86_rdtsc : GCCBuiltin<"__builtin_ia32_rdtsc">,
               Intrinsic<[llvm_i64_ty], [], []>;
@@ -57,20 +57,20 @@ let TargetPrefix = "x86" in {
               Intrinsic<[llvm_i64_ty, llvm_i32_ty], [], []>;
 }
 
-// Read Performance-Monitoring Counter.
+                                       
 let TargetPrefix = "x86" in {
   def int_x86_rdpmc : GCCBuiltin<"__builtin_ia32_rdpmc">,
               Intrinsic<[llvm_i64_ty], [llvm_i32_ty], []>;
 }
 
-// Read processor ID.
+                     
 let TargetPrefix = "x86" in {
   def int_x86_rdpid : GCCBuiltin<"__builtin_ia32_rdpid">,
               Intrinsic<[llvm_i32_ty], [], []>;
 }
 
-//===----------------------------------------------------------------------===//
-// CET SS
+                                                                                
+         
 let TargetPrefix = "x86" in {
   def int_x86_incsspd : GCCBuiltin<"__builtin_ia32_incsspd">,
               Intrinsic<[], [llvm_i32_ty], []>;
@@ -98,8 +98,8 @@ let TargetPrefix = "x86" in {
               Intrinsic<[], [llvm_ptr_ty], []>;
 }
 
-//===----------------------------------------------------------------------===//
-// 3DNow!
+                                                                                
+         
 
 let TargetPrefix = "x86" in {
   def int_x86_3dnow_pavgusb : GCCBuiltin<"__builtin_ia32_pavgusb">,
@@ -157,8 +157,8 @@ let TargetPrefix = "x86" in {
                         [IntrNoMem]>;
 }
 
-//===----------------------------------------------------------------------===//
-// 3DNow! extensions
+                                                                                
+                    
 
 let TargetPrefix = "x86" in {
   def int_x86_3dnowa_pf2iw : GCCBuiltin<"__builtin_ia32_pf2iw">,
@@ -175,11 +175,11 @@ let TargetPrefix = "x86" in {
               Intrinsic<[llvm_x86mmx_ty], [llvm_x86mmx_ty], [IntrNoMem]>;
 }
 
-//===----------------------------------------------------------------------===//
-// SSE1
+                                                                                
+       
 
-// Arithmetic ops
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                 
+let TargetPrefix = "x86" in {                                           
   def int_x86_sse_rcp_ss : GCCBuiltin<"__builtin_ia32_rcpss">,
               Intrinsic<[llvm_v4f32_ty], [llvm_v4f32_ty],
                         [IntrNoMem]>;
@@ -206,13 +206,13 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                          llvm_v4f32_ty], [IntrNoMem]>;
 }
 
-// Comparison ops
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                 
+let TargetPrefix = "x86" in {                                           
   def int_x86_sse_cmp_ss : GCCBuiltin<"__builtin_ia32_cmpss">,
               Intrinsic<[llvm_v4f32_ty], [llvm_v4f32_ty,
                          llvm_v4f32_ty, llvm_i8_ty], [IntrNoMem]>;
-  // NOTE: This comparison intrinsic is not used by clang as long as the
-  //       distinction in signaling behaviour is not implemented.
+                                                                        
+                                                                 
   def int_x86_sse_cmp_ps :
               Intrinsic<[llvm_v4f32_ty], [llvm_v4f32_ty,
                          llvm_v4f32_ty, llvm_i8_ty], [IntrNoMem]>;
@@ -255,8 +255,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
 }
 
 
-// Conversion ops
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                 
+let TargetPrefix = "x86" in {                                           
   def int_x86_sse_cvtss2si : GCCBuiltin<"__builtin_ia32_cvtss2si">,
               Intrinsic<[llvm_i32_ty], [llvm_v4f32_ty], [IntrNoMem]>;
   def int_x86_sse_cvtss2si64 : GCCBuiltin<"__builtin_ia32_cvtss2si64">,
@@ -275,31 +275,31 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                          llvm_x86mmx_ty], [IntrNoMem]>;
 }
 
-// Cacheability support ops
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                           
+let TargetPrefix = "x86" in {                                           
   def int_x86_sse_sfence : GCCBuiltin<"__builtin_ia32_sfence">,
               Intrinsic<[], [], []>;
 }
 
-// Control register.
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                    
+let TargetPrefix = "x86" in {                                           
   def int_x86_sse_stmxcsr :
               Intrinsic<[], [llvm_ptr_ty], []>;
   def int_x86_sse_ldmxcsr :
               Intrinsic<[], [llvm_ptr_ty], []>;
 }
 
-// Misc.
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+        
+let TargetPrefix = "x86" in {                                           
   def int_x86_sse_movmsk_ps : GCCBuiltin<"__builtin_ia32_movmskps">,
               Intrinsic<[llvm_i32_ty], [llvm_v4f32_ty], [IntrNoMem]>;
 }
 
-//===----------------------------------------------------------------------===//
-// SSE2
+                                                                                
+       
 
-// FP arithmetic ops
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                    
+let TargetPrefix = "x86" in {                                           
   def int_x86_sse2_min_sd : GCCBuiltin<"__builtin_ia32_minsd">,
               Intrinsic<[llvm_v2f64_ty], [llvm_v2f64_ty,
                          llvm_v2f64_ty], [IntrNoMem]>;
@@ -314,13 +314,13 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                          llvm_v2f64_ty], [IntrNoMem]>;
 }
 
-// FP comparison ops
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                    
+let TargetPrefix = "x86" in {                                           
   def int_x86_sse2_cmp_sd : GCCBuiltin<"__builtin_ia32_cmpsd">,
               Intrinsic<[llvm_v2f64_ty], [llvm_v2f64_ty,
                          llvm_v2f64_ty, llvm_i8_ty], [IntrNoMem]>;
-  // NOTE: This comparison intrinsic is not used by clang as long as the
-  //       distinction in signaling behaviour is not implemented.
+                                                                        
+                                                                 
   def int_x86_sse2_cmp_pd :
               Intrinsic<[llvm_v2f64_ty], [llvm_v2f64_ty,
                          llvm_v2f64_ty, llvm_i8_ty], [IntrNoMem]>;
@@ -362,8 +362,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                          llvm_v2f64_ty], [IntrNoMem]>;
 }
 
-// Integer arithmetic ops.
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                          
+let TargetPrefix = "x86" in {                                           
   def int_x86_sse2_padds_b : GCCBuiltin<"__builtin_ia32_paddsb128">,
               Intrinsic<[llvm_v16i8_ty], [llvm_v16i8_ty,
                          llvm_v16i8_ty], [IntrNoMem, Commutative]>;
@@ -390,8 +390,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                          llvm_v16i8_ty], [IntrNoMem, Commutative]>;
 }
 
-// Integer shift ops.
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                     
+let TargetPrefix = "x86" in {                                           
   def int_x86_sse2_psll_w : GCCBuiltin<"__builtin_ia32_psllw128">,
               Intrinsic<[llvm_v8i16_ty], [llvm_v8i16_ty,
                          llvm_v8i16_ty], [IntrNoMem]>;
@@ -443,8 +443,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                          llvm_i32_ty], [IntrNoMem]>;
 }
 
-// Conversion ops
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                 
+let TargetPrefix = "x86" in {                                           
   def int_x86_sse2_cvtpd2dq : GCCBuiltin<"__builtin_ia32_cvtpd2dq">,
               Intrinsic<[llvm_v4i32_ty], [llvm_v2f64_ty], [IntrNoMem]>;
   def int_x86_sse2_cvttpd2dq : GCCBuiltin<"__builtin_ia32_cvttpd2dq">,
@@ -474,8 +474,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
               Intrinsic<[llvm_v2f64_ty], [llvm_x86mmx_ty], [IntrNoMem]>;
 }
 
-// Misc.
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+        
+let TargetPrefix = "x86" in {                                           
   def int_x86_sse2_packsswb_128 : GCCBuiltin<"__builtin_ia32_packsswb128">,
               Intrinsic<[llvm_v16i8_ty], [llvm_v8i16_ty,
                          llvm_v8i16_ty], [IntrNoMem]>;
@@ -502,11 +502,11 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
               Intrinsic<[], [], []>;
 }
 
-//===----------------------------------------------------------------------===//
-// SSE3
+                                                                                
+       
 
-// Addition / subtraction ops.
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                              
+let TargetPrefix = "x86" in {                                           
   def int_x86_sse3_addsub_ps : GCCBuiltin<"__builtin_ia32_addsubps">,
               Intrinsic<[llvm_v4f32_ty], [llvm_v4f32_ty,
                          llvm_v4f32_ty], [IntrNoMem]>;
@@ -515,8 +515,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                          llvm_v2f64_ty], [IntrNoMem]>;
 }
 
-// Horizontal ops.
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                  
+let TargetPrefix = "x86" in {                                           
   def int_x86_sse3_hadd_ps : GCCBuiltin<"__builtin_ia32_haddps">,
               Intrinsic<[llvm_v4f32_ty], [llvm_v4f32_ty,
                          llvm_v4f32_ty], [IntrNoMem]>;
@@ -531,14 +531,14 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                          llvm_v2f64_ty], [IntrNoMem]>;
 }
 
-// Specialized unaligned load.
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                              
+let TargetPrefix = "x86" in {                                           
   def int_x86_sse3_ldu_dq : GCCBuiltin<"__builtin_ia32_lddqu">,
               Intrinsic<[llvm_v16i8_ty], [llvm_ptr_ty], [IntrReadMem]>;
 }
 
-// Thread synchronization ops.
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                              
+let TargetPrefix = "x86" in {                                           
   def int_x86_sse3_monitor : GCCBuiltin<"__builtin_ia32_monitor">,
               Intrinsic<[], [llvm_ptr_ty,
                          llvm_i32_ty, llvm_i32_ty], []>;
@@ -547,11 +547,11 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                          llvm_i32_ty], []>;
 }
 
-//===----------------------------------------------------------------------===//
-// SSSE3
+                                                                                
+        
 
-// Horizontal arithmetic ops
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                            
+let TargetPrefix = "x86" in {                                           
   def int_x86_ssse3_phadd_w         : GCCBuiltin<"__builtin_ia32_phaddw">,
               Intrinsic<[llvm_x86mmx_ty], [llvm_x86mmx_ty,
                          llvm_x86mmx_ty], [IntrNoMem]>;
@@ -602,8 +602,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                          llvm_v16i8_ty], [IntrNoMem]>;
 }
 
-// Packed multiply high with round and scale
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                                            
+let TargetPrefix = "x86" in {                                           
   def int_x86_ssse3_pmul_hr_sw      : GCCBuiltin<"__builtin_ia32_pmulhrsw">,
               Intrinsic<[llvm_x86mmx_ty], [llvm_x86mmx_ty,
                          llvm_x86mmx_ty], [IntrNoMem, Commutative]>;
@@ -612,8 +612,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                          llvm_v8i16_ty], [IntrNoMem, Commutative]>;
 }
 
-// Shuffle ops
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+              
+let TargetPrefix = "x86" in {                                           
   def int_x86_ssse3_pshuf_b         : GCCBuiltin<"__builtin_ia32_pshufb">,
               Intrinsic<[llvm_x86mmx_ty], [llvm_x86mmx_ty,
                          llvm_x86mmx_ty], [IntrNoMem]>;
@@ -625,8 +625,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                          [IntrNoMem]>;
 }
 
-// Sign ops
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+           
+let TargetPrefix = "x86" in {                                           
   def int_x86_ssse3_psign_b         : GCCBuiltin<"__builtin_ia32_psignb">,
               Intrinsic<[llvm_x86mmx_ty], [llvm_x86mmx_ty,
                          llvm_x86mmx_ty], [IntrNoMem]>;
@@ -649,8 +649,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                          llvm_v4i32_ty], [IntrNoMem]>;
 }
 
-// Absolute value ops
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                     
+let TargetPrefix = "x86" in {                                           
   def int_x86_ssse3_pabs_b     : GCCBuiltin<"__builtin_ia32_pabsb">,
               Intrinsic<[llvm_x86mmx_ty], [llvm_x86mmx_ty], [IntrNoMem]>;
 
@@ -661,11 +661,11 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
               Intrinsic<[llvm_x86mmx_ty], [llvm_x86mmx_ty], [IntrNoMem]>;
 }
 
-//===----------------------------------------------------------------------===//
-// SSE4.1
+                                                                                
+         
 
-// FP rounding ops
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                  
+let TargetPrefix = "x86" in {                                           
   def int_x86_sse41_round_ss        : GCCBuiltin<"__builtin_ia32_roundss">,
               Intrinsic<[llvm_v4f32_ty], [llvm_v4f32_ty, llvm_v4f32_ty,
                          llvm_i32_ty], [IntrNoMem]>;
@@ -680,15 +680,15 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                          llvm_i32_ty], [IntrNoMem]>;
 }
 
-// Vector min element
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                     
+let TargetPrefix = "x86" in {                                           
   def int_x86_sse41_phminposuw     : GCCBuiltin<"__builtin_ia32_phminposuw128">,
               Intrinsic<[llvm_v8i16_ty], [llvm_v8i16_ty],
                         [IntrNoMem]>;
 }
 
-// Advanced Encryption Standard (AES) Instructions
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                                                  
+let TargetPrefix = "x86" in {                                           
   def int_x86_aesni_aesimc          : GCCBuiltin<"__builtin_ia32_aesimc128">,
               Intrinsic<[llvm_v2i64_ty], [llvm_v2i64_ty],
                         [IntrNoMem]>;
@@ -743,8 +743,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                         [IntrNoMem]>;
 }
 
-// PCLMUL instructions
-let TargetPrefix = "x86" in { // All intrinsics start with "llvm.x86.".
+                      
+let TargetPrefix = "x86" in {                                          
   def int_x86_pclmulqdq : GCCBuiltin<"__builtin_ia32_pclmulqdq128">,
           Intrinsic<[llvm_v2i64_ty], [llvm_v2i64_ty, llvm_v2i64_ty, llvm_i8_ty],
                     [IntrNoMem]>;
@@ -756,22 +756,22 @@ let TargetPrefix = "x86" in { // All intrinsics start with "llvm.x86.".
                     [IntrNoMem]>;
 }
 
-// Vector pack
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+              
+let TargetPrefix = "x86" in {                                           
   def int_x86_sse41_packusdw        : GCCBuiltin<"__builtin_ia32_packusdw128">,
               Intrinsic<[llvm_v8i16_ty], [llvm_v4i32_ty, llvm_v4i32_ty],
                         [IntrNoMem]>;
 }
 
-// Vector insert
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                
+let TargetPrefix = "x86" in {                                           
   def int_x86_sse41_insertps       : GCCBuiltin<"__builtin_ia32_insertps128">,
           Intrinsic<[llvm_v4f32_ty], [llvm_v4f32_ty, llvm_v4f32_ty, llvm_i8_ty],
                     [IntrNoMem]>;
 }
 
-// Vector blend
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+               
+let TargetPrefix = "x86" in {                                           
   def int_x86_sse41_pblendvb         : GCCBuiltin<"__builtin_ia32_pblendvb128">,
         Intrinsic<[llvm_v16i8_ty], [llvm_v16i8_ty, llvm_v16i8_ty,llvm_v16i8_ty],
                   [IntrNoMem]>;
@@ -783,8 +783,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                   [IntrNoMem]>;
 }
 
-// Vector dot product
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                     
+let TargetPrefix = "x86" in {                                           
   def int_x86_sse41_dppd            : GCCBuiltin<"__builtin_ia32_dppd">,
           Intrinsic<[llvm_v2f64_ty], [llvm_v2f64_ty, llvm_v2f64_ty, llvm_i8_ty],
                     [IntrNoMem, Commutative]>;
@@ -793,15 +793,15 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                     [IntrNoMem, Commutative]>;
 }
 
-// Vector sum of absolute differences
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                                     
+let TargetPrefix = "x86" in {                                           
   def int_x86_sse41_mpsadbw         : GCCBuiltin<"__builtin_ia32_mpsadbw128">,
           Intrinsic<[llvm_v8i16_ty], [llvm_v16i8_ty, llvm_v16i8_ty,llvm_i8_ty],
                     [IntrNoMem, Commutative]>;
 }
 
-// Test instruction with bitwise comparison.
-let TargetPrefix = "x86" in { // All intrinsics start with "llvm.x86.".
+                                            
+let TargetPrefix = "x86" in {                                          
   def int_x86_sse41_ptestz          : GCCBuiltin<"__builtin_ia32_ptestz128">,
           Intrinsic<[llvm_i32_ty], [llvm_v2i64_ty, llvm_v2i64_ty],
                     [IntrNoMem]>;
@@ -813,12 +813,12 @@ let TargetPrefix = "x86" in { // All intrinsics start with "llvm.x86.".
                     [IntrNoMem]>;
 }
 
-//===----------------------------------------------------------------------===//
-// SSE4.2
+                                                                                
+         
 
-// Miscellaneous
-// CRC Instruction
-let TargetPrefix = "x86" in { // All intrinsics start with "llvm.x86.".
+                
+                  
+let TargetPrefix = "x86" in {                                          
   def int_x86_sse42_crc32_32_8       : GCCBuiltin<"__builtin_ia32_crc32qi">,
           Intrinsic<[llvm_i32_ty], [llvm_i32_ty, llvm_i8_ty],
                     [IntrNoMem]>;
@@ -833,8 +833,8 @@ let TargetPrefix = "x86" in { // All intrinsics start with "llvm.x86.".
                     [IntrNoMem]>;
 }
 
-// String/text processing ops.
-let TargetPrefix = "x86" in { // All intrinsics start with "llvm.x86.".
+                              
+let TargetPrefix = "x86" in {                                          
   def int_x86_sse42_pcmpistrm128  : GCCBuiltin<"__builtin_ia32_pcmpistrm128">,
     Intrinsic<[llvm_v16i8_ty],
         [llvm_v16i8_ty, llvm_v16i8_ty, llvm_i8_ty],
@@ -900,10 +900,10 @@ let TargetPrefix = "x86" in { // All intrinsics start with "llvm.x86.".
         [IntrNoMem]>;
 }
 
-//===----------------------------------------------------------------------===//
-// SSE4A
+                                                                                
+        
 
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+let TargetPrefix = "x86" in {                                           
   def int_x86_sse4a_extrqi : GCCBuiltin<"__builtin_ia32_extrqi">,
     Intrinsic<[llvm_v2i64_ty], [llvm_v2i64_ty, llvm_i8_ty, llvm_i8_ty],
               [IntrNoMem]>;
@@ -917,11 +917,11 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
     Intrinsic<[llvm_v2i64_ty], [llvm_v2i64_ty, llvm_v2i64_ty], [IntrNoMem]>;
 }
 
-//===----------------------------------------------------------------------===//
-// AVX
+                                                                                
+      
 
-// Arithmetic ops
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                 
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx_addsub_pd_256 : GCCBuiltin<"__builtin_ia32_addsubpd256">,
         Intrinsic<[llvm_v4f64_ty], [llvm_v4f64_ty,
                   llvm_v4f64_ty], [IntrNoMem]>;
@@ -955,8 +955,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                   llvm_i32_ty], [IntrNoMem]>;
 }
 
-// Horizontal ops
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                 
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx_hadd_pd_256 : GCCBuiltin<"__builtin_ia32_haddpd256">,
         Intrinsic<[llvm_v4f64_ty], [llvm_v4f64_ty,
                   llvm_v4f64_ty], [IntrNoMem]>;
@@ -971,8 +971,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                   llvm_v8f32_ty], [IntrNoMem]>;
 }
 
-// Vector permutation
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                     
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx_vpermilvar_pd : GCCBuiltin<"__builtin_ia32_vpermilvarpd">,
         Intrinsic<[llvm_v2f64_ty], [llvm_v2f64_ty,
                   llvm_v2i64_ty], [IntrNoMem]>;
@@ -1098,8 +1098,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
 
 }
 
-// GFNI Instructions
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                    
+let TargetPrefix = "x86" in {                                           
   def int_x86_vgf2p8affineinvqb_128 :
          GCCBuiltin<"__builtin_ia32_vgf2p8affineinvqb_v16qi">,
           Intrinsic<[llvm_v16i8_ty],
@@ -1149,8 +1149,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
           [IntrNoMem]>;
 }
 
-// Vector blend
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+               
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx_blendv_pd_256 : GCCBuiltin<"__builtin_ia32_blendvpd256">,
         Intrinsic<[llvm_v4f64_ty], [llvm_v4f64_ty,
                   llvm_v4f64_ty, llvm_v4f64_ty], [IntrNoMem]>;
@@ -1159,15 +1159,15 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                   llvm_v8f32_ty, llvm_v8f32_ty], [IntrNoMem]>;
 }
 
-// Vector dot product
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                     
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx_dp_ps_256 : GCCBuiltin<"__builtin_ia32_dpps256">,
         Intrinsic<[llvm_v8f32_ty], [llvm_v8f32_ty,
                   llvm_v8f32_ty, llvm_i8_ty], [IntrNoMem, Commutative]>;
 }
 
-// Vector compare
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                 
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx_cmp_pd_256 :
         Intrinsic<[llvm_v4f64_ty], [llvm_v4f64_ty,
                   llvm_v4f64_ty, llvm_i8_ty], [IntrNoMem]>;
@@ -1176,8 +1176,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                   llvm_v8f32_ty, llvm_i8_ty], [IntrNoMem]>;
 }
 
-// Vector convert
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                 
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx_cvt_pd2_ps_256 : GCCBuiltin<"__builtin_ia32_cvtpd2ps256">,
         Intrinsic<[llvm_v4f32_ty], [llvm_v4f64_ty], [IntrNoMem]>;
   def int_x86_avx_cvt_ps2dq_256 : GCCBuiltin<"__builtin_ia32_cvtps2dq256">,
@@ -1190,8 +1190,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
         Intrinsic<[llvm_v8i32_ty], [llvm_v8f32_ty], [IntrNoMem]>;
 }
 
-// Vector bit test
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                  
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx_vtestz_pd : GCCBuiltin<"__builtin_ia32_vtestzpd">,
         Intrinsic<[llvm_i32_ty], [llvm_v2f64_ty,
                   llvm_v2f64_ty], [IntrNoMem]>;
@@ -1266,30 +1266,30 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
           [IntrNoMem]>;
 }
 
-// Vector extract sign mask
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                           
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx_movmsk_pd_256 : GCCBuiltin<"__builtin_ia32_movmskpd256">,
         Intrinsic<[llvm_i32_ty], [llvm_v4f64_ty], [IntrNoMem]>;
   def int_x86_avx_movmsk_ps_256 : GCCBuiltin<"__builtin_ia32_movmskps256">,
         Intrinsic<[llvm_i32_ty], [llvm_v8f32_ty], [IntrNoMem]>;
 }
 
-// Vector zero
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+              
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx_vzeroall : GCCBuiltin<"__builtin_ia32_vzeroall">,
         Intrinsic<[], [], []>;
   def int_x86_avx_vzeroupper : GCCBuiltin<"__builtin_ia32_vzeroupper">,
         Intrinsic<[], [], []>;
 }
 
-// SIMD load ops
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx_ldu_dq_256 : GCCBuiltin<"__builtin_ia32_lddqu256">,
         Intrinsic<[llvm_v32i8_ty], [llvm_ptr_ty], [IntrReadMem]>;
 }
 
-// Conditional load ops
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                       
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx_maskload_pd : GCCBuiltin<"__builtin_ia32_maskloadpd">,
         Intrinsic<[llvm_v2f64_ty], [llvm_ptr_ty, llvm_v2i64_ty],
                   [IntrReadMem, IntrArgMemOnly]>;
@@ -1304,8 +1304,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                   [IntrReadMem, IntrArgMemOnly]>;
 }
 
-// Conditional store ops
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                        
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx_maskstore_pd : GCCBuiltin<"__builtin_ia32_maskstorepd">,
         Intrinsic<[], [llvm_ptr_ty,
                   llvm_v2i64_ty, llvm_v2f64_ty], [IntrArgMemOnly]>;
@@ -1322,8 +1322,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                   llvm_v8i32_ty, llvm_v8f32_ty], [IntrArgMemOnly]>;
 }
 
-// BITALG bits shuffle
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                      
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx512_mask_vpshufbitqmb_128 :
     GCCBuiltin<"__builtin_ia32_vpshufbitqmb128_mask">,
     Intrinsic<[llvm_i16_ty],
@@ -1341,11 +1341,11 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
               [IntrNoMem]>;
 }
 
-//===----------------------------------------------------------------------===//
-// AVX2
+                                                                                
+       
 
-// Integer arithmetic ops.
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                          
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx2_padds_b : GCCBuiltin<"__builtin_ia32_paddsb256">,
               Intrinsic<[llvm_v32i8_ty], [llvm_v32i8_ty,
                          llvm_v32i8_ty], [IntrNoMem, Commutative]>;
@@ -1372,8 +1372,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                          llvm_v32i8_ty], [IntrNoMem, Commutative]>;
 }
 
-// Integer shift ops.
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                     
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx2_psll_w : GCCBuiltin<"__builtin_ia32_psllw256">,
               Intrinsic<[llvm_v16i16_ty], [llvm_v16i16_ty,
                          llvm_v8i16_ty], [IntrNoMem]>;
@@ -1508,8 +1508,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                    llvm_v64i8_ty, llvm_v64i8_ty, llvm_i64_ty], [IntrNoMem]>;
 }
 
-// Pack ops.
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+            
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx2_packsswb : GCCBuiltin<"__builtin_ia32_packsswb256">,
               Intrinsic<[llvm_v32i8_ty], [llvm_v16i16_ty,
                          llvm_v16i16_ty], [IntrNoMem]>;
@@ -1524,8 +1524,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                          llvm_v8i32_ty], [IntrNoMem]>;
 }
 
-// Horizontal arithmetic ops
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                            
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx2_phadd_w : GCCBuiltin<"__builtin_ia32_phaddw256">,
               Intrinsic<[llvm_v16i16_ty], [llvm_v16i16_ty,
                          llvm_v16i16_ty], [IntrNoMem]>;
@@ -1549,8 +1549,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                          llvm_v32i8_ty], [IntrNoMem]>;
 }
 
-// Sign ops
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+           
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx2_psign_b : GCCBuiltin<"__builtin_ia32_psignb256">,
               Intrinsic<[llvm_v32i8_ty], [llvm_v32i8_ty,
                          llvm_v32i8_ty], [IntrNoMem]>;
@@ -1562,8 +1562,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                          llvm_v8i32_ty], [IntrNoMem]>;
 }
 
-// Packed multiply high with round and scale
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                                            
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx2_pmul_hr_sw : GCCBuiltin<"__builtin_ia32_pmulhrsw256">,
               Intrinsic<[llvm_v16i16_ty], [llvm_v16i16_ty,
                          llvm_v16i16_ty], [IntrNoMem, Commutative]>;
@@ -1572,16 +1572,16 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                          llvm_v32i16_ty], [IntrNoMem, Commutative]>;
 }
 
-// Vector blend
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+               
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx2_pblendvb : GCCBuiltin<"__builtin_ia32_pblendvb256">,
               Intrinsic<[llvm_v32i8_ty], [llvm_v32i8_ty, llvm_v32i8_ty,
                          llvm_v32i8_ty], [IntrNoMem]>;
 }
 
 
-// Vector permutation
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                     
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx2_permd : GCCBuiltin<"__builtin_ia32_permvarsi256">,
               Intrinsic<[llvm_v8i32_ty], [llvm_v8i32_ty, llvm_v8i32_ty],
                         [IntrNoMem]>;
@@ -1590,8 +1590,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                         [IntrNoMem]>;
 }
 
-// Conditional load ops
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                       
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx2_maskload_d : GCCBuiltin<"__builtin_ia32_maskloadd">,
         Intrinsic<[llvm_v4i32_ty], [llvm_ptr_ty, llvm_v4i32_ty],
                   [IntrReadMem, IntrArgMemOnly]>;
@@ -1606,8 +1606,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                   [IntrReadMem, IntrArgMemOnly]>;
 }
 
-// Conditional store ops
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                        
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx2_maskstore_d : GCCBuiltin<"__builtin_ia32_maskstored">,
         Intrinsic<[], [llvm_ptr_ty, llvm_v4i32_ty, llvm_v4i32_ty],
                   [IntrArgMemOnly]>;
@@ -1624,8 +1624,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                   [IntrArgMemOnly]>;
 }
 
-// Variable bit shift ops
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                         
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx2_psllv_d : GCCBuiltin<"__builtin_ia32_psllv4si">,
               Intrinsic<[llvm_v4i32_ty], [llvm_v4i32_ty, llvm_v4i32_ty],
                         [IntrNoMem]>;
@@ -1794,8 +1794,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
 
 }
 
-// Gather ops
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+             
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx2_gather_d_pd : GCCBuiltin<"__builtin_ia32_gatherd_pd">,
       Intrinsic<[llvm_v2f64_ty],
         [llvm_v2f64_ty, llvm_ptr_ty, llvm_v4i32_ty, llvm_v2f64_ty, llvm_i8_ty],
@@ -1863,8 +1863,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
         [IntrReadMem, IntrArgMemOnly]>;
 }
 
-// Misc.
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+        
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx2_pmovmskb : GCCBuiltin<"__builtin_ia32_pmovmskb256">,
               Intrinsic<[llvm_i32_ty], [llvm_v32i8_ty], [IntrNoMem]>;
   def int_x86_avx2_pshuf_b : GCCBuiltin<"__builtin_ia32_pshufb256">,
@@ -1875,10 +1875,10 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                          llvm_i8_ty], [IntrNoMem, Commutative]>;
 }
 
-//===----------------------------------------------------------------------===//
-// FMA3 and FMA4
+                                                                                
+                
 
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx512_vfmadd_pd_512 :
           Intrinsic<[llvm_v8f64_ty],
           [llvm_v8f64_ty, llvm_v8f64_ty, llvm_v8f64_ty, llvm_i32_ty],
@@ -1889,7 +1889,7 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
           [llvm_v16f32_ty, llvm_v16f32_ty, llvm_v16f32_ty, llvm_i32_ty],
           [IntrNoMem]>;
 
-  // TODO: Can we use 2 vfmadds+shufflevector?
+                                              
   def int_x86_avx512_vfmaddsub_pd_512 :
           Intrinsic<[llvm_v8f64_ty],
           [llvm_v8f64_ty, llvm_v8f64_ty, llvm_v8f64_ty, llvm_i32_ty],
@@ -1935,8 +1935,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                          llvm_v8i64_ty], [IntrNoMem]>;
 }
 
-// VNNI
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+       
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx512_vpdpbusd_128 :
               GCCBuiltin<"__builtin_ia32_vpdpbusd128">,
               Intrinsic<[llvm_v4i32_ty], [llvm_v4i32_ty, llvm_v4i32_ty,
@@ -1990,10 +1990,10 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                          llvm_v16i32_ty], [IntrNoMem]>;
 }
 
-//===----------------------------------------------------------------------===//
-// XOP
+                                                                                
+      
 
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+let TargetPrefix = "x86" in {                                           
   def int_x86_xop_vpermil2pd : GCCBuiltin<"__builtin_ia32_vpermil2pd">,
               Intrinsic<[llvm_v2f64_ty], [llvm_v2f64_ty, llvm_v2f64_ty,
                                           llvm_v2i64_ty, llvm_i8_ty],
@@ -2223,9 +2223,9 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                         [IntrNoMem]>;
 }
 
-//===----------------------------------------------------------------------===//
-// LWP
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                                                                                
+      
+let TargetPrefix = "x86" in {                                           
   def int_x86_llwpcb :
               GCCBuiltin<"__builtin_ia32_llwpcb">,
               Intrinsic<[], [llvm_ptr_ty], []>;
@@ -2246,20 +2246,20 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
               Intrinsic<[], [llvm_i64_ty, llvm_i32_ty, llvm_i32_ty], []>;
 }
 
-//===----------------------------------------------------------------------===//
-// MMX
+                                                                                
+      
 
-// Empty MMX state op.
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                      
+let TargetPrefix = "x86" in {                                           
   def int_x86_mmx_emms  : GCCBuiltin<"__builtin_ia32_emms">,
               Intrinsic<[], [], []>;
   def int_x86_mmx_femms : GCCBuiltin<"__builtin_ia32_femms">,
               Intrinsic<[], [], []>;
 }
 
-// Integer arithmetic ops.
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
-  // Addition
+                          
+let TargetPrefix = "x86" in {                                           
+             
   def int_x86_mmx_padd_b : GCCBuiltin<"__builtin_ia32_paddb">,
               Intrinsic<[llvm_x86mmx_ty], [llvm_x86mmx_ty, llvm_x86mmx_ty],
                         [IntrNoMem, Commutative]>;
@@ -2287,7 +2287,7 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
               Intrinsic<[llvm_x86mmx_ty], [llvm_x86mmx_ty,
                          llvm_x86mmx_ty], [IntrNoMem, Commutative]>;
 
-  // Subtraction
+                
   def int_x86_mmx_psub_b : GCCBuiltin<"__builtin_ia32_psubb">,
               Intrinsic<[llvm_x86mmx_ty], [llvm_x86mmx_ty, llvm_x86mmx_ty],
                         [IntrNoMem]>;
@@ -2315,7 +2315,7 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
               Intrinsic<[llvm_x86mmx_ty], [llvm_x86mmx_ty,
                          llvm_x86mmx_ty], [IntrNoMem]>;
 
-  // Multiplication
+                   
   def int_x86_mmx_pmulh_w : GCCBuiltin<"__builtin_ia32_pmulhw">,
               Intrinsic<[llvm_x86mmx_ty], [llvm_x86mmx_ty,
                          llvm_x86mmx_ty], [IntrNoMem, Commutative]>;
@@ -2332,7 +2332,7 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
               Intrinsic<[llvm_x86mmx_ty], [llvm_x86mmx_ty,
                          llvm_x86mmx_ty], [IntrNoMem, Commutative]>;
 
-  // Bitwise operations
+                       
   def int_x86_mmx_pand : GCCBuiltin<"__builtin_ia32_pand">,
               Intrinsic<[llvm_x86mmx_ty], [llvm_x86mmx_ty, llvm_x86mmx_ty],
                         [IntrNoMem, Commutative]>;
@@ -2346,7 +2346,7 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
               Intrinsic<[llvm_x86mmx_ty], [llvm_x86mmx_ty, llvm_x86mmx_ty],
                         [IntrNoMem, Commutative]>;
 
-  // Averages
+             
   def int_x86_mmx_pavg_b : GCCBuiltin<"__builtin_ia32_pavgb">,
               Intrinsic<[llvm_x86mmx_ty], [llvm_x86mmx_ty,
                          llvm_x86mmx_ty], [IntrNoMem, Commutative]>;
@@ -2354,7 +2354,7 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
               Intrinsic<[llvm_x86mmx_ty], [llvm_x86mmx_ty,
                          llvm_x86mmx_ty], [IntrNoMem, Commutative]>;
 
-  // Maximum
+            
   def int_x86_mmx_pmaxu_b : GCCBuiltin<"__builtin_ia32_pmaxub">,
               Intrinsic<[llvm_x86mmx_ty], [llvm_x86mmx_ty,
                          llvm_x86mmx_ty], [IntrNoMem, Commutative]>;
@@ -2362,7 +2362,7 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
               Intrinsic<[llvm_x86mmx_ty], [llvm_x86mmx_ty,
                          llvm_x86mmx_ty], [IntrNoMem, Commutative]>;
 
-  // Minimum
+            
   def int_x86_mmx_pminu_b : GCCBuiltin<"__builtin_ia32_pminub">,
               Intrinsic<[llvm_x86mmx_ty], [llvm_x86mmx_ty,
                          llvm_x86mmx_ty], [IntrNoMem, Commutative]>;
@@ -2370,15 +2370,15 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
               Intrinsic<[llvm_x86mmx_ty], [llvm_x86mmx_ty,
                          llvm_x86mmx_ty], [IntrNoMem, Commutative]>;
 
-  // Packed sum of absolute differences
+                                       
   def int_x86_mmx_psad_bw : GCCBuiltin<"__builtin_ia32_psadbw">,
               Intrinsic<[llvm_x86mmx_ty], [llvm_x86mmx_ty,
                          llvm_x86mmx_ty], [IntrNoMem, Commutative]>;
 }
 
-// Integer shift ops.
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
-  // Shift left logical
+                     
+let TargetPrefix = "x86" in {                                           
+                       
   def int_x86_mmx_psll_w : GCCBuiltin<"__builtin_ia32_psllw">,
               Intrinsic<[llvm_x86mmx_ty], [llvm_x86mmx_ty,
                          llvm_x86mmx_ty], [IntrNoMem]>;
@@ -2433,8 +2433,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
               Intrinsic<[llvm_x86mmx_ty], [llvm_x86mmx_ty,
                          llvm_i32_ty], [IntrNoMem]>;
 }
-// Permute
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+          
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx512_permvar_df_256 : GCCBuiltin<"__builtin_ia32_permvardf256">,
               Intrinsic<[llvm_v4f64_ty], [llvm_v4f64_ty,
                         llvm_v4i64_ty],  [IntrNoMem]>;
@@ -2472,8 +2472,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
               Intrinsic<[llvm_v16i32_ty], [llvm_v16i32_ty,
                         llvm_v16i32_ty],  [IntrNoMem]>;
 }
-// Pack ops.
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+            
+let TargetPrefix = "x86" in {                                           
   def int_x86_mmx_packsswb : GCCBuiltin<"__builtin_ia32_packsswb">,
               Intrinsic<[llvm_x86mmx_ty], [llvm_x86mmx_ty,
                          llvm_x86mmx_ty], [IntrNoMem]>;
@@ -2485,8 +2485,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                          llvm_x86mmx_ty], [IntrNoMem]>;
 }
 
-// Unpacking ops.
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                 
+let TargetPrefix = "x86" in {                                           
   def int_x86_mmx_punpckhbw : GCCBuiltin<"__builtin_ia32_punpckhbw">,
               Intrinsic<[llvm_x86mmx_ty], [llvm_x86mmx_ty, llvm_x86mmx_ty],
                         [IntrNoMem]>;
@@ -2507,8 +2507,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                         [IntrNoMem]>;
 }
 
-// Integer comparison ops
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                         
+let TargetPrefix = "x86" in {                                           
   def int_x86_mmx_pcmpeq_b : GCCBuiltin<"__builtin_ia32_pcmpeqb">,
               Intrinsic<[llvm_x86mmx_ty], [llvm_x86mmx_ty,
                          llvm_x86mmx_ty], [IntrNoMem, Commutative]>;
@@ -2530,8 +2530,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                          llvm_x86mmx_ty], [IntrNoMem]>;
 }
 
-// Misc.
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+        
+let TargetPrefix = "x86" in {                                           
   def int_x86_mmx_maskmovq : GCCBuiltin<"__builtin_ia32_maskmovq">,
               Intrinsic<[], [llvm_x86mmx_ty, llvm_x86mmx_ty, llvm_ptr_ty], []>;
 
@@ -2554,10 +2554,10 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                         llvm_i32_ty, llvm_i32_ty], [IntrNoMem]>;
 }
 
-//===----------------------------------------------------------------------===//
-// BMI
+                                                                                
+      
 
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+let TargetPrefix = "x86" in {                                           
   def int_x86_bmi_bextr_32 : GCCBuiltin<"__builtin_ia32_bextr_u32">,
               Intrinsic<[llvm_i32_ty], [llvm_i32_ty, llvm_i32_ty], [IntrNoMem]>;
   def int_x86_bmi_bextr_64 : GCCBuiltin<"__builtin_ia32_bextr_u64">,
@@ -2576,10 +2576,10 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
               Intrinsic<[llvm_i64_ty], [llvm_i64_ty, llvm_i64_ty], [IntrNoMem]>;
 }
 
-//===----------------------------------------------------------------------===//
-// FS/GS Base
+                                                                                
+             
 
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+let TargetPrefix = "x86" in {                                           
   def int_x86_rdfsbase_32 : GCCBuiltin<"__builtin_ia32_rdfsbase32">,
               Intrinsic<[llvm_i32_ty], []>;
   def int_x86_rdgsbase_32 : GCCBuiltin<"__builtin_ia32_rdgsbase32">,
@@ -2598,9 +2598,9 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
               Intrinsic<[], [llvm_i64_ty]>;
 }
 
-//===----------------------------------------------------------------------===//
-// FXSR
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                                                                                
+       
+let TargetPrefix = "x86" in {                                           
   def int_x86_fxrstor : GCCBuiltin<"__builtin_ia32_fxrstor">,
               Intrinsic<[], [llvm_ptr_ty], []>;
   def int_x86_fxrstor64 : GCCBuiltin<"__builtin_ia32_fxrstor64">,
@@ -2611,9 +2611,9 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
               Intrinsic<[], [llvm_ptr_ty], []>;
 }
 
-//===----------------------------------------------------------------------===//
-// XSAVE
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                                                                                
+        
+let TargetPrefix = "x86" in {                                           
   def int_x86_xsave :
               Intrinsic<[], [llvm_ptr_ty, llvm_i32_ty, llvm_i32_ty], []>;
   def int_x86_xsave64 :
@@ -2644,9 +2644,9 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
               Intrinsic<[], [llvm_i32_ty, llvm_i32_ty, llvm_i32_ty], []>;
 }
 
-//===----------------------------------------------------------------------===//
-// CLFLUSHOPT and CLWB
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                                                                                
+                      
+let TargetPrefix = "x86" in {                                           
   def int_x86_clflushopt : GCCBuiltin<"__builtin_ia32_clflushopt">,
               Intrinsic<[], [llvm_ptr_ty], []>;
 
@@ -2654,18 +2654,18 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
               Intrinsic<[], [llvm_ptr_ty], []>;
 }
 
-//===----------------------------------------------------------------------===//
-// Support protection key
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                                                                                
+                         
+let TargetPrefix = "x86" in {                                           
   def int_x86_rdpkru : GCCBuiltin <"__builtin_ia32_rdpkru">,
               Intrinsic<[llvm_i32_ty], [], []>;
   def int_x86_wrpkru : GCCBuiltin<"__builtin_ia32_wrpkru">,
               Intrinsic<[], [llvm_i32_ty], []>;
 }
-//===----------------------------------------------------------------------===//
-// Half float conversion
+                                                                                
+                        
 
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+let TargetPrefix = "x86" in {                                           
   def int_x86_vcvtph2ps_128 : GCCBuiltin<"__builtin_ia32_vcvtph2ps">,
               Intrinsic<[llvm_v4f32_ty], [llvm_v8i16_ty], [IntrNoMem]>;
   def int_x86_vcvtph2ps_256 : GCCBuiltin<"__builtin_ia32_vcvtph2ps256">,
@@ -2696,24 +2696,24 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                                            llvm_v8i16_ty, llvm_i8_ty], [IntrNoMem]>;
 }
 
-//===----------------------------------------------------------------------===//
-// TBM
+                                                                                
+      
 
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+let TargetPrefix = "x86" in {                                           
   def int_x86_tbm_bextri_u32 : GCCBuiltin<"__builtin_ia32_bextri_u32">,
         Intrinsic<[llvm_i32_ty], [llvm_i32_ty, llvm_i32_ty], [IntrNoMem]>;
   def int_x86_tbm_bextri_u64 : GCCBuiltin<"__builtin_ia32_bextri_u64">,
         Intrinsic<[llvm_i64_ty], [llvm_i64_ty, llvm_i64_ty], [IntrNoMem]>;
 }
 
-//===----------------------------------------------------------------------===//
-// RDRAND intrinsics - Return a random value and whether it is valid.
-// RDSEED intrinsics - Return a NIST SP800-90B & C compliant random value and
-// whether it is valid.
+                                                                                
+                                                                     
+                                                                             
+                       
 
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
-  // These are declared side-effecting so they don't get eliminated by CSE or
-  // LICM.
+let TargetPrefix = "x86" in {                                           
+                                                                             
+          
   def int_x86_rdrand_16 : Intrinsic<[llvm_i16_ty, llvm_i32_ty], [], []>;
   def int_x86_rdrand_32 : Intrinsic<[llvm_i32_ty, llvm_i32_ty], [], []>;
   def int_x86_rdrand_64 : Intrinsic<[llvm_i64_ty, llvm_i32_ty], [], []>;
@@ -2722,10 +2722,10 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
   def int_x86_rdseed_64 : Intrinsic<[llvm_i64_ty, llvm_i32_ty], [], []>;
 }
 
-//===----------------------------------------------------------------------===//
-// ADX
+                                                                                
+      
 
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+let TargetPrefix = "x86" in {                                           
   def int_x86_addcarryx_u32:
         Intrinsic<[llvm_i8_ty, llvm_i32_ty],
                   [llvm_i8_ty, llvm_i32_ty, llvm_i32_ty], [IntrNoMem]>;
@@ -2746,10 +2746,10 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                   [llvm_i8_ty, llvm_i64_ty, llvm_i64_ty], [IntrNoMem]>;
 }
 
-//===----------------------------------------------------------------------===//
-// RTM intrinsics. Transactional Memory support.
+                                                                                
+                                                
 
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+let TargetPrefix = "x86" in {                                           
   def int_x86_xbegin : GCCBuiltin<"__builtin_ia32_xbegin">,
               Intrinsic<[llvm_i32_ty], [], []>;
   def int_x86_xend : GCCBuiltin<"__builtin_ia32_xend">,
@@ -2760,10 +2760,10 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
               Intrinsic<[llvm_i32_ty], [], []>;
 }
 
-//===----------------------------------------------------------------------===//
-// AVX512
+                                                                                
+         
 
-// Mask ops
+           
 let TargetPrefix = "x86" in {
   def int_x86_avx512_kadd_b :
         Intrinsic<[llvm_v8i1_ty], [llvm_v8i1_ty, llvm_v8i1_ty], [IntrNoMem]>;
@@ -2793,8 +2793,8 @@ let TargetPrefix = "x86" in {
           Intrinsic<[llvm_i32_ty], [llvm_v64i1_ty, llvm_v64i1_ty], [IntrNoMem]>;
 }
 
-// Conversion ops
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                 
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx512_cvttss2si : GCCBuiltin<"__builtin_ia32_vcvttss2si32">,
               Intrinsic<[llvm_i32_ty], [llvm_v4f32_ty, llvm_i32_ty], [IntrNoMem]>;
   def int_x86_avx512_cvttss2si64 : GCCBuiltin<"__builtin_ia32_vcvttss2si64">,
@@ -2847,8 +2847,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                          llvm_i64_ty, llvm_i32_ty], [IntrNoMem]>;
 }
 
-// Pack ops.
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+            
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx512_packsswb_512 : GCCBuiltin<"__builtin_ia32_packsswb512">,
               Intrinsic<[llvm_v64i8_ty], [llvm_v32i16_ty,llvm_v32i16_ty],
                         [IntrNoMem]>;
@@ -2863,8 +2863,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                          [IntrNoMem]>;
 }
 
-// Vector convert
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                 
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx512_mask_cvtdq2ps_512 :
         GCCBuiltin<"__builtin_ia32_cvtdq2ps512_mask">,
           Intrinsic<[llvm_v16f32_ty],
@@ -3275,8 +3275,8 @@ def int_x86_avx512_mask_range_ps_512 : GCCBuiltin<"__builtin_ia32_rangeps512_mas
                                      llvm_v16f32_ty,  llvm_i16_ty,  llvm_i32_ty], [IntrNoMem]>;
 }
 
-// Vector load with broadcast
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                             
+let TargetPrefix = "x86" in {                                           
    def int_x86_avx512_broadcastmw_512 :
           GCCBuiltin<"__builtin_ia32_broadcastmw512">,
           Intrinsic<[llvm_v16i32_ty], [llvm_i16_ty], [IntrNoMem]>;
@@ -3297,8 +3297,8 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
           Intrinsic<[llvm_v2i64_ty], [llvm_i8_ty], [IntrNoMem]>;
 }
 
-// Arithmetic ops
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                 
+let TargetPrefix = "x86" in {                                           
 
   def int_x86_avx512_add_ps_512 : GCCBuiltin<"__builtin_ia32_addps512">,
           Intrinsic<[llvm_v16f32_ty], [llvm_v16f32_ty, llvm_v16f32_ty,
@@ -3681,7 +3681,7 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
               Intrinsic<[llvm_v8i64_ty], [llvm_v64i8_ty, llvm_v64i8_ty],
                         [IntrNoMem, Commutative]>;
 }
-// Integer arithmetic ops
+                         
 let TargetPrefix = "x86" in {
   def int_x86_avx512_padds_b_512 : GCCBuiltin<"__builtin_ia32_paddsb512">,
           Intrinsic<[llvm_v64i8_ty], [llvm_v64i8_ty, llvm_v64i8_ty],
@@ -3724,7 +3724,7 @@ let TargetPrefix = "x86" in {
                     [llvm_v64i8_ty, llvm_v64i8_ty, llvm_i32_ty], [IntrNoMem]>;
 }
 
-// Gather and Scatter ops
+                         
 let TargetPrefix = "x86" in {
   def int_x86_avx512_gather_dpd_512  : GCCBuiltin<"__builtin_ia32_gathersiv8df">,
           Intrinsic<[llvm_v8f64_ty], [llvm_v8f64_ty, llvm_ptr_ty,
@@ -3857,7 +3857,7 @@ let TargetPrefix = "x86" in {
           [llvm_v8i32_ty, llvm_ptr_ty, llvm_v8i32_ty, llvm_i8_ty, llvm_i32_ty],
           [IntrReadMem, IntrArgMemOnly]>;
 
-// scatter
+          
   def int_x86_avx512_scatter_dpd_512  : GCCBuiltin<"__builtin_ia32_scattersiv8df">,
           Intrinsic<[], [llvm_ptr_ty, llvm_i8_ty,
                         llvm_v8i32_ty, llvm_v8f64_ty, llvm_i32_ty],
@@ -3989,7 +3989,7 @@ let TargetPrefix = "x86" in {
           [llvm_ptr_ty, llvm_i8_ty, llvm_v8i32_ty, llvm_v8i32_ty, llvm_i32_ty],
           [IntrArgMemOnly]>;
 
-  // gather prefetch
+                    
   def int_x86_avx512_gatherpf_dpd_512  : GCCBuiltin<"__builtin_ia32_gatherpfdpd">,
           Intrinsic<[], [llvm_i8_ty, llvm_v8i32_ty, llvm_ptr_ty,
                      llvm_i32_ty, llvm_i32_ty], [IntrArgMemOnly]>;
@@ -4003,7 +4003,7 @@ let TargetPrefix = "x86" in {
           Intrinsic<[], [llvm_i8_ty, llvm_v8i64_ty, llvm_ptr_ty,
                      llvm_i32_ty, llvm_i32_ty], [IntrArgMemOnly]>;
 
-  // scatter prefetch
+                     
   def int_x86_avx512_scatterpf_dpd_512  : GCCBuiltin<"__builtin_ia32_scatterpfdpd">,
           Intrinsic<[], [llvm_i8_ty, llvm_v8i32_ty, llvm_ptr_ty,
                      llvm_i32_ty, llvm_i32_ty], [IntrArgMemOnly]>;
@@ -4018,8 +4018,8 @@ let TargetPrefix = "x86" in {
                      llvm_i32_ty, llvm_i32_ty], [IntrArgMemOnly]>;
 }
 
-// AVX-512 conflict detection instruction
-// Instructions that count the number of leading zero bits
+                                         
+                                                          
 let TargetPrefix = "x86" in {
   def int_x86_avx512_mask_conflict_d_128 :
           GCCBuiltin<"__builtin_ia32_vpconflictsi_128_mask">,
@@ -4054,9 +4054,9 @@ let TargetPrefix = "x86" in {
                     [IntrNoMem]>;
 }
 
-// Compares
+           
 let TargetPrefix = "x86" in {
-  // 512-bit
+            
   def int_x86_avx512_vcomi_sd : GCCBuiltin<"__builtin_ia32_vcomisd">,
               Intrinsic<[llvm_i32_ty], [llvm_v2f64_ty,
                          llvm_v2f64_ty, llvm_i32_ty, llvm_i32_ty], [IntrNoMem]>;
@@ -4065,7 +4065,7 @@ let TargetPrefix = "x86" in {
                          llvm_v4f32_ty, llvm_i32_ty, llvm_i32_ty], [IntrNoMem]>;
 }
 
-// Compress, Expand
+                   
 let TargetPrefix = "x86" in {
   def int_x86_avx512_mask_compress_ps_512 :
                              GCCBuiltin<"__builtin_ia32_compresssf512_mask">,
@@ -4142,7 +4142,7 @@ let TargetPrefix = "x86" in {
         Intrinsic<[llvm_v8i16_ty], [llvm_v8i16_ty, llvm_v8i16_ty,
                    llvm_i8_ty], [IntrNoMem]>;
 
-// expand
+         
   def int_x86_avx512_mask_expand_ps_512 :
                              GCCBuiltin<"__builtin_ia32_expandsf512_mask">,
         Intrinsic<[llvm_v16f32_ty], [llvm_v16f32_ty, llvm_v16f32_ty,
@@ -4219,8 +4219,8 @@ let TargetPrefix = "x86" in {
                    llvm_i8_ty], [IntrNoMem]>;
 }
 
-// VBMI2 Concat & Shift
-let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
+                       
+let TargetPrefix = "x86" in {                                           
   def int_x86_avx512_vpshld_q_512 :
         GCCBuiltin<"__builtin_ia32_vpshldq512">,
         Intrinsic<[llvm_v8i64_ty],
@@ -4450,7 +4450,7 @@ let TargetPrefix = "x86" in {  // All intrinsics start with "llvm.x86.".
                    llvm_v16i32_ty, llvm_i16_ty], [IntrNoMem]>;
 }
 
-// truncate
+           
 let TargetPrefix = "x86" in {
   def int_x86_avx512_mask_pmov_qb_128 :
           GCCBuiltin<"__builtin_ia32_pmovqb128_mask">,
@@ -4661,7 +4661,7 @@ let TargetPrefix = "x86" in {
           Intrinsic<[],
                     [llvm_ptr_ty, llvm_v2i64_ty, llvm_i8_ty],
                     [IntrArgMemOnly]>;
-  def int_x86_avx512_mask_pmov_qd_256 : // FIXME: Replace with trunc+select.
+  def int_x86_avx512_mask_pmov_qd_256 :                                     
           Intrinsic<[llvm_v4i32_ty],
                     [llvm_v4i64_ty, llvm_v4i32_ty, llvm_i8_ty],
                     [IntrNoMem]>;
@@ -4690,7 +4690,7 @@ let TargetPrefix = "x86" in {
           Intrinsic<[],
                     [llvm_ptr_ty, llvm_v4i64_ty, llvm_i8_ty],
                     [IntrArgMemOnly]>;
-  def int_x86_avx512_mask_pmov_qd_512 : // FIXME: Replace with trunc+select.
+  def int_x86_avx512_mask_pmov_qd_512 :                                     
           Intrinsic<[llvm_v8i32_ty],
                     [llvm_v8i64_ty, llvm_v8i32_ty, llvm_i8_ty],
                     [IntrNoMem]>;
@@ -4927,7 +4927,7 @@ let TargetPrefix = "x86" in {
           Intrinsic<[],
                     [llvm_ptr_ty, llvm_v8i16_ty, llvm_i8_ty],
                     [IntrArgMemOnly]>;
-  def int_x86_avx512_mask_pmov_wb_256 : // FIXME: Replace with trunc+select.
+  def int_x86_avx512_mask_pmov_wb_256 :                                     
           Intrinsic<[llvm_v16i8_ty],
                     [llvm_v16i16_ty, llvm_v16i8_ty, llvm_i16_ty],
                     [IntrNoMem]>;
@@ -4956,7 +4956,7 @@ let TargetPrefix = "x86" in {
           Intrinsic<[],
                     [llvm_ptr_ty, llvm_v16i16_ty, llvm_i16_ty],
                     [IntrArgMemOnly]>;
-  def int_x86_avx512_mask_pmov_wb_512 : // FIXME: Replace with trunc+select.
+  def int_x86_avx512_mask_pmov_wb_512 :                                     
           Intrinsic<[llvm_v32i8_ty],
                     [llvm_v32i16_ty, llvm_v32i8_ty, llvm_i32_ty],
                     [IntrNoMem]>;
@@ -4987,7 +4987,7 @@ let TargetPrefix = "x86" in {
                     [IntrArgMemOnly]>;
 }
 
-// Bitwise ternary logic
+                        
 let TargetPrefix = "x86" in {
   def int_x86_avx512_pternlog_d_128 :
           GCCBuiltin<"__builtin_ia32_pternlogd128">,
@@ -5026,10 +5026,10 @@ let TargetPrefix = "x86" in {
                     [IntrNoMem]>;
 }
 
-// Misc.
+        
 let TargetPrefix = "x86" in {
-  // NOTE: These comparison intrinsics are not used by clang as long as the
-  //       distinction in signaling behaviour is not implemented.
+                                                                           
+                                                                 
   def int_x86_avx512_cmp_ps_512 :
               Intrinsic<[llvm_v16i1_ty], [llvm_v16f32_ty, llvm_v16f32_ty,
                          llvm_i32_ty, llvm_i32_ty], [IntrNoMem]>;
@@ -5059,8 +5059,8 @@ let TargetPrefix = "x86" in {
                          llvm_i32_ty, llvm_i8_ty, llvm_i32_ty], [IntrNoMem]>;
 }
 
-//===----------------------------------------------------------------------===//
-// SHA intrinsics
+                                                                                
+                 
 let TargetPrefix = "x86" in {
   def int_x86_sha1rnds4 : GCCBuiltin<"__builtin_ia32_sha1rnds4">,
         Intrinsic<[llvm_v4i32_ty], [llvm_v4i32_ty, llvm_v4i32_ty, llvm_i8_ty],
@@ -5080,8 +5080,8 @@ let TargetPrefix = "x86" in {
       Intrinsic<[llvm_v4i32_ty], [llvm_v4i32_ty, llvm_v4i32_ty], [IntrNoMem]>;
 }
 
-//===----------------------------------------------------------------------===//
-// Thread synchronization ops with timer.
+                                                                                
+                                         
 let TargetPrefix = "x86" in {
   def int_x86_monitorx
       : GCCBuiltin<"__builtin_ia32_monitorx">,
@@ -5091,36 +5091,36 @@ let TargetPrefix = "x86" in {
         Intrinsic<[], [ llvm_i32_ty, llvm_i32_ty, llvm_i32_ty ], []>;
 }
 
-//===----------------------------------------------------------------------===//
-// Cache-line zero
+                                                                                
+                  
 let TargetPrefix = "x86" in {
   def int_x86_clzero : GCCBuiltin<"__builtin_ia32_clzero">,
       Intrinsic<[], [llvm_ptr_ty], []>;
 }
 
-//===----------------------------------------------------------------------===//
-// Cache write back intrinsics
+                                                                                
+                              
 
 let TargetPrefix = "x86" in {
-  // Write back and invalidate
+                              
   def int_x86_wbinvd : GCCBuiltin<"__builtin_ia32_wbinvd">,
       Intrinsic<[], [], []>;
 
-  // Write back no-invalidate
+                             
   def int_x86_wbnoinvd : GCCBuiltin<"__builtin_ia32_wbnoinvd">,
       Intrinsic<[], [], []>;
 }
 
-//===----------------------------------------------------------------------===//
-// Cache-line demote
+                                                                                
+                    
 
 let TargetPrefix = "x86" in {
   def int_x86_cldemote : GCCBuiltin<"__builtin_ia32_cldemote">,
       Intrinsic<[], [llvm_ptr_ty], []>;
 }
 
-//===----------------------------------------------------------------------===//
-// Wait and pause enhancements
+                                                                                
+                              
 let TargetPrefix = "x86" in {
   def int_x86_umonitor : GCCBuiltin<"__builtin_ia32_umonitor">,
               Intrinsic<[], [llvm_ptr_ty], []>;
@@ -5130,8 +5130,8 @@ let TargetPrefix = "x86" in {
               Intrinsic<[llvm_i8_ty], [llvm_i32_ty, llvm_i32_ty, llvm_i32_ty], []>;
 }
 
-//===----------------------------------------------------------------------===//
-// Direct Move Instructions
+                                                                                
+                           
 
 let TargetPrefix = "x86" in {
   def int_x86_directstore32 : GCCBuiltin<"__builtin_ia32_directstore_u32">,
@@ -5142,8 +5142,8 @@ let TargetPrefix = "x86" in {
       Intrinsic<[], [llvm_ptr_ty, llvm_ptr_ty], []>;
 }
 
-//===----------------------------------------------------------------------===//
-// PTWrite - Write data to processor trace pocket
+                                                                                
+                                                 
 
 let TargetPrefix = "x86" in {
   def int_x86_ptwrite32 : GCCBuiltin<"__builtin_ia32_ptwrite32">,
@@ -5152,8 +5152,8 @@ let TargetPrefix = "x86" in {
               Intrinsic<[], [llvm_i64_ty], []>;
 }
 
-//===----------------------------------------------------------------------===//
-// INVPCID - Invalidate Process-Context Identifier
+                                                                                
+                                                  
 
 let TargetPrefix = "x86" in {
   def int_x86_invpcid : GCCBuiltin<"__builtin_ia32_invpcid">,

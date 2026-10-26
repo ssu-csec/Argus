@@ -25,16 +25,16 @@ void appendTagToBuffer(
   }
 }
 
-/// Write a value to a vector of characters in little-endian format.
+                                                                    
 template <typename value_type>
 void serializeValueToBuffer(
     value_type value,
     std::vector<unsigned char> &buff) {
-  // Since endian::write takes a pointer, we can write directly to
-  // the buffer. First we resize it to make sure the data fits, then
-  // we pass a pointer to the original end of the vector.
-  // Since the buffer is a char buffer, we pass in an alignment of 1
-  // to endian::write.
+                                                                  
+                                                                    
+                                                         
+                                                                    
+                      
   buff.resize(buff.size() + sizeof(value_type));
   llvh::support::endian::write<value_type, 1>(
       buff.data() + buff.size() - sizeof(value_type),
@@ -44,14 +44,14 @@ void serializeValueToBuffer(
 
 template <>
 void serializeValueToBuffer(double value, std::vector<unsigned char> &buff) {
-  // Since endian::write takes a pointer, we can write directly to
-  // the buffer. First we resize it to make sure the data fits, then
-  // we pass a pointer to the original end of the vector.
-  // Since the buffer is a char buffer, we pass in an alignment of 1
-  // to endian::write.
+                                                                  
+                                                                    
+                                                         
+                                                                    
+                      
   buff.resize(buff.size() + sizeof(double));
-  // NaN may have a different bit pattern on different platforms.
-  // We need to make sure that the bit pattern is consistent.
+                                                                 
+                                                             
   if (LLVM_UNLIKELY(std::isnan(value))) {
     static_assert(
         sizeof(double) == sizeof(uint64_t), "double better be 64 bits");
@@ -67,36 +67,36 @@ void serializeValueToBuffer(double value, std::vector<unsigned char> &buff) {
         llvh::support::endianness::little);
   }
 }
-} // namespace
+}             
 
 void SerializedLiteralGenerator::serializeBuffer(
     llvh::ArrayRef<Literal *> literals,
     std::vector<unsigned char> &buff,
     bool isKeyBuffer) {
-  // Stores the last type parsed by the for loop
+                                                
   TagType lastTag = NumberTag;
 
-  // Stores the type currently being parsed by the for loop
+                                                           
   TagType newTag = NumberTag;
 
-  // Stores the values of each serialized Literal in a sequence so that
-  // they can be added to tempBuff after the tag is finalized
+                                                                       
+                                                             
   std::vector<unsigned char> tmpSeqBuffer;
 
-  // Stores the length of the current type sequence
+                                                   
   size_t seqLength = 0;
 
   for (size_t i = 0, buffSize = literals.size(); i < buffSize; ++i) {
-    // The first switch simply sets newTag.
-    // If newTag is different from lastTag, we append the tag and the
-    // tmpSeqBuffer to buff.
-    // After this check, we serialize the value to tmpSeqBuffer if possible.
-    // Since we can only write the tmpSeqBuffer to buff once we know the
-    // sequence ends, the check has to go after the type checking switch.
-    // Since we can only write to tmpSeqBuffer after it's been cleared (if
-    // the sequence is over), the only way to delay the write to tmpSeqBuffer
-    // is to either write to a second temporary buffer, and write that to
-    // tmpSeqBuffer afterwards, or add a second switch.
+                                           
+                                                                     
+                            
+                                                                            
+                                                                        
+                                                                         
+                                                                          
+                                                                             
+                                                                         
+                                                       
     switch (literals[i]->getKind()) {
       case ValueKind::LiteralNumberKind:
         newTag = llvh::cast<LiteralNumber>(literals[i])
@@ -154,8 +154,8 @@ void SerializedLiteralGenerator::serializeBuffer(
         break;
       }
       case ValueKind::LiteralStringKind: {
-        // For strings, we are going to store the index to the string table,
-        // which will need to be decoded at runtime.
+                                                                            
+                                                    
         auto str = llvh::cast<LiteralString>(literals[i])->getValue().str();
         auto stringID =
             isKeyBuffer ? BMGen_.getIdentifierID(str) : BMGen_.getStringID(str);
@@ -171,16 +171,16 @@ void SerializedLiteralGenerator::serializeBuffer(
       }
       case ValueKind::LiteralBoolKind:
       case ValueKind::LiteralNullKind:
-        /* no-op */
+                   
         break;
       default:
         hermes_fatal("Invalid Literal Kind");
     }
   }
-  // The last value in the buffer can't get serialized in the loop.
+                                                                   
   appendTagToBuffer(buff, lastTag, seqLength);
   buff.insert(buff.end(), tmpSeqBuffer.begin(), tmpSeqBuffer.end());
 }
 
-} // namespace hbc
-} // namespace hermes
+}                 
+}                    

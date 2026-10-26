@@ -14,11 +14,11 @@
 
 namespace {
 
-/**
- * bits<T>::width
- *
- * The size, in bits, of the type `T`.
- */
+   
+                 
+  
+                                      
+   
 template <typename T>
 struct bits {
   static constexpr size_t width = sizeof(T) * CHAR_BIT;
@@ -30,12 +30,12 @@ using bigger_signed_int = typename std::enable_if<
         B <= bits<T>::width,
     T>::type;
 
-/**
- * signExtend<B, T>
- *
- * Take a `B`-bit signed twos-complement integer stored in an integral type `T`
- * wider than `B` bits and sign-extend it to the full width of `T`.
- */
+   
+                   
+  
+                                                                               
+                                                                   
+   
 template <size_t B, typename T>
 inline bigger_signed_int<B, T> signExtend(const T allBits) {
   struct {
@@ -45,7 +45,7 @@ inline bigger_signed_int<B, T> signExtend(const T allBits) {
   return s.lowBits;
 }
 
-} // anonymous namespace
+}                       
 
 namespace hermes {
 
@@ -54,7 +54,7 @@ void appendSignedLEB128(std::vector<uint8_t> &vector, int64_t value) {
   llvh::raw_svector_ostream OS(data);
   llvh::encodeSLEB128(value, OS);
 
-  // "Convert" from char to uint8_t.
+                                    
   for (int i = 0, e = data.size(); i < e; i++) {
     vector.push_back((uint8_t)data[i]);
   }
@@ -91,4 +91,4 @@ void encodeSLEB128(int32_t input, llvh::raw_ostream &os, size_t minBytes) {
   llvm_unreachable("Input too wide.");
 }
 
-} // namespace hermes
+}                    

@@ -20,4 +20,4 @@ void CompactArray::scaleUp() {
   swap(newTable);
 }
 
-} // namespace hermes
+}                    

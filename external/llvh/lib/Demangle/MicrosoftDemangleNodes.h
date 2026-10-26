@@ -11,11 +11,11 @@ class OutputStream;
 namespace llvh {
 namespace ms_demangle {
 
-// This memory allocator is extremely fast, but it doesn't call dtors
-// for allocated objects. That means you can't use STL containers
-// (such as std::vector) with this allocator. But it pays off --
-// the demangler is 3x faster with this allocator compared to one with
-// STL containers.
+                                                                     
+                                                                 
+                                                                
+                                                                      
+                  
 constexpr size_t AllocUnit = 4096;
 
 class ArenaAllocator {
@@ -53,9 +53,9 @@ public:
 
     Head->Used += Length;
     if (Head->Used > Head->Capacity) {
-      // It's possible we need a buffer which is larger than our default unit
-      // size, so we need to be careful to add a node with capacity that is at
-      // least as large as what we need.
+                                                                             
+                                                                              
+                                        
       addNode(std::max(AllocUnit, Length));
       Head->Used = Length;
       Buf = Head->Buf;
@@ -109,7 +109,7 @@ private:
   AllocatorNode *Head = nullptr;
 };
 
-// Storage classes
+                  
 enum Qualifiers : uint8_t {
   Q_None = 0,
   Q_Const = 1 << 0,
@@ -133,7 +133,7 @@ enum class StorageClass : uint8_t {
 enum class PointerAffinity { None, Pointer, Reference, RValueReference };
 enum class FunctionRefQualifier { None, Reference, RValueReference };
 
-// Calling conventions
+                      
 enum class CallingConv : uint8_t {
   None,
   Cdecl,
@@ -154,7 +154,7 @@ enum OutputFlags {
   OF_NoCallingConvention = 1,
 };
 
-// Types
+        
 enum class PrimitiveKind {
   Void,
   Bool,
@@ -187,70 +187,70 @@ enum class CharKind {
 
 enum class IntrinsicFunctionKind : uint8_t {
   None,
-  New,                        // ?2 # operator new
-  Delete,                     // ?3 # operator delete
-  Assign,                     // ?4 # operator=
-  RightShift,                 // ?5 # operator>>
-  LeftShift,                  // ?6 # operator<<
-  LogicalNot,                 // ?7 # operator!
-  Equals,                     // ?8 # operator==
-  NotEquals,                  // ?9 # operator!=
-  ArraySubscript,             // ?A # operator[]
-  Pointer,                    // ?C # operator->
-  Dereference,                // ?D # operator*
-  Increment,                  // ?E # operator++
-  Decrement,                  // ?F # operator--
-  Minus,                      // ?G # operator-
-  Plus,                       // ?H # operator+
-  BitwiseAnd,                 // ?I # operator&
-  MemberPointer,              // ?J # operator->*
-  Divide,                     // ?K # operator/
-  Modulus,                    // ?L # operator%
-  LessThan,                   // ?M operator<
-  LessThanEqual,              // ?N operator<=
-  GreaterThan,                // ?O operator>
-  GreaterThanEqual,           // ?P operator>=
-  Comma,                      // ?Q operator,
-  Parens,                     // ?R operator()
-  BitwiseNot,                 // ?S operator~
-  BitwiseXor,                 // ?T operator^
-  BitwiseOr,                  // ?U operator|
-  LogicalAnd,                 // ?V operator&&
-  LogicalOr,                  // ?W operator||
-  TimesEqual,                 // ?X operator*=
-  PlusEqual,                  // ?Y operator+=
-  MinusEqual,                 // ?Z operator-=
-  DivEqual,                   // ?_0 operator/=
-  ModEqual,                   // ?_1 operator%=
-  RshEqual,                   // ?_2 operator>>=
-  LshEqual,                   // ?_3 operator<<=
-  BitwiseAndEqual,            // ?_4 operator&=
-  BitwiseOrEqual,             // ?_5 operator|=
-  BitwiseXorEqual,            // ?_6 operator^=
-  VbaseDtor,                  // ?_D # vbase destructor
-  VecDelDtor,                 // ?_E # vector deleting destructor
-  DefaultCtorClosure,         // ?_F # default constructor closure
-  ScalarDelDtor,              // ?_G # scalar deleting destructor
-  VecCtorIter,                // ?_H # vector constructor iterator
-  VecDtorIter,                // ?_I # vector destructor iterator
-  VecVbaseCtorIter,           // ?_J # vector vbase constructor iterator
-  VdispMap,                   // ?_K # virtual displacement map
-  EHVecCtorIter,              // ?_L # eh vector constructor iterator
-  EHVecDtorIter,              // ?_M # eh vector destructor iterator
-  EHVecVbaseCtorIter,         // ?_N # eh vector vbase constructor iterator
-  CopyCtorClosure,            // ?_O # copy constructor closure
-  LocalVftableCtorClosure,    // ?_T # local vftable constructor closure
-  ArrayNew,                   // ?_U operator new[]
-  ArrayDelete,                // ?_V operator delete[]
-  ManVectorCtorIter,          // ?__A managed vector ctor iterator
-  ManVectorDtorIter,          // ?__B managed vector dtor iterator
-  EHVectorCopyCtorIter,       // ?__C EH vector copy ctor iterator
-  EHVectorVbaseCopyCtorIter,  // ?__D EH vector vbase copy ctor iterator
-  VectorCopyCtorIter,         // ?__G vector copy constructor iterator
-  VectorVbaseCopyCtorIter,    // ?__H vector vbase copy constructor iterator
-  ManVectorVbaseCopyCtorIter, // ?__I managed vector vbase copy constructor
-  CoAwait,                    // ?__L co_await
-  Spaceship,                  // operator<=>
+  New,                                            
+  Delete,                                            
+  Assign,                                      
+  RightShift,                                   
+  LeftShift,                                    
+  LogicalNot,                                  
+  Equals,                                       
+  NotEquals,                                    
+  ArraySubscript,                               
+  Pointer,                                      
+  Dereference,                                 
+  Increment,                                    
+  Decrement,                                    
+  Minus,                                       
+  Plus,                                        
+  BitwiseAnd,                                  
+  MemberPointer,                                 
+  Divide,                                      
+  Modulus,                                     
+  LessThan,                                  
+  LessThanEqual,                              
+  GreaterThan,                               
+  GreaterThanEqual,                           
+  Comma,                                     
+  Parens,                                     
+  BitwiseNot,                                
+  BitwiseXor,                                
+  BitwiseOr,                                 
+  LogicalAnd,                                 
+  LogicalOr,                                  
+  TimesEqual,                                 
+  PlusEqual,                                  
+  MinusEqual,                                 
+  DivEqual,                                    
+  ModEqual,                                    
+  RshEqual,                                     
+  LshEqual,                                     
+  BitwiseAndEqual,                             
+  BitwiseOrEqual,                              
+  BitwiseXorEqual,                             
+  VbaseDtor,                                           
+  VecDelDtor,                                                    
+  DefaultCtorClosure,                                             
+  ScalarDelDtor,                                                 
+  VecCtorIter,                                                    
+  VecDtorIter,                                                   
+  VecVbaseCtorIter,                                                     
+  VdispMap,                                                    
+  EHVecCtorIter,                                                     
+  EHVecDtorIter,                                                    
+  EHVecVbaseCtorIter,                                                      
+  CopyCtorClosure,                                             
+  LocalVftableCtorClosure,                                              
+  ArrayNew,                                        
+  ArrayDelete,                                        
+  ManVectorCtorIter,                                              
+  ManVectorDtorIter,                                              
+  EHVectorCopyCtorIter,                                           
+  EHVectorVbaseCopyCtorIter,                                            
+  VectorCopyCtorIter,                                                 
+  VectorVbaseCopyCtorIter,                                                  
+  ManVectorVbaseCopyCtorIter,                                              
+  CoAwait,                                    
+  Spaceship,                                
   MaxIntrinsic
 };
 
@@ -275,7 +275,7 @@ enum class SpecialIntrinsicKind {
   LocalStaticThreadGuard,
 };
 
-// Function classes
+                   
 enum FuncClass : uint16_t {
   FC_None = 0,
   FC_Public = 1 << 0,
@@ -399,25 +399,25 @@ struct FunctionSignatureNode : public TypeNode {
   void outputPre(OutputStream &OS, OutputFlags Flags) const override;
   void outputPost(OutputStream &OS, OutputFlags Flags) const override;
 
-  // Valid if this FunctionTypeNode is the Pointee of a PointerType or
-  // MemberPointerType.
+                                                                      
+                       
   PointerAffinity Affinity = PointerAffinity::None;
 
-  // The function's calling convention.
+                                       
   CallingConv CallConvention = CallingConv::None;
 
-  // Function flags (gloabl, public, etc)
+                                         
   FuncClass FunctionClass = FC_Global;
 
   FunctionRefQualifier RefQualifier = FunctionRefQualifier::None;
 
-  // The return type of the function.
+                                     
   TypeNode *ReturnType = nullptr;
 
-  // True if this is a C-style ... varargs function.
+                                                    
   bool IsVariadic = false;
 
-  // Function parameters
+                        
   NodeArrayNode *Params = nullptr;
 };
 
@@ -491,7 +491,7 @@ struct ConversionOperatorIdentifierNode : public IdentifierNode {
 
   void output(OutputStream &OS, OutputFlags Flags) const override;
 
-  // The type that this operator converts too.
+                                              
   TypeNode *TargetType = nullptr;
 };
 
@@ -503,7 +503,7 @@ struct StructorIdentifierNode : public IdentifierNode {
 
   void output(OutputStream &OS, OutputFlags Flags) const override;
 
-  // The name of the class that this is a structor of.
+                                                      
   IdentifierNode *Class = nullptr;
   bool IsDestructor = false;
 };
@@ -529,14 +529,14 @@ struct PointerTypeNode : public TypeNode {
   void outputPre(OutputStream &OS, OutputFlags Flags) const override;
   void outputPost(OutputStream &OS, OutputFlags Flags) const override;
 
-  // Is this a pointer, reference, or rvalue-reference?
+                                                       
   PointerAffinity Affinity = PointerAffinity::None;
 
-  // If this is a member pointer, this is the class that the member is in.
+                                                                          
   QualifiedNameNode *ClassParent = nullptr;
 
-  // Represents a type X in "a pointer to X", "a reference to X", or
-  // "rvalue-reference to X"
+                                                                    
+                            
   TypeNode *Pointee = nullptr;
 };
 
@@ -559,10 +559,10 @@ struct ArrayTypeNode : public TypeNode {
   void outputDimensionsImpl(OutputStream &OS, OutputFlags Flags) const;
   void outputOneDimension(OutputStream &OS, OutputFlags Flags, Node *N) const;
 
-  // A list of array dimensions.  e.g. [3,4,5] in `int Foo[3][4][5]`
+                                                                    
   NodeArrayNode *Dimensions = nullptr;
 
-  // The type of array element.
+                               
   TypeNode *ElementType = nullptr;
 };
 
@@ -692,7 +692,7 @@ struct FunctionSymbolNode : public SymbolNode {
   FunctionSignatureNode *Signature = nullptr;
 };
 
-} // namespace ms_demangle
-} // namespace llvh
+}                         
+}                  
 
 #endif

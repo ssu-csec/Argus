@@ -21,8 +21,8 @@
 #include "llvh/Support/Error.h"
 #include <vector>
 
-// This class represents a glob pattern. Supported metacharacters
-// are "*", "?", "[<chars>]" and "[^<chars>]".
+                                                                 
+                                              
 namespace llvh {
 class BitVector;
 template <typename T> class ArrayRef;
@@ -35,14 +35,14 @@ public:
 private:
   bool matchOne(ArrayRef<BitVector> Pat, StringRef S) const;
 
-  // Parsed glob pattern.
+                         
   std::vector<BitVector> Tokens;
 
-  // The following members are for optimization.
+                                                
   Optional<StringRef> Exact;
   Optional<StringRef> Prefix;
   Optional<StringRef> Suffix;
 };
 }
 
-#endif // LLVM_SUPPORT_GLOB_PATTERN_H
+#endif                               

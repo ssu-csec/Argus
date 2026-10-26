@@ -28,11 +28,11 @@ struct FmtAlign {
       : Adapter(Adapter), Where(Where), Amount(Amount), Fill(Fill) {}
 
   void format(raw_ostream &S, StringRef Options) {
-    // If we don't need to align, we can format straight into the underlying
-    // stream.  Otherwise we have to go through an intermediate stream first
-    // in order to calculate how long the output is so we can align it.
-    // TODO: Make the format method return the number of bytes written, that
-    // way we can also skip the intermediate stream for left-aligned output.
+                                                                            
+                                                                            
+                                                                       
+                                                                            
+                                                                            
     if (Amount == 0) {
       Adapter.format(S, Options);
       return;

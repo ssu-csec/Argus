@@ -17,8 +17,8 @@
 namespace hermes {
 namespace vm {
 
-// This file declares some functions in Object which are also used by
-// Reflect.
+                                                                     
+           
 
 CallResult<bool>
 defineProperty(Runtime &runtime, NativeArgs args, PropOpFlags opFlags);
@@ -35,22 +35,22 @@ CallResult<HermesValue> getOwnPropertyKeysAsStrings(
     Runtime &runtime,
     OwnKeysFlags okFlags);
 
-/// "Kind" provided to enumerableOwnProperties to request different
-/// representation of the properties in the object.
+                                                                   
+                                                   
 enum class EnumerableOwnPropertiesKind {
   Key,
   Value,
   KeyValue,
 };
 
-/// ES8.0 7.3.21.
-/// EnumerableOwnProperties gets the requested properties based on \p kind.
+                 
+                                                                           
 CallResult<HermesValue> enumerableOwnProperties_RJS(
     Runtime &runtime,
     Handle<JSObject> objHandle,
     EnumerableOwnPropertiesKind kind);
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
 #endif

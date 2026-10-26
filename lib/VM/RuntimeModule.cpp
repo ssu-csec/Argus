@@ -43,8 +43,8 @@ SymbolID RuntimeModule::createSymbolFromStringIDMayAllocate(
     StringID stringID,
     const StringTableEntry &entry,
     OptValue<uint32_t> mhash) {
-  // Use manual pointer arithmetic to avoid out of bounds errors on empty
-  // string accesses.
+                                                                         
+                     
   auto strStorage = bcProvider_->getStringStorage();
   if (entry.isUTF16()) {
     const char16_t *s =
@@ -53,7 +53,7 @@ SymbolID RuntimeModule::createSymbolFromStringIDMayAllocate(
     uint32_t hash = mhash ? *mhash : hashString(str);
     return mapStringMayAllocate(str, stringID, hash);
   } else {
-    // ASCII.
+             
     const char *s = (const char *)strStorage.begin() + entry.getOffset();
     ASCIIRef str{s, entry.getLength()};
     uint32_t hash = mhash ? *mhash : hashString(str);
@@ -67,8 +67,8 @@ RuntimeModule::~RuntimeModule() {
   runtime_.getCrashManager().unregisterMemory(this);
   runtime_.removeRuntimeModule(this);
 
-  // We may reference other CodeBlocks through lazy compilation, but we only
-  // own the ones that reference us.
+                                                                            
+                                    
   for (auto *block : functionMap_) {
     if (block != nullptr && block->getRuntimeModule() == this) {
       runtime_.getHeap().getIDTracker().untrackNative(block);
@@ -102,8 +102,8 @@ CallResult<RuntimeModule *> RuntimeModule::create(
         ExecutionStatus::EXCEPTION) {
       return ExecutionStatus::EXCEPTION;
     }
-    // If the BC provider is backed by a buffer, register the BC provider struct
-    // (but not the buffer contents, since that might be too large).
+                                                                                
+                                                                    
     if (result->bcProvider_ && !result->bcProvider_->getRawBuffer().empty())
       runtime.getCrashManager().registerMemory(
           result->bcProvider_.get(), sizeof(hbc::BCProviderFromBuffer));
@@ -161,10 +161,10 @@ RuntimeModule *RuntimeModule::createLazyModule(
     uint32_t functionID) {
   auto RM = createUninitialized(runtime, domain);
   RM->lazyRoot_ = parent->lazyRoot_;
-  // Copy the lazy root's script ID for lazy modules.
+                                                     
   RM->scriptID_ = RM->lazyRoot_->scriptID_;
 
-  // Set the bcProvider's BytecodeModule to point to the parent's.
+                                                                  
   assert(parent->isInitialized() && "Parent module must have been initialized");
 
   auto *bcFunction = &((hbc::BCProviderFromSrc *)parent->getBytecode())
@@ -173,16 +173,16 @@ RuntimeModule *RuntimeModule::createLazyModule(
 
   RM->bcProvider_ = hbc::BCProviderLazy::createBCProviderLazy(bcFunction);
 
-  // We don't know which function index this block will eventually represent,
-  // so just add it as 0 to ensure ownership. We'll move it later in
-  // `initializeLazy`.
+                                                                             
+                                                                    
+                      
   RM->functionMap_.emplace_back(
       CodeBlock::createCodeBlock(
           RM, RM->bcProvider_->getFunctionHeader(functionID), {}, functionID));
 
-  // The module doesn't have a string table until we've compiled the block,
-  // so just add the string name as 0 in the mean time for f.name to work via
-  // getLazyName(). Since it's in the stringIDMap_, it'll be correctly GC'd.
+                                                                           
+                                                                             
+                                                                            
   RM->stringIDMap_.emplace_back(parent->getSymbolIDFromStringIDMayAllocate(
       bcFunction->getHeader().functionName));
 
@@ -198,21 +198,21 @@ SymbolID RuntimeModule::getLazyName() {
 
 void RuntimeModule::initializeLazyMayAllocate(
     std::unique_ptr<hbc::BCProvider> bytecode) {
-  // Clear the old data provider first.
+                                       
   bcProvider_ = nullptr;
 
-  // Initialize without CJS module table because this compilation is done
-  // separately, and the bytecode will not contain a module table.
+                                                                         
+                                                                  
   initializeWithoutCJSModulesMayAllocate(std::move(bytecode));
 
-  // createLazyCodeBlock added a single codeblock as functionMap_[0]
+                                                                    
   assert(functionMap_[0] && "Missing first entry");
 
-  // We should move it to the index where it's supposed to be. This ensures a
-  // 1-1 relationship between codeblocks and bytecodefunctions, which the
-  // debugger relies on for setting step-out breakpoints in all functions.
+                                                                             
+                                                                         
+                                                                          
   if (bcProvider_->getGlobalFunctionIndex() == 0) {
-    // No move needed
+                     
     return;
   }
   assert(
@@ -232,7 +232,7 @@ void RuntimeModule::importStringIDMapMayAllocate() {
 
   stringIDMap_.clear();
 
-  // Populate the string ID map with empty identifiers.
+                                                       
   stringIDMap_.resize(strTableSize, RootSymbolID(SymbolID::empty()));
 
   if (runtime_.getVMExperimentFlags() & experiments::MAdviseStringsSequential) {
@@ -243,17 +243,17 @@ void RuntimeModule::importStringIDMapMayAllocate() {
     bcProvider_->willNeedStringTable();
   }
 
-  // Get the array of pre-computed hashes from identifiers in the bytecode
-  // to their runtime representation as SymbolIDs.
+                                                                          
+                                                  
   auto kinds = bcProvider_->getStringKinds();
   auto hashes = bcProvider_->getIdentifierHashes();
   assert(
       hashes.size() <= strTableSize &&
       "Should not have more strings than identifiers");
 
-  // Preallocate enough space to store all identifiers to prevent
-  // unnecessary allocations. NOTE: If this module is not the first module,
-  // then this is an underestimate.
+                                                                 
+                                                                           
+                                   
   runtime_.getIdentifierTable().reserve(hashes.size());
   {
     StringID strID = 0;
@@ -283,15 +283,15 @@ void RuntimeModule::importStringIDMapMayAllocate() {
   }
 
   if (strTableSize == 0) {
-    // If the string table turns out to be empty,
-    // we always add one empty string to it.
-    // Note that this can only happen when we are creating the RuntimeModule
-    // in a non-standard way, either in unit tests or the special
-    // emptyCodeBlockRuntimeModule_ in Runtime where the creation happens
-    // manually instead of going through bytecode module generation.
-    // In those cases, functions will be created with a default nameID=0
-    // without adding the name string into the string table. Hence here
-    // we need to add it manually and it will have index 0.
+                                                 
+                                            
+                                                                            
+                                                                 
+                                                                         
+                                                                    
+                                                                        
+                                                                       
+                                                           
     ASCIIRef s;
     stringIDMap_.push_back({});
     mapStringMayAllocate(s, 0, hashString(s));
@@ -327,7 +327,7 @@ std::string RuntimeModule::getStringFromStringID(StringID stringID) {
     convertUTF16ToUTF8WithReplacements(out, UTF16Ref{s, entry.getLength()});
     return out;
   } else {
-    // ASCII.
+             
     const char *s = (const char *)strStorage.begin() + entry.getOffset();
     return std::string{s, entry.getLength()};
   }
@@ -354,19 +354,19 @@ SymbolID RuntimeModule::mapStringMayAllocate(
     llvh::ArrayRef<T> str,
     StringID stringID,
     uint32_t hash) {
-  // Create a SymbolID for a given string. In general a SymbolID holds onto an
-  // intern'd StringPrimitive. As an optimization, if this RuntimeModule is
-  // persistent, then it will not be deallocated before the Runtime, and we can
-  // have the SymbolID hold a raw pointer into the storage and produce the
-  // StringPrimitive when it is first required.
+                                                                              
+                                                                           
+                                                                               
+                                                                          
+                                               
   SymbolID id;
   if (flags_.persistent) {
-    // Registering a lazy identifier does not allocate, so we do not need a
-    // GC scope.
+                                                                           
+                
     id = runtime_.getIdentifierTable().registerLazyIdentifier(str, hash);
   } else {
-    // Accessing a symbol non-lazily may allocate in the GC heap, so add a scope
-    // marker.
+                                                                                
+              
     GCScopeMarkerRAII scopeMarker{runtime_};
     id = *runtime_.ignoreAllocationFailure(
         runtime_.getIdentifierTable().getSymbolHandle(runtime_, str, hash));
@@ -391,8 +391,8 @@ void RuntimeModule::markRoots(RootAcceptor &acceptor, bool markLongLived) {
 
 void RuntimeModule::markLongLivedWeakRoots(WeakRootAcceptor &acceptor) {
   for (auto &cbPtr : functionMap_) {
-    // Only mark a CodeBlock is its non-null, and has not been scanned
-    // previously in this top-level markRoots invocation.
+                                                                      
+                                                         
     if (cbPtr != nullptr && cbPtr->getRuntimeModule() == this) {
       cbPtr->markCachedHiddenClasses(runtime_, acceptor);
     }
@@ -445,12 +445,12 @@ size_t RuntimeModule::additionalMemorySize() const {
 
 #ifdef HERMES_MEMORY_INSTRUMENTATION
 void RuntimeModule::snapshotAddNodes(GC &gc, HeapSnapshot &snap) const {
-  // Create a native node for each CodeBlock owned by this module.
+                                                                  
   for (const CodeBlock *cb : functionMap_) {
-    // Skip the null code blocks, they are lazily inserted the first time
-    // they are used.
+                                                                         
+                     
     if (cb && cb->getRuntimeModule() == this) {
-      // Only add a CodeBlock if this runtime module is the owner.
+                                                                  
       snap.beginNode();
       snap.endNode(
           HeapSnapshot::NodeType::Native,
@@ -461,15 +461,15 @@ void RuntimeModule::snapshotAddNodes(GC &gc, HeapSnapshot &snap) const {
     }
   }
 
-  // Create a node for functionMap_.
+                                    
   snap.beginNode();
-  // Create an edge to each CodeBlock owned by this module.
+                                                           
   for (int i = 0, e = functionMap_.size(); i < e; i++) {
     const CodeBlock *cb = functionMap_[i];
-    // Skip the null code blocks, they are lazily inserted the first time
-    // they are used.
+                                                                         
+                     
     if (cb && cb->getRuntimeModule() == this) {
-      // Only add a CodeBlock if this runtime module is the owner.
+                                                                  
       snap.addIndexedEdge(
           HeapSnapshot::EdgeType::Element, i, gc.getNativeID(cb));
     }
@@ -488,7 +488,7 @@ void RuntimeModule::snapshotAddEdges(GC &gc, HeapSnapshot &snap) const {
       "functionMap",
       gc.getNativeID(&functionMap_));
 }
-#endif // HERMES_MEMORY_INSTRUMENTATION
+#endif                                 
 
 namespace detail {
 
@@ -499,8 +499,8 @@ StringID mapStringMayAllocate(RuntimeModule &module, const char *str) {
   return module.stringIDMap_.size() - 1;
 }
 
-} // namespace detail
+}                    
 
-} // namespace vm
+}                
 
-} // namespace hermes
+}                    

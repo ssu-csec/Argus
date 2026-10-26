@@ -19,7 +19,7 @@
 |*                                                                            *|
 |*===----------------------------------------------------------------------===*/
 
-/* Please leave this file C-compatible. */
+                                          
 
 #ifndef LLVM_C_DATATYPES_H
 #define LLVM_C_DATATYPES_H
@@ -45,16 +45,16 @@
         "__STDC_CONSTANT_MACROS before #including llvm-c/DataTypes.h"
 #endif
 
-/* Note that <inttypes.h> includes <stdint.h>, if this is a C99 system. */
+                                                                          
 #include <sys/types.h>
 
 #ifdef _AIX
-// GCC is strict about defining large constants: they must have LL modifier.
+                                                                            
 #undef INT64_MAX
 #undef INT64_MIN
 #endif
 
-#else /* _MSC_VER */
+#else               
 #ifdef __cplusplus
 #include <cstddef>
 #include <cstdlib>
@@ -68,11 +68,11 @@
 typedef signed __int64 ssize_t;
 #else
 typedef signed int ssize_t;
-#endif /* _WIN64 */
+#endif             
 
-#endif /* _MSC_VER */
+#endif               
 
-/* Set defaults for constants which we cannot find. */
+                                                      
 #if !defined(INT64_MAX)
 # define INT64_MAX 9223372036854775807LL
 #endif
@@ -87,4 +87,4 @@ typedef signed int ssize_t;
 #define HUGE_VALF (float)HUGE_VAL
 #endif
 
-#endif /* LLVM_C_DATATYPES_H */
+#endif                         

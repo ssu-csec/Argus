@@ -11,8 +11,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-let TargetPrefix = "xcore" in {  // All intrinsics start with "llvm.xcore.".
-  // Miscellaneous instructions.
+let TargetPrefix = "xcore" in {                                             
+                                
   def int_xcore_bitrev : Intrinsic<[llvm_i32_ty],[llvm_i32_ty],[IntrNoMem]>,
                          GCCBuiltin<"__builtin_bitrev">;
   def int_xcore_crc8 : Intrinsic<[llvm_i32_ty, llvm_i32_ty],
@@ -36,7 +36,7 @@ let TargetPrefix = "xcore" in {  // All intrinsics start with "llvm.xcore.".
   def int_xcore_setsr : Intrinsic<[],[llvm_i32_ty]>;
   def int_xcore_clrsr : Intrinsic<[],[llvm_i32_ty]>;
 
-  // Resource instructions.
+                           
   def int_xcore_getr : Intrinsic<[llvm_anyptr_ty],[llvm_i32_ty]>;
   def int_xcore_freer : Intrinsic<[],[llvm_anyptr_ty],
                                    [NoCapture<0>]>;
@@ -92,17 +92,17 @@ let TargetPrefix = "xcore" in {  // All intrinsics start with "llvm.xcore.".
   def int_xcore_endin : Intrinsic<[llvm_i32_ty],[llvm_anyptr_ty],
                                  [NoCapture<0>]>;
 
-  // Intrinsics for events.
+                           
   def int_xcore_waitevent : Intrinsic<[llvm_ptr_ty],[], [IntrReadMem]>;
 
-  // If any of the resources owned by the thread are ready this returns the
-  // vector of one of the ready resources. If no resources owned by the thread
-  // are ready then the operand passed to the intrinsic is returned.
+                                                                           
+                                                                              
+                                                                    
   def int_xcore_checkevent : Intrinsic<[llvm_ptr_ty],[llvm_ptr_ty]>;
 
   def int_xcore_clre : Intrinsic<[],[],[]>;
 
-  // Intrinsics for threads.
+                            
   def int_xcore_getst : Intrinsic <[llvm_anyptr_ty],[llvm_anyptr_ty],
                                    [NoCapture<0>]>;
   def int_xcore_msync : Intrinsic <[],[llvm_anyptr_ty], [NoCapture<0>]>;

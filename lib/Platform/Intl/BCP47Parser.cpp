@@ -26,56 +26,56 @@ bool isCharType(const std::u16string &str, size_t min, size_t max, F charType) {
   return str.size() >= min && str.size() <= max && llvh::all_of(str, charType);
 }
 
-// Helper functions to check subtag validity.
-// https://unicode.org/reports/tr35/#Unicode_Language_and_Locale_Identifiers
+                                             
+                                                                            
 bool isUnicodeLanguageSubtag(const std::u16string &subtag) {
-  // = alpha{2,3} | alpha{5,8};
-  // root case?
+                               
+               
   return isCharType(subtag, 2, 3, &isASCIILetter) ||
       isCharType(subtag, 5, 8, &isASCIILetter);
 }
 bool isUnicodeScriptSubtag(const std::u16string &subtag) {
-  // = alpha{4};
+                
   return isCharType(subtag, 4, 4, &isASCIILetter);
 }
 bool isUnicodeRegionSubtag(const std::u16string &subtag) {
-  // = (alpha{2} | digit{3});
+                             
   return isCharType(subtag, 2, 2, &isASCIILetter) ||
       isCharType(subtag, 3, 3, &isASCIIDigit);
 }
 bool isUnicodeVariantSubtag(const std::u16string &subtag) {
-  // = (alphanum{5,8} | digit alphanum{3});
+                                           
   return isCharType(subtag, 5, 8, &isASCIILetterOrDigit) ||
       isCharType(subtag, 3, 3, &isASCIILetterOrDigit);
 }
 bool isUnicodeExtensionAttribute(const std::u16string &subtag) {
-  // = alphanum{3,8};
+                     
   return isCharType(subtag, 3, 8, &isASCIILetterOrDigit);
 }
 bool isUnicodeExtensionKey(const std::u16string &subtag) {
-  // = alphanum alpha;
+                      
   return subtag.size() == 2 && isASCIILetterOrDigit(subtag.front()) &&
       isASCIILetter(subtag.back());
 }
 bool isUnicodeExtensionKeyTypeItem(const std::u16string &subtag) {
-  // = alphanum{3,8};
+                     
   return isCharType(subtag, 3, 8, &isASCIILetterOrDigit);
 }
 bool isTransformedExtensionKey(const std::u16string &subtag) {
-  // = alpha digit;
+                   
   return subtag.size() == 2 && isASCIILetter(subtag.front()) &&
       isASCIIDigit(subtag.back());
 }
 bool isTransformedExtensionTValueItem(const std::u16string &subtag) {
-  // = (sep alphanum{3,8})+;
+                            
   return isCharType(subtag, 3, 8, &isASCIILetterOrDigit);
 }
 bool isPrivateUseExtension(const std::u16string &subtag) {
-  // = (sep alphanum{1,8})+;
+                            
   return isCharType(subtag, 1, 8, &isASCIILetterOrDigit);
 }
 bool isOtherExtension(const std::u16string &subtag) {
-  // = (sep alphanum{2,8})+;
+                            
   return isCharType(subtag, 2, 8, &isASCIILetterOrDigit);
 }
 std::vector<std::u16string> splitIntoSubtags(const std::u16string &locale) {
@@ -91,10 +91,10 @@ std::vector<std::u16string> splitIntoSubtags(const std::u16string &locale) {
   }
   return subtags;
 }
-} // namespace
+}             
 
 bool isUnicodeExtensionType(const std::u16string &str) {
-  // = alphanum{3,8} (sep alphanum{3,8})*;
+                                          
   return llvh::all_of(splitIntoSubtags(str), isUnicodeExtensionKeyTypeItem);
 }
 
@@ -122,7 +122,7 @@ class LanguageTagParser {
 LanguageTagParser::LanguageTagParser(const std::u16string &localeId) {
   subtags_ = splitIntoSubtags(localeId);
   std::reverse(subtags_.begin(), subtags_.end());
-  // Convert all subtags to lowercase by default.
+                                                 
   for (std::u16string &subtag : subtags_) {
     for (char16_t &c : subtag)
       if (c <= 'Z' && c >= 'A')
@@ -130,10 +130,10 @@ LanguageTagParser::LanguageTagParser(const std::u16string &localeId) {
   }
 }
 
-// 	unicode_locale_id =
-// 	  unicode_language_id
-//    extensions*
-//    pu_extensions? ;
+                       
+                         
+                 
+                      
 std::optional<ParsedLocaleIdentifier>
 LanguageTagParser::parseUnicodeLocaleId() {
   if (!parseUnicodeLanguageId(false))
@@ -145,13 +145,13 @@ LanguageTagParser::parseUnicodeLocaleId() {
   return result_;
 }
 
-// unicode_language_id =
-//   unicode_language_subtag
-//   (sep unicode_script_subtag)?
-//   (sep unicode_region_subtag)?
-//   (sep unicode_variant_subtag)*
-// NOTE: We intentionally omit tags starting with a script subtag and the "root"
-// tag since they are not valid BCP-47 tags.
+                        
+                            
+                                 
+                                 
+                                  
+                                                                                
+                                            
 bool LanguageTagParser::parseUnicodeLanguageId(bool transformedExtensionId) {
   if (!transformedExtensionId && !isUnicodeLanguageSubtag(getCurrentSubtag()))
     return false;
@@ -196,20 +196,20 @@ bool LanguageTagParser::parseExtensions() {
 
     switch (singleton) {
       case 'u':
-        // unicode_locale_extensions
+                                    
         if (!parseUnicodeExtension())
           return false;
         break;
       case 't':
-        // transformed_extensions
+                                 
         if (!parseTransformedExtension())
           return false;
         break;
       case 'x':
-        // pu_extensions - must be the last extension
+                                                     
         return parsePUExtension();
       default:
-        // other_extensions
+                           
         if (!parseOtherExtension(singleton))
           return false;
         break;
@@ -218,9 +218,9 @@ bool LanguageTagParser::parseExtensions() {
   return true;
 }
 
-// unicode_locale_extensions = sep [uU]
-// ((sep keyword)+
-// |(sep attribute)+ (sep keyword)*) ;
+                                       
+                  
+                                      
 bool LanguageTagParser::parseUnicodeExtension() {
   if (!result_.unicodeExtensionAttributes.empty() ||
       !result_.unicodeExtensionKeywords.empty())
@@ -230,7 +230,7 @@ bool LanguageTagParser::parseUnicodeExtension() {
 
   while (isUnicodeExtensionAttribute(getCurrentSubtag())) {
     hasKeywordOrAttribute = true;
-    // ECMA-402 specifies that attributes should be deduplicated.
+                                                                 
     result_.unicodeExtensionAttributes.insert(getCurrentSubtag());
     if (!nextSubtag())
       return true;
@@ -238,7 +238,7 @@ bool LanguageTagParser::parseUnicodeExtension() {
 
   while (hasMoreSubtags() && isUnicodeExtensionKey(getCurrentSubtag())) {
     hasKeywordOrAttribute = true;
-    // ECMA-402 specifies that only the first occurrence of a key is kept.
+                                                                          
     auto res =
         result_.unicodeExtensionKeywords.insert({getCurrentSubtag(), {}});
     std::u16string &uvalue = res.first->second;
@@ -254,16 +254,16 @@ bool LanguageTagParser::parseUnicodeExtension() {
   return hasKeywordOrAttribute;
 }
 
-// transformed_extensions= sep [tT]
-// ((sep tlang (sep tfield)*)
-// | (sep tfield)+) ;
-//
-// tlang = unicode_language_subtag
-//  (sep unicode_script_subtag)?
-//  (sep unicode_region_subtag)?
-//  (sep unicode_variant_subtag)* ;
-//
-//  tfield = tkey tvalue;
+                                   
+                             
+                     
+  
+                                  
+                                
+                                
+                                   
+  
+                         
 bool LanguageTagParser::parseTransformedExtension() {
   if (!result_.transformedLanguageIdentifier.languageSubtag.empty() ||
       !result_.transformedExtensionFields.empty())
@@ -280,8 +280,8 @@ bool LanguageTagParser::parseTransformedExtension() {
     hasExtension = true;
     auto res =
         result_.transformedExtensionFields.insert({getCurrentSubtag(), {}});
-    // IETF RFC6497: Two identical field separators MUST NOT be present in the
-    // language tag.
+                                                                              
+                    
     if (!res.second)
       return false;
     if (!nextSubtag())
@@ -301,8 +301,8 @@ bool LanguageTagParser::parseTransformedExtension() {
   return hasExtension;
 }
 
-// pu_extensions= sep [xX]
-// (sep alphanum{1,8})+ ;
+                          
+                         
 bool LanguageTagParser::parsePUExtension() {
   if (!isPrivateUseExtension(getCurrentSubtag()))
     return false;
@@ -316,8 +316,8 @@ bool LanguageTagParser::parsePUExtension() {
   return true;
 }
 
-// other_extensions= sep [alphanum-[tTuUxX]]
-// (sep alphanum{2,8})+ ;
+                                            
+                         
 bool LanguageTagParser::parseOtherExtension(char16_t singleton) {
   auto res = result_.otherExtensionMap.insert({singleton, {}});
   if (!res.second || !isOtherExtension(getCurrentSubtag()))
@@ -346,18 +346,18 @@ const std::u16string &LanguageTagParser::getCurrentSubtag() const {
   return subtags_.back();
 }
 
-/* static */ std::optional<ParsedLocaleIdentifier>
+             std::optional<ParsedLocaleIdentifier>
 ParsedLocaleIdentifier::parse(const std::u16string &localeId) {
   LanguageTagParser parser(localeId);
   return parser.parseUnicodeLocaleId();
 }
 
-// https://unicode.org/reports/tr35/#Canonical_Unicode_Locale_Identifiers
-// https://tc39.es/ecma402/#sec-canonicalizeunicodelocaleid
+                                                                         
+                                                           
 std::u16string ParsedLocaleIdentifier::canonicalize() const {
   std::u16string canoLocaleId;
 
-  // Append unicode_language_id
+                               
   {
     canoLocaleId.append(languageIdentifier.languageSubtag);
     assert(!canoLocaleId.empty() && "Valid tag with empty language subtag.");
@@ -366,14 +366,14 @@ std::u16string ParsedLocaleIdentifier::canonicalize() const {
       return (c >= u'a' && c <= u'z') ? c - u'a' + u'A' : c;
     };
     if (!scriptSubtag.empty()) {
-      // Convert script subtag into title case.
+                                               
       canoLocaleId.append({u'-', toAsciiUpper(scriptSubtag[0])});
       for (size_t i = 1; i < scriptSubtag.size(); i++)
         canoLocaleId += scriptSubtag[i];
     }
     if (!languageIdentifier.regionSubtag.empty()) {
       canoLocaleId += u'-';
-      // Convert region subtag into uppercase.
+                                              
       for (auto c : languageIdentifier.regionSubtag)
         canoLocaleId += toAsciiUpper(c);
     }
@@ -381,10 +381,10 @@ std::u16string ParsedLocaleIdentifier::canonicalize() const {
       canoLocaleId.append(u"-").append(subtag);
   }
 
-  // Any extensions are in alphabetical order by their singleton (eg,
-  // en-t-xxx-u-yyy, not en-u-yyy-t-xxx).
+                                                                     
+                                         
 
-  // Append other extensions from a-s
+                                     
   auto oExtIt = otherExtensionMap.begin();
   while (oExtIt != otherExtensionMap.end() && oExtIt->first < 't') {
     canoLocaleId.append({u'-', oExtIt->first});
@@ -393,11 +393,11 @@ std::u16string ParsedLocaleIdentifier::canonicalize() const {
     oExtIt++;
   }
 
-  // Build transformed extension
+                                
   {
     std::u16string transformedExtension;
 
-    // Append tlang
+                   
     if (!transformedLanguageIdentifier.languageSubtag.empty())
       transformedExtension.append(u"-").append(
           transformedLanguageIdentifier.languageSubtag);
@@ -410,40 +410,40 @@ std::u16string ParsedLocaleIdentifier::canonicalize() const {
     for (const auto &subtag : transformedLanguageIdentifier.variantSubtagList)
       transformedExtension.append(u"-").append(subtag);
 
-    // Sort tfields by the alphabetical order of its keys
+                                                         
     for (const auto &p : transformedExtensionFields) {
       transformedExtension.append(u"-").append(p.first);
       if (!p.second.empty())
         transformedExtension.append(u"-").append(p.second);
     }
 
-    // Append transformed extension singleton and extension
+                                                           
     if (transformedExtension.length() > 0)
       canoLocaleId.append(u"-t").append(transformedExtension);
   }
 
-  // Build Unicode extension
+                            
   {
     std::u16string unicodeExtension;
 
-    // Append Unicode attributes.
+                                 
     for (const auto &attribute : unicodeExtensionAttributes)
       unicodeExtension.append(u"-").append(attribute);
 
-    // Append Unicode keywords
+                              
     for (const auto &p : unicodeExtensionKeywords) {
       unicodeExtension.append(u"-").append(p.first);
-      // Drop uvalue if it is "true".
+                                     
       if (!p.second.empty() && p.second != u"true")
         unicodeExtension.append(u"-").append(p.second);
     }
 
-    // Append Unicode singleton
+                               
     if (!unicodeExtension.empty())
       canoLocaleId.append(u"-u").append(unicodeExtension);
   }
 
-  // Append remaining other extensions
+                                      
   while (oExtIt != otherExtensionMap.end()) {
     canoLocaleId.append({u'-', oExtIt->first});
     if (!oExtIt->second.empty())
@@ -451,7 +451,7 @@ std::u16string ParsedLocaleIdentifier::canonicalize() const {
     oExtIt++;
   }
 
-  // Append private use extensions
+                                  
   if (!puExtensions.empty()) {
     canoLocaleId.append(u"-x-");
     canoLocaleId.append(puExtensions);
@@ -460,5 +460,5 @@ std::u16string ParsedLocaleIdentifier::canonicalize() const {
   return canoLocaleId;
 }
 
-} // namespace platform_intl
-} // namespace hermes
+}                           
+}                    

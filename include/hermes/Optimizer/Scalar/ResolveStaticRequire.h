@@ -12,7 +12,7 @@
 
 namespace hermes {
 
-/// Ensure that all CommonJS require() calls are statically resolvable.
+                                                                       
 class ResolveStaticRequire : public ModulePass {
  public:
   explicit ResolveStaticRequire() : ModulePass("ResolveStaticRequire") {}
@@ -20,6 +20,6 @@ class ResolveStaticRequire : public ModulePass {
   bool runOnModule(Module *M) override;
 };
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_OPTIMIZER_SCALAR_RESOLVESTATICREQUIRE_H
+#endif                                                  

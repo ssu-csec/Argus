@@ -22,8 +22,8 @@
 #include <memory>
 
 namespace llvh {
-  /// A simple registry entry which provides only a name, description, and
-  /// no-argument constructor.
+                                                                          
+                              
   template <typename T>
   class SimpleRegistryEntry {
     StringRef Name, Desc;
@@ -38,9 +38,9 @@ namespace llvh {
     std::unique_ptr<T> instantiate() const { return Ctor(); }
   };
 
-  /// A global registry used in conjunction with static constructors to make
-  /// pluggable components (like targets or garbage collectors) "just work" when
-  /// linked with an executable.
+                                                                            
+                                                                                
+                                
   template <typename T>
   class Registry {
   public:
@@ -57,8 +57,8 @@ namespace llvh {
     static node *Head, *Tail;
 
   public:
-    /// Node in linked list of entries.
-    ///
+                                       
+       
     class node {
       friend class iterator;
       friend Registry<T>;
@@ -70,17 +70,17 @@ namespace llvh {
       node(const entry &V) : Next(nullptr), Val(V) {}
     };
 
-    /// Add a node to the Registry: this is the interface between the plugin and
-    /// the executable.
-    ///
-    /// This function is exported by the executable and called by the plugin to
-    /// add a node to the executable's registry. Therefore it's not defined here
-    /// to avoid it being instantiated in the plugin and is instead defined in
-    /// the executable (see LLVM_INSTANTIATE_REGISTRY below).
+                                                                                
+                       
+       
+                                                                               
+                                                                                
+                                                                              
+                                                             
     static void add_node(node *N);
 
-    /// Iterators for registry entries.
-    ///
+                                       
+       
     class iterator {
       const node *Cur;
 
@@ -94,8 +94,8 @@ namespace llvh {
       const entry *operator->() const { return &Cur->Val; }
     };
 
-    // begin is not defined here in order to avoid usage of an undefined static
-    // data member, instead it's instantiated by LLVM_INSTANTIATE_REGISTRY.
+                                                                               
+                                                                           
     static iterator begin();
     static iterator end()   { return iterator(nullptr); }
 
@@ -103,14 +103,14 @@ namespace llvh {
       return make_range(begin(), end());
     }
 
-    /// A static registration template. Use like such:
-    ///
-    ///   Registry<Collector>::Add<FancyGC>
-    ///   X("fancy-gc", "Newfangled garbage collector.");
-    ///
-    /// Use of this template requires that:
-    ///
-    ///  1. The registered subclass has a default constructor.
+                                                      
+       
+                                           
+                                                         
+       
+                                           
+       
+                                                              
     template <typename V>
     class Add {
       entry Entry;
@@ -125,16 +125,16 @@ namespace llvh {
       }
     };
   };
-} // end namespace llvh
+}                      
 
-/// Instantiate a registry class.
-///
-/// This provides template definitions of add_node, begin, and the Head and Tail
-/// pointers, then explicitly instantiates them. We could explicitly specialize
-/// them, instead of the two-step process of define then instantiate, but
-/// strictly speaking that's not allowed by the C++ standard (we would need to
-/// have explicit specialization declarations in all translation units where the
-/// specialization is used) so we don't.
+                                 
+   
+                                                                                
+                                                                               
+                                                                         
+                                                                              
+                                                                                
+                                        
 #define LLVM_INSTANTIATE_REGISTRY(REGISTRY_CLASS) \
   namespace llvh { \
   template<typename T> typename Registry<T>::node *Registry<T>::Head = nullptr;\
@@ -157,4 +157,4 @@ namespace llvh {
   template REGISTRY_CLASS::iterator Registry<REGISTRY_CLASS::type>::begin(); \
   }
 
-#endif // LLVM_SUPPORT_REGISTRY_H
+#endif                           

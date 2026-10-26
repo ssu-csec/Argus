@@ -13,8 +13,8 @@
 
 namespace hermes {
 
-/// Moves code around to reduce code size and reduce the dynamic instruction
-/// count.
+                                                                            
+          
 class CodeMotion : public FunctionPass {
  public:
   explicit CodeMotion() : FunctionPass("CodeMotion") {}
@@ -23,6 +23,6 @@ class CodeMotion : public FunctionPass {
   bool runOnFunction(Function *F) override;
 };
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_OPTIMIZER_SCALAR_CODEMOTION_H
+#endif                                        

@@ -20,13 +20,13 @@
 
 namespace llvh {
 namespace sys {
-  // True if Valgrind is controlling this process.
+                                                  
   bool RunningOnValgrind();
 
-  // Discard valgrind's translation of code in the range [Addr .. Addr + Len).
-  // Otherwise valgrind may continue to execute the old version of the code.
+                                                                              
+                                                                            
   void ValgrindDiscardTranslations(const void *Addr, size_t Len);
-} // namespace sys
-} // end namespace llvh
+}                 
+}                      
 
-#endif // LLVM_SUPPORT_VALGRIND_H
+#endif                           

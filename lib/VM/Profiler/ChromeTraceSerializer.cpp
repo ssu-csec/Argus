@@ -43,7 +43,7 @@ std::shared_ptr<ChromeStackFrameNode> ChromeStackFrameNode::findOrAddNewChild(
   return children_.back();
 }
 
-/*static*/ ChromeTraceFormat ChromeTraceFormat::create(
+           ChromeTraceFormat ChromeTraceFormat::create(
     uint32_t pid,
     const SamplingProfiler::ThreadNamesMap &threadNames,
     const std::vector<SamplingProfiler::StackTrace> &sampledStacks) {
@@ -55,8 +55,8 @@ std::shared_ptr<ChromeStackFrameNode> ChromeStackFrameNode::findOrAddNewChild(
           frameIdGen.getNextFrameNodeId(), llvh::None)};
   for (const SamplingProfiler::StackTrace &sample : sampledStacks) {
     std::shared_ptr<ChromeStackFrameNode> leafNode = trace.root_;
-    // Leaf frame is in sample[0] so dump it backward to
-    // get root => leaf represenation.
+                                                        
+                                      
     for (const auto &frame : llvh::reverse(sample.stack))
       leafNode = leafNode->findOrAddNewChild(frameIdGen, frame);
     leafNode->addHit();
@@ -84,7 +84,7 @@ OptValue<hbc::DebugSourceLocation> getSourceLocation(
   }
   return llvh::None;
 }
-} // namespace
+}             
 
 ChromeTraceSerializer::ChromeTraceSerializer(
     const SamplingProfiler &sp,
@@ -98,7 +98,7 @@ ChromeTraceSerializer::ChromeTraceSerializer(
 namespace chrome_event_type {
 static const char *Completed = "X";
 static const char *Metadata = "M";
-} // namespace chrome_event_type
+}                               
 
 void ChromeTraceSerializer::serializeProcessName(JSONEmitter &json) const {
   double pid = trace_.getPid();
@@ -108,18 +108,18 @@ void ChromeTraceSerializer::serializeProcessName(JSONEmitter &json) const {
     json.emitKeyValue("ph", chrome_event_type::Metadata);
     json.emitKeyValue("cat", "__metadata");
     json.emitKeyValue("pid", pid);
-    // Use first event time for process_name time.
+                                                  
     json.emitKeyValue("ts", getSerializedTimeStamp(firstEventTimeStamp_));
-    // process_name event has no real tid.
+                                          
     json.emitKeyValue("tid", "-1");
 
-    // TODO: get the real process name.
+                                       
     json.emitKey("args");
     json.openDict();
     json.emitKeyValue("name", "hermes");
-    json.closeDict(); // args
+    json.closeDict();        
   }
-  json.closeDict(); // process_name entry.
+  json.closeDict();                       
 }
 
 void ChromeTraceSerializer::serializeThreads(JSONEmitter &json) const {
@@ -128,25 +128,25 @@ void ChromeTraceSerializer::serializeThreads(JSONEmitter &json) const {
     SamplingProfiler::ThreadId tid = threadNameEntry.first;
     std::string threadName = threadNameEntry.second;
 
-    // Emit thread_name entry.
+                              
     json.openDict();
     {
       json.emitKeyValue("name", "thread_name");
       json.emitKeyValue("ph", chrome_event_type::Metadata);
       json.emitKeyValue("cat", "__metadata");
       json.emitKeyValue("pid", static_cast<double>(pid));
-      // Use first event time for thread_name time.
+                                                   
       json.emitKeyValue("ts", getSerializedTimeStamp(firstEventTimeStamp_));
       json.emitKeyValue("tid", std::to_string(tid));
 
       json.emitKey("args");
       json.openDict();
       json.emitKeyValue("name", threadName);
-      json.closeDict(); // args
+      json.closeDict();        
     }
-    json.closeDict(); // thread_name entry.
+    json.closeDict();                      
 
-    // Emit thread entry.
+                         
     json.openDict();
     {
       json.emitKeyValue("name", threadName);
@@ -159,9 +159,9 @@ void ChromeTraceSerializer::serializeThreads(JSONEmitter &json) const {
 
       json.emitKey("args");
       json.openDict();
-      json.closeDict(); // args
+      json.closeDict();        
     }
-    json.closeDict(); // thread entry.
+    json.closeDict();                 
   }
 }
 
@@ -214,21 +214,21 @@ void ChromeTraceSerializer::serializeStackFrames(JSONEmitter &json) const {
         OptValue<hbc::DebugSourceLocation> sourceLocOpt = getSourceLocation(
             bcProvider, frame.jsFrame.functionId, frame.jsFrame.offset);
         if (sourceLocOpt.hasValue()) {
-          // Bundle has debug info.
+                                   
           std::string fileNameStr = bcProvider->getDebugInfo()->getFilenameByID(
               sourceLocOpt.getValue().filenameId);
 
           uint32_t line = sourceLocOpt.getValue().line;
           uint32_t column = sourceLocOpt.getValue().column;
-          // format: frame_name(file:line:column)
+                                                 
           os << "(" << fileNameStr << ":" << line << ":" << column << ")";
-          // Still emit line/column entries for babel/metro/prepack
-          // source map symbolication.
+                                                                   
+                                      
           json.emitKeyValue("line", std::to_string(line));
           json.emitKeyValue("column", std::to_string(column));
 
-          // Emit function's start line/column so that can we symbolicate
-          // name correctly.
+                                                                         
+                            
           OptValue<hbc::DebugSourceLocation> funcStartSourceLocOpt =
               getSourceLocation(bcProvider, frame.jsFrame.functionId, 0);
           if (funcStartSourceLocOpt.hasValue()) {
@@ -240,8 +240,8 @@ void ChromeTraceSerializer::serializeStackFrames(JSONEmitter &json) const {
                 std::to_string(funcStartSourceLocOpt.getValue().column));
           }
         } else {
-          // Without debug info, emit virtual address for source map
-          // symbolication.
+                                                                    
+                           
           uint32_t funcVirtAddr =
               bcProvider->getVirtualOffsetForFunction(frame.jsFrame.functionId);
           json.emitKeyValue("funcVirtAddr", std::to_string(funcVirtAddr));
@@ -284,43 +284,43 @@ void ChromeTraceSerializer::serializeStackFrames(JSONEmitter &json) const {
 void ChromeTraceSerializer::serialize(llvh::raw_ostream &OS) const {
   JSONEmitter json(OS);
 
-  // The format of the chrome trace is a bit vague. Here are the essential
-  // relationship I reverse engineered out:
-  // 1. Tracery only supports OS "samples" events now, not InstantEvent.
-  // 2. For each "samples" event, its 'tid' field must match a Completed('X')
-  // thread event in "traceEvents" section.(only true for
-  // chrome://tracing viewer)
-  // 3. To give a name to thread, a 'thread_name' metadata record must be
-  // emitted to match its 'tid'.
-  // 4. "process_name" metadata record gives name to a process.
-  // 5. "sample" event's "sf" field points to a stack frame id "key" in
-  // "stackFrames" section.
+                                                                          
+                                           
+                                                                        
+                                                                             
+                                                         
+                             
+                                                                         
+                                
+                                                               
+                                                                       
+                           
 
-  json.openDict(); // Open trace.
+  json.openDict();               
 
-  // Emit process/threads and its metadata events.
+                                                  
   json.emitKey("traceEvents");
   json.openArray();
   serializeProcessName(json);
   serializeThreads(json);
-  json.closeArray(); // traceEvents.
+  json.closeArray();                
 
-  // Emit "samples" events.
+                           
   json.emitKey("samples");
   json.openArray();
   serializeSampledEvents(json);
-  json.closeArray(); // samples
+  json.closeArray();           
 
-  // Emit "stackFrames" entries.
+                                
   json.emitKey("stackFrames");
   json.openDict();
   serializeStackFrames(json);
-  json.closeDict(); // stackFrames.
+  json.closeDict();                
 
-  json.closeDict(); // Whole trace.
+  json.closeDict();                
 }
 
-/*static*/ std::string ChromeTraceSerializer::getSerializedTimeStamp(
+           std::string ChromeTraceSerializer::getSerializedTimeStamp(
     SamplingProfiler::TimeStampType timeStamp) {
   return std::to_string(
       std::chrono::duration_cast<std::chrono::microseconds>(
@@ -363,8 +363,8 @@ void ProfilerProfileSerializer::serialize() const {
   json_.openDict();
 
   if (!chromeTrace_.getSampledEvents().empty()) {
-    // samples and timeDeltas are optional, so don't emit if there are no
-    // samples.
+                                                                         
+               
     emitSamples();
     emitTimeDeltas();
   }
@@ -397,7 +397,7 @@ static void emitProfileNode(
   json.emitKeyValue("lineNumber", lineNumber);
   json.emitKeyValue("columnNumber", columnNumber);
 
-  json.closeDict(); // callFrame
+  json.closeDict();             
 
   const auto children = node.getChildren();
   if (!children.empty()) {
@@ -407,7 +407,7 @@ static void emitProfileNode(
     for (const auto &child : children) {
       json.emitValue(child->getId());
     }
-    json.closeArray(); // children
+    json.closeArray();            
   }
 
   const uint32_t hitCount = node.getHitCount();
@@ -415,7 +415,7 @@ static void emitProfileNode(
     json.emitKeyValue("hitCount", hitCount);
   }
 
-  json.closeDict(); // node
+  json.closeDict();        
 }
 
 void ProfilerProfileSerializer::processNode(
@@ -437,7 +437,7 @@ void ProfilerProfileSerializer::processNode(
       OptValue<hbc::DebugSourceLocation> sourceLocOpt = getSourceLocation(
           bcProvider, frame.jsFrame.functionId, frame.jsFrame.offset);
       if (sourceLocOpt.hasValue()) {
-        // Bundle has debug info.
+                                 
         scriptId = sourceLocOpt.getValue().filenameId;
         url = bcProvider->getDebugInfo()->getFilenameByID(scriptId);
 
@@ -478,7 +478,7 @@ void ProfilerProfileSerializer::emitNodes() const {
   json_.emitKey("nodes");
   json_.openArray();
 
-  // Emit the root node first as required by CDP.
+                                                 
   const ChromeStackFrameNode *root = &chromeTrace_.getRoot();
   assert(root && "no profile root");
   emitProfileNode(json_, *root, "[root]", 0, "[root]", 0, 0);
@@ -493,7 +493,7 @@ void ProfilerProfileSerializer::emitNodes() const {
     }
   });
 
-  json_.closeArray(); // nodes
+  json_.closeArray();         
 }
 
 template <typename T>
@@ -538,7 +538,7 @@ void ProfilerProfileSerializer::emitSamples() const {
     json_.emitValue(stackId);
   }
 
-  json_.closeArray(); // samples
+  json_.closeArray();           
 }
 
 void ProfilerProfileSerializer::emitTimeDeltas() const {
@@ -556,9 +556,9 @@ void ProfilerProfileSerializer::emitTimeDeltas() const {
     previousTimeStampMicros = currentTimeStampMicros;
   }
 
-  json_.closeArray(); // samples
+  json_.closeArray();           
 }
-} // namespace
+}             
 
 void serializeAsProfilerProfile(
     const SamplingProfiler &sp,
@@ -569,7 +569,7 @@ void serializeAsProfilerProfile(
   ProfilerProfileSerializer s(sp, json, std::move(chromeTrace));
   s.serialize();
 }
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMESVM_SAMPLING_PROFILER_AVAILABLE
+#endif                                        

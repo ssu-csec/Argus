@@ -17,86 +17,86 @@ namespace llvh {
 namespace ARM {
 namespace WinEH {
 enum class RuntimeFunctionFlag {
-  RFF_Unpacked,       /// unpacked entry
-  RFF_Packed,         /// packed entry
-  RFF_PackedFragment, /// packed entry representing a fragment
-  RFF_Reserved,       /// reserved
+  RFF_Unpacked,                         
+  RFF_Packed,                         
+  RFF_PackedFragment,                                         
+  RFF_Reserved,                   
 };
 
 enum class ReturnType {
-  RT_POP,             /// return via pop {pc} (L flag must be set)
-  RT_B,               /// 16-bit branch
-  RT_BW,              /// 32-bit branch
-  RT_NoEpilogue,      /// no epilogue (fragment)
+  RT_POP,                                                         
+  RT_B,                                
+  RT_BW,                               
+  RT_NoEpilogue,                                
 };
 
-/// RuntimeFunction - An entry in the table of procedure data (.pdata)
-///
-///  3 3 2 2 2 2 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0
-///  1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
-/// +---------------------------------------------------------------+
-/// |                     Function Start RVA                        |
-/// +-------------------+-+-+-+-----+-+---+---------------------+---+
-/// |    Stack Adjust   |C|L|R| Reg |H|Ret|   Function Length   |Flg|
-/// +-------------------+-+-+-+-----+-+---+---------------------+---+
-///
-/// Flag : 2-bit field with the following meanings:
-///   - 00 = packed unwind data not used; reamining bits point to .xdata record
-///   - 01 = packed unwind data
-///   - 10 = packed unwind data, function assumed to have no prologue; useful
-///          for function fragments that are discontiguous with the start of the
-///          function
-///   - 11 = reserved
-/// Function Length : 11-bit field providing the length of the entire function
-///                   in bytes, divided by 2; if the function is greater than
-///                   4KB, a full .xdata record must be used instead
-/// Ret : 2-bit field indicating how the function returns
-///   - 00 = return via pop {pc} (the L bit must be set)
-///   - 01 = return via 16-bit branch
-///   - 10 = return via 32-bit branch
-///   - 11 = no epilogue; useful for function fragments that may only contain a
-///          prologue but the epilogue is elsewhere
-/// H : 1-bit flag indicating whether the function "homes" the integer parameter
-///     registers (r0-r3), allocating 16-bytes on the stack
-/// Reg : 3-bit field indicating the index of the last saved non-volatile
-///       register.  If the R bit is set to 0, then only integer registers are
-///       saved (r4-rN, where N is 4 + Reg).  If the R bit is set to 1, then
-///       only floating-point registers are being saved (d8-dN, where N is
-///       8 + Reg).  The special case of the R bit being set to 1 and Reg equal
-///       to 7 indicates that no registers are saved.
-/// R : 1-bit flag indicating whether the non-volatile registers are integer or
-///     floating-point.  0 indicates integer, 1 indicates floating-point.  The
-///     special case of the R-flag being set and Reg being set to 7 indicates
-///     that no non-volatile registers are saved.
-/// L : 1-bit flag indicating whether the function saves/restores the link
-///     register (LR)
-/// C : 1-bit flag indicating whether the function includes extra instructions
-///     to setup a frame chain for fast walking.  If this flag is set, r11 is
-///     implicitly added to the list of saved non-volatile integer registers.
-/// Stack Adjust : 10-bit field indicating the number of bytes of stack that are
-///                allocated for this function.  Only values between 0x000 and
-///                0x3f3 can be directly encoded.  If the value is 0x3f4 or
-///                greater, then the low 4 bits have special meaning as follows:
-///                - Bit 0-1
-///                  indicate the number of words' of adjustment (1-4), minus 1
-///                - Bit 2
-///                  indicates if the prologue combined adjustment into push
-///                - Bit 3
-///                  indicates if the epilogue combined adjustment into pop
-///
-/// RESTRICTIONS:
-///   - IF C is SET:
-///     + L flag must be set since frame chaining requires r11 and lr
-///     + r11 must NOT be included in the set of registers described by Reg
-///   - IF Ret is 0:
-///     + L flag must be set
+                                                                      
+   
+                                                                    
+                                                                    
+                                                                     
+                                                                     
+                                                                     
+                                                                     
+                                                                     
+   
+                                                   
+                                                                               
+                               
+                                                                             
+                                                                                
+                     
+                     
+                                                                              
+                                                                             
+                                                                    
+                                                         
+                                                        
+                                     
+                                     
+                                                                               
+                                                   
+                                                                                
+                                                           
+                                                                         
+                                                                              
+                                                                            
+                                                                          
+                                                                               
+                                                     
+                                                                               
+                                                                              
+                                                                             
+                                                 
+                                                                          
+                     
+                                                                              
+                                                                             
+                                                                             
+                                                                                
+                                                                              
+                                                                           
+                                                                                
+                            
+                                                                               
+                          
+                                                                            
+                          
+                                                                           
+   
+                 
+                    
+                                                                     
+                                                                           
+                    
+                            
 
-// NOTE: RuntimeFunction is meant to be a simple class that provides raw access
-// to all fields in the structure.  The accessor methods reflect the names of
-// the bitfields that they correspond to.  Although some obvious simplifications
-// are possible via merging of methods, it would prevent the use of this class
-// to fully inspect the contents of the data structure which is particularly
-// useful for scenarios such as llvm-readobj to aid in testing.
+                                                                               
+                                                                             
+                                                                                
+                                                                              
+                                                                            
+                                                               
 
 class RuntimeFunction {
 public:
@@ -181,19 +181,19 @@ public:
   }
 };
 
-/// PrologueFolding - pseudo-flag derived from Stack Adjust indicating that the
-/// prologue has stack adjustment combined into the push
+                                                                               
+                                                        
 inline bool PrologueFolding(const RuntimeFunction &RF) {
   return RF.StackAdjust() >= 0x3f4 && (RF.StackAdjust() & 0x4);
 }
-/// Epilogue - pseudo-flag derived from Stack Adjust indicating that the
-/// epilogue has stack adjustment combined into the pop
+                                                                        
+                                                       
 inline bool EpilogueFolding(const RuntimeFunction &RF) {
   return RF.StackAdjust() >= 0x3f4 && (RF.StackAdjust() & 0x8);
 }
-/// StackAdjustment - calculated stack adjustment in words.  The stack
-/// adjustment should be determined via this function to account for the special
-/// handling the special encoding when the value is >= 0x3f4.
+                                                                      
+                                                                                
+                                                             
 inline uint16_t StackAdjustment(const RuntimeFunction &RF) {
   uint16_t Adjustment = RF.StackAdjust();
   if (Adjustment >= 0x3f4)
@@ -201,93 +201,93 @@ inline uint16_t StackAdjustment(const RuntimeFunction &RF) {
   return Adjustment;
 }
 
-/// SavedRegisterMask - Utility function to calculate the set of saved general
-/// purpose (r0-r15) and VFP (d0-d31) registers.
+                                                                              
+                                                
 std::pair<uint16_t, uint32_t> SavedRegisterMask(const RuntimeFunction &RF);
 
-/// ExceptionDataRecord - An entry in the table of exception data (.xdata)
-///
-///  3 3 2 2 2 2 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0
-///  1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
-/// +-------+---------+-+-+-+---+-----------------------------------+
-/// | C Wrd | Epi Cnt |F|E|X|Ver|         Function Length           |
-/// +-------+--------+'-'-'-'---'---+-------------------------------+
-/// |    Reserved    |Ex. Code Words|   (Extended Epilogue Count)   |
-/// +-------+--------+--------------+-------------------------------+
-///
-/// Function Length : 18-bit field indicating the total length of the function
-///                   in bytes divided by 2.  If a function is larger than
-///                   512KB, then multiple pdata and xdata records must be used.
-/// Vers : 2-bit field describing the version of the remaining structure.  Only
-///        version 0 is currently defined (values 1-3 are not permitted).
-/// X : 1-bit field indicating the presence of exception data
-/// E : 1-bit field indicating that the single epilogue is packed into the
-///     header
-/// F : 1-bit field indicating that the record describes a function fragment
-///     (implies that no prologue is present, and prologue processing should be
-///     skipped)
-/// Epilogue Count : 5-bit field that differs in meaning based on the E field.
-///
-///                  If E is set, then this field specifies the index of the
-///                  first unwind code describing the (only) epilogue.
-///
-///                  Otherwise, this field indicates the number of exception
-///                  scopes.  If more than 31 scopes exist, then this field and
-///                  the Code Words field must both be set to 0 to indicate that
-///                  an extension word is required.
-/// Code Words : 4-bit field that species the number of 32-bit words needed to
-///              contain all the unwind codes.  If more than 15 words (63 code
-///              bytes) are required, then this field and the Epilogue Count
-///              field must both be set to 0 to indicate that an extension word
-///              is required.
-/// Extended Epilogue Count, Extended Code Words :
-///                          Valid only if Epilog Count and Code Words are both
-///                          set to 0.  Provides an 8-bit extended code word
-///                          count and 16-bits for epilogue count
-///
-///  3 3 2 2 2 2 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0
-///  1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
-/// +----------------+------+---+---+-------------------------------+
-/// |  Ep Start Idx  | Cond |Res|       Epilogue Start Offset       |
-/// +----------------+------+---+-----------------------------------+
-///
-/// If the E bit is unset in the header, the header is followed by a series of
-/// epilogue scopes, which are sorted by their offset.
-///
-/// Epilogue Start Offset: 18-bit field encoding the offset of epilogue relative
-///                        to the start of the function in bytes divided by two
-/// Res : 2-bit field reserved for future expansion (must be set to 0)
-/// Condition : 4-bit field providing the condition under which the epilogue is
-///             executed.  Unconditional epilogues should set this field to 0xe.
-///             Epilogues must be entirely conditional or unconditional, and in
-///             Thumb-2 mode.  The epilogue beings with the first instruction
-///             after the IT opcode.
-/// Epilogue Start Index : 8-bit field indicating the byte index of the first
-///                        unwind code describing the epilogue
-///
-///  3 3 2 2 2 2 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0
-///  1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
-/// +---------------+---------------+---------------+---------------+
-/// | Unwind Code 3 | Unwind Code 2 | Unwind Code 1 | Unwind Code 0 |
-/// +---------------+---------------+---------------+---------------+
-///
-/// Following the epilogue scopes, the byte code describing the unwinding
-/// follows.  This is padded to align up to word alignment.  Bytes are stored in
-/// little endian.
-///
-///  3 3 2 2 2 2 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0
-///  1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
-/// +---------------------------------------------------------------+
-/// |           Exception Handler RVA (requires X = 1)              |
-/// +---------------------------------------------------------------+
-/// |  (possibly followed by data required for exception handler)   |
-/// +---------------------------------------------------------------+
-///
-/// If the X bit is set in the header, the unwind byte code is followed by the
-/// exception handler information.  This constants of one Exception Handler RVA
-/// which is the address to the exception handler, followed immediately by the
-/// variable length data associated with the exception handler.
-///
+                                                                          
+   
+                                                                    
+                                                                    
+                                                                     
+                                                                     
+                                                                     
+                                                                     
+                                                                     
+   
+                                                                              
+                                                                          
+                                                                                
+                                                                               
+                                                                         
+                                                             
+                                                                          
+              
+                                                                            
+                                                                               
+                
+                                                                              
+   
+                                                                            
+                                                                      
+   
+                                                                            
+                                                                               
+                                                                                
+                                                   
+                                                                              
+                                                                              
+                                                                            
+                                                                               
+                             
+                                                  
+                                                                               
+                                                                            
+                                                                 
+   
+                                                                    
+                                                                    
+                                                                     
+                                                                     
+                                                                     
+   
+                                                                              
+                                                      
+   
+                                                                                
+                                                                               
+                                                                      
+                                                                               
+                                                                                
+                                                                               
+                                                                             
+                                    
+                                                                             
+                                                              
+   
+                                                                    
+                                                                    
+                                                                     
+                                                                     
+                                                                     
+   
+                                                                         
+                                                                                
+                  
+   
+                                                                    
+                                                                    
+                                                                     
+                                                                     
+                                                                     
+                                                                     
+                                                                     
+   
+                                                                              
+                                                                               
+                                                                              
+                                                               
+   
 
 struct EpilogueScope {
   const support::ulittle32_t ES;

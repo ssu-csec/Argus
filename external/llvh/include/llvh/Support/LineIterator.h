@@ -18,17 +18,17 @@ namespace llvh {
 
 class MemoryBuffer;
 
-/// A forward iterator which reads text lines from a buffer.
-///
-/// This class provides a forward iterator interface for reading one line at
-/// a time from a buffer. When default constructed the iterator will be the
-/// "end" iterator.
-///
-/// The iterator is aware of what line number it is currently processing. It
-/// strips blank lines by default, and comment lines given a comment-starting
-/// character.
-///
-/// Note that this iterator requires the buffer to be nul terminated.
+                                                            
+   
+                                                                            
+                                                                           
+                   
+   
+                                                                            
+                                                                             
+              
+   
+                                                                     
 class line_iterator {
   const MemoryBuffer *Buffer;
   char CommentMarker;
@@ -44,23 +44,23 @@ public:
   using pointer = value_type *;
   using reference = value_type &;
 
-  /// Default construct an "end" iterator.
+                                          
   line_iterator() : Buffer(nullptr) {}
 
-  /// Construct a new iterator around some memory buffer.
+                                                         
   explicit line_iterator(const MemoryBuffer &Buffer, bool SkipBlanks = true,
                          char CommentMarker = '\0');
 
-  /// Return true if we've reached EOF or are an "end" iterator.
+                                                                
   bool is_at_eof() const { return !Buffer; }
 
-  /// Return true if we're an "end" iterator or have reached EOF.
+                                                                 
   bool is_at_end() const { return is_at_eof(); }
 
-  /// Return the current line number. May return any number at EOF.
+                                                                   
   int64_t line_number() const { return LineNumber; }
 
-  /// Advance to the next (non-empty, non-comment) line.
+                                                        
   line_iterator &operator++() {
     advance();
     return *this;
@@ -71,7 +71,7 @@ public:
     return tmp;
   }
 
-  /// Get the current line as a \c StringRef.
+                                             
   StringRef operator*() const { return CurrentLine; }
   const StringRef *operator->() const { return &CurrentLine; }
 
@@ -85,7 +85,7 @@ public:
   }
 
 private:
-  /// Advance the iterator to the next line.
+                                            
   void advance();
 };
 }

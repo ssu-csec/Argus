@@ -11,10 +11,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-// TODO: implement.
-// Currently this is only used by PrettyStackTrace which is also unimplemented
-// on Windows. Roughly, a Windows implementation would use CreateWaitableTimer
-// and a second thread to run the TimerAPCProc.
+                   
+                                                                              
+                                                                              
+                                               
 
 namespace llvh {
   namespace sys {

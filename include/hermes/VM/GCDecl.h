@@ -28,7 +28,7 @@ using GC = GCBase;
 #error "Unsupported HermesVM GCKIND" #HERMESVM_GCKIND
 #endif
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMES_VM_GCDECL_H
+#endif                      

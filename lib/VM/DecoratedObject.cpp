@@ -15,8 +15,8 @@
 #endif
 namespace hermes {
 namespace vm {
-//===----------------------------------------------------------------------===//
-// class DecoratedObject
+                                                                                
+                        
 
 size_t DecoratedObject::Decoration::getMallocSize() const {
   return sizeof *this;
@@ -43,7 +43,7 @@ void DecoratedObjectBuildMeta(const GCCell *cell, Metadata::Builder &mb) {
   mb.setVTable(&DecoratedObject::vt);
 }
 
-// static
+         
 PseudoHandle<DecoratedObject> DecoratedObject::create(
     Runtime &runtime,
     Handle<JSObject> parentHandle,
@@ -57,19 +57,19 @@ PseudoHandle<DecoratedObject> DecoratedObject::create(
       runtime.getHiddenClassForPrototype(*parentHandle, reservedSlots),
       std::move(decoration));
   auto self = JSObjectInit::initToPseudoHandle(runtime, cell);
-  // Allocate a propStorage if the number of additional slots requires it.
+                                                                          
   auto selfWithSlots = runtime.ignoreAllocationFailure(
       JSObject::allocatePropStorage(std::move(self), runtime, reservedSlots));
   return PseudoHandle<DecoratedObject>::vmcast(std::move(selfWithSlots));
 }
 
-// static
+         
 void DecoratedObject::_finalizeImpl(GCCell *cell, GC &) {
   auto *self = vmcast<DecoratedObject>(cell);
   self->~DecoratedObject();
 }
 
-// static
+         
 size_t DecoratedObject::_mallocSizeImpl(GCCell *cell) {
   DecoratedObject *self = vmcast<DecoratedObject>(cell);
   if (const Decoration *deco = self->getDecoration()) {
@@ -78,5 +78,5 @@ size_t DecoratedObject::_mallocSizeImpl(GCCell *cell) {
   return 0;
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

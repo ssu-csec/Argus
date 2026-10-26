@@ -19,7 +19,7 @@ enum class OpCode : uint8_t {
   _last
 };
 
-// Define all instructions.
+                           
 #define DEFINE_OPERAND_TYPE(name, type) typedef type Operand##name;
 
 #define DEFINE_OPCODE_0(name) LLVM_PACKED(struct name##Inst { OpCode opCode; });
@@ -78,7 +78,7 @@ enum class OpCode : uint8_t {
 
 #include "hermes/BCGen/HBC/BytecodeList.def"
 
-/// A union of all instructions.
+                                
 LLVM_PACKED_START
 struct Inst {
   union {
@@ -89,7 +89,7 @@ struct Inst {
 };
 LLVM_PACKED_END
 
-} // namespace inst
-} // namespace hermes
+}                  
+}                    
 
 #endif

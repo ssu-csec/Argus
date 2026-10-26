@@ -12,4 +12,4 @@
 
 int repl(const hermes::vm::RuntimeConfig &config);
 
-#endif // HERMES_H
+#endif            

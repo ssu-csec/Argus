@@ -24,7 +24,7 @@ enum class stream_error_code {
   filesystem_error
 };
 
-/// Base class for errors originating when parsing raw PDB files
+                                                                
 class BinaryStreamError : public ErrorInfo<BinaryStreamError> {
 public:
   static char ID;
@@ -43,6 +43,6 @@ private:
   std::string ErrMsg;
   stream_error_code Code;
 };
-} // namespace llvh
+}                  
 
-#endif // LLVM_SUPPORT_BINARYSTREAMERROR_H
+#endif                                    

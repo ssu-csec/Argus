@@ -13,8 +13,8 @@
 namespace hermes {
 namespace vm {
 
-//===----------------------------------------------------------------------===//
-// class JSMapImpl
+                                                                                
+                  
 
 template <CellKind C>
 void JSMapImpl<C>::MapOrSetBuildMeta(
@@ -63,8 +63,8 @@ PseudoHandle<JSMapImpl<C>> JSMapImpl<C>::create(
 template class JSMapImpl<CellKind::JSSetKind>;
 template class JSMapImpl<CellKind::JSMapKind>;
 
-//===----------------------------------------------------------------------===//
-// class JSSetIterator
+                                                                                
+                      
 
 template <CellKind C>
 void JSMapIteratorImpl<C>::MapOrSetIteratorBuildMeta(
@@ -114,5 +114,5 @@ PseudoHandle<JSMapIteratorImpl<C>> JSMapIteratorImpl<C>::create(
 template class JSMapIteratorImpl<CellKind::JSMapIteratorKind>;
 template class JSMapIteratorImpl<CellKind::JSSetIteratorKind>;
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

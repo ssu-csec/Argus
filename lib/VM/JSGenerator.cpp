@@ -12,8 +12,8 @@
 namespace hermes {
 namespace vm {
 
-//===----------------------------------------------------------------------===//
-// class JSGenerator
+                                                                                
+                    
 
 const ObjectVTable JSGenerator::vt{
     VTable(CellKind::JSGeneratorKind, cellSize<JSGenerator>()),
@@ -47,5 +47,5 @@ CallResult<PseudoHandle<JSGenerator>> JSGenerator::create(
   return JSObjectInit::initToPseudoHandle(runtime, cell);
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

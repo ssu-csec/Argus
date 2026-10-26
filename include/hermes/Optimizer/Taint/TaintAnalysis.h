@@ -36,14 +36,39 @@ class TaintAnalysis : public ModulePass {
   SinkRegistry &sinkRegistry_;
 
   std::ofstream reportFile_;
-  std::string prefix_;  // 도메인 prefix (예: "www.naver.com_"), JSON/TXT 파일명에 사용
+  std::string prefix_;                                                       
 
-  // Rule 3: 모듈 선스캔으로 구축된 이벤트 구동 함수 집합
+                                      
   std::set<Function *> eventDrivenFunctions_;
+  enum FunctionContextBits : unsigned {
+    NoKnownContext = 0,
+    AutonomousContext = 1,
+    EventDrivenContext = 2,
+  };
+  llvh::DenseMap<Function *, unsigned> functionContextBits_;
+  llvh::DenseMap<Function *, std::set<std::string>> eventRootSources_;
+  llvh::DenseMap<Function *, std::set<std::string>>
+      autonomousResolutionSources_;
+  llvh::DenseMap<Function *, std::set<std::string>>
+      eventResolutionSources_;
+  llvh::DenseMap<Function *, std::vector<std::string>>
+      autonomousContextWitness_;
+  llvh::DenseMap<Function *, std::vector<std::string>> eventContextWitness_;
+  std::map<std::string, unsigned> functionContextDistribution_;
   void collectEventDrivenFunctions(Module *M);
-  void markAsEventDriven(Value *V, int depth);
+  void markAsEventDriven(
+      Value *V,
+      int depth,
+      const std::string &mechanism = "DOM_EVENT_REGISTRATION");
+  void computeFunctionExecutionContexts(Module *M);
 
-  std::string getTriggerContext(hermes::Instruction *sourceInst);
+  std::string getTriggerContext(hermes::Instruction *sinkInst);
+  std::string getTriggerContextReason(hermes::Instruction *sinkInst);
+  std::set<std::string> getContextResolutionSources(
+      hermes::Instruction *sinkInst);
+  std::vector<std::string> getContextWitness(
+      hermes::Instruction *sinkInst,
+      unsigned contextBit);
   std::string getDestinationURL(hermes::Instruction *sinkInst);
 
 
@@ -63,10 +88,10 @@ class TaintAnalysis : public ModulePass {
     SinkType sinkType;
     std::vector<Instruction *> path;
 
-    // 기본 생성자
+             
     Vulnerability() : source(nullptr), sink(nullptr), sinkType(SinkType::XSS) {}
 
-    // 편의용 생성자
+              
     Vulnerability(
         Instruction *src,
         Instruction *snk,
@@ -82,23 +107,23 @@ class TaintAnalysis : public ModulePass {
           path(p) {}
   };
 
-  // ★ [핵심] .cpp 파일이 찾던 그 변수명 (reports_ 대신 vulnerabilities_ 사용)
+                                                               
   std::vector<Vulnerability> vulnerabilities_;
 
 
 
-  // 내부 분석 함수들
+              
   llvh::SmallVector<Instruction *, 32> identifySources(Module *M);
   llvh::SmallVector<Instruction *, 32> identifySinks(Module *M);
 
-  // void analyzeFunctionCalls(Module *M); // Moved to CallGraphAnalyzer
-  // bool shouldAnalyzeFunction(Function *F); // Moved to CallGraphAnalyzer
+                                                                        
+                                                                           
   std::string extractObjectName(Value *object);
   void analyzeTaintFlow(
       const llvh::SmallVectorImpl<Instruction *> &sources,
       const llvh::SmallVectorImpl<Instruction *> &sinks);
 
-  // 보고서 출력 함수
+              
   void reportVulnerabilities();
 
   const char *getSinkTypeName(SinkType type);
@@ -114,7 +139,7 @@ class TaintAnalysis : public ModulePass {
 
   bool runOnModule(Module *M) override;
 
-  // 외부에서 결과를 가져갈 때 사용
+                      
   const std::vector<Vulnerability> &getReports() const {
     return vulnerabilities_;
   }

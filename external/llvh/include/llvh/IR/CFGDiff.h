@@ -26,66 +26,66 @@
 #include <cstddef>
 #include <iterator>
 
-// Two booleans are used to define orders in graphs:
-// InverseGraph defines when we need to reverse the whole graph and is as such
-// also equivalent to applying updates in reverse.
-// InverseEdge defines whether we want to change the edges direction. E.g., for
-// a non-inversed graph, the children are naturally the successors when
-// InverseEdge is false and the predecessors when InverseEdge is true.
+                                                    
+                                                                              
+                                                  
+                                                                               
+                                                                       
+                                                                      
 
-// We define two base clases that call into GraphDiff, one for successors
-// (CFGSuccessors), where InverseEdge is false, and one for predecessors
-// (CFGPredecessors), where InverseEdge is true.
-// FIXME: Further refactoring may merge the two base classes into a single one
-// templated / parametrized on using succ_iterator/pred_iterator and false/true
-// for the InverseEdge.
+                                                                         
+                                                                        
+                                                
+                                                                              
+                                                                               
+                       
 
-// CFGViewSuccessors and CFGViewPredecessors, both can be parametrized to
-// consider the graph inverted or not (i.e. InverseGraph). Successors
-// implicitly has InverseEdge = false and Predecessors implicitly has
-// InverseEdge = true (see calls to GraphDiff methods in there). The GraphTraits
-// instantiations that follow define the value of InverseGraph.
+                                                                         
+                                                                     
+                                                                     
+                                                                                
+                                                               
 
-// GraphTraits instantiations:
-// - GraphDiff<BasicBlock *> is equivalent to InverseGraph = false
-// - GraphDiff<Inverse<BasicBlock *>> is equivalent to InverseGraph = true
-// - second pair item is BasicBlock *, then InverseEdge = false (so it inherits
-// from CFGViewSuccessors).
-// - second pair item is Inverse<BasicBlock *>, then InverseEdge = true (so it
-// inherits from CFGViewPredecessors).
+                              
+                                                                  
+                                                                          
+                                                                               
+                           
+                                                                              
+                                      
 
-// The 4 GraphTraits are as follows:
-// 1. std::pair<const GraphDiff<BasicBlock *> *, BasicBlock *>> :
-//        CFGViewSuccessors<false>
-// Regular CFG, children means successors, InverseGraph = false,
-// InverseEdge = false.
-// 2. std::pair<const GraphDiff<Inverse<BasicBlock *>> *, BasicBlock *>> :
-//        CFGViewSuccessors<true>
-// Reverse the graph, get successors but reverse-apply updates,
-// InverseGraph = true, InverseEdge = false.
-// 3. std::pair<const GraphDiff<BasicBlock *> *, Inverse<BasicBlock *>>> :
-//        CFGViewPredecessors<false>
-// Regular CFG, reverse edges, so children mean predecessors,
-// InverseGraph = false, InverseEdge = true.
-// 4. std::pair<const GraphDiff<Inverse<BasicBlock *>> *, Inverse<BasicBlock *>>
-//        : CFGViewPredecessors<true>
-// Reverse the graph and the edges, InverseGraph = true, InverseEdge = true.
+                                    
+                                                                 
+                                  
+                                                                
+                       
+                                                                          
+                                 
+                                                               
+                                            
+                                                                          
+                                    
+                                                             
+                                            
+                                                                                
+                                     
+                                                                            
 
 namespace llvh {
 
-// GraphDiff defines a CFG snapshot: given a set of Update<NodePtr>, provide
-// utilities to skip edges marked as deleted and return a set of edges marked as
-// newly inserted. The current diff treats the CFG as a graph rather than a
-// multigraph. Added edges are pruned to be unique, and deleted edges will
-// remove all existing edges between two blocks.
+                                                                            
+                                                                                
+                                                                           
+                                                                          
+                                                
 template <typename NodePtr, bool InverseGraph = false> class GraphDiff {
   using UpdateMapType = SmallDenseMap<NodePtr, SmallVector<NodePtr, 2>>;
   UpdateMapType SuccInsert;
   UpdateMapType SuccDelete;
   UpdateMapType PredInsert;
   UpdateMapType PredDelete;
-  // Using a singleton empty vector for all BasicBlock requests with no
-  // children.
+                                                                       
+              
   SmallVector<NodePtr, 1> Empty;
 
   void printMap(raw_ostream &OS, const UpdateMapType &M) const {
@@ -181,12 +181,12 @@ template <bool InverseGraph = false> struct CFGViewSuccessors {
 
   static ChildIteratorType child_begin(NodeRef N) {
     auto InsertVec = N.first->getAddedChildren(N.second, false);
-    // filter iterator init:
+                            
     auto firstit = make_filter_range(
         make_range<ExistingChildIterator>({succ_begin(N.second), N.first},
                                           {succ_end(N.second), N.first}),
         DeletedEdgesFilter(N.second));
-    // new inserts iterator init:
+                                 
     auto secondit = make_range<AddNewChildrenIterator>(
         {InsertVec.begin(), N.first}, {InsertVec.end(), N.first});
 
@@ -196,12 +196,12 @@ template <bool InverseGraph = false> struct CFGViewSuccessors {
 
   static ChildIteratorType child_end(NodeRef N) {
     auto InsertVec = N.first->getAddedChildren(N.second, false);
-    // filter iterator init:
+                            
     auto firstit = make_filter_range(
         make_range<ExistingChildIterator>({succ_end(N.second), N.first},
                                           {succ_end(N.second), N.first}),
         DeletedEdgesFilter(N.second));
-    // new inserts iterator init:
+                                 
     auto secondit = make_range<AddNewChildrenIterator>(
         {InsertVec.end(), N.first}, {InsertVec.end(), N.first});
 
@@ -235,12 +235,12 @@ template <bool InverseGraph = false> struct CFGViewPredecessors {
 
   static ChildIteratorType child_begin(NodeRef N) {
     auto InsertVec = N.first->getAddedChildren(N.second, true);
-    // filter iterator init:
+                            
     auto firstit = make_filter_range(
         make_range<ExistingChildIterator>({pred_begin(N.second), N.first},
                                           {pred_end(N.second), N.first}),
         DeletedEdgesFilter(N.second));
-    // new inserts iterator init:
+                                 
     auto secondit = make_range<AddNewChildrenIterator>(
         {InsertVec.begin(), N.first}, {InsertVec.end(), N.first});
 
@@ -250,12 +250,12 @@ template <bool InverseGraph = false> struct CFGViewPredecessors {
 
   static ChildIteratorType child_end(NodeRef N) {
     auto InsertVec = N.first->getAddedChildren(N.second, true);
-    // filter iterator init:
+                            
     auto firstit = make_filter_range(
         make_range<ExistingChildIterator>({pred_end(N.second), N.first},
                                           {pred_end(N.second), N.first}),
         DeletedEdgesFilter(N.second));
-    // new inserts iterator init:
+                                 
     auto secondit = make_range<AddNewChildrenIterator>(
         {InsertVec.end(), N.first}, {InsertVec.end(), N.first});
 
@@ -280,6 +280,6 @@ template <>
 struct GraphTraits<
     std::pair<const GraphDiff<BasicBlock *, true> *, Inverse<BasicBlock *>>>
     : CFGViewPredecessors<true> {};
-} // end namespace llvh
+}                      
 
-#endif // LLVM_IR_CFGDIFF_H
+#endif                     

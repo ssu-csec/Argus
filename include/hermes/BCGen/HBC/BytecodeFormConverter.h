@@ -15,15 +15,15 @@
 namespace hermes {
 namespace hbc {
 
-/// Convert a bytecode file in \p buffer to the target form \p form, in-place.
-/// \return true if successful, false if the file could not be intepreted.
-/// On a false return, an error is returned in outError.
+                                                                              
+                                                                          
+                                                        
 bool convertBytecodeToForm(
     llvh::MutableArrayRef<uint8_t> buffer,
     BytecodeForm targetForm,
     std::string *outError);
 
-} // namespace hbc
-} // namespace hermes
+}                 
+}                    
 
-#endif // HERMES_BYTECODEDELTAPREPARER_H
+#endif                                  

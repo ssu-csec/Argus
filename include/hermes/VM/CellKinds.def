@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// This file defines all possible kinds of objects that are known to the
-// garbage collector.
+                                                                        
+                     
 
 #ifndef CELL_KIND
 #define CELL_KIND(name)
@@ -20,8 +20,8 @@
 #define CELL_RANGE(rangeName, first, last)
 #endif
 
-// Helper macro for defining a CellKind which 1:1 corresponds with a JS Class.
-// Defines both the kind and the JS Class name.
+                                                                              
+                                               
 #define CELL_CLASS(name, jsClassName) \
   CELL_KIND(name)                     \
   CELL_JS_NAME(name, jsClassName)
@@ -102,13 +102,13 @@ CELL_CLASS(JSFunction, "Function")
 
 CELL_KIND(BigIntPrimitive)
 
-// Dummy object used only in tests.
+                                   
 CELL_KIND(DummyObject)
 
-// Update AllCells, below, if new CellKinds are added.
-// (AllCells is useful for checking that a CellKind is valid.)
+                                                      
+                                                              
 
-// Define inheritance ranges.
+                             
 CELL_RANGE(AllCells, Uninitialized, DummyObject)
 CELL_RANGE(Object, JSObject, JSFunction)
 CELL_RANGE(DecoratedObject, DecoratedObject, HostObject)

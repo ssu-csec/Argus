@@ -80,15 +80,15 @@ CallResult<HermesValue> StringPrimitive::createEfficientImpl(
     return runtime.getCharacterString(str[0]).getHermesValue();
   }
 
-  // Check if we should acquire ownership of storage.
+                                                     
   if (optStorage != nullptr &&
       str.size() >= StringPrimitive::EXTERNAL_STRING_MIN_SIZE) {
     return ExternalStringPrimitive<T>::create(runtime, std::move(*optStorage));
   }
 
-  // Check if we fit in ASCII.
-  // We are ASCII if we are 8 bit, or we are 16 bit and all of our text is
-  // ASCII.
+                              
+                                                                          
+           
   bool isAscii = charIs8Bit || isAllASCII(str.begin(), str.end());
   if (isAscii) {
     auto result = StringPrimitive::create(runtime, str.size(), isAscii);
@@ -96,7 +96,7 @@ CallResult<HermesValue> StringPrimitive::createEfficientImpl(
       return ExecutionStatus::EXCEPTION;
     }
     auto output = runtime.makeHandle<StringPrimitive>(*result);
-    // Copy directly into the StringPrimitive storage.
+                                                      
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4244)
@@ -215,7 +215,7 @@ CallResult<HermesValue> StringPrimitive::createDynamicWithKnownEncoding(
     if (LLVM_UNLIKELY(res == ExecutionStatus::EXCEPTION)) {
       return ExecutionStatus::EXCEPTION;
     }
-    // Copy directly into the StringPrimitive storage.
+                                                      
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4244)
@@ -288,11 +288,11 @@ CallResult<HermesValue> StringPrimitive::concat(
   auto xLen = xPtr->getStringLength();
   auto yLen = yPtr->getStringLength();
   if (!xLen) {
-    // x is the empty string, just return y.
+                                            
     return yHandle.getHermesValue();
   }
   if (!yLen) {
-    // y is the empty string, just return x.
+                                            
     return xHandle.getHermesValue();
   }
 
@@ -384,8 +384,8 @@ StringView StringPrimitive::createStringViewMustBeFlat(
 #ifdef HERMES_MEMORY_INSTRUMENTATION
 std::string StringPrimitive::_snapshotNameImpl(GCCell *cell, GC &gc) {
   auto *const self = vmcast<StringPrimitive>(cell);
-  // Only convert up to EXTERNAL_STRING_THRESHOLD characters, because large
-  // strings can cause crashes in the snapshot visualizer.
+                                                                           
+                                                          
   std::string out;
   bool fullyWritten = true;
   if (self->isASCII()) {
@@ -401,7 +401,7 @@ std::string StringPrimitive::_snapshotNameImpl(GCCell *cell, GC &gc) {
         out, self->castToUTF16Ref(), EXTERNAL_STRING_THRESHOLD);
   }
   if (!fullyWritten) {
-    // The string was truncated, add a truncation message
+                                                         
     out += "...(truncated by snapshot)...";
   }
   return out;
@@ -446,13 +446,13 @@ CallResult<HermesValue> DynamicStringPrimitive<T, Uniqued>::create(
   return HermesValue::encodeStringValue(cell);
 }
 
-template class DynamicStringPrimitive<char16_t, true /* Uniqued */>;
-template class DynamicStringPrimitive<char, true /* Uniqued */>;
-template class DynamicStringPrimitive<char16_t, false /* not Uniqued */>;
-template class DynamicStringPrimitive<char, false /* not Uniqued */>;
+template class DynamicStringPrimitive<char16_t, true              >;
+template class DynamicStringPrimitive<char, true              >;
+template class DynamicStringPrimitive<char16_t, false                  >;
+template class DynamicStringPrimitive<char, false                  >;
 
-// NOTE: this is a template method in a template class, thus the two separate
-// template<> lines.
+                                                                             
+                    
 template <typename T>
 template <class BasicString>
 ExternalStringPrimitive<T>::ExternalStringPrimitive(BasicString &&contents)
@@ -466,8 +466,8 @@ ExternalStringPrimitive<T>::ExternalStringPrimitive(BasicString &&contents)
       "ExternalStringPrimitive length must be at least EXTERNAL_STRING_MIN_SIZE");
 }
 
-// NOTE: this is a template method in a template class, thus the two separate
-// template<> lines.
+                                                                             
+                    
 template <typename T>
 template <class BasicString>
 CallResult<HermesValue> ExternalStringPrimitive<T>::create(
@@ -478,9 +478,9 @@ CallResult<HermesValue> ExternalStringPrimitive<T>::create(
       "ExternalStringPrimitive mismatched char type");
   if (LLVM_UNLIKELY(str.size() > MAX_STRING_LENGTH))
     return runtime.raiseRangeError("String length exceeds limit");
-  // We have to use a variable sized alloc here even though the size is already
-  // known, because ExternalStringPrimitive is derived from
-  // VariableSizeRuntimeCell
+                                                                               
+                                                           
+                            
   auto *extStr =
       runtime.makeAVariable<ExternalStringPrimitive<T>, HasFinalizer::Yes>(
           sizeof(ExternalStringPrimitive<T>), std::forward<BasicString>(str));
@@ -501,8 +501,8 @@ CallResult<HermesValue> ExternalStringPrimitive<T>::createLongLived(
     return runtime.raiseRangeError(
         "Cannot allocate an external string primitive.");
   }
-  // Use variable size alloc since ExternalStringPrimitive is derived from
-  // VariableSizeRuntimeCell.
+                                                                          
+                             
   auto *extStr = runtime.makeAVariable<
       ExternalStringPrimitive<T>,
       HasFinalizer::Yes,
@@ -530,8 +530,8 @@ CallResult<HermesValue> ExternalStringPrimitive<T>::create(
 template <typename T>
 void ExternalStringPrimitive<T>::_finalizeImpl(GCCell *cell, GC &gc) {
   ExternalStringPrimitive<T> *self = vmcast<ExternalStringPrimitive<T>>(cell);
-  // Remove the external string from the snapshot tracking system if it's being
-  // tracked.
+                                                                               
+             
   gc.getIDTracker().untrackNative(self->contents_.data());
   gc.debitExternalMemory(self, self->calcExternalMemorySize());
   self->~ExternalStringPrimitive<T>();
@@ -583,8 +583,8 @@ ExternalStringPrimitive<char16_t>::create<std::basic_string<char16_t>>(
     Runtime &runtime,
     std::basic_string<char16_t> &&str);
 
-//===----------------------------------------------------------------------===//
-// BufferedStringPrimitive<T>
+                                                                                
+                             
 
 void BufferedASCIIStringPrimitiveBuildMeta(
     const GCCell *cell,
@@ -606,16 +606,16 @@ PseudoHandle<StringPrimitive> BufferedStringPrimitive<T>::create(
     Runtime &runtime,
     uint32_t length,
     Handle<ExternalStringPrimitive<T>> storage) {
-  // We have to use a variable sized alloc here even though the size is already
-  // known, because BufferedStringPrimitive is derived from
-  // VariableSizeRuntimeCell.
+                                                                               
+                                                           
+                             
   auto *cell = runtime.makeAVariable<BufferedStringPrimitive<T>>(
       sizeof(BufferedStringPrimitive<T>), runtime, length, storage);
   return createPseudoHandle<StringPrimitive>(cell);
 }
 
 #ifndef NDEBUG
-/// Assert the the combined length of the two strings is valid.
+                                                               
 static void assertValidLength(StringPrimitive *a, StringPrimitive *b) {
   SafeUInt32 len(a->getStringLength());
   len.add(b->getStringLength());
@@ -690,7 +690,7 @@ PseudoHandle<StringPrimitive> BufferedStringPrimitive<T>::append(
       (std::is_same<T, char16_t>::value || right->isASCII()) &&
       "cannot append UTF16 to ASCII");
 
-  // Can't append if this is not the end of the string.
+                                                       
   if (self->getStringLength() != storage->contents_.size()) {
     noAlloc.release();
     return BufferedStringPrimitive<T>::create(runtime, selfHnd, rightHnd);
@@ -755,5 +755,5 @@ void BufferedStringPrimitive<T>::_snapshotAddNodesImpl(
 
 template class BufferedStringPrimitive<char16_t>;
 template class BufferedStringPrimitive<char>;
-} // namespace vm
-} // namespace hermes
+}                
+}                    

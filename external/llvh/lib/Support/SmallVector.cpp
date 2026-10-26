@@ -14,7 +14,7 @@
 #include "llvh/ADT/SmallVector.h"
 using namespace llvh;
 
-// Check that no bytes are wasted and everything is well-aligned.
+                                                                 
 namespace {
 struct Struct16B {
   alignas(16) void *X;
@@ -38,16 +38,16 @@ static_assert(sizeof(SmallVector<void *, 1>) ==
                   sizeof(unsigned) * 2 + sizeof(void *) * 2,
               "wasted space in SmallVector size 1");
 
-/// grow_pod - This is an implementation of the grow() method which only works
-/// on POD-like datatypes and is out of line to reduce code duplication.
+                                                                              
+                                                                        
 void SmallVectorBase::grow_pod(void *FirstEl, size_t MinCapacity,
                                size_t TSize) {
   constexpr size_t MinGrowth = 1;
-  size_t NewCapacity = 2 * capacity() + MinGrowth; // Always grow.
+  size_t NewCapacity = 2 * capacity() + MinGrowth;                
   NewCapacity = static_cast<unsigned>(std::max(NewCapacity, MinCapacity));
 
-  // Ensure that NewCapacity did not overflow an unsigned int,
-  // and that the capacity in bytes will not overflow a size_t.
+                                                              
+                                                               
   if (NewCapacity <= this->capacity() ||
       NewCapacity < MinCapacity ||
       NewCapacity > size_t(-1) / TSize)
@@ -57,10 +57,10 @@ void SmallVectorBase::grow_pod(void *FirstEl, size_t MinCapacity,
   if (BeginX == FirstEl) {
     NewElts = safe_malloc(NewCapacity * TSize);
 
-    // Copy the elements over.  No need to run dtors on PODs.
+                                                             
     memcpy(NewElts, this->BeginX, size() * TSize);
   } else {
-    // If this wasn't grown from the inline copy, grow the allocated space.
+                                                                           
     NewElts = safe_realloc(this->BeginX, NewCapacity * TSize);
   }
 

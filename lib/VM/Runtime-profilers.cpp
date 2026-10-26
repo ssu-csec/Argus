@@ -25,7 +25,7 @@ namespace vm {
 #ifdef HERMESVM_PROFILER_OPCODE
 void Runtime::dumpOpcodeStats(llvh::raw_ostream &os) const {
   std::ostringstream stream;
-  // Get all non-zero occurrence opcodes.
+                                         
   std::vector<size_t> idx;
   for (size_t i = 0; i < static_cast<uint32_t>(inst::OpCode::_last); ++i) {
     if (opcodeExecuteFrequency[i])
@@ -36,12 +36,12 @@ void Runtime::dumpOpcodeStats(llvh::raw_ostream &os) const {
   const auto *t = (const uint64_t *)timeSpent;
   const auto *f = (const uint32_t *)opcodeExecuteFrequency;
 
-  // sort indexes based on total time spent.
+                                            
   sort(idx.begin(), idx.end(), [t](size_t i1, size_t i2) {
     return t[i1] > t[i2];
   });
 
-  // sort indexes based on frequency.
+                                     
   sort(idx_freq.begin(), idx_freq.end(), [f](size_t i1, size_t i2) {
     return f[i1] > f[i2];
   });
@@ -109,32 +109,32 @@ const ProfilerFunctionInfo *Runtime::getProfilerInfo(ProfilerID id) {
 #endif
 
 #if defined(HERMESVM_PROFILER_JSFUNCTION)
-/// Aggregate JS Function Profiling results by adding total time spent
-/// per stacktrace and dump it to llvh::outs(). Each line of the output
-/// includes a stacktrace with function names separated by semicolon,
-/// followed by a tab, and then the total time (in terms of number of clock
-/// cycles) spent in this stack trace. Each function name is displayed with
-/// a prefixing line:column or ProfilerID, as some functions do not have names.
-///
-/// ProfileType::OPCODES uses opcodes executed instead of time spent.
-///
-/// TODO: Record line:col for inner functions.
+                                                                      
+                                                                       
+                                                                     
+                                                                           
+                                                                           
+                                                                               
+   
+                                                                     
+   
+                                              
 void Runtime::dumpJSFunctionStats(ProfileType type) {
   if (type == ProfileType::ALL) {
     dumpJSFunctionStats(ProfileType::TIME);
     dumpJSFunctionStats(ProfileType::OPCODES);
-    // The peak number of registers on the stack.
+                                                 
     llvh::outs() << "\nPeak stack usage: " << maxStackLevel << "\n";
     return;
   }
   const bool opcodes = type == ProfileType::OPCODES;
-  // Map from a stacktrace to total exclusive time spent.
+                                                         
   std::map<std::vector<ProfilerID>, uint64_t> funcTimeSpent;
-  // Current stacktrace.
+                        
   std::vector<ProfilerID> functionStack;
-  // Timestamp to enter the current stacktrace.
+                                               
   std::vector<uint64_t> enterTimes;
-  // Total time spent in all children functions from the current stacktrace.
+                                                                            
   std::vector<uint64_t> childrenTimes;
 
   for (const auto &event : functionEvents) {
@@ -148,12 +148,12 @@ void Runtime::dumpJSFunctionStats(ProfileType type) {
       }
       uint64_t inc =
           (opcodes ? event.opcodeStamp : event.timeStamp) - enterTimes.back();
-      // inc now holds the inclusive time spent in the current stacktrace.
+                                                                          
       uint64_t exc = inc - childrenTimes.back();
-      // exc now holds the exclusive time spent in the current stacktrace.
+                                                                          
       auto ret = funcTimeSpent.insert(std::make_pair(functionStack, exc));
       if (!ret.second) {
-        // Stack already exists in the map, accumulate the time.
+                                                                
         ret.first->second += exc;
       }
       functionStack.pop_back();
@@ -172,8 +172,8 @@ void Runtime::dumpJSFunctionStats(ProfileType type) {
   for (const auto &kv : funcTimeSpent) {
     gcScope.clearAllHandles();
 
-    // Format of each line:
-    //   [Stack trace (function ID/name separated by semicolon)] [timeSpent]
+                           
+                                                                            
     bool isFirst = true;
     for (auto profID : kv.first) {
       if (!isFirst) {
@@ -192,14 +192,14 @@ void Runtime::dumpJSFunctionStats(ProfileType type) {
 #ifdef HERMESVM_PROFILER_NATIVECALL
 
 void Runtime::dumpNativeCallStats(llvh::raw_ostream &OS) {
-  // Pick an arbitrary static function in Hermes to use as a base.
+                                                                  
   const auto base = reinterpret_cast<uintptr_t>(ArrayStorage::ensureCapacity);
 
   OS << "Native call base offset 12ArrayStorage14ensureCapacity\n";
   OS << "Native call stats\n";
   OS << "=================\n";
 
-  // The stats we gather for a single native function.
+                                                      
   struct Info {
     uint32_t count{};
     uint64_t duration{};
@@ -208,16 +208,16 @@ void Runtime::dumpNativeCallStats(llvh::raw_ostream &OS) {
     }
   };
 
-  // Map from a C++ function pointer to stats for that function. We need to
-  // cast to "void *" because DenseMapInfo uses alignOf() by default and that
-  // fails with pointers to function.
+                                                                           
+                                                                             
+                                     
   using MapTy = llvh::DenseMap<void *, Info>;
 
-  // There could be multiple ones pointing to the same native code, so we need
-  // to merge them.
+                                                                              
+                   
   MapTy funcMap{};
 
-  // Scan the heap for instances of NativeFunction.
+                                                   
   heap_.forAllObjs([&funcMap](GCCell *cell) {
     auto *nf = dyn_vmcast<NativeFunction>(cell);
     if (!nf)
@@ -227,7 +227,7 @@ void Runtime::dumpNativeCallStats(llvh::raw_ostream &OS) {
     info.duration += nf->getCallDuration();
   });
 
-  // Sort by duration.
+                      
   std::vector<MapTy::value_type> funcs{funcMap.begin(), funcMap.end()};
 
   std::sort(
@@ -247,9 +247,9 @@ void Runtime::dumpNativeCallStats(llvh::raw_ostream &OS) {
        << llvh::format_decimal(entry.second.duration, 8) << " "
        << llvh::format_decimal(entry.second.durationPerCall(), 8) << " ";
 
-    // We have to deal with the possibility that the base has a larger address.
-    // If that happens, we want to output a small negative number instead of
-    // a 64-bit two's complement.
+                                                                               
+                                                                            
+                                 
     if (ofs < base)
       OS << "-" << llvh::format_hex(base - ofs, 10);
     else
@@ -259,9 +259,9 @@ void Runtime::dumpNativeCallStats(llvh::raw_ostream &OS) {
   }
 }
 
-#endif // HERMESVM_PROFILER_NATIVECALL
+#endif                                
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
 #undef DEBUG_TYPE

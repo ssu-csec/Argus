@@ -14,9 +14,9 @@
 namespace hermes {
 namespace vm {
 
-/// Create a Base64-encoded ASCII string from an input string expected to have
-/// each character in the range of U+0000 to U+00FF. Error is thrown if any
-/// character is outside of the expected range.
+                                                                              
+                                                                           
+                                               
 CallResult<HermesValue> btoa(void *, Runtime &runtime, NativeArgs args) {
   GCScope gcScope{runtime};
   auto res = toString_RJS(runtime, args.getArgHandle(0));
@@ -26,7 +26,7 @@ CallResult<HermesValue> btoa(void *, Runtime &runtime, NativeArgs args) {
 
   auto string = runtime.makeHandle(std::move(*res));
 
-  // Figure out the expected encoded length
+                                           
   uint64_t expectedLength = ((string->getStringLength() + 2) / 3) * 4;
   bool overflow = expectedLength > std::numeric_limits<uint32_t>::max();
   if (overflow) {
@@ -50,8 +50,8 @@ CallResult<HermesValue> btoa(void *, Runtime &runtime, NativeArgs args) {
   return builder->getStringPrimitive().getHermesValue();
 }
 
-/// Take a Base64-encoded ASCII string and decode it. Error is thrown if the
-/// input string isn't a valid base64 encoded string.
+                                                                            
+                                                     
 CallResult<HermesValue> atob(void *, Runtime &runtime, NativeArgs args) {
   GCScope gcScope{runtime};
   auto res = toString_RJS(runtime, args.getArgHandle(0));
@@ -84,5 +84,5 @@ CallResult<HermesValue> atob(void *, Runtime &runtime, NativeArgs args) {
   return builder->getStringPrimitive().getHermesValue();
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

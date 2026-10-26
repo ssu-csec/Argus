@@ -48,7 +48,7 @@ inline void write(raw_ostream &os, ArrayRef<value_type> vals,
     write(os, v, endian);
 }
 
-/// Adapter to write values to a stream in a particular byte order.
+                                                                   
 struct Writer {
   raw_ostream &OS;
   endianness Endian;
@@ -61,9 +61,9 @@ struct Writer {
   }
 };
 
-} // end namespace endian
+}                        
 
-} // end namespace support
-} // end namespace llvh
+}                         
+}                      
 
 #endif

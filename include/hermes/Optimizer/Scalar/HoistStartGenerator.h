@@ -13,10 +13,10 @@
 
 namespace hermes {
 
-/// Moves StartGenerator instructions to the beginning of the function in
-/// which they reside.
-/// Required to run at the end of any set of optimizations to ensure
-/// StartGenerator is in the correct position in the function.
+                                                                         
+                      
+                                                                    
+                                                              
 class HoistStartGenerator : public FunctionPass {
  public:
   explicit HoistStartGenerator() : FunctionPass("HoistStartGenerator") {}
@@ -25,6 +25,6 @@ class HoistStartGenerator : public FunctionPass {
   bool runOnFunction(Function *F) override;
 };
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_OPTIMIZER_SCALAR_HOISTSTARTGENERATOR_H
+#endif                                                 

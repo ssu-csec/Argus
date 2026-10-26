@@ -42,8 +42,8 @@ Error uncompress(StringRef InputBuffer,
 
 uint32_t crc32(StringRef Buffer);
 
-}  // End of namespace zlib
+}                          
 
-} // End of namespace llvh
+}                         
 
 #endif

@@ -13,9 +13,9 @@
 
 using namespace hermes;
 
-/// Auxiliary method to figure out the Functions that a given CallInst may
-/// be calling. Returns true if we have a complete set, false if there are
-/// unknown callees.
+                                                                          
+                                                                          
+                    
 static bool identifyCallees(CallInst *CI, llvh::DenseSet<Function *> &callees) {
   Value *callee = CI->getCallee();
   switch (callee->getKind()) {
@@ -37,17 +37,17 @@ static bool identifyCallees(CallInst *CI, llvh::DenseSet<Function *> &callees) {
       }
       for (auto *U : V->getUsers()) {
         if (llvh::isa<LoadFrameInst>(U)) {
-          // Skip over a load frame using that address
+                                                      
           continue;
         }
         auto *SF = llvh::dyn_cast<StoreFrameInst>(U);
         if (!SF) {
-          // Unknown inst using that address ... bail out.
+                                                          
           return false;
         }
         auto *CFI = llvh::dyn_cast<CreateFunctionInst>(SF->getValue());
         if (!CFI) {
-          // Currently look only direct stores of created functions.
+                                                                    
           return false;
         }
         callees.insert(CFI->getFunctionCode());
@@ -55,20 +55,20 @@ static bool identifyCallees(CallInst *CI, llvh::DenseSet<Function *> &callees) {
       return true;
     }
     default: {
-      // If callee is any other ValueKind, we don't know.
+                                                         
       return false;
     }
   }
 }
 
-/// Auxiliary method to figure out the call sites at which F may be
-/// invoked.  Returns true if the complete set of call sites is known.
+                                                                   
+                                                                      
 static bool identifyCallsites(
     Function *F,
     llvh::DenseSet<CallInst *> &callSites) {
-  // Non-strict functions can be aliased in multiple ways (
-  // arguments.callee, Function.prototype.caller etc). Do not try to identify
-  // the callsites for those.
+                                                           
+                                                                             
+                             
   if (!F->isStrictMode()) {
     return false;
   }
@@ -95,15 +95,15 @@ static bool identifyCallsites(
   return true;
 }
 
-/// The main function that computes caller-callee relationships.
+                                                                
 void SimpleCallGraphProvider::initCallRelationships(Function *F) {
-  // (a) Initialize the callsites map.
+                                      
   llvh::DenseSet<CallInst *> callSites;
   if (identifyCallsites(F, callSites)) {
     callsites_.insert(std::make_pair(F, callSites));
   }
 
-  // (b) Initialize the callees map.
+                                    
   for (auto &bbit : *F) {
     for (auto &it : bbit) {
       Instruction *I = &it;

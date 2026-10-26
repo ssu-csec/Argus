@@ -15,9 +15,9 @@ namespace hermes {
 namespace vm {
 
 inline Handle<HermesValue> HandleRootOwner::makeHandle(HermesValue value) {
-  // This is the same as Handle<HermesValue>(getTopGCScope(), value), but it's
-  // this way for historical reasons.  The source could be updated for clarity
-  // if the generated code doesn't change.
+                                                                              
+                                                                              
+                                          
   return Handle<HermesValue>(*this, value);
 }
 template <class T>
@@ -103,7 +103,7 @@ inline PinnedHermesValue *HandleRootOwner::newPinnedHermesValue(
   return newPinnedHermesValue(topGCScope_, value);
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
 #endif

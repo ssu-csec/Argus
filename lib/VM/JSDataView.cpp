@@ -52,5 +52,5 @@ JSDataView::JSDataView(
       offset_(0),
       length_(0) {}
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

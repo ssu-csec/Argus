@@ -15,7 +15,7 @@ using namespace hermes;
 
 namespace {
 
-/// \return the arguments for a given CallInst \p call, excluding the 'this'.
+                                                                             
 std::vector<Value *> getArgumentsWithoutThis(CallInst *call) {
   std::vector<Value *> result;
   unsigned argCount = call->getNumArguments();
@@ -26,10 +26,10 @@ std::vector<Value *> getArgumentsWithoutThis(CallInst *call) {
   return result;
 }
 
-} // namespace
+}             
 
-/// Replace Call instructions with HBCCallNInst when the argument count is
-/// in range.
+                                                                          
+             
 bool FuncCallNOpts::runOnFunction(Function *F) {
   bool changed = false;
   IRBuilder::InstructionDestroyer destroyer;
@@ -37,7 +37,7 @@ bool FuncCallNOpts::runOnFunction(Function *F) {
 
   for (BasicBlock &BB : *F) {
     for (Instruction &insn : BB) {
-      // We can only operate on CallInst, not its subclasses.
+                                                             
       if (insn.getKind() == ValueKind::CallInstKind) {
         auto *call = llvh::cast<CallInst>(&insn);
         unsigned argCount = call->getNumArguments();

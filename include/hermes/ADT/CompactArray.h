@@ -23,18 +23,18 @@ namespace hermes {
 namespace vm {
 class Deserializer;
 class Serializer;
-} // namespace vm
+}                
 
-/// Array of uint32_t, but size-optimized for small values.
-///
-/// The underlying storage type is automatically scaled up to accommodate
-/// inserted values. The number of elements cannot be changed, except by
-/// swapping contents with another instance.
+                                                           
+   
+                                                                         
+                                                                        
+                                            
 class CompactArray {
  public:
   enum Scale { UINT8 = 0, UINT16 = 1, UINT32 = 2 };
 
-  /// Array with \p count zeroes.
+                                 
   CompactArray(uint32_t count, Scale initScale = UINT8)
       : size_(count),
         scale_(initScale),
@@ -42,7 +42,7 @@ class CompactArray {
   ~CompactArray() {
     ::free(raw_);
   }
-  /// swap is the only bulk transfer method.
+                                            
   CompactArray(const CompactArray &) = delete;
   CompactArray &operator=(const CompactArray &) = delete;
   void swap(CompactArray &other) {
@@ -62,10 +62,10 @@ class CompactArray {
     }
     llvm_unreachable("impossible scale");
   }
-  /// Set the element at index \p idx to \p value.
+                                                  
   void set(uint32_t idx, uint32_t value) {
-    // Note: Scales up twice if value > 64k and current scale is UINT8.
-    // We assume this happens rarely.
+                                                                       
+                                     
     while (!trySet(idx, value))
       scaleUp();
   }
@@ -85,7 +85,7 @@ class CompactArray {
     static uint32_t get(char *raw, uint32_t idx) {
       return reinterpret_cast<T *>(raw)[idx];
     }
-    /// Returns true iff \p value fits into T.
+                                              
     static bool trySet(char *raw, uint32_t idx, uint32_t value) {
       if (value > std::numeric_limits<T>::max())
         return false;
@@ -93,9 +93,9 @@ class CompactArray {
       return true;
     }
   };
-  /// Upgrade to next scale.
+                            
   void scaleUp();
-  /// Returns true iff \p value fit at current scale.
+                                                     
   bool trySet(uint32_t idx, uint32_t value) {
     assert(idx < size_);
     switch (scale_) {
@@ -108,16 +108,16 @@ class CompactArray {
     }
     llvm_unreachable("impossible scale");
   }
-  /// Number of elements.
+                         
   uint32_t size_;
-  /// Underlying element storage type.
+                                      
   Scale scale_;
-  /// Contiguous allocation holding all elements.
+                                                 
   char *raw_;
 };
 
-/// CompactArray but elements are EMPTY, DELETED, or valid number in [0, 2^32-2)
-/// and elements always transition EMPTY -> valid -> DELETED -> valid -> ...
+                                                                                
+                                                                            
 class CompactTable : private CompactArray {
  public:
   using CompactArray::additionalMemorySize;
@@ -144,7 +144,7 @@ class CompactTable : private CompactArray {
   void set(uint32_t idx, uint32_t value) {
     assert(!isValid(idx));
     CompactArray::set(idx, value + FIRST_VALID);
-    /// Checks for overflow.
+                            
     assert(isValid(idx));
   }
   void markAsDeleted(uint32_t idx) {
@@ -153,7 +153,7 @@ class CompactTable : private CompactArray {
   }
 
  private:
-  /// (De)serialization reads/writes the underlying CompactArray.
+                                                                 
   friend class vm::Deserializer;
   friend class vm::Serializer;
 
@@ -161,11 +161,11 @@ class CompactTable : private CompactArray {
     return *this;
   }
 
-  /// Invalid values at the bottom, to make good use of underlying CompactArray.
-  /// Empty is 0 so that the initial state is all empty.
+                                                                                
+                                                        
   enum { EMPTY = 0, DELETED, FIRST_VALID };
 };
 
-} // namespace hermes
+}                    
 #pragma GCC diagnostic pop
-#endif // HERMES_SUPPORT_COMPACTARRAY_H
+#endif                                 

@@ -14,11 +14,11 @@ namespace hermes {
 std::string hashAsString(const SHA1 &hash) {
   char buf[SHA1_NUM_BYTES * 2 + 1];
   for (unsigned i = 0; i < SHA1_NUM_BYTES; i++) {
-    // snprintf null-terminates, so overwrite the null terminator in the next
-    // iteration of the loop.
+                                                                             
+                             
     snprintf(buf + (i * 2), 3, "%02x", hash[i]);
   }
   return std::string(buf);
 }
 
-} // namespace hermes
+}                    

@@ -1,8 +1,8 @@
 #include <cassert>
 #include <mutex>
 
-// Our modified dtoa requires one locks (lock 1) to be provided for maintaining
-// its power of 5 cache in a multi-threaded environment.
+                                                                               
+                                                        
 
 static std::mutex mutex;
 

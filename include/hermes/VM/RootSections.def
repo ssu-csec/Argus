@@ -17,7 +17,7 @@ ROOT_SECTION(StringCycleCheckVisited)
 ROOT_SECTION(Builtins)
 ROOT_SECTION(Jobs)
 ROOT_SECTION(Prototypes)
-// We don't need DebugEnvironment anymore, but keep it for MobileLab.
+                                                                     
 ROOT_SECTION(DebugEnvironment)
 ROOT_SECTION(IdentifierTable)
 ROOT_SECTION(GCScopes)

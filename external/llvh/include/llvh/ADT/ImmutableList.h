@@ -53,14 +53,14 @@ public:
   }
 };
 
-/// ImmutableList - This class represents an immutable (functional) list.
-///  It is implemented as a smart pointer (wraps ImmutableListImpl), so it
-///  it is intended to always be copied by value as if it were a pointer.
-///  This interface matches ImmutableSet and ImmutableMap.  ImmutableList
-///  objects should almost never be created directly, and instead should
-///  be created by ImmutableListFactory objects that manage the lifetime
-///  of a group of lists.  When the factory object is reclaimed, all lists
-///  created by that factory are released as well.
+                                                                         
+                                                                          
+                                                                         
+                                                                         
+                                                                        
+                                                                        
+                                                                          
+                                                  
 template <typename T>
 class ImmutableList {
 public:
@@ -74,9 +74,9 @@ private:
   const ImmutableListImpl<T>* X;
 
 public:
-  // This constructor should normally only be called by ImmutableListFactory<T>.
-  // There may be cases, however, when one needs to extract the internal pointer
-  // and reconstruct a list object from that pointer.
+                                                                                
+                                                                                
+                                                     
   ImmutableList(const ImmutableListImpl<T>* x = nullptr) : X(x) {}
 
   const ImmutableListImpl<T>* getInternalPointer() const {
@@ -101,15 +101,15 @@ public:
     ImmutableList getList() const { return L; }
   };
 
-  /// begin - Returns an iterator referring to the head of the list, or
-  ///  an iterator denoting the end of the list if the list is empty.
+                                                                       
+                                                                     
   iterator begin() const { return iterator(X); }
 
-  /// end - Returns an iterator denoting the end of the list.  This iterator
-  ///  does not refer to a valid list element.
+                                                                            
+                                              
   iterator end() const { return iterator(); }
 
-  /// isEmpty - Returns true if the list is empty.
+                                                  
   bool isEmpty() const { return !X; }
 
   bool contains(const T& V) const {
@@ -120,23 +120,23 @@ public:
     return false;
   }
 
-  /// isEqual - Returns true if two lists are equal.  Because all lists created
-  ///  from the same ImmutableListFactory are uniqued, this has O(1) complexity
-  ///  because it the contents of the list do not need to be compared.  Note
-  ///  that you should only compare two lists created from the same
-  ///  ImmutableListFactory.
+                                                                               
+                                                                               
+                                                                            
+                                                                   
+                            
   bool isEqual(const ImmutableList& L) const { return X == L.X; }
 
   bool operator==(const ImmutableList& L) const { return isEqual(L); }
 
-  /// getHead - Returns the head of the list.
+                                             
   const T& getHead() const {
     assert(!isEmpty() && "Cannot get the head of an empty list.");
     return X->getHead();
   }
 
-  /// getTail - Returns the tail of the list, which is another (possibly empty)
-  ///  ImmutableList.
+                                                                               
+                     
   ImmutableList getTail() const {
     return X ? X->getTail() : nullptr;
   }
@@ -175,7 +175,7 @@ public:
 
   template <typename ElemT>
   LLVM_NODISCARD ImmutableList<T> concat(ElemT &&Head, ImmutableList<T> Tail) {
-    // Profile the new list to see if it already exists in our cache.
+                                                                     
     FoldingSetNodeID ID;
     void* InsertPos;
 
@@ -184,12 +184,12 @@ public:
     ListTy* L = Cache.FindNodeOrInsertPos(ID, InsertPos);
 
     if (!L) {
-      // The list does not exist in our cache.  Create it.
+                                                          
       BumpPtrAllocator& A = getAllocator();
       L = (ListTy*) A.Allocate<ListTy>();
       new (L) ListTy(std::forward<ElemT>(Head), TailImpl);
 
-      // Insert the new list into the cache.
+                                            
       Cache.InsertNode(L, InsertPos);
     }
 
@@ -217,9 +217,9 @@ public:
   }
 };
 
-//===----------------------------------------------------------------------===//
-// Partially-specialized Traits.
-//===----------------------------------------------------------------------===//
+                                                                                
+                                
+                                                                                
 
 template<typename T> struct DenseMapInfo;
 template<typename T> struct DenseMapInfo<ImmutableList<T>> {
@@ -246,6 +246,6 @@ template <typename T> struct isPodLike;
 template <typename T>
 struct isPodLike<ImmutableList<T>> { static const bool value = true; };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_ADT_IMMUTABLELIST_H
+#endif                            

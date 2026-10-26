@@ -29,8 +29,8 @@ bool DominanceInfo::properlyDominates(
   if (ABB != BBB)
     return properlyDominates(ABB, BBB);
 
-  // Otherwise, they're in the same block, and we just need to check
-  // whether B comes after A.
+                                                                    
+                             
   auto ItA = A->getIterator();
   auto ItB = B->getIterator();
   auto E = ABB->begin();

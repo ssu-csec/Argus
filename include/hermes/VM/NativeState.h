@@ -18,8 +18,8 @@ class Runtime;
 class NativeState;
 using FinalizeNativeStatePtr = void (*)(GC &gc, NativeState *ns);
 
-/// Wrapper for a pointer to some arbitrary native data (not on the JS heap)
-/// + a function that's invoked on that data when the NativeState is finalized.
+                                                                            
+                                                                               
 class NativeState final : public GCCell {
   friend void NativeStateBuildMeta(const GCCell *cell, Metadata::Builder &mb);
 
@@ -39,7 +39,7 @@ class NativeState final : public GCCell {
     assert(finalizePtr && "use a no-op if you are sure that is what you want");
   }
 
-  /// Create a new NativeState on the JS heap.
+                                              
   static NativeState *
   create(Runtime &runtime, void *context, FinalizeNativeStatePtr finalizePtr);
 
@@ -57,7 +57,7 @@ class NativeState final : public GCCell {
   FinalizeNativeStatePtr finalizePtr_;
 };
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMES_VM_NATIVESTATE_H
+#endif                           

@@ -5,11 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//===----------------------------------------------------------------------===//
-/// \file
-/// ES6.0 25.3.1 The %GeneratorPrototype% Object
-//===----------------------------------------------------------------------===//
+                                                                                
+         
+                                                
+                                                                                
 #include "JSLibInternal.h"
+#include "hermes/FrontEndDefs/Builtins.h"
 
 #include "hermes/VM/JSGenerator.h"
 #include "hermes/VM/Operations.h"
@@ -33,14 +34,14 @@ void populateGeneratorPrototype(Runtime &runtime) {
       runtime,
       proto,
       Predefined::getSymbolID(Predefined::returnStr),
-      /* isThrow */ (void *)false,
+                    (void *)false,
       generatorPrototypeReturnOrThrow,
       1);
   defineMethod(
       runtime,
       proto,
       Predefined::getSymbolID(Predefined::throwStr),
-      /* isThrow */ (void *)true,
+                    (void *)true,
       generatorPrototypeReturnOrThrow,
       1);
 
@@ -48,8 +49,8 @@ void populateGeneratorPrototype(Runtime &runtime) {
   dpf.writable = 0;
   dpf.enumerable = 0;
 
-  // The initial value of GeneratorFunction.prototype.constructor is the
-  // intrinsic object %Generator% (which is GeneratorFunction.prototype).
+                                                                        
+                                                                         
   defineProperty(
       runtime,
       proto,
@@ -65,7 +66,27 @@ void populateGeneratorPrototype(Runtime &runtime) {
       dpf);
 }
 
-// ES6.0 25.3.3.2.
+static CallResult<HermesValue> asyncIteratorSelf(void *, Runtime &, NativeArgs args) { return args.getThisArg(); }
+static CallResult<HermesValue> asyncGeneratorRequest(void *ctx, Runtime &runtime, NativeArgs args) {
+  auto result = Callable::executeCall1(runtime.makeHandle(runtime.getBuiltinCallable(
+      static_cast<unsigned>(reinterpret_cast<uintptr_t>(ctx)))), runtime,
+      args.getThisHandle(), args.getArg(0));
+  if (result == ExecutionStatus::EXCEPTION) return ExecutionStatus::EXCEPTION;
+  return result->get();
+}
+void populateAsyncGeneratorPrototype(Runtime &runtime) {
+  auto proto = Handle<JSObject>::vmcast(&runtime.asyncGeneratorPrototype);
+  auto flags = DefinePropertyFlags::getNewNonEnumerableFlags();
+  defineMethod(runtime, proto, Predefined::getSymbolID(Predefined::next), reinterpret_cast<void *>(static_cast<uintptr_t>(BuiltinMethod::HermesBuiltin_asyncGeneratorNext)), asyncGeneratorRequest, 1);
+  defineMethod(runtime, proto, Predefined::getSymbolID(Predefined::returnStr), reinterpret_cast<void *>(static_cast<uintptr_t>(BuiltinMethod::HermesBuiltin_asyncGeneratorReturn)), asyncGeneratorRequest, 1);
+  defineMethod(runtime, proto, Predefined::getSymbolID(Predefined::throwStr), reinterpret_cast<void *>(static_cast<uintptr_t>(BuiltinMethod::HermesBuiltin_asyncGeneratorThrow)), asyncGeneratorRequest, 1);
+  flags.writable = 0;
+  defineProperty(runtime, proto, Predefined::getSymbolID(Predefined::constructor), Handle<>(&runtime.asyncGeneratorFunctionPrototype), flags);
+  defineProperty(runtime, proto, Predefined::getSymbolID(Predefined::SymbolToStringTag), runtime.getPredefinedStringHandle(Predefined::AsyncGenerator), flags);
+  defineMethod(runtime, Handle<JSObject>::vmcast(&runtime.asyncIteratorPrototype), Predefined::getSymbolID(Predefined::SymbolAsyncIterator), nullptr, asyncIteratorSelf, 0);
+}
+
+                  
 static CallResult<Handle<JSGenerator>> generatorValidate(
     Runtime &runtime,
     Handle<> value) {
@@ -84,9 +105,9 @@ static CallResult<Handle<JSGenerator>> generatorValidate(
   return generator;
 }
 
-// ES6.0 25.3.3.3.
-// Placed separately from generatorPrototypeNext for readability and for simpler
-// comparison to the spec.
+                  
+                                                                                
+                          
 static CallResult<Handle<JSObject>> generatorResume(
     Runtime &runtime,
     Handle<GeneratorInnerFunction> generator,
@@ -128,30 +149,30 @@ generatorPrototypeNext(void *, Runtime &runtime, NativeArgs args) {
   return result->getHermesValue();
 }
 
-// ES6.0 25.3.3.4.
-// Placed separately from generatorPrototypeReturnOrThrow for readability
-// and for simpler comparison to the spec.
+                  
+                                                                         
+                                          
 static CallResult<Handle<JSObject>> generatorResumeAbrupt(
     Runtime &runtime,
     Handle<GeneratorInnerFunction> generator,
     Handle<> value,
     bool isThrow) {
   if (generator->getState() == GeneratorInnerFunction::State::SuspendedStart) {
-    // If state is "suspendedStart", then
-    // Set generator’s [[GeneratorState]] internal slot to "completed".
+                                         
+                                                                       
     generator->setState(GeneratorInnerFunction::State::Completed);
   }
 
   if (generator->getState() == GeneratorInnerFunction::State::Completed) {
     if (!isThrow) {
-      // abruptCompletion.[[type]] is return.
+                                             
       return createIterResultObject(runtime, value, true);
     }
     runtime.setThrownValue(*value);
     return ExecutionStatus::EXCEPTION;
   }
 
-  // Assert: state is "suspendedYield".
+                                       
   assert(
       generator->getState() == GeneratorInnerFunction::State::SuspendedYield);
 
@@ -194,5 +215,5 @@ generatorPrototypeReturnOrThrow(void *ctx, Runtime &runtime, NativeArgs args) {
   return result->getHermesValue();
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

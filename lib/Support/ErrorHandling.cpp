@@ -68,4 +68,4 @@ LLVM_ATTRIBUTE_NORETURN void hermes_fatal(
       (llvh::Twine(prefix) + ": " + convert_error_to_message(code)).str());
 }
 
-} // namespace hermes
+}                    

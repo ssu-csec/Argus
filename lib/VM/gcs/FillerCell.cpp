@@ -22,5 +22,5 @@ void FillerCellBuildMeta(const GCCell *, Metadata::Builder &mb) {
   mb.setVTable(&FillerCell::vt);
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

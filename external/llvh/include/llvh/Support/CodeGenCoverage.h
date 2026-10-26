@@ -35,6 +35,6 @@ public:
   bool emit(StringRef FilePrefix, StringRef BackendName) const;
   void reset();
 };
-} // namespace llvh
+}                  
 
-#endif // ifndef LLVM_SUPPORT_CODEGENCOVERAGE_H
+#endif                                         

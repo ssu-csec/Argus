@@ -100,7 +100,7 @@ void parallel_for_each_n(IndexTy Begin, IndexTy End, FuncTy Fn) {
 #else
 const ptrdiff_t MinParallelSize = 1024;
 
-/// Inclusive median.
+                     
 template <class RandomAccessIterator, class Comparator>
 RandomAccessIterator medianOf3(RandomAccessIterator Start,
                                RandomAccessIterator End,
@@ -116,23 +116,23 @@ RandomAccessIterator medianOf3(RandomAccessIterator Start,
 template <class RandomAccessIterator, class Comparator>
 void parallel_quick_sort(RandomAccessIterator Start, RandomAccessIterator End,
                          const Comparator &Comp, TaskGroup &TG, size_t Depth) {
-  // Do a sequential sort for small inputs.
+                                           
   if (std::distance(Start, End) < detail::MinParallelSize || Depth == 0) {
     llvh::sort(Start, End, Comp);
     return;
   }
 
-  // Partition.
+               
   auto Pivot = medianOf3(Start, End, Comp);
-  // Move Pivot to End.
+                       
   std::swap(*(End - 1), *Pivot);
   Pivot = std::partition(Start, End - 1, [&Comp, End](decltype(*Start) V) {
     return Comp(V, *(End - 1));
   });
-  // Move Pivot to middle of partition.
+                                       
   std::swap(*Pivot, *(End - 1));
 
-  // Recurse.
+             
   TG.spawn([=, &Comp, &TG] {
     parallel_quick_sort(Start, Pivot, Comp, TG, Depth - 1);
   });
@@ -149,10 +149,10 @@ void parallel_sort(RandomAccessIterator Start, RandomAccessIterator End,
 
 template <class IterTy, class FuncTy>
 void parallel_for_each(IterTy Begin, IterTy End, FuncTy Fn) {
-  // TaskGroup has a relatively high overhead, so we want to reduce
-  // the number of spawn() calls. We'll create up to 1024 tasks here.
-  // (Note that 1024 is an arbitrary number. This code probably needs
-  // improving to take the number of available cores into account.)
+                                                                   
+                                                                     
+                                                                     
+                                                                   
   ptrdiff_t TaskSize = std::distance(Begin, End) / 1024;
   if (TaskSize == 0)
     TaskSize = 1;
@@ -191,9 +191,9 @@ template <typename Iter>
 using DefComparator =
     std::less<typename std::iterator_traits<Iter>::value_type>;
 
-} // namespace detail
+}                    
 
-// sequential algorithm implementations.
+                                        
 template <class Policy, class RandomAccessIterator,
           class Comparator = detail::DefComparator<RandomAccessIterator>>
 void sort(Policy policy, RandomAccessIterator Start, RandomAccessIterator End,
@@ -218,8 +218,8 @@ void for_each_n(Policy policy, IndexTy Begin, IndexTy End, FuncTy Fn) {
     Fn(I);
 }
 
-// Parallel algorithm implementations, only available when LLVM_ENABLE_THREADS
-// is true.
+                                                                              
+           
 #if LLVM_ENABLE_THREADS
 template <class RandomAccessIterator,
           class Comparator = detail::DefComparator<RandomAccessIterator>>
@@ -241,7 +241,7 @@ void for_each_n(parallel_execution_policy policy, IndexTy Begin, IndexTy End,
 }
 #endif
 
-} // namespace parallel
-} // namespace llvh
+}                      
+}                  
 
-#endif // LLVM_SUPPORT_PARALLEL_H
+#endif                           

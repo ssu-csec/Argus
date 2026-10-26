@@ -84,10 +84,10 @@ RESWORD(static)
 RESWORD(extends)
 RESWORD(super)
 
-// Future reserved words
+                        
 RESWORD(enum)
 
-// Strict mode future reserved words
+                                    
 RESWORD(implements)
 RESWORD(interface)
 RESWORD(package)

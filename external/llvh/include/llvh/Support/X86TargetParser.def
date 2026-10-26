@@ -11,7 +11,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-// NOTE: NO INCLUDE GUARD DESIRED!
+                                  
 
 #ifndef X86_VENDOR
 #define X86_VENDOR(ENUM, STR)
@@ -20,13 +20,13 @@ X86_VENDOR(VENDOR_INTEL, "intel")
 X86_VENDOR(VENDOR_AMD,   "amd")
 #undef X86_VENDOR
 
-// This macro is used to implement CPU types that have an alias. As of now
-// there is only ever one alias.
+                                                                          
+                                
 #ifndef X86_CPU_TYPE_COMPAT_WITH_ALIAS
 #define X86_CPU_TYPE_COMPAT_WITH_ALIAS(ARCHNAME, ENUM, STR, ALIAS) X86_CPU_TYPE_COMPAT(ARCHNAME, ENUM, STR)
 #endif
 
-// This macro is used for cpu types present in compiler-rt/libgcc.
+                                                                  
 #ifndef X86_CPU_TYPE_COMPAT
 #define X86_CPU_TYPE_COMPAT(ARCHNAME, ENUM, STR) X86_CPU_TYPE(ARCHNAME, ENUM)
 #endif
@@ -45,7 +45,7 @@ X86_CPU_TYPE_COMPAT           ("btver1",     AMD_BTVER1,       "btver1")
 X86_CPU_TYPE_COMPAT           ("btver2",     AMD_BTVER2,       "btver2")
 X86_CPU_TYPE_COMPAT           ("znver1",     AMDFAM17H,        "amdfam17h")
 X86_CPU_TYPE_COMPAT           ("knm",        INTEL_KNM,        "knm")
-// Entries below this are not in libgcc/compiler-rt.
+                                                    
 X86_CPU_TYPE                  ("i386",        INTEL_i386)
 X86_CPU_TYPE                  ("i486",        INTEL_i486)
 X86_CPU_TYPE                  ("pentium",     INTEL_PENTIUM)
@@ -71,7 +71,7 @@ X86_CPU_TYPE                  ("tremont",     INTEL_TREMONT)
 #undef X86_CPU_TYPE_COMPAT
 #undef X86_CPU_TYPE
 
-// This macro is used for cpu subtypes present in compiler-rt/libgcc.
+                                                                     
 #ifndef X86_CPU_SUBTYPE_COMPAT
 #define X86_CPU_SUBTYPE_COMPAT(ARCHNAME, ENUM, STR) X86_CPU_SUBTYPE(ARCHNAME, ENUM)
 #endif
@@ -97,7 +97,7 @@ X86_CPU_SUBTYPE_COMPAT("broadwell",      INTEL_COREI7_BROADWELL,      "broadwell
 X86_CPU_SUBTYPE_COMPAT("skylake",        INTEL_COREI7_SKYLAKE,        "skylake")
 X86_CPU_SUBTYPE_COMPAT("skylake-avx512", INTEL_COREI7_SKYLAKE_AVX512, "skylake-avx512")
 X86_CPU_SUBTYPE_COMPAT("cannonlake",     INTEL_COREI7_CANNONLAKE,     "cannonlake")
-// Entries below this are not in libgcc/compiler-rt.
+                                                    
 X86_CPU_SUBTYPE       ("core2",          INTEL_CORE2_65)
 X86_CPU_SUBTYPE       ("penryn",         INTEL_CORE2_45)
 X86_CPU_SUBTYPE       ("k6",             AMDPENTIUM_K6)
@@ -108,7 +108,7 @@ X86_CPU_SUBTYPE       ("geode",          AMDPENTIUM_GEODE)
 #undef X86_CPU_SUBTYPE
 
 
-// This macro is used for cpu types present in compiler-rt/libgcc.
+                                                                  
 #ifndef X86_FEATURE_COMPAT
 #define X86_FEATURE_COMPAT(VAL, ENUM, STR) X86_FEATURE(VAL, ENUM)
 #endif
@@ -147,7 +147,7 @@ X86_FEATURE_COMPAT(27, FEATURE_AVX512IFMA,      "avx512ifma")
 X86_FEATURE_COMPAT(28, FEATURE_AVX5124VNNIW,    "avx5124vnniw")
 X86_FEATURE_COMPAT(29, FEATURE_AVX5124FMAPS,    "avx5124fmaps")
 X86_FEATURE_COMPAT(30, FEATURE_AVX512VPOPCNTDQ, "avx512vpopcntdq")
-// Features below here are not in libgcc/compiler-rt.
+                                                     
 X86_FEATURE       (32, FEATURE_MOVBE)
 X86_FEATURE       (33, FEATURE_ADX)
 X86_FEATURE       (34, FEATURE_EM64T)

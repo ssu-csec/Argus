@@ -19,11 +19,11 @@ class Module;
 class Instruction;
 class IRBuilder;
 
-/// This class represents a pass, which is a transformation of the IR. Passes
-/// are either Function passes, which transform one function, and are not
-/// allowed to create new functions or modify other functions, or module
-/// passes which operate on the entire module and are free to manipulate
-/// multiple functions.
+                                                                             
+                                                                         
+                                                                        
+                                                                        
+                       
 class Pass {
  public:
   enum class PassKind {
@@ -32,23 +32,23 @@ class Pass {
   };
 
  private:
-  /// Stores the kind of derived class.
+                                       
   const PassKind kind;
-  /// The textual name of the pass.
+                                   
   llvh::StringRef name;
 
  public:
-  /// Constructor. \p K indicates the kind of pass this is.
+                                                           
   explicit Pass(Pass::PassKind K, llvh::StringRef name) : kind(K), name(name) {}
 
   virtual ~Pass() = default;
 
-  /// Returns the kind of the pass.
+                                   
   PassKind getKind() const {
     return kind;
   }
 
-  /// Returns the textual name of the pass.
+                                           
   llvh::StringRef getName() const {
     return name;
   }
@@ -60,8 +60,8 @@ class FunctionPass : public Pass {
       : Pass(Pass::PassKind::Function, name) {}
   ~FunctionPass() override = default;
 
-  /// Runs the current pass on the function \p F.
-  /// \returns true if the function was modified.
+                                                 
+                                                 
   virtual bool runOnFunction(Function *F) = 0;
 
   static bool classof(const Pass *S) {
@@ -75,8 +75,8 @@ class ModulePass : public Pass {
       : Pass(Pass::PassKind::Module, name) {}
   ~ModulePass() override = default;
 
-  /// Runs the current pass on the module \p M.
-  /// \returns true if module was modified.
+                                               
+                                           
   virtual bool runOnModule(Module *M) = 0;
 
   static bool classof(const Pass *S) {
@@ -84,10 +84,10 @@ class ModulePass : public Pass {
   }
 };
 
-/// Pass header declaration.
+                            
 #define PASS(ID, NAME, DESCRIPTION) std::unique_ptr<Pass> create##ID();
 #include "Passes.def"
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_OPTIMIZER_PASSMANAGER_PASS_H
+#endif                                       

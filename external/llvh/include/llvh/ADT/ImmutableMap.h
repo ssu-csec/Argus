@@ -21,9 +21,9 @@
 
 namespace llvh {
 
-/// ImutKeyValueInfo -Traits class used by ImmutableMap.  While both the first
-/// and second elements in a pair are used to generate profile information,
-/// only the first element (the key) is used by isEqual and isLess.
+                                                                              
+                                                                           
+                                                                   
 template <typename T, typename S>
 struct ImutKeyValueInfo {
   using value_type = const std::pair<T,S>;
@@ -74,10 +74,10 @@ protected:
   TreeTy* Root;
 
 public:
-  /// Constructs a map from a pointer to a tree root.  In general one
-  /// should use a Factory object to create maps instead of directly
-  /// invoking the constructor, but there are cases where make this
-  /// constructor public is useful.
+                                                                     
+                                                                    
+                                                                   
+                                   
   explicit ImmutableMap(const TreeTy* R) : Root(const_cast<TreeTy*>(R)) {
     if (Root) { Root->retain(); }
   }
@@ -159,9 +159,9 @@ public:
 
   bool isEmpty() const { return !Root; }
 
-  //===--------------------------------------------------===//
-  // Foreach - A limited form of map iteration.
-  //===--------------------------------------------------===//
+                                                              
+                                               
+                                                              
 
 private:
   template <typename Callback>
@@ -197,15 +197,15 @@ public:
     }
   }
 
-  //===--------------------------------------------------===//
-  // For testing.
-  //===--------------------------------------------------===//
+                                                              
+                 
+                                                              
 
   void verify() const { if (Root) Root->verify(); }
 
-  //===--------------------------------------------------===//
-  // Iterators.
-  //===--------------------------------------------------===//
+                                                              
+               
+                                                              
 
   class iterator : public ImutAVLValueIterator<ImmutableMap> {
     friend class ImmutableMap;
@@ -230,16 +230,16 @@ public:
     return nullptr;
   }
 
-  /// getMaxElement - Returns the <key,value> pair in the ImmutableMap for
-  ///  which key is the highest in the ordering of keys in the map.  This
-  ///  method returns NULL if the map is empty.
+                                                                          
+                                                                         
+                                               
   value_type* getMaxElement() const {
     return Root ? &(Root->getMaxElement()->getValue()) : nullptr;
   }
 
-  //===--------------------------------------------------===//
-  // Utility methods.
-  //===--------------------------------------------------===//
+                                                              
+                     
+                                                              
 
   unsigned getHeight() const { return Root ? Root->getHeight() : 0; }
 
@@ -252,7 +252,7 @@ public:
   }
 };
 
-// NOTE: This will possibly become the new implementation of ImmutableMap some day.
+                                                                                   
 template <typename KeyT, typename ValT,
 typename ValInfo = ImutKeyValueInfo<KeyT,ValT>>
 class ImmutableMapRef {
@@ -271,10 +271,10 @@ protected:
   FactoryTy *Factory;
 
 public:
-  /// Constructs a map from a pointer to a tree root.  In general one
-  /// should use a Factory object to create maps instead of directly
-  /// invoking the constructor, but there are cases where make this
-  /// constructor public is useful.
+                                                                     
+                                                                    
+                                                                   
+                                   
   explicit ImmutableMapRef(const TreeTy *R, FactoryTy *F)
       : Root(const_cast<TreeTy *>(R)), Factory(F) {
     if (Root) {
@@ -354,18 +354,18 @@ public:
 
   bool isEmpty() const { return !Root; }
 
-  //===--------------------------------------------------===//
-  // For testing.
-  //===--------------------------------------------------===//
+                                                              
+                 
+                                                              
 
   void verify() const {
     if (Root)
       Root->verify();
   }
 
-  //===--------------------------------------------------===//
-  // Iterators.
-  //===--------------------------------------------------===//
+                                                              
+               
+                                                              
 
   class iterator : public ImutAVLValueIterator<ImmutableMapRef> {
     friend class ImmutableMapRef;
@@ -390,16 +390,16 @@ public:
     return nullptr;
   }
 
-  /// getMaxElement - Returns the <key,value> pair in the ImmutableMap for
-  ///  which key is the highest in the ordering of keys in the map.  This
-  ///  method returns NULL if the map is empty.
+                                                                          
+                                                                         
+                                               
   value_type* getMaxElement() const {
     return Root ? &(Root->getMaxElement()->getValue()) : 0;
   }
 
-  //===--------------------------------------------------===//
-  // Utility methods.
-  //===--------------------------------------------------===//
+                                                              
+                     
+                                                              
 
   unsigned getHeight() const { return Root ? Root->getHeight() : 0; }
 
@@ -410,6 +410,6 @@ public:
   inline void Profile(FoldingSetNodeID &ID) const { return Profile(ID, *this); }
 };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_ADT_IMMUTABLEMAP_H
+#endif                           

@@ -25,7 +25,7 @@ namespace detail {
 
 template <typename Callable> class scope_exit {
   Callable ExitFunction;
-  bool Engaged = true; // False once moved-from or release()d.
+  bool Engaged = true;                                        
 
 public:
   template <typename Fp>
@@ -47,13 +47,13 @@ public:
   }
 };
 
-} // end namespace detail
+}                        
 
-// Keeps the callable object that is passed in, and execute it at the
-// destruction of the returned object (usually at the scope exit where the
-// returned object is kept).
-//
-// Interface is specified by p0052r2.
+                                                                     
+                                                                          
+                            
+  
+                                     
 template <typename Callable>
 LLVM_NODISCARD detail::scope_exit<typename std::decay<Callable>::type>
 make_scope_exit(Callable &&F) {
@@ -61,6 +61,6 @@ make_scope_exit(Callable &&F) {
       std::forward<Callable>(F));
 }
 
-} // end namespace llvh
+}                      
 
 #endif

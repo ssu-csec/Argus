@@ -19,43 +19,43 @@
 namespace hermes {
 namespace hbc {
 
-/// Universal type of all operands passed to emit methods.
+                                                          
 using param_t = int64_t;
 
-/// offset_t should only be used by instruction emitting to indicate the current
-/// stream location.
+                                                                                
+                    
 using offset_t = uint32_t;
 
-/// opcode_atom_t represents the smallest numeric type that we use for opcodes,
-/// opeands and offsets. Instructions can use multiple atoms to represent larger
-/// data types like constants or long jumps.
+                                                                               
+                                                                                
+                                            
 using opcode_atom_t = uint8_t;
 
 enum Operator {
-// Generate enums for each opcode:
-// JmpOp,
-// MovOp,
-// ...
+                                  
+         
+         
+      
 #define DEFINE_OPCODE(name) name##Op,
 #include "hermes/BCGen/HBC/BytecodeList.def"
 };
 
 class BytecodeInstructionGenerator {
  protected:
-  /// A list of opcodes.
+                        
   std::vector<opcode_atom_t> opcodes_{};
 
-  /// A flag indicating that an encoding error happened, in which case the
-  /// bytecode is wrong and shouldn't be executed.
+                                                                          
+                                                  
   bool encodingError_{};
 
  public:
-  /// Returns whether an encoding error happened during bytecode emission.
+                                                                          
   bool hasEncodingError() const {
     return encodingError_;
   }
 
-  /// Returns the current location of the bytecode stream.
+                                                          
   offset_t getCurrentLocation() {
     return opcodes_.size();
   }
@@ -65,7 +65,7 @@ class BytecodeInstructionGenerator {
     emitUInt8(op);
     return loc;
   }
-  /// Encode the parameter \p t in little-endian using \p size number of bytes.
+                                                                               
   void emitOperand(param_t t, int size) {
     while (size--) {
       opcodes_.push_back((opcode_atom_t)t);
@@ -73,18 +73,18 @@ class BytecodeInstructionGenerator {
     }
   }
 
-  /// Take over the opcodes. opcodes_ will become empty after this call.
+                                                                        
   std::vector<opcode_atom_t> acquireBytecode() {
     return std::move(opcodes_);
   }
 
-// Generate emitters per operand type, such as:
-// void emitUInt8(param_t value) { ... }
-// void emitReg8(param_t value) { ... }
-// ...
-// We also assert that the value can fit into ctype.
-// For integer values, ((param_t)(ctype)value) == value will do the job;
-// We also want doubles to pass the check unconditionally.
+                                               
+                                        
+                                       
+      
+                                                    
+                                                                        
+                                                          
 #define DEFINE_OPERAND_TYPE(name, ctype)                  \
   void emit##name(param_t value) {                        \
     encodingError_ |= ((param_t)(ctype)value) != value && \
@@ -93,10 +93,10 @@ class BytecodeInstructionGenerator {
   }
 #include "hermes/BCGen/HBC/BytecodeList.def"
 
-// Generate instruction emitters, such as:
-// void emitJmp(param_t t1) { ...; }
-// void emitMov(param_t t1, param_t t2) { ...; }
-// ...
+                                          
+                                    
+                                                
+      
 #define DEFINE_OPCODE_0(name)        \
   offset_t emit##name() {            \
     auto loc = emitOpcode(name##Op); \
@@ -162,12 +162,12 @@ class BytecodeInstructionGenerator {
   };
 #include "hermes/BCGen/HBC/BytecodeList.def"
 
-  /// Wrapper around emitLoadConstDouble, allow us to pass
-  /// a raw double value instead of having to convert it
-  /// to int64_t.
+                                                          
+                                                        
+                 
   offset_t emitLoadConstDoubleDirect(param_t dst, double value) {
-    // NaN may have a different bit pattern on different platforms.
-    // We need to make sure that the bit pattern is consistent.
+                                                                   
+                                                               
     if (LLVM_UNLIKELY(std::isnan(value))) {
       static_assert(
           sizeof(double) == sizeof(uint64_t), "double better be 64 bits");
@@ -177,8 +177,8 @@ class BytecodeInstructionGenerator {
     return emitLoadConstDouble(dst, llvh::DoubleToBits(value));
   }
 };
-} // namespace hbc
-} // namespace hermes
+}                 
+}                    
 #pragma GCC diagnostic pop
 
 #endif

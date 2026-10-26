@@ -20,24 +20,24 @@
 #error "Missing macro definition of HANDLE_METADATA*"
 #endif
 
-// Handler for all types of metadata.
+                                     
 #ifndef HANDLE_METADATA
 #define HANDLE_METADATA(CLASS)
 #endif
 
-// Handler for leaf nodes in the class hierarchy.
+                                                 
 #ifndef HANDLE_METADATA_LEAF
 #define HANDLE_METADATA_LEAF(CLASS) HANDLE_METADATA(CLASS)
 #endif
 
-// Handler for non-leaf nodes in the class hierarchy.
+                                                     
 #ifndef HANDLE_METADATA_BRANCH
 #define HANDLE_METADATA_BRANCH(CLASS) HANDLE_METADATA(CLASS)
 #endif
 
-// Handler for specialized and uniquable leaf nodes under MDNode.  Defers to
-// HANDLE_MDNODE_LEAF_UNIQUABLE if it's defined, otherwise to
-// HANDLE_SPECIALIZED_MDNODE_LEAF.
+                                                                            
+                                                             
+                                  
 #ifndef HANDLE_SPECIALIZED_MDNODE_LEAF_UNIQUABLE
 #ifdef HANDLE_MDNODE_LEAF_UNIQUABLE
 #define HANDLE_SPECIALIZED_MDNODE_LEAF_UNIQUABLE(CLASS)                        \
@@ -48,27 +48,27 @@
 #endif
 #endif
 
-// Handler for leaf nodes under MDNode.
+                                       
 #ifndef HANDLE_MDNODE_LEAF_UNIQUABLE
 #define HANDLE_MDNODE_LEAF_UNIQUABLE(CLASS) HANDLE_MDNODE_LEAF(CLASS)
 #endif
 
-// Handler for leaf nodes under MDNode.
+                                       
 #ifndef HANDLE_MDNODE_LEAF
 #define HANDLE_MDNODE_LEAF(CLASS) HANDLE_METADATA_LEAF(CLASS)
 #endif
 
-// Handler for non-leaf nodes under MDNode.
+                                           
 #ifndef HANDLE_MDNODE_BRANCH
 #define HANDLE_MDNODE_BRANCH(CLASS) HANDLE_METADATA_BRANCH(CLASS)
 #endif
 
-// Handler for specialized leaf nodes under MDNode.
+                                                   
 #ifndef HANDLE_SPECIALIZED_MDNODE_LEAF
 #define HANDLE_SPECIALIZED_MDNODE_LEAF(CLASS) HANDLE_MDNODE_LEAF(CLASS)
 #endif
 
-// Handler for specialized non-leaf nodes under MDNode.
+                                                       
 #ifndef HANDLE_SPECIALIZED_MDNODE_BRANCH
 #define HANDLE_SPECIALIZED_MDNODE_BRANCH(CLASS) HANDLE_MDNODE_BRANCH(CLASS)
 #endif

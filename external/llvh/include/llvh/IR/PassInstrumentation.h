@@ -64,12 +64,12 @@ namespace llvh {
 
 class PreservedAnalyses;
 
-/// This class manages callbacks registration, as well as provides a way for
-/// PassInstrumentation to pass control to the registered callbacks.
+                                                                            
+                                                                    
 class PassInstrumentationCallbacks {
 public:
-  // Before/After callbacks accept IRUnits, so they need to take them
-  // as pointers, wrapped with llvh::Any
+                                                                     
+                                        
   using BeforePassFunc = bool(StringRef, Any);
   using AfterPassFunc = void(StringRef, Any);
   using BeforeAnalysisFunc = void(StringRef, Any);
@@ -78,7 +78,7 @@ public:
 public:
   PassInstrumentationCallbacks() {}
 
-  /// Copying PassInstrumentationCallbacks is not intended.
+                                                           
   PassInstrumentationCallbacks(const PassInstrumentationCallbacks &) = delete;
   void operator=(const PassInstrumentationCallbacks &) = delete;
 
@@ -111,22 +111,22 @@ private:
       AfterAnalysisCallbacks;
 };
 
-/// This class provides instrumentation entry points for the Pass Manager,
-/// doing calls to callbacks registered in PassInstrumentationCallbacks.
+                                                                          
+                                                                        
 class PassInstrumentation {
   PassInstrumentationCallbacks *Callbacks;
 
 public:
-  /// Callbacks object is not owned by PassInstrumentation, its life-time
-  /// should at least match the life-time of corresponding
-  /// PassInstrumentationAnalysis (which usually is till the end of current
-  /// compilation).
+                                                                         
+                                                          
+                                                                           
+                   
   PassInstrumentation(PassInstrumentationCallbacks *CB = nullptr)
       : Callbacks(CB) {}
 
-  /// BeforePass instrumentation point - takes \p Pass instance to be executed
-  /// and constant reference to IR it operates on. \Returns true if pass is
-  /// allowed to be executed.
+                                                                              
+                                                                           
+                             
   template <typename IRUnitT, typename PassT>
   bool runBeforePass(const PassT &Pass, const IRUnitT &IR) const {
     if (!Callbacks)
@@ -138,8 +138,8 @@ public:
     return ShouldRun;
   }
 
-  /// AfterPass instrumentation point - takes \p Pass instance that has
-  /// just been executed and constant reference to IR it operates on.
+                                                                       
+                                                                     
   template <typename IRUnitT, typename PassT>
   void runAfterPass(const PassT &Pass, const IRUnitT &IR) const {
     if (Callbacks)
@@ -147,8 +147,8 @@ public:
         C(Pass.name(), llvh::Any(&IR));
   }
 
-  /// BeforeAnalysis instrumentation point - takes \p Analysis instance
-  /// to be executed and constant reference to IR it operates on.
+                                                                       
+                                                                 
   template <typename IRUnitT, typename PassT>
   void runBeforeAnalysis(const PassT &Analysis, const IRUnitT &IR) const {
     if (Callbacks)
@@ -156,8 +156,8 @@ public:
         C(Analysis.name(), llvh::Any(&IR));
   }
 
-  /// AfterAnalysis instrumentation point - takes \p Analysis instance
-  /// that has just been executed and constant reference to IR it operated on.
+                                                                      
+                                                                              
   template <typename IRUnitT, typename PassT>
   void runAfterAnalysis(const PassT &Analysis, const IRUnitT &IR) const {
     if (Callbacks)
@@ -165,11 +165,11 @@ public:
         C(Analysis.name(), llvh::Any(&IR));
   }
 
-  /// Handle invalidation from the pass manager when PassInstrumentation
-  /// is used as the result of PassInstrumentationAnalysis.
-  ///
-  /// On attempt to invalidate just return false. There is nothing to become
-  /// invalid here.
+                                                                        
+                                                           
+     
+                                                                            
+                   
   template <typename IRUnitT, typename... ExtraArgsT>
   bool invalidate(IRUnitT &, const class llvh::PreservedAnalyses &,
                   ExtraArgsT...) {
@@ -177,6 +177,6 @@ public:
   }
 };
 
-} // namespace llvh
+}                  
 
 #endif

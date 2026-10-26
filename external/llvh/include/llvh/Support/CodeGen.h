@@ -17,19 +17,19 @@
 
 namespace llvh {
 
-  // Relocation model types.
+                            
   namespace Reloc {
   enum Model { Static, PIC_, DynamicNoPIC, ROPI, RWPI, ROPI_RWPI };
   }
 
-  // Code model types.
+                      
   namespace CodeModel {
-    // Sync changes with CodeGenCWrappers.h.
+                                            
   enum Model { Tiny, Small, Kernel, Medium, Large };
   }
 
   namespace PICLevel {
-    // This is used to map -fpic/-fPIC.
+                                       
     enum Level { NotPIC=0, SmallPIC=1, BigPIC=2 };
   }
 
@@ -37,7 +37,7 @@ namespace llvh {
     enum Level { Default=0, Small=1, Large=2 };
   }
 
-  // TLS models.
+                
   namespace TLSModel {
     enum Model {
       GeneralDynamic,
@@ -47,16 +47,16 @@ namespace llvh {
     };
   }
 
-  // Code generation optimization level.
+                                        
   namespace CodeGenOpt {
     enum Level {
-      None,        // -O0
-      Less,        // -O1
-      Default,     // -O2, -Os
-      Aggressive   // -O3
+      None,              
+      Less,              
+      Default,                
+      Aggressive         
     };
   }
 
-}  // end llvm namespace
+}                       
 
 #endif

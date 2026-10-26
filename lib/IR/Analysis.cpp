@@ -54,7 +54,7 @@ PostOrderAnalysis::PostOrderAnalysis(Function *F) : ctx_(F->getContext()) {
 
   BasicBlock *entry = &*F->begin();
 
-  // Finally, do an PO scan from the entry block.
+                                                 
   visitPostOrder(entry, Order);
 
   assert(
@@ -75,39 +75,39 @@ void PostOrderAnalysis::dump() {
   outs() << "\n";
 }
 
-// Perform depth-first search to identify loops. The loop header of a block B is
-// its DFS ancestor H such that a descendent of B has a back edge to H. (In the
-// case of a self-loop, the ancestor and descendant are B itself.) When there
-// are multiple such blocks, we take the one with the maximum DFS discovery time
-// to get the innermost loop. The preheader is the DFS parent of H. We use
-// DominanceInfo to ensure that preheaders dominate headers and headers dominate
-// all blocks in the loop.
+                                                                                
+                                                                               
+                                                                             
+                                                                                
+                                                                          
+                                                                                
+                          
 LoopAnalysis::LoopAnalysis(Function *F, const DominanceInfo &dominanceInfo) {
-  // BlockMap (defined in Analysis.h) and BlockSet are used for most cases.
-  // TinyBlockSet is only used for headerSets (defined below); it has a smaller
-  // inline size because we store BLOCK -> {SET OF HEADERS} for every block, and
-  // very deeply nested loops (leading to many headers) are not that common.
+                                                                           
+                                                                               
+                                                                                
+                                                                            
   using BlockSet = llvh::SmallPtrSet<const BasicBlock *, 16>;
   using TinyBlockSet = llvh::SmallPtrSet<BasicBlock *, 2>;
 
   int dfsTime = 0;
-  // Maps each block to its DFS discovery time (value of dfsTime).
+                                                                  
   BlockMap<int> discovered;
-  // Set of blocks we have finished visiting.
+                                             
   BlockSet finished;
-  // Maps each block to its parent in the DFS tree.
+                                                   
   BlockMap<BasicBlock *> parent;
-  // Maps each block to a set of header blocks of loops that enclose it.
+                                                                        
   BlockMap<TinyBlockSet> headerSets;
 
-  // Explicit stack for depth-first search.
+                                           
   llvh::SmallVector<BasicBlock *, 16> stack;
   stack.push_back(&*F->begin());
   while (stack.size()) {
     BasicBlock *BB = stack.back();
-    // If it's the first time visiting, record the discovery time and push all
-    // undiscovered successors onto the stack. Leave BB on the stack so that
-    // after visiting all descendants, we come back to it and resume below.
+                                                                              
+                                                                            
+                                                                           
     if (discovered.try_emplace(BB, dfsTime).second) {
       ++dfsTime;
       for (auto it = succ_begin(BB), e = succ_end(BB); it != e; ++it) {
@@ -122,21 +122,21 @@ LoopAnalysis::LoopAnalysis(Function *F, const DominanceInfo &dominanceInfo) {
 
     stack.pop_back();
     if (finished.count(BB)) {
-      // BB was duplicated on the stack and we already finished visiting it.
+                                                                            
       continue;
     }
 
-    // Check back/forward/cross edges to find loops BB is in.
+                                                             
     TinyBlockSet headers;
     for (auto it = succ_begin(BB), e = succ_end(BB); it != e; ++it) {
       BasicBlock *succ = *it;
       assert(discovered.count(succ) && "Unexpected undiscovered successor");
       if (!finished.count(succ)) {
-        // Found a back edge to a header block.
+                                               
         headers.insert(succ);
       } else {
-        // Either a forward edge or cross edge. Headers of succ are also headers
-        // of BB if we haven't finished visiting them.
+                                                                                
+                                                      
         auto entry = headerSets.find(succ);
         if (entry != headerSets.end()) {
           for (BasicBlock *headerOfSucc : entry->second) {
@@ -155,9 +155,9 @@ LoopAnalysis::LoopAnalysis(Function *F, const DominanceInfo &dominanceInfo) {
     finished.insert(BB);
   }
 
-  // Determine which headers are good/bad and populate headerToPreheader_ using
-  // the parent mapping. A header is good if it dominates every block in the
-  // loop (that is, it is the only entry point).
+                                                                               
+                                                                            
+                                                
   BlockSet badHeaders;
   for (auto &entry : headerSets) {
     const BasicBlock *BB = entry.first;
@@ -176,7 +176,7 @@ LoopAnalysis::LoopAnalysis(Function *F, const DominanceInfo &dominanceInfo) {
     }
   }
 
-  // Populate blockToHeader_ with the innermost loop header for each block.
+                                                                           
   for (auto &entry : headerSets) {
     const BasicBlock *BB = entry.first;
     TinyBlockSet &headers = entry.second;
@@ -224,12 +224,12 @@ FunctionScopeAnalysis::calculateFunctionScopeData(
   }
 
   if (!scopeDesc->hasFunction()) {
-    // The only scope that doesn't have a function is the Module's initial
-    // scope.
+                                                                          
+             
     assert(scopeDesc->getParent() == nullptr);
   } else {
-    // If the function is a CommonJS module,
-    // then it won't have a CreateFunctionInst, so calculate the depth manually.
+                                            
+                                                                                
     Function *F = scopeDesc->getFunction();
     Module *module = F->getParent();
     if (module->findCJSModule(F)) {

@@ -20,7 +20,7 @@ namespace llvh {
 
 namespace ilist_detail {
 
-/// Find const-correct node types.
+                                  
 template <class OptionsT, bool IsConst> struct IteratorTraits;
 template <class OptionsT> struct IteratorTraits<OptionsT, false> {
   using value_type = typename OptionsT::value_type;
@@ -51,9 +51,9 @@ template <> struct IteratorHelper<true> : ilist_detail::NodeAccess {
   template <class T> static void decrement(T *&I) { I = Access::getNext(*I); }
 };
 
-} // end namespace ilist_detail
+}                              
 
-/// Iterator for intrusive lists  based on ilist_node.
+                                                      
 template <class OptionsT, bool IsReverse, bool IsConst>
 class ilist_iterator : ilist_detail::SpecificNodeAccess<OptionsT> {
   friend ilist_iterator<OptionsT, IsReverse, !IsConst>;
@@ -79,23 +79,23 @@ private:
   node_pointer NodePtr = nullptr;
 
 public:
-  /// Create from an ilist_node.
+                                
   explicit ilist_iterator(node_reference N) : NodePtr(&N) {}
 
   explicit ilist_iterator(pointer NP) : NodePtr(Access::getNodePtr(NP)) {}
   explicit ilist_iterator(reference NR) : NodePtr(Access::getNodePtr(&NR)) {}
   ilist_iterator() = default;
 
-  // This is templated so that we can allow constructing a const iterator from
-  // a nonconst iterator...
+                                                                              
+                           
   template <bool RHSIsConst>
   ilist_iterator(
       const ilist_iterator<OptionsT, IsReverse, RHSIsConst> &RHS,
       typename std::enable_if<IsConst || !RHSIsConst, void *>::type = nullptr)
       : NodePtr(RHS.NodePtr) {}
 
-  // This is templated so that we can allow assigning to a const iterator from
-  // a nonconst iterator...
+                                                                              
+                           
   template <bool RHSIsConst>
   typename std::enable_if<IsConst || !RHSIsConst, ilist_iterator &>::type
   operator=(const ilist_iterator<OptionsT, IsReverse, RHSIsConst> &RHS) {
@@ -103,30 +103,30 @@ public:
     return *this;
   }
 
-  /// Explicit conversion between forward/reverse iterators.
-  ///
-  /// Translate between forward and reverse iterators without changing range
-  /// boundaries.  The resulting iterator will dereference (and have a handle)
-  /// to the previous node, which is somewhat unexpected; but converting the
-  /// two endpoints in a range will give the same range in reverse.
-  ///
-  /// This matches std::reverse_iterator conversions.
+                                                            
+     
+                                                                            
+                                                                              
+                                                                            
+                                                                   
+     
+                                                     
   explicit ilist_iterator(
       const ilist_iterator<OptionsT, !IsReverse, IsConst> &RHS)
       : ilist_iterator(++RHS.getReverse()) {}
 
-  /// Get a reverse iterator to the same node.
-  ///
-  /// Gives a reverse iterator that will dereference (and have a handle) to the
-  /// same node.  Converting the endpoint iterators in a range will give a
-  /// different range; for range operations, use the explicit conversions.
+                                              
+     
+                                                                               
+                                                                          
+                                                                          
   ilist_iterator<OptionsT, !IsReverse, IsConst> getReverse() const {
     if (NodePtr)
       return ilist_iterator<OptionsT, !IsReverse, IsConst>(*NodePtr);
     return ilist_iterator<OptionsT, !IsReverse, IsConst>();
   }
 
-  /// Const-cast.
+                 
   ilist_iterator<OptionsT, IsReverse, false> getNonConst() const {
     if (NodePtr)
       return ilist_iterator<OptionsT, IsReverse, false>(
@@ -135,14 +135,14 @@ public:
     return ilist_iterator<OptionsT, IsReverse, false>();
   }
 
-  // Accessors...
+                 
   reference operator*() const {
     assert(!NodePtr->isKnownSentinel());
     return *Access::getValuePtr(NodePtr);
   }
   pointer operator->() const { return &operator*(); }
 
-  // Comparison operators
+                         
   friend bool operator==(const ilist_iterator &LHS, const ilist_iterator &RHS) {
     return LHS.NodePtr == RHS.NodePtr;
   }
@@ -150,7 +150,7 @@ public:
     return LHS.NodePtr != RHS.NodePtr;
   }
 
-  // Increment and decrement operators...
+                                         
   ilist_iterator &operator--() {
     NodePtr = IsReverse ? NodePtr->getNext() : NodePtr->getPrev();
     return *this;
@@ -170,19 +170,19 @@ public:
     return tmp;
   }
 
-  /// Get the underlying ilist_node.
+                                    
   node_pointer getNodePtr() const { return static_cast<node_pointer>(NodePtr); }
 
-  /// Check for end.  Only valid if ilist_sentinel_tracking<true>.
+                                                                  
   bool isEnd() const { return NodePtr ? NodePtr->isSentinel() : false; }
 };
 
 template <typename From> struct simplify_type;
 
-/// Allow ilist_iterators to convert into pointers to a node automatically when
-/// used by the dyn_cast, cast, isa mechanisms...
-///
-/// FIXME: remove this, since there is no implicit conversion to NodeTy.
+                                                                               
+                                                 
+   
+                                                                        
 template <class OptionsT, bool IsConst>
 struct simplify_type<ilist_iterator<OptionsT, false, IsConst>> {
   using iterator = ilist_iterator<OptionsT, false, IsConst>;
@@ -194,6 +194,6 @@ template <class OptionsT, bool IsConst>
 struct simplify_type<const ilist_iterator<OptionsT, false, IsConst>>
     : simplify_type<ilist_iterator<OptionsT, false, IsConst>> {};
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_ADT_ILIST_ITERATOR_H
+#endif                             

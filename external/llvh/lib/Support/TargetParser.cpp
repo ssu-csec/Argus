@@ -26,10 +26,10 @@ using namespace AMDGPU;
 
 namespace {
 
-// List of canonical FPU names (use getFPUSynonym) and which architectural
-// features they correspond to (use getFPUFeatures).
-// FIXME: TableGen this.
-// The entries must appear in the order listed in ARM::FPUKind for correct indexing
+                                                                          
+                                                    
+                        
+                                                                                   
 static const struct {
   const char *NameCStr;
   size_t NameLength;
@@ -45,14 +45,14 @@ static const struct {
 #include "llvh/Support/ARMTargetParser.def"
 };
 
-// List of canonical arch names (use getArchSynonym).
-// This table also provides the build attribute fields for CPU arch
-// and Arch ID, according to the Addenda to the ARM ABI, chapters
-// 2.4 and 2.3.5.2 respectively.
-// FIXME: SubArch values were simplified to fit into the expectations
-// of the triples and are not conforming with their official names.
-// Check to see if the expectation should be changed.
-// FIXME: TableGen this.
+                                                     
+                                                                   
+                                                                 
+                                
+                                                                     
+                                                                   
+                                                     
+                        
 template <typename T> struct ArchNames {
   const char *NameCStr;
   size_t NameLength;
@@ -63,14 +63,14 @@ template <typename T> struct ArchNames {
   unsigned DefaultFPU;
   unsigned ArchBaseExtensions;
   T ID;
-  ARMBuildAttrs::CPUArch ArchAttr; // Arch ID in build attributes.
+  ARMBuildAttrs::CPUArch ArchAttr;                                
 
   StringRef getName() const { return StringRef(NameCStr, NameLength); }
 
-  // CPU class in build attributes.
+                                   
   StringRef getCPUAttr() const { return StringRef(CPUAttrCStr, CPUAttrLength); }
 
-  // Sub-Arch name.
+                   
   StringRef getSubArch() const { return StringRef(SubArchCStr, SubArchLength); }
 };
 ArchNames<ARM::ArchKind> ARCHNames[] = {
@@ -88,8 +88,8 @@ ArchNames<AArch64::ArchKind> AArch64ARCHNames[] = {
  };
 
 
-// List of Arch Extension names.
-// FIXME: TableGen this.
+                                
+                        
 static const struct {
   const char *NameCStr;
   size_t NameLength;
@@ -108,9 +108,9 @@ static const struct {
 #include "llvh/Support/AArch64TargetParser.def"
 };
 
-// List of HWDiv names (use getHWDivSynonym) and which architectural
-// features they correspond to (use getHWDivFeatures).
-// FIXME: TableGen this.
+                                                                    
+                                                      
+                        
 static const struct {
   const char *NameCStr;
   size_t NameLength;
@@ -122,16 +122,16 @@ static const struct {
 #include "llvh/Support/ARMTargetParser.def"
 };
 
-// List of CPU names and their arches.
-// The same CPU can have multiple arches and can be default on multiple arches.
-// When finding the Arch for a CPU, first-found prevails. Sort them accordingly.
-// When this becomes table-generated, we'd probably need two tables.
-// FIXME: TableGen this.
+                                      
+                                                                               
+                                                                                
+                                                                    
+                        
 template <typename T> struct CpuNames {
   const char *NameCStr;
   size_t NameLength;
   T ArchID;
-  bool Default; // is $Name the default CPU for $ArchID ?
+  bool Default;                                          
   unsigned DefaultExtensions;
 
   StringRef getName() const { return StringRef(NameCStr, NameLength); }
@@ -148,11 +148,11 @@ CpuNames<AArch64::ArchKind> AArch64CPUNames[] = {
  #include "llvh/Support/AArch64TargetParser.def"
  };
 
-} // namespace
+}             
 
-// ======================================================= //
-// Information by ID
-// ======================================================= //
+                                                             
+                    
+                                                             
 
 StringRef ARM::getFPUName(unsigned FPUKind) {
   if (FPUKind >= ARM::FK_LAST)
@@ -260,8 +260,8 @@ bool llvh::ARM::getFPUFeatures(unsigned FPUKind,
   if (FPUKind >= ARM::FK_LAST || FPUKind == ARM::FK_INVALID)
     return false;
 
-  // fp-only-sp and d16 subtarget features are independent of each other, so we
-  // must enable/disable both.
+                                                                               
+                              
   switch (FPUNames[FPUKind].Restriction) {
   case ARM::FPURestriction::SP_D16:
     Features.push_back("+fp-only-sp");
@@ -277,10 +277,10 @@ bool llvh::ARM::getFPUFeatures(unsigned FPUKind,
     break;
   }
 
-  // FPU version subtarget features are inclusive of lower-numbered ones, so
-  // enable the one corresponding to this version and disable all that are
-  // higher. We also have to make sure to disable fp16 when vfp4 is disabled,
-  // as +vfp4 implies +fp16 but -vfp4 does not imply -fp16.
+                                                                            
+                                                                          
+                                                                             
+                                                           
   switch (FPUNames[FPUKind].FPUVersion) {
   case ARM::FPUVersion::VFPV5:
     Features.push_back("+fp-armv8");
@@ -317,7 +317,7 @@ bool llvh::ARM::getFPUFeatures(unsigned FPUKind,
     break;
   }
 
-  // crypto includes neon, so we handle this similarly to FPU version.
+                                                                      
   switch (FPUNames[FPUKind].NeonSupport) {
   case ARM::NeonSupportLevel::Crypto:
     Features.push_back("+neon");
@@ -389,13 +389,13 @@ StringRef llvh::ARM::getDefaultCPU(StringRef Arch) {
   if (AK == ARM::ArchKind::INVALID)
     return StringRef();
 
-  // Look for multiple AKs to find the default for pair AK+Name.
+                                                                
   for (const auto CPU : CPUNames) {
     if (CPU.ArchID == AK && CPU.Default)
       return CPU.getName();
   }
 
-  // If we can't find a default then target the architecture instead
+                                                                    
   return "generic";
 }
 
@@ -551,12 +551,12 @@ StringRef llvh::AArch64::getDefaultCPU(StringRef Arch) {
   if (AK == ArchKind::INVALID)
     return StringRef();
 
-  // Look for multiple AKs to find the default for pair AK+Name.
+                                                                
   for (const auto &CPU : AArch64CPUNames)
     if (CPU.ArchID == AK && CPU.Default)
       return CPU.getName();
 
-  // If we can't find a default then target the architecture instead
+                                                                    
   return "generic";
 }
 
@@ -566,9 +566,9 @@ unsigned llvh::AArch64::checkArchVersion(StringRef Arch) {
   return 0;
 }
 
-// ======================================================= //
-// Parsers
-// ======================================================= //
+                                                             
+          
+                                                             
 
 static StringRef getHWDivSynonym(StringRef HWDiv) {
   return StringSwitch<StringRef>(HWDiv)
@@ -578,7 +578,7 @@ static StringRef getHWDivSynonym(StringRef HWDiv) {
 
 static StringRef getFPUSynonym(StringRef FPU) {
   return StringSwitch<StringRef>(FPU)
-      .Cases("fpa", "fpe2", "fpe3", "maverick", "invalid") // Unsupported
+      .Cases("fpa", "fpe2", "fpe3", "maverick", "invalid")               
       .Case("vfp2", "vfpv2")
       .Case("vfp3", "vfpv3")
       .Case("vfp4", "vfpv4")
@@ -588,7 +588,7 @@ static StringRef getFPUSynonym(StringRef FPU) {
       .Cases("fp4-dp-d16", "fpv4-dp-d16", "vfpv4-d16")
       .Case("fp5-sp-d16", "fpv5-sp-d16")
       .Cases("fp5-dp-d16", "fpv5-dp-d16", "fpv5-d16")
-      // FIXME: Clang uses it, but it's bogus, since neon defaults to vfpv3.
+                                                                            
       .Case("neon-vfpv3", "neon")
       .Default(FPU);
 }
@@ -617,16 +617,16 @@ static StringRef getArchSynonym(StringRef Arch) {
       .Default(Arch);
 }
 
-// MArch is expected to be of the form (arm|thumb)?(eb)?(v.+)?(eb)?, but
-// (iwmmxt|xscale)(eb)? is also permitted. If the former, return
-// "v.+", if the latter, return unmodified string, minus 'eb'.
-// If invalid, return empty string.
+                                                                        
+                                                                
+                                                              
+                                   
 StringRef llvh::ARM::getCanonicalArchName(StringRef Arch) {
   size_t offset = StringRef::npos;
   StringRef A = Arch;
   StringRef Error = "";
 
-  // Begins with "arm" / "thumb", move past it.
+                                               
   if (A.startswith("arm64"))
     offset = 5;
   else if (A.startswith("arm"))
@@ -635,38 +635,38 @@ StringRef llvh::ARM::getCanonicalArchName(StringRef Arch) {
     offset = 5;
   else if (A.startswith("aarch64")) {
     offset = 7;
-    // AArch64 uses "_be", not "eb" suffix.
+                                           
     if (A.find("eb") != StringRef::npos)
       return Error;
     if (A.substr(offset, 3) == "_be")
       offset += 3;
   }
 
-  // Ex. "armebv7", move past the "eb".
+                                       
   if (offset != StringRef::npos && A.substr(offset, 2) == "eb")
     offset += 2;
-  // Or, if it ends with eb ("armv7eb"), chop it off.
+                                                     
   else if (A.endswith("eb"))
     A = A.substr(0, A.size() - 2);
-  // Trim the head
+                  
   if (offset != StringRef::npos)
     A = A.substr(offset);
 
-  // Empty string means offset reached the end, which means it's valid.
+                                                                       
   if (A.empty())
     return Arch;
 
-  // Only match non-marketing names
+                                   
   if (offset != StringRef::npos) {
-    // Must start with 'vN'.
+                            
     if (A.size() >= 2 && (A[0] != 'v' || !std::isdigit(A[1])))
       return Error;
-    // Can't have an extra 'eb'.
+                                
     if (A.find("eb") != StringRef::npos)
       return Error;
   }
 
-  // Arch will either be a 'v' name (v7a) or a marketing name (xscale).
+                                                                       
   return A;
 }
 
@@ -688,7 +688,7 @@ unsigned llvh::ARM::parseFPU(StringRef FPU) {
   return ARM::FK_INVALID;
 }
 
-// Allows partial match, ex. "v7a" matches "armv7a".
+                                                    
 ARM::ArchKind ARM::parseArch(StringRef Arch) {
   Arch = getCanonicalArchName(Arch);
   StringRef Syn = getArchSynonym(Arch);
@@ -729,7 +729,7 @@ void llvh::AArch64::fillValidCPUArchList(SmallVectorImpl<StringRef> &Values) {
   }
 }
 
-// ARM, Thumb, AArch64
+                      
 ARM::ISAKind ARM::parseArchISA(StringRef Arch) {
   return StringSwitch<ARM::ISAKind>(Arch)
       .StartsWith("aarch64", ARM::ISAKind::AARCH64)
@@ -739,7 +739,7 @@ ARM::ISAKind ARM::parseArchISA(StringRef Arch) {
       .Default(ARM::ISAKind::INVALID);
 }
 
-// Little/Big endian
+                    
 ARM::EndianKind ARM::parseArchEndian(StringRef Arch) {
   if (Arch.startswith("armeb") || Arch.startswith("thumbeb") ||
       Arch.startswith("aarch64_be"))
@@ -758,7 +758,7 @@ ARM::EndianKind ARM::parseArchEndian(StringRef Arch) {
   return ARM::EndianKind::INVALID;
 }
 
-// Profile A/R/M
+                
 ARM::ProfileKind ARM::parseArchProfile(StringRef Arch) {
   Arch = getCanonicalArchName(Arch);
   switch (parseArch(Arch)) {
@@ -804,7 +804,7 @@ ARM::ProfileKind ARM::parseArchProfile(StringRef Arch) {
   llvm_unreachable("Unhandled architecture");
 }
 
-// Version number (ex. v7 = 7).
+                               
 unsigned llvh::ARM::parseArchVersion(StringRef Arch) {
   Arch = getCanonicalArchName(Arch);
   switch (parseArch(Arch)) {
@@ -867,10 +867,10 @@ StringRef llvh::ARM::computeDefaultTargetABI(const Triple &TT, StringRef CPU) {
       return "aapcs16";
     return "apcs-gnu";
   } else if (TT.isOSWindows())
-    // FIXME: this is invalid for WindowsCE.
+                                            
     return "aapcs";
 
-  // Select the default based on the platform.
+                                              
   switch (TT.getEnvironment()) {
   case Triple::Android:
   case Triple::GNUEABI:
@@ -898,7 +898,7 @@ unsigned llvh::AArch64::parseFPU(StringRef FPU) {
   return ARM::parseFPU(FPU);
 }
 
-// Allows partial match, ex. "v8a" matches "armv8a".
+                                                    
 AArch64::ArchKind AArch64::parseArch(StringRef Arch) {
   Arch = getCanonicalArchName(Arch);
   if (checkArchVersion(Arch) < 8)
@@ -928,22 +928,22 @@ AArch64::ArchKind llvh::AArch64::parseCPUArch(StringRef CPU) {
   return ArchKind::INVALID;
 }
 
-// ARM, Thumb, AArch64
+                      
 ARM::ISAKind AArch64::parseArchISA(StringRef Arch) {
   return ARM::parseArchISA(Arch);
 }
 
-// Little/Big endian
+                    
 ARM::EndianKind AArch64::parseArchEndian(StringRef Arch) {
   return ARM::parseArchEndian(Arch);
 }
 
-// Profile A/R/M
+                
 ARM::ProfileKind AArch64::parseArchProfile(StringRef Arch) {
   return ARM::parseArchProfile(Arch);
 }
 
-// Version number (ex. v8 = 8).
+                               
 unsigned llvh::AArch64::parseArchVersion(StringRef Arch) {
   return ARM::parseArchVersion(Arch);
 }
@@ -963,8 +963,8 @@ struct GPUInfo {
 };
 
 constexpr GPUInfo R600GPUs[26] = {
-  // Name       Canonical    Kind        Features
-  //            Name
+                                                 
+                    
   {{"r600"},    {"r600"},    GK_R600,    FEATURE_NONE },
   {{"rv630"},   {"r600"},    GK_R600,    FEATURE_NONE },
   {{"rv635"},   {"r600"},    GK_R600,    FEATURE_NONE },
@@ -993,11 +993,11 @@ constexpr GPUInfo R600GPUs[26] = {
   {{"turks"},   {"turks"},   GK_TURKS,   FEATURE_NONE }
 };
 
-// This table should be sorted by the value of GPUKind
-// Don't bother listing the implicitly true features
+                                                      
+                                                    
 constexpr GPUInfo AMDGCNGPUs[32] = {
-  // Name         Canonical    Kind        Features
-  //              Name
+                                                   
+                      
   {{"gfx600"},    {"gfx600"},  GK_GFX600,  FEATURE_FAST_FMA_F32},
   {{"tahiti"},    {"gfx600"},  GK_GFX600,  FEATURE_FAST_FMA_F32},
   {{"gfx601"},    {"gfx601"},  GK_GFX601,  FEATURE_NONE},
@@ -1045,7 +1045,7 @@ const GPUInfo *getArchEntry(AMDGPU::GPUKind AK, ArrayRef<GPUInfo> Table) {
   return I;
 }
 
-} // namespace
+}             
 
 StringRef llvh::AMDGPU::getArchNameAMDGCN(GPUKind AK) {
   if (const auto *Entry = getArchEntry(AK, AMDGCNGPUs))
@@ -1090,7 +1090,7 @@ unsigned AMDGPU::getArchAttrR600(GPUKind AK) {
 }
 
 void AMDGPU::fillValidArchListAMDGCN(SmallVectorImpl<StringRef> &Values) {
-  // XXX: Should this only report unique canonical names?
+                                                         
   for (const auto C : AMDGCNGPUs)
     Values.push_back(C.Name);
 }

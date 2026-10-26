@@ -17,12 +17,12 @@ namespace ESTree {
 class Node;
 }
 
-/// Output the supplied AST as JS.
-/// \param OS the output stream
-/// \param root the root AST node
-/// \param pretty pretty print or not.
+                                  
+                               
+                                 
+                                      
 void generateJS(llvh::raw_ostream &OS, ESTree::Node *root, bool pretty);
 
-} // namespace hermes
+}                    
 
 #endif

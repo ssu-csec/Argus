@@ -15,7 +15,7 @@
 
 namespace llvh {
 
-/// Implementations of list algorithms using ilist_node_base.
+                                                             
 template <bool EnableSentinelTracking> class ilist_base {
 public:
   using node_base_type = ilist_node_base<EnableSentinelTracking>;
@@ -34,7 +34,7 @@ public:
     Next->setPrev(Prev);
     Prev->setNext(Next);
 
-    // Not strictly necessary, but helps catch a class of bugs.
+                                                               
     N.setPrev(nullptr);
     N.setNext(nullptr);
   }
@@ -45,7 +45,7 @@ public:
     Last.setPrev(Prev);
     Prev->setNext(&Last);
 
-    // Not strictly necessary, but helps catch a class of bugs.
+                                                               
     First.setPrev(nullptr);
     Final->setNext(nullptr);
   }
@@ -55,18 +55,18 @@ public:
     if (&Next == &Last || &First == &Last)
       return;
 
-    // Position cannot be contained in the range to be transferred.
+                                                                   
     assert(&Next != &First &&
-           // Check for the most common mistake.
+                                                
            "Insertion point can't be one of the transferred nodes");
 
     node_base_type &Final = *Last.getPrev();
 
-    // Detach from old list/position.
+                                     
     First.getPrev()->setNext(&Last);
     Last.setPrev(First.getPrev());
 
-    // Splice [First, Final] into its new list/position.
+                                                        
     node_base_type &Prev = *Next.getPrev();
     Final.setNext(&Next);
     First.setPrev(&Prev);
@@ -88,6 +88,6 @@ public:
   }
 };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_ADT_ILIST_BASE_H
+#endif                         

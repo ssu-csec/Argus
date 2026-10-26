@@ -21,28 +21,28 @@
 
 namespace hermes {
 
-/// A class whose constructor/destructor delimit a region of code
-/// execution that should be timed, and may have further attributes
-/// associated with it.  This may be used to produce systrace output,
-/// platform-specific logging such as Android logcat, or simple
-/// print statement to standard output.
+                                                                 
+                                                                   
+                                                                     
+                                                               
+                                       
 class PerfSection {
  public:
 #if defined(HERMES_USE_FBSYSTRACE) || defined(HERMESVM_PLATFORM_LOGGING)
-  /// Start a section with the given name, and optional category, used in logs.
+                                                                               
   PerfSection(const char *name, const char *category = nullptr);
 
-  /// Terminate a section.  This may send telemetry, or write log
-  /// messages.
+                                                                 
+               
   ~PerfSection();
 
-  /// Add the argument with the given \p argName, with \p value as the
-  /// value.  If there are multiples call for the same argName, the
-  /// last value is recorded.
+                                                                      
+                                                                   
+                             
   void addArg(const char *argName, size_t value);
-  /// Like the above, but for a double value.  We change the name, rather than
-  /// use overloading, because multiple integer types convert to the size_t add
-  /// arg above, and we don't want the overloading to be ambiguous.
+                                                                              
+                                                                               
+                                                                   
   void addArgD(const char *argName, double d);
   void
   addArg(const char *argName, const llvh::StringRef value, bool copy = true);
@@ -52,14 +52,14 @@ class PerfSection {
   const char *name_;
   const char *category_;
 #endif
-  /// Whether any tracing output is enabled.
+                                            
   bool enabled_{false};
 
  private:
-  /// We want ArgValue to be able to hold arguments of various types,
-  /// in its union.  This enumeration should correspond to those
-  /// types.  When we upgrade to a C++ with std::variant, we should
-  /// use that.
+                                                                     
+                                                                
+                                                                   
+               
   enum class ArgType {
     SIZE_T,
     DOUBLE,
@@ -102,7 +102,7 @@ class PerfSection {
   }
 
 #else
-  // Dummy no-overhead implementations:
+                                       
   PerfSection(const char *name, const char *category = nullptr) {}
   void addArg(const char *argName, size_t value) {}
   void addArgD(const char *argName, double d) {}
@@ -111,6 +111,6 @@ class PerfSection {
 #endif
 };
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_SUPPORT_PERFSECTION_H
+#endif                                

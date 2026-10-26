@@ -63,35 +63,35 @@ void encodeUTF8(char *&dst, uint32_t cp) {
   dst = d;
 }
 
-/// The following logic is a combination of ES14 11.1.4 CodePointAt() and
-/// what https://infra.spec.whatwg.org/#strings says about what to do with
-/// singular surrogates: "To convert a string into a scalar value string,
-/// replace any surrogates with U+FFFD." Therefore, if we encounter any lone
-/// surrogate, replace the value with UNICODE_REPLACEMENT_CHARACTER (U+FFFD).
-/// The result of this process is that the enclosing for-loop processes only
-/// scalar values (aka a code point that is not a surrogate).
-/// \param cur Iterator pointing to the current character
-/// \param end Iterator pointing to the end of the string
-/// \return std::pair with first element being the Unicode code point, and the
-///         second being how many code point units were consumed
+                                                                         
+                                                                          
+                                                                         
+                                                                            
+                                                                             
+                                                                            
+                                                             
+                                                         
+                                                         
+                                                                              
+                                                                
 static std::pair<char32_t, size_t> convertToCodePointAt(
     llvh::ArrayRef<char16_t>::iterator cur,
     llvh::ArrayRef<char16_t>::iterator end) {
   char16_t c = cur[0];
   if (isLowSurrogate(c)) {
-    // Unpaired low surrogate.
+                              
     return {UNICODE_REPLACEMENT_CHARACTER, 1};
   } else if (isHighSurrogate(c)) {
-    // Leading high surrogate. See if the next character is a low surrogate.
+                                                                            
     if (cur + 1 == end || !isLowSurrogate(cur[1])) {
-      // Trailing or unpaired high surrogate.
+                                             
       return {UNICODE_REPLACEMENT_CHARACTER, 1};
     } else {
-      // Decode surrogate pair and increment, because we consumed two chars.
+                                                                            
       return {utf16SurrogatePairToCodePoint(c, cur[1]), 2};
     }
   } else {
-    // Not a surrogate.
+                       
     return {c, 1};
   }
 }
@@ -102,17 +102,17 @@ bool convertUTF16ToUTF8WithReplacements(
     size_t maxCharacters) {
   out.clear();
   out.reserve(input.size());
-  // Stop early if we've reached currNumCharacters worth of UTF-8 characters.
+                                                                             
   size_t currNumCharacters = 0;
   if (!maxCharacters) {
-    // Condition checks are easier if this number is set to the max value.
+                                                                          
     maxCharacters = std::numeric_limits<size_t>::max();
   }
   auto cur = input.begin(), end = input.end();
   for (; cur < end && currNumCharacters < maxCharacters;
        ++cur, ++currNumCharacters) {
     char16_t c = cur[0];
-    // ASCII fast-path.
+                       
     if (LLVM_LIKELY(c <= 0x7F)) {
       out.push_back(static_cast<char>(c));
       continue;
@@ -121,9 +121,9 @@ bool convertUTF16ToUTF8WithReplacements(
     auto [c32, inputConsumed] = convertToCodePointAt(cur, end);
     cur += (inputConsumed - 1);
 
-    // The code point to be encoded here is guaranteed to be a valid unicode
-    // code point and not a surrogate. Because of the convertToCodePointAt()
-    // process.
+                                                                            
+                                                                            
+               
     std::array<char, UTF8CodepointMaxBytes> buff;
     char *ptr = buff.data();
     encodeUTF8(ptr, c32);
@@ -141,7 +141,7 @@ std::pair<uint32_t, uint32_t> convertUTF16ToUTF8BufferWithReplacements(
   auto end = input.end();
   for (auto cur = input.begin(); cur < end; ++cur) {
     char16_t c = cur[0];
-    // ASCII fast-path.
+                       
     if (LLVM_LIKELY(c <= 0x7F)) {
       if (numWritten + 1 > outBuffer.size()) {
         break;
@@ -156,9 +156,9 @@ std::pair<uint32_t, uint32_t> convertUTF16ToUTF8BufferWithReplacements(
     auto [c32, inputConsumed] = convertToCodePointAt(cur, end);
     cur += (inputConsumed - 1);
 
-    // The code point to be encoded here is guaranteed to be a valid unicode
-    // code point and not a surrogate. Because of the convertToCodePointAt()
-    // process.
+                                                                            
+                                                                            
+               
     std::array<char, UTF8CodepointMaxBytes> buff;
     char *ptr = buff.data();
     encodeUTF8(ptr, c32);
@@ -182,7 +182,7 @@ void convertUTF16ToUTF8WithSingleSurrogates(
   dest.clear();
   dest.reserve(input.size());
   for (char16_t c : input) {
-    // ASCII fast-path.
+                       
     if (LLVM_LIKELY(c <= 0x7F)) {
       dest.push_back(static_cast<char>(c));
       continue;
@@ -203,7 +203,7 @@ bool isAllASCII(const uint8_t *start, const uint8_t *end) {
       "uint32_t must be 4 bytes and cannot be more than 4 byte aligned");
 
   if (len >= 4) {
-    // Step by 1s until aligned for uint32_t.
+                                             
     uint8_t mask = 0;
     while ((uintptr_t)cursor % alignof(uint32_t)) {
       mask |= *cursor++;
@@ -213,7 +213,7 @@ bool isAllASCII(const uint8_t *start, const uint8_t *end) {
       return false;
     }
 
-    // Now that we are aligned, step by 4s.
+                                           
     while (len >= 4) {
       uint32_t val = *(const uint32_t *)cursor;
       if (val & 0x80808080u) {
@@ -236,24 +236,24 @@ bool isAllASCII(const uint8_t *start, const uint8_t *end) {
 void convertUTF8WithSurrogatesToUTF8WithReplacements(
     std::string &output,
     llvh::StringRef input) {
-  // Temporary buffer to convert input to UTF16.
+                                                
   llvh::SmallVector<char16_t, 8> ustr;
-  // The temporary string cannot possibly have more characters than input. Using
-  // reserve avoids default-initializing the elements.
+                                                                                
+                                                      
   ustr.reserve(input.size());
-  // ustr is pessimistically allocated, so pass a raw pointer to its contents to
-  // convertUTF8WithSurrogatesToUTF16. The alternative is to use a
-  // std::back_inserter that would resize the buffer if needed. It turns out
-  // that the resulting code using std::back_inserter is considerably larger.
+                                                                                
+                                                                  
+                                                                            
+                                                                             
   char16_t *ustrEnd =
       convertUTF8WithSurrogatesToUTF16(ustr.data(), input.begin(), input.end());
-  // Sanity-check for buffer overflow.
+                                      
   assert(
       static_cast<uintptr_t>(ustrEnd - ustr.data()) <= ustr.capacity() &&
       "buffer overflow while converting UTF8 surrogates");
-  // Now convert the UTF16 string to UTF8 without surrogates.
+                                                             
   convertUTF16ToUTF8WithReplacements(
       output, llvh::makeArrayRef(ustr.data(), ustrEnd));
 }
 
-} // namespace hermes
+}                    

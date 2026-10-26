@@ -18,15 +18,15 @@
 using llvh::StringRef;
 using namespace hermes;
 
-/// Support for dumping regex bytecode.
+                                       
 namespace {
-/// Base implementation of dumpInstruction() which just outputs the opcode.
-/// Overloads may be used to specialize this.
+                                                                           
+                                             
 void dumpInstruction(const regex::Insn *insn, llvh::raw_ostream &OS) {
-/// Dump the instruction stream to a raw_ostream \p OS.
-/// The default implementation of dump() outputs the opcode name only.
-/// Note this is NOT a virtual function: we can't store a vtable since
-/// instructions must be directly serializable.
+                                                       
+                                                                      
+                                                                      
+                                               
 #define REOP(Code)          \
   case regex::Opcode::Code: \
     OS << #Code;            \
@@ -36,15 +36,15 @@ void dumpInstruction(const regex::Insn *insn, llvh::raw_ostream &OS) {
   }
 }
 
-/// aligner can take a value and force it to the alignment for its type, even if
-/// the value came from a packed struct in memory.
+                                                                                
+                                                  
 template <typename T>
 T aligner(T v) {
   return v;
 }
 
-/// Helpers to compute the width of an instruction. All instructions are
-/// fixed-width, except for brackets, MatchNChar8Insn, and MatchNCharICase8Insn.
+                                                                        
+                                                                                
 template <typename Insn>
 uint32_t instructionWidth(const Insn *insn) {
   return sizeof *insn;
@@ -196,7 +196,7 @@ void dumpInstruction(const regex::BracketInsn *insn, llvh::raw_ostream &OS) {
     else
       OS << llvh::format_hex(c, 4);
   };
-  // BracketRange32 immediately follow insn.
+                                            
   const BracketRange32 *range =
       reinterpret_cast<const BracketRange32 *>(1 + insn);
   for (uint32_t i = 0; i < insn->rangeCount; i++) {
@@ -275,12 +275,12 @@ void dumpInstruction(const regex::Width1LoopInsn *insn, llvh::raw_ostream &OS) {
       aligner(insn->min),
       aligner(insn->max));
 }
-} // namespace
+}             
 
 namespace hermes {
 
 void dumpRegexBytecode(llvh::ArrayRef<uint8_t> bytes, llvh::raw_ostream &OS) {
-  // Output the header and then slice it off.
+                                             
   auto *header =
       reinterpret_cast<const regex::RegexBytecodeHeader *>(bytes.data());
   OS << llvh::format(
@@ -292,10 +292,10 @@ void dumpRegexBytecode(llvh::ArrayRef<uint8_t> bytes, llvh::raw_ostream &OS) {
   bytes = bytes.slice(sizeof *header);
   uint32_t cursor = 0;
   while (cursor < bytes.size()) {
-    // Output offset in left column.
+                                    
     OS << "  " << llvh::format_hex_no_prefix(cursor, 4) << "  ";
 
-    // Call dumpInstruction() with its derived type.
+                                                    
     auto insn = reinterpret_cast<const regex::Insn *>(&bytes[cursor]);
     switch (insn->opcode) {
 #define REOP(Code)                                          \
@@ -309,7 +309,7 @@ void dumpRegexBytecode(llvh::ArrayRef<uint8_t> bytes, llvh::raw_ostream &OS) {
     }
     OS << '\n';
   }
-  // We expect to have consumed exactly the size of the stream.
+                                                               
   assert(cursor == bytes.size() && "Invalid instructions in regex stream");
 }
 
@@ -334,8 +334,8 @@ llvh::Optional<CompiledRegExp> CompiledRegExp::tryCompile(
     llvh::StringRef *outError) {
   using namespace regex::constants;
 
-  // We have to match the way strings are constructed by StringTable, which is
-  // by interpreting UTF-8 encoded surrogates as UTF-16 surrogates.
+                                                                              
+                                                                   
   llvh::SmallVector<char16_t, 16> re16;
   convertUTF8WithSurrogatesToUTF16(
       std::back_inserter(re16), pattern.begin(), pattern.end());
@@ -343,7 +343,7 @@ llvh::Optional<CompiledRegExp> CompiledRegExp::tryCompile(
   llvh::SmallVector<char16_t, 6> flags16;
   convertUTF8WithSurrogatesToUTF16(
       std::back_inserter(flags16), flags.begin(), flags.end());
-  // Build and compile the regexp.
+                                  
   auto re = regex::Regex<regex::UTF16RegexTraits>(re16, flags16);
   if (!re.valid()) {
     if (outError)
@@ -385,10 +385,10 @@ RegExpBytecode UniquingRegExpTable::getBytecodeBuffer() const {
 
 void UniquingRegExpTable::disassemble(llvh::raw_ostream &OS) const {
   uint32_t index = 0;
-  // Note that regexp patterns and flags are read without interpreting escapes
-  // by JSLexer, so this will output in a format identical to the source
-  // pattern (preserving escapes, etc) except that non-BMP characters will have
-  // been encoded in UTF-8 as two UTF-16 surrogates.
+                                                                              
+                                                                        
+                                                                               
+                                                    
   for (const auto &regexp : regexps_) {
     OS << index << ": /" << regexp->getPattern() << '/' << regexp->getFlags()
        << '\n';
@@ -398,4 +398,4 @@ void UniquingRegExpTable::disassemble(llvh::raw_ostream &OS) const {
   OS << '\n';
 }
 
-} // namespace hermes
+}                    

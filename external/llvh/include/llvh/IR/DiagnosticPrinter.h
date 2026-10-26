@@ -20,7 +20,7 @@
 
 namespace llvh {
 
-// Forward declarations.
+                        
 class Module;
 class raw_ostream;
 class SMDiagnostic;
@@ -28,12 +28,12 @@ class StringRef;
 class Twine;
 class Value;
 
-/// Interface for custom diagnostic printing.
+                                             
 class DiagnosticPrinter {
 public:
   virtual ~DiagnosticPrinter() = default;
 
-  // Simple types.
+                  
   virtual DiagnosticPrinter &operator<<(char C) = 0;
   virtual DiagnosticPrinter &operator<<(unsigned char C) = 0;
   virtual DiagnosticPrinter &operator<<(signed char C) = 0;
@@ -50,15 +50,15 @@ public:
   virtual DiagnosticPrinter &operator<<(double N) = 0;
   virtual DiagnosticPrinter &operator<<(const Twine &Str) = 0;
 
-  // IR related types.
+                      
   virtual DiagnosticPrinter &operator<<(const Value &V) = 0;
   virtual DiagnosticPrinter &operator<<(const Module &M) = 0;
 
-  // Other types.
+                 
   virtual DiagnosticPrinter &operator<<(const SMDiagnostic &Diag) = 0;
 };
 
-/// Basic diagnostic printer that uses an underlying raw_ostream.
+                                                                 
 class DiagnosticPrinterRawOStream : public DiagnosticPrinter {
 protected:
   raw_ostream &Stream;
@@ -66,7 +66,7 @@ protected:
 public:
   DiagnosticPrinterRawOStream(raw_ostream &Stream) : Stream(Stream) {}
 
-  // Simple types.
+                  
   DiagnosticPrinter &operator<<(char C) override;
   DiagnosticPrinter &operator<<(unsigned char C) override;
   DiagnosticPrinter &operator<<(signed char C) override;
@@ -83,14 +83,14 @@ public:
   DiagnosticPrinter &operator<<(double N) override;
   DiagnosticPrinter &operator<<(const Twine &Str) override;
 
-  // IR related types.
+                      
   DiagnosticPrinter &operator<<(const Value &V) override;
   DiagnosticPrinter &operator<<(const Module &M) override;
 
-  // Other types.
+                 
   DiagnosticPrinter &operator<<(const SMDiagnostic &Diag) override;
 };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_IR_DIAGNOSTICPRINTER_H
+#endif                               

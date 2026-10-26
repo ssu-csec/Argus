@@ -27,7 +27,7 @@ void AlignedHeapSegment::Contents::protectGuardPage(
   char *begin = &paddedGuardPage_[kGuardPagePadding];
   size_t size = sizeof(paddedGuardPage_) - kGuardPagePadding;
   size_t PS = oscompat::page_size();
-  // Only protect if the actual system page size matches expectations.
+                                                                      
   if (reinterpret_cast<uintptr_t>(begin) % PS == 0 && PS <= size) {
     oscompat::vm_protect(begin, PS, mode);
   }
@@ -35,8 +35,8 @@ void AlignedHeapSegment::Contents::protectGuardPage(
 
 AlignedHeapSegment::AlignedHeapSegment(AlignedStorage storage)
     : storage_(std::move(storage)) {
-  // Storage end must be page-aligned so that markUnused below stays in
-  // segment.
+                                                                       
+             
   assert(
       reinterpret_cast<uintptr_t>(hiLim()) % oscompat::page_size() == 0 &&
       "storage end must be page-aligned");
@@ -62,9 +62,9 @@ void AlignedHeapSegment::markUnused(char *start, char *end) {
   assert(
       !llvh::alignmentAdjustment(start, oscompat::page_size()) &&
       !llvh::alignmentAdjustment(end, oscompat::page_size()));
-  // Some kernels seems to require all pages in the mapping to have the same
-  // permissions for the advise to "take", so suspend guard page protection
-  // temporarily.
+                                                                            
+                                                                           
+                 
   contents()->protectGuardPage(oscompat::ProtectMode::ReadWrite);
   storage_.markUnused(start, end);
   contents()->protectGuardPage(oscompat::ProtectMode::None);
@@ -91,7 +91,7 @@ void AlignedHeapSegment::setLevel(char *lvl) {
   level_ = lvl;
 }
 
-/// Explicit template instantiations for setLevel
+                                                 
 template void AlignedHeapSegment::setLevel<AdviseUnused::Yes>(char *lvl);
 template void AlignedHeapSegment::setLevel<AdviseUnused::No>(char *lvl);
 
@@ -100,7 +100,7 @@ void AlignedHeapSegment::resetLevel() {
   setLevel<MU>(start());
 }
 
-/// Explicit template instantiations for resetLevel
+                                                   
 template void AlignedHeapSegment::resetLevel<AdviseUnused::Yes>();
 template void AlignedHeapSegment::resetLevel<AdviseUnused::No>();
 
@@ -130,7 +130,7 @@ void AlignedHeapSegment::clear() {
   clear(start(), end());
 }
 
-/* static */ void AlignedHeapSegment::clear(char *start, char *end) {
+             void AlignedHeapSegment::clear(char *start, char *end) {
 #if LLVM_ADDRESS_SANITIZER_BUILD
   __asan_poison_memory_region(start, end - start);
 #else
@@ -138,14 +138,14 @@ void AlignedHeapSegment::clear() {
 #endif
 }
 
-/* static */ void AlignedHeapSegment::checkUnwritten(char *start, char *end) {
+             void AlignedHeapSegment::checkUnwritten(char *start, char *end) {
 #if !LLVM_ADDRESS_SANITIZER_BUILD && defined(HERMES_SLOW_DEBUG)
-  // Check that the space was not written into.
+                                               
   std::for_each(
       start, end, [](char value) { assert(value == kInvalidHeapValue); });
 #endif
 }
-#endif // !NDEBUG
+#endif           
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

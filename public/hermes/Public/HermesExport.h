@@ -8,7 +8,7 @@
 #ifndef HERMES_EXPORT
 #ifdef _MSC_VER
 #define HERMES_EXPORT __declspec(dllexport)
-#else // _MSC_VER
+#else            
 #define HERMES_EXPORT __attribute__((visibility("default")))
-#endif // _MSC_VER
-#endif // !defined(HERMES_EXPORT)
+#endif            
+#endif                           

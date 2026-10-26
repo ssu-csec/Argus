@@ -25,12 +25,12 @@
 namespace llvh {
 namespace sys {
 
-/// SwapByteOrder_16 - This function returns a byte-swapped representation of
-/// the 16-bit argument.
+                                                                             
+                        
 inline uint16_t SwapByteOrder_16(uint16_t value) {
 #if defined(_MSC_VER) && !defined(_DEBUG)
-  // The DLL version of the runtime lacks these functions (bug!?), but in a
-  // release build they're replaced with BSWAP instructions anyway.
+                                                                           
+                                                                   
   return _byteswap_ushort(value);
 #else
   uint16_t Hi = value << 8;
@@ -39,8 +39,8 @@ inline uint16_t SwapByteOrder_16(uint16_t value) {
 #endif
 }
 
-/// SwapByteOrder_32 - This function returns a byte-swapped representation of
-/// the 32-bit argument.
+                                                                             
+                        
 inline uint32_t SwapByteOrder_32(uint32_t value) {
 #if defined(__llvm__) || (LLVM_GNUC_PREREQ(4, 3, 0) && !defined(__ICC))
   return __builtin_bswap32(value);
@@ -55,8 +55,8 @@ inline uint32_t SwapByteOrder_32(uint32_t value) {
 #endif
 }
 
-/// SwapByteOrder_64 - This function returns a byte-swapped representation of
-/// the 64-bit argument.
+                                                                             
+                        
 inline uint64_t SwapByteOrder_64(uint64_t value) {
 #if defined(__llvm__) || (LLVM_GNUC_PREREQ(4, 3, 0) && !defined(__ICC))
   return __builtin_bswap64(value);
@@ -121,7 +121,7 @@ inline void swapByteOrder(T &Value) {
   Value = getSwappedBytes(Value);
 }
 
-} // end namespace sys
-} // end namespace llvh
+}                     
+}                      
 
 #endif

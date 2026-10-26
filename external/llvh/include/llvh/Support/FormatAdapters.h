@@ -98,9 +98,9 @@ detail::RepeatAdapter<T> fmt_repeat(T &&Item, size_t Count) {
   return detail::RepeatAdapter<T>(std::forward<T>(Item), Count);
 }
 
-// llvh::Error values must be consumed before being destroyed.
-// Wrapping an error in fmt_consume explicitly indicates that the formatv_object
-// should take ownership and consume it.
+                                                              
+                                                                                
+                                        
 inline detail::ErrorAdapter fmt_consume(Error &&Item) {
   return detail::ErrorAdapter(std::move(Item));
 }

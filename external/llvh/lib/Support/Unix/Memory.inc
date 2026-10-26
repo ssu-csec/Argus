@@ -60,13 +60,13 @@ int getPosixProtectionFlags(unsigned Flags) {
     return PROT_READ | PROT_WRITE | PROT_EXEC;
   case llvh::sys::Memory::MF_EXEC:
 #if defined(__FreeBSD__)
-    // On PowerPC, having an executable page that has no read permission
-    // can have unintended consequences.  The function InvalidateInstruction-
-    // Cache uses instructions dcbf and icbi, both of which are treated by
-    // the processor as loads.  If the page has no read permissions,
-    // executing these instructions will result in a segmentation fault.
-    // Somehow, this problem is not present on Linux, but it does happen
-    // on FreeBSD.
+                                                                        
+                                                                             
+                                                                          
+                                                                    
+                                                                        
+                                                                        
+                  
     return PROT_READ | PROT_EXEC;
 #else
     return PROT_EXEC;
@@ -74,11 +74,11 @@ int getPosixProtectionFlags(unsigned Flags) {
   default:
     llvm_unreachable("Illegal memory protection flag specified!");
   }
-  // Provide a default return value as required by some compilers.
+                                                                  
   return PROT_NONE;
 }
 
-} // anonymous namespace
+}                       
 
 namespace llvh {
 namespace sys {
@@ -103,7 +103,7 @@ Memory::allocateMappedMemory(size_t NumBytes,
 #else
   MAP_ANON
 #endif
-  ; // Ends statement above
+  ;                        
 
   int Protect = getPosixProtectionFlags(PFlags);
 
@@ -111,7 +111,7 @@ Memory::allocateMappedMemory(size_t NumBytes,
   Protect |= PROT_MPROTECT(PROT_READ | PROT_WRITE | PROT_EXEC);
 #endif
 
-  // Use any near hint and the page size to set a page-aligned starting address
+                                                                               
   uintptr_t Start = NearBlock ? reinterpret_cast<uintptr_t>(NearBlock->base()) +
                                       NearBlock->size() : 0;
   if (Start && Start % PageSize)
@@ -120,7 +120,7 @@ Memory::allocateMappedMemory(size_t NumBytes,
   void *Addr = ::mmap(reinterpret_cast<void*>(Start), PageSize*NumPages,
                       Protect, MMFlags, fd, 0);
   if (Addr == MAP_FAILED) {
-    if (NearBlock) //Try again without a near hint
+    if (NearBlock)                                
       return allocateMappedMemory(NumBytes, nullptr, PFlags, EC);
 
     EC = std::error_code(errno, std::generic_category());
@@ -131,7 +131,7 @@ Memory::allocateMappedMemory(size_t NumBytes,
   Result.Address = Addr;
   Result.Size = NumPages*PageSize;
 
-  // Rely on protectMappedMemory to invalidate instruction cache.
+                                                                 
   if (PFlags & MF_EXEC) {
     EC = Memory::protectMappedMemory (Result, PFlags);
     if (EC != std::error_code())
@@ -171,9 +171,9 @@ Memory::protectMappedMemory(const MemoryBlock &M, unsigned Flags) {
   bool InvalidateCache = (Flags & MF_EXEC);
 
 #if defined(__arm__) || defined(__aarch64__)
-  // Certain ARM implementations treat icache clear instruction as a memory read,
-  // and CPU segfaults on trying to clear cache on !PROT_READ page.  Therefore we need
-  // to temporarily add PROT_READ for the sake of flushing the instruction caches.
+                                                                                 
+                                                                                      
+                                                                                  
   if (InvalidateCache && !(Protect & PROT_READ)) {
     int Result = ::mprotect((void *)Start, End - Start, Protect | PROT_READ);
     if (Result != 0)
@@ -195,13 +195,13 @@ Memory::protectMappedMemory(const MemoryBlock &M, unsigned Flags) {
   return std::error_code();
 }
 
-/// InvalidateInstructionCache - Before the JIT can run a block of code
-/// that has been emitted it must invalidate the instruction cache on some
-/// platforms.
+                                                                       
+                                                                          
+              
 void Memory::InvalidateInstructionCache(const void *Addr,
                                         size_t Len) {
 
-// icache invalidation for PPC and ARM.
+                                       
 #if defined(__APPLE__)
 
 #  if (defined(__POWERPC__) || defined (__ppc__) || \
@@ -234,16 +234,16 @@ void Memory::InvalidateInstructionCache(const void *Addr,
   asm volatile("isync");
 #  elif (defined(__arm__) || defined(__aarch64__) || defined(__mips__)) && \
         defined(__GNUC__)
-  // FIXME: Can we safely always call this for __GNUC__ everywhere?
+                                                                   
   const char *Start = static_cast<const char *>(Addr);
   const char *End = Start + Len;
   __clear_cache(const_cast<char *>(Start), const_cast<char *>(End));
 #  endif
 
-#endif  // end apple
+#endif              
 
   ValgrindDiscardTranslations(Addr, Len);
 }
 
-} // namespace sys
-} // namespace llvh
+}                 
+}                  

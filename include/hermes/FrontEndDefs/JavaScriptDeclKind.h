@@ -12,6 +12,6 @@ namespace hermes {
 
 enum class JavaScriptDeclKind : unsigned char { Const, Let, Var };
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_FRONTENDDEFS_JAVASCRIPT_DECLKIND_H_
+#endif                                              

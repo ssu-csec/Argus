@@ -93,7 +93,7 @@ static void auditCallInstructions(Function *F) {
             CallsCall += 1;
             break;
           default:
-            // Other cases; for example, property enumeration.
+                                                              
             CallsOther += 1;
             break;
         }
@@ -126,7 +126,7 @@ static void auditInferredTypes(Function *F) {
       } else if (t.isAnyType()) {
         TypeAny++;
       } else {
-        // Other cases not counted above, e.g. union types.
+                                                           
         TypeOther++;
       }
     }

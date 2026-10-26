@@ -24,13 +24,13 @@ template <typename T> struct BinaryItemTraits {
   static ArrayRef<uint8_t> bytes(const T &Item) = delete;
 };
 
-/// BinaryItemStream represents a sequence of objects stored in some kind of
-/// external container but for which it is useful to view as a stream of
-/// contiguous bytes.  An example of this might be if you have a collection of
-/// records and you serialize each one into a buffer, and store these serialized
-/// records in a container.  The pointers themselves are not laid out
-/// contiguously in memory, but we may wish to read from or write to these
-/// records as if they were.
+                                                                            
+                                                                        
+                                                                              
+                                                                                
+                                                                     
+                                                                          
+                            
 template <typename T, typename Traits = BinaryItemTraits<T>>
 class BinaryItemStream : public BinaryStream {
 public:
@@ -85,7 +85,7 @@ private:
   }
 
   Expected<uint32_t> translateOffsetIndex(uint32_t Offset) {
-    // Make sure the offset is somewhere in our items array.
+                                                            
     if (Offset >= getLength())
       return make_error<BinaryStreamError>(stream_error_code::stream_too_short);
     ++Offset;
@@ -99,10 +99,10 @@ private:
   llvh::support::endianness Endian;
   ArrayRef<T> Items;
 
-  // Sorted vector of offsets to accelerate lookup.
+                                                   
   std::vector<uint32_t> ItemEndOffsets;
 };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_SUPPORT_BINARYITEMSTREAM_H
+#endif                                   

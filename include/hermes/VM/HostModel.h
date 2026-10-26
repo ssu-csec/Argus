@@ -14,13 +14,13 @@
 namespace hermes {
 namespace vm {
 
-/// A function to clean up the context used by a native function
+                                                                
 typedef void (*FinalizeNativeFunctionPtr)(void *context);
 
-/// This class represents a host function callable from JavaScript.
-/// This is nearly the same as a NativeFunction, except an additional
-/// function pointer can do cleanup when the FinalizableNativeFunction is
-/// finalized.
+                                                                   
+                                                                     
+                                                                         
+              
 class FinalizableNativeFunction final : public NativeFunction {
   FinalizeNativeFunctionPtr finalizePtr_;
 
@@ -34,10 +34,10 @@ class FinalizableNativeFunction final : public NativeFunction {
     return cell->getKind() == CellKind::FinalizableNativeFunctionKind;
   }
 
-  /// Create an instance of FinalizableNativeFunction.
-  /// \param functionPtr the host function
-  /// \param finalizePtr the finalizer function
-  /// \param paramCount number of parameters (excluding `this`)
+                                                      
+                                          
+                                               
+                                                               
   static CallResult<HermesValue> createWithoutPrototype(
       Runtime &runtime,
       void *context,
@@ -67,28 +67,28 @@ class FinalizableNativeFunction final : public NativeFunction {
 
   static void _finalizeImpl(GCCell *cell, GC &) {
     auto *self = vmcast<FinalizableNativeFunction>(cell);
-    // Destruct the object.
+                           
     self->~FinalizableNativeFunction();
   }
 };
 
-/// When a HostObject is created, this proxy provides the business
-/// logic for the HostObject's implementation.
+                                                                  
+                                              
 class HostObjectProxy : public DecoratedObject::Decoration {
  public:
-  // This is called when the object is finalized.
+                                                 
   virtual ~HostObjectProxy();
 
-  // This is called to fetch a property value by name.
+                                                      
   virtual CallResult<HermesValue> get(SymbolID) = 0;
 
-  // This is called to set a property value by name.  It will return
-  // \c ExecutionStatus, and set the runtime's thrown value as appropriate.
+                                                                    
+                                                                           
   virtual CallResult<bool> set(SymbolID, HermesValue) = 0;
 
-  // This is called to query names of properties.  In case of failure it will
-  // return \c ExecutionStatus::EXCEPTION, and set the runtime's thrown Value
-  // as appropriate.
+                                                                             
+                                                                             
+                    
   virtual CallResult<Handle<JSArray>> getHostPropertyNames() = 0;
 };
 
@@ -103,7 +103,7 @@ class HostObject final : public DecoratedObject {
     return cell->getKind() == CellKind::HostObjectKind;
   }
 
-  /// Create an instance of HostObject with no prototype.
+                                                         
   static CallResult<HermesValue> createWithoutPrototype(
       Runtime &runtime,
       std::unique_ptr<HostObjectProxy> proxy);
@@ -136,7 +136,7 @@ class HostObject final : public DecoratedObject {
       : DecoratedObject(runtime, parent, clazz, std::move(proxy)) {}
 };
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
 #endif

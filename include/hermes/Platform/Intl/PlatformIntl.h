@@ -59,7 +59,7 @@ class Option {
 
  private:
   Kind kind_;
-  // I am too lazy to make this a union.
+                                        
   double num_;
   std::u16string str_;
 };
@@ -67,19 +67,19 @@ class Option {
 using Options = std::unordered_map<std::u16string, Option>;
 using Part = std::unordered_map<std::u16string, std::u16string>;
 
-/// For functions which take locales, most of
-/// https://tc39.es/ecma402/#sec-canonicalizelocalelist has been done
-/// already.  All that remains is for each method to iterate the array
-/// and do steps 7.c.v-vii for each element.
-///
-/// For functions which take options, it has been canonicalized into a
-/// C++ map.
-///
-/// Formally, doing this canonicalization up front create an
-/// observable difference between the order of operations in ECMA 402
-/// and the actual operations, if the locals or options involve
-/// getters or Proxies.  For now, we will ignore this inconsistency,
-/// as anybody depending on it is trying too hard.
+                                             
+                                                                     
+                                                                      
+                                            
+   
+                                                                      
+            
+   
+                                                            
+                                                                     
+                                                               
+                                                                    
+                                                  
 
 vm::CallResult<std::vector<std::u16string>> getCanonicalLocales(
     vm::Runtime &runtime,
@@ -176,8 +176,8 @@ class NumberFormat : public vm::DecoratedObject::Decoration {
   std::vector<Part> formatToParts(double jsTimeValue) noexcept;
 };
 
-} // namespace platform_intl
-} // namespace hermes
+}                           
+}                    
 #endif
 
 #endif

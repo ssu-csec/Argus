@@ -17,16 +17,16 @@
 namespace hermes {
 namespace vm {
 
-/// Generate format-agnostic data structure, which should contain relevant
-/// information about the recorded Sampling Profile and may be used by third
-/// parties.
+                                                                          
+                                                                            
+            
 facebook::hermes::sampling_profiler::Profile generateProfile(
     const SamplingProfiler &samplingProfiler,
     const std::vector<SamplingProfiler::StackTrace> &sampledStacks);
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
-#endif // HERMESVM_SAMPLING_PROFILER_AVAILABLE
+#endif                                        
 
-#endif // HERMES_VM_PROFILER_PROFILEGENERATOR_H
+#endif                                         

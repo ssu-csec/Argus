@@ -12,8 +12,8 @@
 namespace hermes {
 namespace vm {
 
-//===----------------------------------------------------------------------===//
-// class JSCallableProxy
+                                                                                
+                        
 
 const CallableVTable JSCallableProxy::vt{
     {
@@ -71,16 +71,16 @@ CallResult<bool> JSCallableProxy::isConstructor(Runtime &runtime) {
 CallResult<HermesValue>
 JSCallableProxy::_proxyNativeCall(void *, Runtime &runtime, NativeArgs) {
   GCScope gcScope(runtime);
-  // We don't use NativeArgs; the implementations just read the current
-  // stack frame directly.
+                                                                       
+                          
   StackFramePtr callerFrame = runtime.getCurrentFrame();
   auto selfHandle =
       Handle<JSCallableProxy>::vmcast(&callerFrame.getCalleeClosureOrCBRef());
-  // detail::slots() will always return the slots_ field here, but
-  // this isn't a member, so it can't see it.  It doesn't seem to be
-  // worth tweaking the abstractions to avoid the small overhead in
-  // this case.
-  // Make sure to retrieve the target and handler before any JS can execute.
+                                                                  
+                                                                    
+                                                                   
+               
+                                                                            
   auto &slots = detail::slots(*selfHandle);
   Handle<JSObject> target = runtime.makeHandle(slots.target);
   Handle<JSObject> handler = runtime.makeHandle(slots.handler);
@@ -92,18 +92,27 @@ JSCallableProxy::_proxyNativeCall(void *, Runtime &runtime, NativeArgs) {
   if (trapRes == ExecutionStatus::EXCEPTION) {
     return ExecutionStatus::EXCEPTION;
   }
-  // 6. If trap is undefined, then
+                                  
   if (!*trapRes) {
-    //   a. Return ? Call(target, thisArgument, argumentsList).
-    // OR
-    //   a. Assert: IsConstructor(target) is true.
-    //   b. Return ? Construct(target, argumentsList, newTarget).
+                                                               
+         
+                                                  
+                                                                 
+    MutableHandle<> receiver{runtime, callerFrame.getThisArgRef()};
+    if (callerFrame->isConstructorCall()) {
+      auto prepared = Callable::prepareThisForConstruct_RJS(
+          Handle<Callable>::vmcast(target), runtime,
+          Handle<Callable>::vmcast(&callerFrame.getNewTargetRef()));
+      if (prepared == ExecutionStatus::EXCEPTION)
+        return ExecutionStatus::EXCEPTION;
+      receiver = prepared->getHermesValue();
+    }
     ScopedNativeCallFrame newFrame{
         runtime,
         callerFrame.getArgCount(),
         target.getHermesValue(),
         callerFrame.getNewTargetRef(),
-        callerFrame.getThisArgRef()};
+        receiver.getHermesValue()};
     if (LLVM_UNLIKELY(newFrame.overflowed()))
       return runtime.raiseStackOverflow(
           Runtime::StackOverflowKind::NativeStack);
@@ -111,16 +120,17 @@ JSCallableProxy::_proxyNativeCall(void *, Runtime &runtime, NativeArgs) {
         callerFrame.argsBegin(),
         callerFrame.getArgCount(),
         newFrame->argsBegin());
-    // I know statically that target is a Callable, but storing it as
-    // a Callable makes it much harder to share all the JSProxy code,
-    // so we cast here.
+                                                                     
+                                                                     
+                       
     auto res = Callable::call(Handle<Callable>::vmcast(target), runtime);
     if (LLVM_UNLIKELY(res == ExecutionStatus::EXCEPTION)) {
       return ExecutionStatus::EXCEPTION;
     }
-    return res->get();
+    return callerFrame->isConstructorCall() && !res->get().isObject()
+        ? receiver.getHermesValue() : res->get();
   }
-  // 7. Let argArray be CreateArrayFromList(argumentsList).
+                                                           
   CallResult<Handle<JSArray>> argArrayRes = JSArray::create(
       runtime, callerFrame->getArgCount(), callerFrame->getArgCount());
   if (LLVM_UNLIKELY(argArrayRes == ExecutionStatus::EXCEPTION)) {
@@ -133,7 +143,7 @@ JSCallableProxy::_proxyNativeCall(void *, Runtime &runtime, NativeArgs) {
         SmallHermesValue::encodeHermesValue(callerFrame.getArgRef(i), runtime);
     JSArray::unsafeSetExistingElementAt(*argArray, runtime, i, shv);
   }
-  // 8. Let newObj be ? Call(trap, handler, « target, argArray, newTarget »).
+                                                                             
   if (callerFrame->isConstructorCall()) {
     CallResult<PseudoHandle<>> newObjRes = Callable::executeCall3(
         *trapRes,
@@ -145,14 +155,14 @@ JSCallableProxy::_proxyNativeCall(void *, Runtime &runtime, NativeArgs) {
     if (LLVM_UNLIKELY(newObjRes == ExecutionStatus::EXCEPTION)) {
       return ExecutionStatus::EXCEPTION;
     }
-    // 9. If Type(newObj) is not Object, throw a TypeError exception.
+                                                                     
     if (!vmisa<JSObject>(newObjRes->get())) {
       return runtime.raiseTypeError("Proxy construct trap returned non-Object");
     }
-    // 10. return newObj.
+                         
     return newObjRes->get();
   } else {
-    // 8. Return ? Call(trap, handler, « target, thisArgument, argArray »).
+                                                                           
     auto res = Callable::executeCall3(
         *trapRes,
         runtime,
@@ -186,5 +196,5 @@ CallResult<PseudoHandle<JSObject>> JSCallableProxy::_newObjectImpl(
       protoHandle);
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

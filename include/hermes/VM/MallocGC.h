@@ -27,20 +27,20 @@ namespace vm {
 
 class MallocGC final : public GCBase {
   class CellHeader {
-    /// If true, then this cell is live. If this is false at the end of a
-    /// collection, then this cell can be freed. Defaults to false when not in
-    /// the middle of a collection.
+                                                                         
+                                                                              
+                                   
     bool marked_ = false;
 
 #ifdef HERMESVM_SANITIZE_HANDLES
-    /// If non-null, contains a pointer to the new location where this cell will
-    /// be after the collection is over.
-    /// Only used in handle sanitization when pointers are moved.
+                                                                                
+                                        
+                                                                 
     CellHeader *forwardingPtr_ = nullptr;
 #endif
 
-    /// Storage of the GCCell data is past this point. Needs to be aligned to
-    /// the alignment of the heap.
+                                                                             
+                                  
     static_assert(
         alignof(GCCell) <= HeapAlign,
         "GCCell's alignment exceeds the alignment requirement of the heap");
@@ -51,7 +51,7 @@ class MallocGC final : public GCBase {
       return marked_;
     }
 
-    /// Mark a cell as live. Set its new location to \p newLocation.
+                                                                    
     void mark() {
       assert(!isMarked() && "Marking an already marked pointer");
       marked_ = true;
@@ -105,27 +105,27 @@ class MallocGC final : public GCBase {
     }
   };
 
-  /// pointers_ stores all of the objects managed by the GC. If a pointer is not
-  /// in this set, then it is not a GC pointer, and thus invalid to be collected
-  /// or marked.
+                                                                                
+                                                                                
+                
   llvh::DenseSet<CellHeader *> pointers_;
-  /// newPointers_ is the set of live objects at the end of a collection.
-  /// Pointers are moved from pointers_ to this as they are discovered to be
-  /// alive.
-  /// This should be empty between collections.
+                                                                         
+                                                                            
+            
+                                               
   llvh::DenseSet<CellHeader *> newPointers_;
-  /// maxSize_ is the absolute highest amount of memory that MallocGC is allowed
-  /// to allocate.
+                                                                                
+                  
   const gcheapsize_t maxSize_;
-  /// sizeLimit_ is the point at which a collection should be run.
+                                                                  
   gcheapsize_t sizeLimit_;
-  /// allocatedBytes_ is the current amount of memory stored in the heap.
+                                                                         
   gcheapsize_t allocatedBytes_{0};
-  /// externalBytes_ is the external memory retained by cells on the heap.
+                                                                          
   uint64_t externalBytes_{0};
 
  public:
-  /// See comment in GCBase.
+                            
   class Size final {
    public:
     explicit Size(const GCConfig &gcConfig)
@@ -158,15 +158,15 @@ class MallocGC final : public GCBase {
 
   ~MallocGC() override;
 
-  /// Checks if a requested \p size can fit in the heap. If it can't, a
-  /// collection occurs. If it still can't after the collection, OOM is
-  /// declared.
+                                                                       
+                                                                       
+               
   void collectBeforeAlloc(std::string cause, uint32_t size);
 
-  /// Allocate a new cell of the specified size \p size by calling alloc.
-  /// Instantiate an object of type T with constructor arguments \p args in the
-  /// newly allocated cell.
-  /// \return a pointer to the newly created object in the GC heap.
+                                                                         
+                                                                               
+                           
+                                                                   
   template <
       typename T,
       bool fixedSize = true,
@@ -175,44 +175,44 @@ class MallocGC final : public GCBase {
       class... Args>
   inline T *makeA(uint32_t size, Args &&...args);
 
-  /// Returns whether an external allocation of the given \p size fits
-  /// within the maximum heap size.  (Note that this does not guarantee that the
-  /// allocation will "succeed" -- the size plus the used() of the heap may
-  /// still exceed the max heap size.  But if it fails, the allocation can never
-  /// succeed.)
+                                                                      
+                                                                                
+                                                                           
+                                                                                
+               
   bool canAllocExternalMemory(uint32_t size) override;
 
-  /// Collect all of the dead objects and symbols in the heap. Also invalidate
-  /// weak pointers that point to dead objects.
+                                                                              
+                                               
   void collect(std::string cause, bool canEffectiveOOM = false) override;
 
   static constexpr uint32_t minAllocationSizeImpl() {
-    // MallocGC imposes no limit on individual allocations.
+                                                           
     return 0;
   }
 
   static constexpr uint32_t maxAllocationSizeImpl() {
-    // MallocGC imposes no limit on individual allocations.
+                                                           
     return std::numeric_limits<uint32_t>::max();
   }
 
-  /// Run the finalizers for all heap objects.
+                                              
   void finalizeAll() override;
 
-  /// \return true iff this is collecting the entire heap, or false if it is
-  /// only a portion of the heap.
-  /// \pre Assumes inGC() is true, or else this has no meaning.
+                                                                            
+                                 
+                                                               
   bool inFullCollection() const {
     return true;
   }
 
 #ifndef NDEBUG
-  /// See comment in GCBase.
+                            
   bool calledByGC() const override {
     return inGC();
   }
 
-  /// \return true iff the pointer \p p is controlled by this GC.
+                                                                 
   bool validPointer(const void *p) const override;
   bool dbgContains(const void *p) const override;
 
@@ -220,7 +220,7 @@ class MallocGC final : public GCBase {
 #endif
 
 #ifdef HERMES_MEMORY_INSTRUMENTATION
-  /// Same as in superclass GCBase.
+                                   
   virtual void createSnapshot(llvh::raw_ostream &os, bool captureNumericValue)
       override;
 #endif
@@ -252,13 +252,13 @@ class MallocGC final : public GCBase {
   void getCrashManagerHeapInfo(CrashManager::HeapInformation &info) override;
   std::string getKindAsStr() const override;
 
-  /// The largest the size of this heap could ever grow to.
+                                                           
   size_t maxSize() const {
     return maxSize_;
   }
 
-  /// Iterate over all objects in the heap, and call \p callback on them.
-  /// \param callback A function to call on each found object.
+                                                                         
+                                                              
   void forAllObjs(const std::function<void(GCCell *)> &callback) override;
 
   static bool classof(const GCBase *gc) {
@@ -271,45 +271,45 @@ class MallocGC final : public GCBase {
   void clearUnmarkedPropertyMaps();
 #endif
 
-  /// Allocate an object in the GC controlled heap with the size to allocate
-  /// given by \p size.
+                                                                            
+                       
   template <
       bool fixedSizeIgnored = true,
       HasFinalizer hasFinalizer = HasFinalizer::No>
   inline void *alloc(uint32_t size);
 
-  /// Initialize a cell with the required basic data for any cell.
+                                                                  
   inline void initCell(GCCell *cell, uint32_t size);
 
-  /// See \c GCBase::printStats.
+                                
   void printStats(JSONEmitter &json) override;
 
-  /// Reset the statistics used for reporting GC information.
+                                                             
   void resetStats();
 
   struct MarkingAcceptor;
   class SkipWeakRefsMarkingAcceptor;
   struct FullMSCUpdateWeakRootsAcceptor;
 
-  /// Continually pops elements from the mark stack of \p acceptor and
-  /// scans their pointer fields.  If such a field points to an
-  /// unmarked object, mark it and push it on the mark stack.
+                                                                      
+                                                               
+                                                             
   void drainMarkStack(MarkingAcceptor &acceptor);
 
-  /// Iterate the list of `weakMapEntrySlots_`, for each non-free slot, if
-  /// both the key and the owner are marked, mark the mapped value with
-  /// \p acceptor. This may further cause other values to be marked, so we need
-  /// to keep iterating until no update. After the iteration, set each
-  /// unreachable mapped value to Empty.
+                                                                          
+                                                                       
+                                                                               
+                                                                      
+                                        
   void markWeakMapEntrySlots(MarkingAcceptor &acceptor);
 
-  /// Update all of the weak references and invalidate the ones that point to
-  /// dead objects.
+                                                                             
+                   
   void updateWeakReferences();
 };
 
-/// @name Inline implementations
-/// @{
+                                
+      
 
 template <bool fixedSizeIgnored, HasFinalizer hasFinalizer>
 inline void *MallocGC::alloc(uint32_t size) {
@@ -320,15 +320,15 @@ inline void *MallocGC::alloc(uint32_t size) {
   if (shouldSanitizeHandles()) {
     collectBeforeAlloc(kHandleSanCauseForAnalytics, size);
   }
-  // Use subtraction to prevent overflow.
+                                         
   if (LLVM_UNLIKELY(size > sizeLimit_ - allocatedBytes_)) {
     collectBeforeAlloc(kNaturalCauseForAnalytics, size);
   }
-  // Add space for the header.
+                              
   auto *header = new (checkedMalloc(size + sizeof(CellHeader))) CellHeader();
   GCCell *mem = header->data();
   initCell(mem, size);
-  // Add to the set of pointers owned by the GC.
+                                                
   pointers_.insert(header);
   allocatedBytes_ += size;
   totalAllocatedBytes_ += size;
@@ -352,22 +352,22 @@ inline T *MallocGC::makeA(uint32_t size, Args &&...args) {
   assert(
       isSizeHeapAligned(size) &&
       "Call to makeA must use a size aligned to HeapAlign");
-  // Since there is no old generation in this collector, always forward to the
-  // normal allocation.
+                                                                              
+                       
   void *mem = alloc<fixedSize, hasFinalizer>(size);
   return constructCell<T>(mem, size, std::forward<Args>(args)...);
 }
 
 inline void MallocGC::initCell(GCCell *cell, uint32_t size) {
 #ifndef NDEBUG
-  // For debugging, fill with a dead value.
+                                           
   std::fill_n(reinterpret_cast<char *>(cell), size, kInvalidHeapValue);
 #endif
 }
 
-/// @}
+      
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    
 
 #endif

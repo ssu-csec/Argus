@@ -23,10 +23,10 @@
 
 using namespace llvh;
 
-//===----------------------------------------------------------------------===//
-//=== WARNING: Implementation here must contain only TRULY operating system
-//===          independent code.
-//===----------------------------------------------------------------------===//
+                                                                                
+                                                                           
+                                
+                                                                                
 
 bool llvh::llvm_is_multithreaded() {
 #if LLVM_ENABLE_THREADS != 0
@@ -38,7 +38,7 @@ bool llvh::llvm_is_multithreaded() {
 
 #if LLVM_ENABLE_THREADS == 0 ||                                                \
     (!defined(_WIN32) && !defined(HAVE_PTHREAD_H))
-// Support for non-Win32, non-pthread implementation.
+                                                     
 void llvh::llvm_execute_on_thread(void (*Fn)(void *), void *UserData,
                                   unsigned RequestedStackSize) {
   (void)RequestedStackSize;
@@ -61,12 +61,12 @@ void llvh::get_thread_name(SmallVectorImpl<char> &Name) { Name.clear(); }
 
 #include <thread>
 unsigned llvh::heavyweight_hardware_concurrency() {
-  // Since we can't get here unless LLVM_ENABLE_THREADS == 1, it is safe to use
-  // `std::thread` directly instead of `llvh::thread` (and indeed, doing so
-  // allows us to not define `thread` in the llvm namespace, which conflicts
-  // with some platforms such as FreeBSD whose headers also define a struct
-  // called `thread` in the global namespace which can cause ambiguity due to
-  // ADL.
+                                                                               
+                                                                           
+                                                                            
+                                                                           
+                                                                             
+         
   int NumPhysical = sys::getHostNumPhysicalCores();
   if (NumPhysical == -1)
     return std::thread::hardware_concurrency();
@@ -79,13 +79,13 @@ unsigned llvh::hardware_concurrency() {
   if (sched_getaffinity(0, sizeof(Set), &Set))
     return CPU_COUNT(&Set);
 #endif
-  // Guard against std::thread::hardware_concurrency() returning 0.
+                                                                   
   if (unsigned Val = std::thread::hardware_concurrency())
     return Val;
   return 1;
 }
 
-// Include the platform-specific parts of this class.
+                                                     
 #ifdef LLVM_ON_UNIX
 #include "Unix/Threading.inc"
 #endif

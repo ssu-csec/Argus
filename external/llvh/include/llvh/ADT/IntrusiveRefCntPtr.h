@@ -62,12 +62,12 @@
 
 namespace llvh {
 
-/// A CRTP mixin class that adds reference counting to a type.
-///
-/// The lifetime of an object which inherits from RefCountedBase is managed by
-/// calls to Release() and Retain(), which increment and decrement the object's
-/// refcount, respectively.  When a Release() call decrements the refcount to 0,
-/// the object deletes itself.
+                                                              
+   
+                                                                              
+                                                                               
+                                                                                
+                              
 template <class Derived> class RefCountedBase {
   mutable unsigned RefCount = 0;
 
@@ -84,7 +84,7 @@ public:
   }
 };
 
-/// A thread-safe version of \c RefCountedBase.
+                                               
 template <class Derived> class ThreadSafeRefCountedBase {
   mutable std::atomic<int> RefCount;
 
@@ -102,37 +102,37 @@ public:
   }
 };
 
-/// Class you can specialize to provide custom retain/release functionality for
-/// a type.
-///
-/// Usually specializing this class is not necessary, as IntrusiveRefCntPtr
-/// works with any type which defines Retain() and Release() functions -- you
-/// can define those functions yourself if RefCountedBase doesn't work for you.
-///
-/// One case when you might want to specialize this type is if you have
-///  - Foo.h defines type Foo and includes Bar.h, and
-///  - Bar.h uses IntrusiveRefCntPtr<Foo> in inline functions.
-///
-/// Because Foo.h includes Bar.h, Bar.h can't include Foo.h in order to pull in
-/// the declaration of Foo.  Without the declaration of Foo, normally Bar.h
-/// wouldn't be able to use IntrusiveRefCntPtr<Foo>, which wants to call
-/// T::Retain and T::Release.
-///
-/// To resolve this, Bar.h could include a third header, FooFwd.h, which
-/// forward-declares Foo and specializes IntrusiveRefCntPtrInfo<Foo>.  Then
-/// Bar.h could use IntrusiveRefCntPtr<Foo>, although it still couldn't call any
-/// functions on Foo itself, because Foo would be an incomplete type.
+                                                                               
+           
+   
+                                                                           
+                                                                             
+                                                                               
+   
+                                                                       
+                                                     
+                                                              
+   
+                                                                               
+                                                                           
+                                                                        
+                             
+   
+                                                                        
+                                                                           
+                                                                                
+                                                                     
 template <typename T> struct IntrusiveRefCntPtrInfo {
   static void retain(T *obj) { obj->Retain(); }
   static void release(T *obj) { obj->Release(); }
 };
 
-/// A smart pointer to a reference-counted object that inherits from
-/// RefCountedBase or ThreadSafeRefCountedBase.
-///
-/// This class increments its pointee's reference count when it is created, and
-/// decrements its refcount when it's destroyed (or is changed to point to a
-/// different object).
+                                                                    
+                                               
+   
+                                                                               
+                                                                            
+                      
 template <typename T> class IntrusiveRefCntPtr {
   T *Obj = nullptr;
 
@@ -245,8 +245,8 @@ bool operator!=(const IntrusiveRefCntPtr<T> &A, std::nullptr_t B) {
   return !(A == B);
 }
 
-// Make IntrusiveRefCntPtr work with dyn_cast, isa, and the other idioms from
-// Casting.h.
+                                                                             
+             
 template <typename From> struct simplify_type;
 
 template <class T> struct simplify_type<IntrusiveRefCntPtr<T>> {
@@ -258,13 +258,13 @@ template <class T> struct simplify_type<IntrusiveRefCntPtr<T>> {
 };
 
 template <class T> struct simplify_type<const IntrusiveRefCntPtr<T>> {
-  using SimpleType = /*const*/ T *;
+  using SimpleType =           T *;
 
   static SimpleType getSimplifiedValue(const IntrusiveRefCntPtr<T> &Val) {
     return Val.get();
   }
 };
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_ADT_INTRUSIVEREFCNTPTR_H
+#endif                                 

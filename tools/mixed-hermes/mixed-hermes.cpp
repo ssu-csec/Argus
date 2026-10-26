@@ -71,10 +71,10 @@ static opt<unsigned> ExecutionTimeLimit(
     "time-limit",
     llvh::cl::desc("Number of milliseconds after which to abort JS execution"),
     llvh::cl::init(0));
-} // namespace cl
+}                
 
-/// Execute Hermes bytecode \p bytecode, respecting command line arguments.
-/// \return an exit status.
+                                                                           
+                           
 static int executeHBCBytecodeFromCL(
     std::unique_ptr<hbc::BCProvider> bytecode,
     const driver::BytecodeBufferInfo &info) {
@@ -131,9 +131,9 @@ static int executeHBCBytecodeFromCL(
   if (cl::Repeat <= 1) {
     success = executeHBCBytecode(std::move(bytecode), options, &info.filename);
   } else {
-    // The runtime is supposed to own the bytecode exclusively, but we
-    // want to keep it around in this special case, so we can reuse it
-    // between iterations.
+                                                                      
+                                                                      
+                          
     std::shared_ptr<hbc::BCProvider> sharedBytecode = std::move(bytecode);
 
     success = true;
@@ -174,14 +174,14 @@ static vm::RuntimeConfig getReplRuntimeConfig() {
 
 int main(int argc, char **argv) {
 #ifndef HERMES_FBCODE_BUILD
-  // Normalize the arg vector.
+                              
   llvh::InitLLVM initLLVM(argc, argv);
 #else
-  // When both HERMES_FBCODE_BUILD and sanitizers are enabled, InitLLVM may have
-  // been already created and destroyed before main() is invoked. This presents
-  // a problem because InitLLVM can't be instantiated more than once in the same
-  // process. The most important functionality InitLLVM provides is shutting
-  // down LLVM in its destructor. We can use "llvm_shutdown_obj" to do the same.
+                                                                                
+                                                                               
+                                                                                
+                                                                            
+                                                                                
   llvh::llvm_shutdown_obj Y;
 #endif
 
@@ -192,15 +192,15 @@ int main(int argc, char **argv) {
     return repl(getReplRuntimeConfig());
   }
 
-  // Tell compiler to emit async break check if time-limit feature is enabled
-  // so that user can turn on this feature with single ExecutionTimeLimit
-  // option.
+                                                                             
+                                                                         
+            
   if (cl::ExecutionTimeLimit > 0) {
     cl::EmitAsyncBreakCheck = true;
   }
 
-  // Make sure any allocated alt signal stack is not considered a leak
-  // by ASAN.
+                                                                      
+             
   oscompat::SigAltStackLeakSuppressor sigAltLeakSuppressor;
   driver::CompileResult res = driver::compileFromCommandLineOptions();
   if (res.bytecodeProvider) {

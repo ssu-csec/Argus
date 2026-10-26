@@ -23,7 +23,7 @@ namespace llvh {
 class Function;
 class Value;
 
-/// Structure to hold a use-list order.
+                                       
 struct UseListOrder {
   const Value *V = nullptr;
   const Function *F = nullptr;
@@ -39,6 +39,6 @@ struct UseListOrder {
 
 using UseListOrderStack = std::vector<UseListOrder>;
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_IR_USELISTORDER_H
+#endif                          

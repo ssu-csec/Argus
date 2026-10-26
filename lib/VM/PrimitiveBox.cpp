@@ -15,8 +15,8 @@
 namespace hermes {
 namespace vm {
 
-//===----------------------------------------------------------------------===//
-// class JSString
+                                                                                
+                 
 
 const ObjectVTable JSString::vt{
     VTable(CellKind::JSStringKind, cellSize<JSString>()),
@@ -79,7 +79,7 @@ void JSString::setPrimitiveString(
   assert(res && "cannot find 'length' property");
   (void)res;
 
-  // This is definitely not a proxy because we know strings have lengths.
+                                                                         
   auto shv =
       SmallHermesValue::encodeNumberValue(string->getStringLength(), runtime);
   JSObject::setNamedSlotValueUnsafe(*selfHandle, runtime, desc, shv);
@@ -142,8 +142,8 @@ CallResult<bool> JSString::_setOwnIndexedImpl(
   if (index < str->getStringLength())
     return false;
 
-  // Property indexes beyond the end of the string must be added as named
-  // properties.
+                                                                         
+                
   auto vr = valueToSymbolID(
       runtime,
       runtime.makeHandle(HermesValue::encodeUntrustedNumberValue(index)));
@@ -151,8 +151,8 @@ CallResult<bool> JSString::_setOwnIndexedImpl(
       vr != ExecutionStatus::EXCEPTION &&
       "valueToIdentifier() failed for uint32_t value");
 
-  // Can't call defineOwnComputedPrimitive because it would infinitely recurse
-  // calling JSString::_setOwnIndexedImpl.
+                                                                              
+                                          
   return JSObject::defineOwnPropertyInternal(
       selfHandle,
       runtime,
@@ -167,13 +167,13 @@ bool JSString::_deleteOwnIndexedImpl(
     uint32_t index) {
   auto *str = getPrimitiveString(vmcast<JSString>(selfHandle.get()), runtime);
 
-  // Only characters past the end of the string can be deleted (since they
-  // already are).
+                                                                          
+                  
   return index >= str->getStringLength();
 }
 
-//===----------------------------------------------------------------------===//
-// class JSStringIterator
+                                                                                
+                         
 
 const ObjectVTable JSStringIterator::vt{
     VTable(CellKind::JSStringIteratorKind, cellSize<JSStringIterator>()),
@@ -194,7 +194,7 @@ void JSStringIteratorBuildMeta(const GCCell *cell, Metadata::Builder &mb) {
   mb.addField("iteratedString", &self->iteratedString_);
 }
 
-/// ES6.0 21.1.5.1 CreateStringIterator Abstract Operation
+                                                          
 PseudoHandle<JSStringIterator> JSStringIterator::create(
     Runtime &runtime,
     Handle<StringPrimitive> string) {
@@ -206,51 +206,51 @@ PseudoHandle<JSStringIterator> JSStringIterator::create(
   return JSObjectInit::initToPseudoHandle(runtime, obj);
 }
 
-/// ES6.0 21.1.5.2.1 %StringIteratorPrototype%.next ( ) 4-14
+                                                            
 CallResult<HermesValue> JSStringIterator::nextElement(
     Handle<JSStringIterator> self,
     Runtime &runtime) {
-  // 4. Let s be the value of the [[IteratedString]] internal slot of O.
+                                                                        
   auto s = runtime.makeHandle(self->iteratedString_);
   if (!s) {
-    // 5. If s is undefined, return CreateIterResultObject(undefined, true).
+                                                                            
     return createIterResultObject(runtime, Runtime::getUndefinedValue(), true)
         .getHermesValue();
   }
 
-  // 6. Let position be the value of the [[StringIteratorNextIndex]] internal
-  // slot of O.
+                                                                             
+               
   uint32_t position = self->nextIndex_;
-  // 7. Let len be the number of elements in s.
+                                               
   uint32_t len = s->getStringLength();
 
   if (position >= len) {
-    // 8a. Set the value of the [[IteratedString]] internal slot of O to
-    // undefined.
+                                                                        
+                 
     self->iteratedString_.setNull(runtime.getHeap());
-    // 8b. Return CreateIterResultObject(undefined, true).
+                                                          
     return createIterResultObject(runtime, Runtime::getUndefinedValue(), true)
         .getHermesValue();
   }
 
   MutableHandle<StringPrimitive> resultString{runtime};
 
-  // 9. Let first be the code unit value at index position in s.
+                                                                
   char16_t first = s->at(position);
   if (first < 0xd800 || first > 0xdbff || position + 1 == len) {
-    // 10. If first < 0xD800 or first > 0xDBFF or position+1 = len,
-    // let resultString be the string consisting of the single code unit first.
+                                                                   
+                                                                               
     resultString = runtime.getCharacterString(first).get();
   } else {
-    // 11a. Let second the code unit value at index position+1 in the String S.
+                                                                               
     char16_t second = s->at(position + 1);
     if (second < 0xdc00 || second > 0xdfff) {
-      // 11b. If second < 0xDC00 or second > 0xDFFF, let resultString be the
-      // string consisting of the single code unit first.
+                                                                            
+                                                         
       resultString = runtime.getCharacterString(first).get();
     } else {
-      // 11c. Let resultString be the string consisting of the code unit first
-      // followed by the code unit second.
+                                                                              
+                                          
       char16_t charArr[2]{first, second};
       auto strRes = StringPrimitive::create(runtime, UTF16Ref{charArr, 2});
       if (LLVM_UNLIKELY(strRes == ExecutionStatus::EXCEPTION)) {
@@ -260,16 +260,16 @@ CallResult<HermesValue> JSStringIterator::nextElement(
     }
   }
 
-  // 13. Set the value of the [[StringIteratorNextIndex]] internal slot of O to
-  // position+resultSize.
+                                                                               
+                         
   self->nextIndex_ = position + resultString->getStringLength();
 
-  // 14. Return CreateIterResultObject(resultString, false).
+                                                            
   return createIterResultObject(runtime, resultString, false).getHermesValue();
 }
 
-//===----------------------------------------------------------------------===//
-// class JSBigInt
+                                                                                
+                 
 
 const ObjectVTable JSBigInt::vt{
     VTable(CellKind::JSBigIntKind, cellSize<JSBigInt>()),
@@ -302,8 +302,8 @@ Handle<JSBigInt> JSBigInt::create(
   return JSObjectInit::initToHandle(runtime, obj);
 }
 
-//===----------------------------------------------------------------------===//
-// class JSNumber
+                                                                                
+                 
 
 const ObjectVTable JSNumber::vt{
     VTable(CellKind::JSNumberKind, cellSize<JSNumber>()),
@@ -333,8 +333,8 @@ PseudoHandle<JSNumber> JSNumber::create(
   return JSObjectInit::initToPseudoHandle(runtime, obj);
 }
 
-//===----------------------------------------------------------------------===//
-// class JSBoolean
+                                                                                
+                  
 
 const ObjectVTable JSBoolean::vt{
     VTable(CellKind::JSBooleanKind, cellSize<JSBoolean>()),
@@ -362,8 +362,8 @@ JSBoolean::create(Runtime &runtime, bool value, Handle<JSObject> parentHandle) {
   return JSObjectInit::initToPseudoHandle(runtime, obj);
 }
 
-//===----------------------------------------------------------------------===//
-// class JSSymbol
+                                                                                
+                 
 
 const ObjectVTable JSSymbol::vt{
     VTable(CellKind::JSSymbolKind, cellSize<JSSymbol>()),
@@ -395,5 +395,5 @@ PseudoHandle<JSSymbol> JSSymbol::create(
   return JSObjectInit::initToPseudoHandle(runtime, obj);
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

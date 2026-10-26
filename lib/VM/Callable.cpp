@@ -10,6 +10,8 @@
 #include "hermes/VM/ArrayLike.h"
 #include "hermes/VM/BuildMetadata.h"
 #include "hermes/VM/JSDataView.h"
+#include "hermes/VM/JSCallableProxy.h"
+#include "hermes/VM/Operations.h"
 #include "hermes/VM/JSDate.h"
 #include "hermes/VM/JSError.h"
 #include "hermes/VM/JSMapImpl.h"
@@ -34,8 +36,8 @@
 namespace hermes {
 namespace vm {
 
-//===----------------------------------------------------------------------===//
-// class Environment
+                                                                                
+                    
 
 const VTable Environment::vt{CellKind::EnvironmentKind, 0};
 
@@ -46,8 +48,8 @@ void EnvironmentBuildMeta(const GCCell *cell, Metadata::Builder &mb) {
   mb.addArray(self->getSlots(), &self->size_, sizeof(GCHermesValue));
 }
 
-//===----------------------------------------------------------------------===//
-// class Callable
+                                                                                
+                 
 
 void CallableBuildMeta(const GCCell *cell, Metadata::Builder &mb) {
   mb.addJSObjectOverlapSlots(JSObject::numOverlapSlots<Callable>());
@@ -65,28 +67,29 @@ std::string Callable::_snapshotNameImpl(GCCell *cell, GC &gc) {
 #endif
 
 CallResult<PseudoHandle<JSObject>> Callable::_newObjectImpl(
-    Handle<Callable> /*selfHandle*/,
+    Handle<Callable>               ,
     Runtime &runtime,
     Handle<JSObject> parentHandle) {
   return JSObject::create(runtime, parentHandle);
 }
 
 void Callable::defineLazyProperties(Handle<Callable> fn, Runtime &runtime) {
-  // lazy functions can be Bound or JS Functions.
+                                                 
   if (auto jsFun = Handle<JSFunction>::dyn_vmcast(fn)) {
     const CodeBlock *codeBlock = jsFun->getCodeBlock(runtime);
-    // Create empty object for prototype.
+                                         
     auto prototypeParent = vmisa<JSGeneratorFunction>(*jsFun)
-        ? Handle<JSObject>::vmcast(&runtime.generatorPrototype)
+        ? Handle<JSObject>::vmcast(codeBlock->getHeaderFlags().asyncGenerator
+            ? &runtime.asyncGeneratorPrototype : &runtime.generatorPrototype)
         : Handle<JSObject>::vmcast(&runtime.objectPrototype);
 
-    // According to ES12 26.7.4, AsyncFunction instances do not have a
-    // 'prototype' property, hence we need to set an null handle here.
-    // Functions that cannot be used with `new` should also not define a
-    // 'prototype' property, such as arrow functions per 15.3.4, except for
-    // generator functions.
+                                                                      
+                                                                      
+                                                                        
+                                                                           
+                           
     auto prototypeObjectHandle =
-        codeBlock->getHeaderFlags().isCallProhibited(/* construct */ true) &&
+        codeBlock->getHeaderFlags().isCallProhibited(                true) &&
             !vmisa<JSGeneratorFunction>(*jsFun)
         ? Runtime::makeNullHandle<JSObject>()
         : runtime.makeHandle(JSObject::create(runtime, prototypeParent));
@@ -103,7 +106,7 @@ void Callable::defineLazyProperties(Handle<Callable> fn, Runtime &runtime) {
         cr != ExecutionStatus::EXCEPTION && "failed to define length and name");
     (void)cr;
   } else {
-    // no other kind of function can be lazy currently
+                                                      
     assert(false && "invalid lazy function");
   }
 }
@@ -125,10 +128,10 @@ ExecutionStatus Callable::defineNameLengthAndPrototype(
   GCScope scope{runtime, "defineNameLengthAndPrototype"};
 
   namespace P = Predefined;
-/// Adds a property to the object in \p OBJ_HANDLE.  \p SYMBOL provides its name
-/// as a \c Predefined enum value, and its value is  rooted in \p HANDLE.  If
-/// property definition fails, the exceptional execution status will be
-/// propagated to the outer function.
+                                                                                
+                                                                             
+                                                                       
+                                     
 #define DEFINE_PROP(OBJ_HANDLE, SYMBOL, HANDLE)                            \
   do {                                                                     \
     auto status = JSObject::defineNewOwnProperty(                          \
@@ -140,19 +143,19 @@ ExecutionStatus Callable::defineNameLengthAndPrototype(
 
   assert(name.isValid() && "A name must always be provided");
 
-  // Length is the number of formal arguments.
-  // 10.2.9 SetFunctionLength is performed during 10.2.3 OrdinaryFunctionCreate.
+                                              
+                                                                                
   auto lengthHandle =
       runtime.makeHandle(HermesValue::encodeUntrustedNumberValue(paramCount));
   DEFINE_PROP(selfHandle, P::length, lengthHandle);
 
-  // Define the name.
-  // 10.2.8 SetFunctionName is performed after 10.2.3 OrdinaryFunctionCreate.
+                     
+                                                                             
   auto nameHandle = runtime.makeHandle(runtime.getStringPrimFromSymbolID(name));
   DEFINE_PROP(selfHandle, P::name, nameHandle);
 
   if (strictMode) {
-    // Define .callee and .arguments properties: throw always in strict mode.
+                                                                             
     auto accessor =
         Handle<PropertyAccessor>::vmcast(&runtime.throwTypeErrorAccessor);
 
@@ -166,19 +169,19 @@ ExecutionStatus Callable::defineNameLengthAndPrototype(
   }
 
   if (prototypeObjectHandle) {
-    // Set its 'prototype' property.
+                                    
     pf.clear();
     pf.enumerable = 0;
-    /// System constructors have read-only prototypes.
+                                                      
     pf.writable = (uint8_t)writablePrototype;
     pf.configurable = 0;
     DEFINE_PROP(selfHandle, P::prototype, prototypeObjectHandle);
 
     if (LLVM_LIKELY(!vmisa<JSGeneratorFunction>(*selfHandle))) {
-      // Set the 'constructor' property in the prototype object.
-      // This must not be set for GeneratorFunctions, because
-      // prototypes must not point back to their constructors.
-      // See the diagram: ES9.0 25.2 (GeneratorFunction objects).
+                                                                
+                                                             
+                                                              
+                                                                 
       pf.clear();
       pf.enumerable = 0;
       pf.writable = 1;
@@ -192,8 +195,8 @@ ExecutionStatus Callable::defineNameLengthAndPrototype(
 #undef DEFINE_PROP
 }
 
-/// Execute this function with no arguments. This is just a convenience
-/// helper method; it actually invokes the interpreter recursively.
+                                                                       
+                                                                   
 CallResult<PseudoHandle<>> Callable::executeCall0(
     Handle<Callable> selfHandle,
     Runtime &runtime,
@@ -211,8 +214,8 @@ CallResult<PseudoHandle<>> Callable::executeCall0(
   return call(selfHandle, runtime);
 }
 
-/// Execute this function with one argument. This is just a convenience
-/// helper method; it actually invokes the interpreter recursively.
+                                                                       
+                                                                   
 CallResult<PseudoHandle<>> Callable::executeCall1(
     Handle<Callable> selfHandle,
     Runtime &runtime,
@@ -232,8 +235,8 @@ CallResult<PseudoHandle<>> Callable::executeCall1(
   return call(selfHandle, runtime);
 }
 
-/// Execute this function with two arguments. This is just a convenience
-/// helper method; it actually invokes the interpreter recursively.
+                                                                        
+                                                                   
 CallResult<PseudoHandle<>> Callable::executeCall2(
     Handle<Callable> selfHandle,
     Runtime &runtime,
@@ -255,8 +258,8 @@ CallResult<PseudoHandle<>> Callable::executeCall2(
   return call(selfHandle, runtime);
 }
 
-/// Execute this function with three arguments. This is just a convenience
-/// helper method; it actually invokes the interpreter recursively.
+                                                                          
+                                                                   
 CallResult<PseudoHandle<>> Callable::executeCall3(
     Handle<Callable> selfHandle,
     Runtime &runtime,
@@ -280,8 +283,8 @@ CallResult<PseudoHandle<>> Callable::executeCall3(
   return call(selfHandle, runtime);
 }
 
-/// Execute this function with four arguments. This is just a convenience
-/// helper method; it actually invokes the interpreter recursively.
+                                                                         
+                                                                   
 CallResult<PseudoHandle<>> Callable::executeCall4(
     Handle<Callable> selfHandle,
     Runtime &runtime,
@@ -326,9 +329,9 @@ CallResult<PseudoHandle<>> Callable::executeCall(
   if (LLVM_UNLIKELY(newFrame.overflowed()))
     return runtime.raiseStackOverflow(Runtime::StackOverflowKind::NativeStack);
 
-  // Initialize the arguments to undefined because we might allocate and cause
-  // a gc while populating them.
-  // TODO: look into doing this lazily.
+                                                                              
+                                
+                                       
   newFrame.fillArguments(n, HermesValue::encodeUndefinedValue());
 
   if (LLVM_UNLIKELY(
@@ -353,7 +356,7 @@ CallResult<PseudoHandle<>> Callable::executeConstruct0(
   if (LLVM_UNLIKELY(thisVal == ExecutionStatus::EXCEPTION)) {
     return ExecutionStatus::EXCEPTION;
   }
-  auto thisValHandle = runtime.makeHandle<JSObject>(std::move(thisVal->get()));
+  auto thisValHandle = runtime.makeHandle(std::move(*thisVal));
   auto result = executeCall0(selfHandle, runtime, thisValHandle, true);
   if (LLVM_UNLIKELY(result == ExecutionStatus::EXCEPTION)) {
     return ExecutionStatus::EXCEPTION;
@@ -371,7 +374,7 @@ CallResult<PseudoHandle<>> Callable::executeConstruct1(
   if (LLVM_UNLIKELY(thisVal == ExecutionStatus::EXCEPTION)) {
     return ExecutionStatus::EXCEPTION;
   }
-  auto thisValHandle = runtime.makeHandle<JSObject>(std::move(thisVal->get()));
+  auto thisValHandle = runtime.makeHandle(std::move(*thisVal));
   CallResult<PseudoHandle<>> result =
       executeCall1(selfHandle, runtime, thisValHandle, *param1, true);
   if (LLVM_UNLIKELY(result == ExecutionStatus::EXCEPTION)) {
@@ -382,18 +385,56 @@ CallResult<PseudoHandle<>> Callable::executeConstruct1(
                                      thisValHandle.getHermesValue()));
 }
 
-CallResult<PseudoHandle<JSObject>> Callable::createThisForConstruct_RJS(
-    Handle<Callable> selfHandle,
-    Runtime &runtime) {
-  CallResult<PseudoHandle<>> prototypeProp = JSObject::getNamed_RJS(
-      selfHandle, runtime, Predefined::getSymbolID(Predefined::prototype));
-  if (LLVM_UNLIKELY(prototypeProp == ExecutionStatus::EXCEPTION)) {
+CallResult<PseudoHandle<>> Callable::createThisForConstruct_RJS(
+    Handle<Callable> selfHandle, Runtime &runtime) {
+  return prepareThisForConstruct_RJS(selfHandle, runtime, selfHandle);
+}
+
+CallResult<PseudoHandle<>> Callable::prepareThisForConstruct_RJS(
+    Handle<Callable> selfHandle, Runtime &runtime, Handle<Callable> newTarget) {
+  GCScope gcScope(runtime);
+  auto constructible = isConstructor(runtime, *selfHandle);
+  if (constructible == ExecutionStatus::EXCEPTION)
     return ExecutionStatus::EXCEPTION;
+  if (!*constructible)
+    return runtime.raiseTypeError("Function is not a constructor");
+  MutableHandle<Callable> target{runtime, *selfHandle};
+  MutableHandle<Callable> effectiveNewTarget{runtime, *newTarget};
+  while (auto *bound = dyn_vmcast<BoundFunction>(*target)) {
+    auto *next = bound->getTarget(runtime);
+    if (*effectiveNewTarget == *target)
+      effectiveNewTarget = next;
+    target = next;
   }
-  Handle<JSObject> prototype = vmisa<JSObject>(prototypeProp->get())
-      ? runtime.makeHandle<JSObject>(prototypeProp->get())
-      : Handle<JSObject>::vmcast(&runtime.objectPrototype);
-  return Callable::newObject(selfHandle, runtime, prototype);
+                                                                           
+  if (vmisa<JSCallableProxy>(*target))
+    return createPseudoHandle(HermesValue::encodeUndefinedValue());
+  if (auto *function = dyn_vmcast<JSFunction>(*target)) {
+    if (function->getCodeBlock(runtime)->getHeaderFlags().derivedConstructor)
+      return createPseudoHandle(HermesValue::encodeUndefinedValue());
+  }
+  auto prototypeProp = JSObject::getNamed_RJS(
+      effectiveNewTarget, runtime, Predefined::getSymbolID(Predefined::prototype));
+  if (prototypeProp == ExecutionStatus::EXCEPTION)
+    return ExecutionStatus::EXCEPTION;
+  MutableHandle<JSObject> prototype{runtime};
+  if (vmisa<JSObject>(prototypeProp->get()))
+    prototype = vmcast<JSObject>(prototypeProp->get());
+  else if (vmisa<NativeConstructor>(*target)) {
+                                                                     
+    auto intrinsic = JSObject::getNamed_RJS(
+        target, runtime, Predefined::getSymbolID(Predefined::prototype));
+    if (intrinsic == ExecutionStatus::EXCEPTION)
+      return ExecutionStatus::EXCEPTION;
+    if (vmisa<JSObject>(intrinsic->get()))
+      prototype = vmcast<JSObject>(intrinsic->get());
+  }
+  if (!prototype)
+    prototype = runtime.objectPrototypeRawPtr;
+  auto object = Callable::newObject(target, runtime, prototype);
+  if (object == ExecutionStatus::EXCEPTION)
+    return ExecutionStatus::EXCEPTION;
+  return createPseudoHandle(object->getHermesValue());
 }
 
 CallResult<double> Callable::extractOwnLengthProperty_RJS(
@@ -450,8 +491,8 @@ CallResult<double> Callable::extractOwnLengthProperty_RJS(
   return intRes->getNumber();
 }
 
-//===----------------------------------------------------------------------===//
-// class BoundFunction
+                                                                                
+                      
 
 const CallableVTable BoundFunction::vt{
     {
@@ -498,8 +539,8 @@ CallResult<HermesValue> BoundFunction::create(
     ConstArgIterator argsWithThis) {
   unsigned argCount = argCountWithThis > 0 ? argCountWithThis - 1 : 0;
 
-  // Copy the arguments. If we don't have any, we must at least initialize
-  // 'this' to 'undefined'.
+                                                                          
+                           
   auto arrRes = ArrayStorage::create(runtime, argCount + 1);
   if (LLVM_UNLIKELY(arrRes == ExecutionStatus::EXCEPTION)) {
     return ExecutionStatus::EXCEPTION;
@@ -511,8 +552,8 @@ CallResult<HermesValue> BoundFunction::create(
       ArrayStorage::push_back(arrHandle, runtime, Handle<>(&argsWithThis[i]));
     }
   } else {
-    // Don't need to worry about resizing since it was created with a capacity
-    // of at least 1.
+                                                                              
+                     
     ArrayStorage::push_back(arrHandle, runtime, Runtime::getUndefinedValue());
   }
 
@@ -541,18 +582,18 @@ ExecutionStatus BoundFunction::initializeLengthAndName_RJS(
     Callable::initializeLazyObject(runtime, target);
   }
 
-  // Extract target.length.
+                           
   auto targetLength = Callable::extractOwnLengthProperty_RJS(target, runtime);
   if (targetLength == ExecutionStatus::EXCEPTION)
     return ExecutionStatus::EXCEPTION;
 
-  // Define .length
+                   
   PropertyFlags pf{};
   pf.enumerable = 0;
   pf.writable = 0;
   pf.configurable = 1;
 
-  // Length is the number of formal arguments.
+                                              
   auto length = runtime.makeHandle(
       HermesValue::encodeUntrustedNumberValue(
           argCount >= *targetLength ? 0.0 : *targetLength - argCount));
@@ -566,7 +607,7 @@ ExecutionStatus BoundFunction::initializeLengthAndName_RJS(
     return ExecutionStatus::EXCEPTION;
   }
 
-  // Set the name by prepending "bound ".
+                                         
   auto propRes = JSObject::getNamed_RJS(
       target, runtime, Predefined::getSymbolID(Predefined::name));
   if (LLVM_UNLIKELY(propRes == ExecutionStatus::EXCEPTION)) {
@@ -578,9 +619,9 @@ ExecutionStatus BoundFunction::initializeLengthAndName_RJS(
   auto nameView = StringPrimitive::createStringView(runtime, nameHandle);
   llvh::SmallU16String<32> boundName{"bound "};
   boundName.append(nameView.begin(), nameView.end());
-  // Share name strings for repeatedly bound functions by using the
-  // identifier table. If a new symbol is created, it will disappear
-  // after the name string dies, since nothing else refers to it.
+                                                                   
+                                                                    
+                                                                 
   auto &identifierTable = runtime.getIdentifierTable();
   auto boundNameSym = identifierTable.getSymbolHandle(runtime, boundName);
   if (LLVM_UNLIKELY(boundNameSym == ExecutionStatus::EXCEPTION)) {
@@ -602,7 +643,7 @@ ExecutionStatus BoundFunction::initializeLengthAndName_RJS(
     return ExecutionStatus::EXCEPTION;
   }
 
-  // Define .callee and .arguments properties: throw always in bound functions.
+                                                                               
   auto accessor =
       Handle<PropertyAccessor>::vmcast(&runtime.throwTypeErrorAccessor);
 
@@ -640,24 +681,24 @@ CallResult<PseudoHandle<JSObject>> BoundFunction::_newObjectImpl_RJS(
     Handle<JSObject>) {
   auto *self = vmcast<BoundFunction>(*selfHandle);
 
-  // If it is a chain of bound functions, skip directly to the end.
+                                                                   
   while (auto *targetAsBound =
              dyn_vmcast<BoundFunction>(self->getTarget(runtime)))
     self = targetAsBound;
 
   auto targetHandle = runtime.makeHandle(self->getTarget(runtime));
 
-  // We must duplicate the [[Construct]] functionality here.
+                                                            
 
-  // Obtain "target.prototype".
+                               
   auto propRes = JSObject::getNamed_RJS(
       targetHandle, runtime, Predefined::getSymbolID(Predefined::prototype));
   if (propRes == ExecutionStatus::EXCEPTION)
     return ExecutionStatus::EXCEPTION;
   auto prototype = runtime.makeHandle(std::move(*propRes));
 
-  // If target.prototype is an object, use it, otherwise use the standard
-  // object prototype.
+                                                                         
+                      
   return targetHandle->getVT()->newObject(
       targetHandle,
       runtime,
@@ -677,40 +718,44 @@ CallResult<PseudoHandle<>> BoundFunction::_boundCall(
 
   CallResult<PseudoHandle<>> res{ExecutionStatus::EXCEPTION};
   StackFramePtr originalCalleeFrame = StackFramePtr(runtime.getStackPointer());
-  // Save the original newTarget since we will overwrite it.
-  HermesValue originalNewTarget = originalCalleeFrame.getNewTargetRef();
-  // Save the original arg count since we will lose it.
+                                                            
+  GCScope boundScope{runtime};
+  auto originalNewTarget = runtime.makeHandle(originalCalleeFrame.getNewTargetRef());
+  MutableHandle<> effectiveNewTarget{runtime, *originalNewTarget};
+                                                       
   auto originalArgCount = originalCalleeFrame.getArgCount();
-  // Keep track of the total arg count.
+                                       
   auto totalArgCount = originalArgCount;
 
   auto callerFrame = runtime.getCurrentFrame();
-  // We must preserve the "thisArg" passed to us by the caller because it is in
-  // a register that is not supposed to be modified by a call. Copy it to the
-  // scratch register in the caller's frame.
-  // Note that since there is only one scratch reg, we must process all chained
-  // bound calls in one go (which is more efficient anyway).
+                                                                               
+                                                                             
+                                            
+                                                                               
+                                                            
   callerFrame.getScratchRef() = originalCalleeFrame.getThisArgRef();
 
-  // Pop the stack down to the first argument, erasing the call frame - we don't
-  // need the call frame since we will build a new one.
+                                                                                
+                                                       
   runtime.popToSavedStackPointer(&originalCalleeFrame.getThisArgRef());
 
-  // Loop, copying the bound arguments of all chained bound functions.
+                                                                      
   for (;;) {
+    if (effectiveNewTarget->isObject() && effectiveNewTarget->getObject() == self)
+      effectiveNewTarget = HermesValue::encodeObjectValue(self->getTarget(runtime));
     auto boundArgCount = self->getArgCountWithThis(runtime) - 1;
     totalArgCount += boundArgCount;
 
-    // Check if we have enough stack for the arguments and the frame metadata.
+                                                                              
     if (LLVM_UNLIKELY(!runtime.checkAvailableStack(
             StackFrameLayout::callerOutgoingRegisters(boundArgCount)))) {
-      // Oops, we ran out of stack in the middle of calling a bound function.
-      // Restore everything and bail.
+                                                                             
+                                     
 
-      // We can't "pop" the stack pointer to an arbitrary value, which may be
-      // higher than the current pointer. So, first we pop everything that we
-      // may have pushed, then allocate the correct amount to get back to the
-      // initial state.
+                                                                             
+                                                                             
+                                                                             
+                       
       runtime.popToSavedStackPointer(&originalCalleeFrame.getThisArgRef());
       runtime.allocUninitializedStack(
           StackFrameLayout::CallerExtraRegistersAtEnd + 1);
@@ -723,29 +768,29 @@ CallResult<PseudoHandle<>> BoundFunction::_boundCall(
       goto bail;
     }
 
-    // Allocate space only for the arguments for now.
+                                                     
     auto *stack = runtime.allocUninitializedStack(boundArgCount);
 
-    // Copy the bound arguments (but not the bound "this").
+                                                           
     std::uninitialized_copy_n(
         self->getArgsWithThis(runtime) + 1, boundArgCount, ArgIterator(stack));
 
-    // Loop while the target is another bound function.
+                                                       
     auto *targetAsBound = dyn_vmcast<BoundFunction>(self->getTarget(runtime));
     if (!targetAsBound)
       break;
     self = targetAsBound;
   }
 
-  // Block scope for non-trivial variables to avoid complaints from "goto".
+                                                                           
   {
-    // Allocate space for "thisArg" and the frame metdata following the outgoing
-    // registers. Note that we already checked earlier that we have enough
-    // stack.
+                                                                                
+                                                                          
+             
     auto *stack = runtime.allocUninitializedStack(
         StackFrameLayout::CallerExtraRegistersAtEnd + 1);
 
-    // Initialize the new frame metadata.
+                                         
     auto newCalleeFrame = StackFramePtr::initFrame(
         stack,
         runtime.getCurrentFrame(),
@@ -753,10 +798,10 @@ CallResult<PseudoHandle<>> BoundFunction::_boundCall(
         nullptr,
         totalArgCount,
         HermesValue::encodeObjectValue(self->getTarget(runtime)),
-        originalNewTarget);
-    // Initialize "thisArg". When constructing we must use the original 'this',
-    // not the bound one.
-    newCalleeFrame.getThisArgRef() = !originalNewTarget.isUndefined()
+        effectiveNewTarget.getHermesValue());
+                                                                               
+                         
+    newCalleeFrame.getThisArgRef() = !originalNewTarget->isUndefined()
         ? static_cast<HermesValue>(callerFrame.getScratchRef())
         : self->getArgsWithThis(runtime)[0];
 
@@ -767,14 +812,14 @@ CallResult<PseudoHandle<>> BoundFunction::_boundCall(
         runtime.getCurrentFrame() == callerFrame &&
         "caller frame not restored");
 
-    // Restore the original stack level.
+                                        
     runtime.popToSavedStackPointer(originalCalleeFrame.ptr());
   }
 
 bail:
-  // We must restore the original call frame. There is no need to restore
-  // all the fields to their previous values, just the registers which are not
-  // supposed to be modified by a call.
+                                                                         
+                                                                              
+                                       
   StackFramePtr::initFrame(
       originalCalleeFrame.ptr(),
       StackFramePtr{},
@@ -784,7 +829,7 @@ bail:
       HermesValue::encodeEmptyValue(),
       HermesValue::encodeEmptyValue());
 
-  // Restore "thisArg" and clear the scratch register to avoid a leak.
+                                                                      
   originalCalleeFrame.getThisArgRef() = callerFrame.getScratchRef();
   callerFrame.getScratchRef() = HermesValue::encodeUndefinedValue();
 
@@ -794,13 +839,13 @@ bail:
 CallResult<PseudoHandle<>> BoundFunction::_callImpl(
     Handle<Callable> selfHandle,
     Runtime &runtime) {
-  // Pass `nullptr` as the IP because this function is never called
-  // from the interpreter, which should use `_boundCall` directly.
+                                                                   
+                                                                  
   return _boundCall(vmcast<BoundFunction>(selfHandle.get()), nullptr, runtime);
 }
 
-//===----------------------------------------------------------------------===//
-// class NativeFunction
+                                                                                
+                       
 
 const CallableVTable NativeFunction::vt{
     {
@@ -863,7 +908,7 @@ Handle<NativeFunction> NativeFunction::create(
       functionPtr);
   auto selfHandle = JSObjectInit::initToHandle(runtime, cell);
 
-  // Allocate a propStorage if the number of additional slots requires it.
+                                                                          
   runtime.ignoreAllocationFailure(
       JSObject::allocatePropStorage(selfHandle, runtime, reservedSlots));
 
@@ -932,8 +977,8 @@ CallResult<PseudoHandle<JSObject>> NativeFunction::_newObjectImpl(
       "This function cannot be used as a constructor.");
 }
 
-//===----------------------------------------------------------------------===//
-// class NativeConstructor
+                                                                                
+                          
 
 template <class From>
 static CallResult<PseudoHandle<JSObject>> toCallResultPseudoHandleJSObject(
@@ -1029,8 +1074,8 @@ CallResult<PseudoHandle<>> NativeConstructor::_callImpl(
 }
 #endif
 
-//===----------------------------------------------------------------------===//
-// class JSFunction
+                                                                                
+                   
 
 const CallableVTable JSFunction::vt{
     {
@@ -1130,10 +1175,10 @@ void JSFunction::_snapshotAddEdgesImpl(
     GC &gc,
     HeapSnapshot &snap) {
   auto *const self = vmcast<JSFunction>(cell);
-  // Add the super type's edges too.
+                                    
   Callable::_snapshotAddEdgesImpl(self, gc, snap);
 
-  // A node for the code block will be added as part of the RuntimeModule.
+                                                                          
   snap.addNamedEdge(
       HeapSnapshot::EdgeType::Shortcut,
       "codeBlock",
@@ -1149,8 +1194,8 @@ void JSFunction::_snapshotAddLocationsImpl(
 }
 #endif
 
-//===----------------------------------------------------------------------===//
-// class JSAsyncFunction
+                                                                                
+                        
 
 const CallableVTable JSAsyncFunction::vt{
     {
@@ -1206,8 +1251,8 @@ PseudoHandle<JSAsyncFunction> JSAsyncFunction::create(
   return self;
 }
 
-//===----------------------------------------------------------------------===//
-// class JSGeneratorFunction
+                                                                                
+                            
 
 const CallableVTable JSGeneratorFunction::vt{
     {
@@ -1263,8 +1308,8 @@ PseudoHandle<JSGeneratorFunction> JSGeneratorFunction::create(
   return self;
 }
 
-//===----------------------------------------------------------------------===//
-// class GeneratorInnerFunction
+                                                                                
+                               
 
 const CallableVTable GeneratorInnerFunction::vt{
     {
@@ -1333,11 +1378,11 @@ CallResult<Handle<GeneratorInnerFunction>> GeneratorInnerFunction::create(
   }
   auto ctx = runtime.makeHandle<ArrayStorage>(*ctxRes);
 
-  // Set "this" as the first element.
+                                     
   ctx->set(0, args.getThisArg(), runtime.getHeap());
 
-  // Set the rest of the arguments.
-  // Argument i goes in slot i+1 to account for the "this".
+                                   
+                                                           
   for (uint32_t i = 0, e = args.getArgCount(); i < e; ++i) {
     ctx->set(i + 1, args.getArg(i), runtime.getHeap());
   }
@@ -1347,7 +1392,7 @@ CallResult<Handle<GeneratorInnerFunction>> GeneratorInnerFunction::create(
   return self;
 }
 
-/// Call the callable with arguments already on the stack.
+                                                          
 CallResult<PseudoHandle<>> GeneratorInnerFunction::callInnerFunction(
     Handle<GeneratorInnerFunction> selfHandle,
     Runtime &runtime,
@@ -1361,14 +1406,14 @@ CallResult<PseudoHandle<>> GeneratorInnerFunction::callInnerFunction(
   self->action_ = action;
 
   auto ctx = runtime.makeMutableHandle(selfHandle->savedContext_);
-  // Account for the `this` argument stored as the first element of ctx.
+                                                                        
   const uint32_t argCount = self->argCount_;
-  // Generators cannot be used as constructors, so newTarget is always
-  // undefined.
+                                                                      
+               
   HermesValue newTarget = HermesValue::encodeUndefinedValue();
   ScopedNativeCallFrame frame{
       runtime,
-      argCount, // Account for `this`.
+      argCount,                       
       selfHandle.getHermesValue(),
       newTarget,
       ctx->at(0)};
@@ -1378,10 +1423,10 @@ CallResult<PseudoHandle<>> GeneratorInnerFunction::callInnerFunction(
     frame->getArgRef(i) = ctx->at(i + 1);
   }
 
-  // Force lazy compilation immediately in order to size the context properly.
-  // We're about to call the function anyway, so this doesn't reduce laziness.
-  // Note that this will do nothing after the very first time a lazy function
-  // is called, so we only resize before we save any registers at all.
+                                                                              
+                                                                              
+                                                                             
+                                                                      
   if (LLVM_UNLIKELY(selfHandle->getCodeBlock(runtime)->isLazy())) {
     if (LLVM_UNLIKELY(
             selfHandle->getCodeBlock(runtime)->lazyCompile(runtime) ==
@@ -1406,7 +1451,7 @@ CallResult<PseudoHandle<>> GeneratorInnerFunction::callInnerFunction(
 void GeneratorInnerFunction::restoreStack(Runtime &runtime) {
   const uint32_t frameOffset = getFrameOffsetInContext();
   const uint32_t frameSize = getFrameSizeInContext(runtime);
-  // Start at the lower end of the range to be copied.
+                                                      
   PinnedHermesValue *dst = runtime.getCurrentFrame().ptr();
   assert(
       dst + frameSize <= runtime.getStackPointer() &&
@@ -1419,12 +1464,12 @@ void GeneratorInnerFunction::restoreStack(Runtime &runtime) {
 void GeneratorInnerFunction::saveStack(Runtime &runtime) {
   const uint32_t frameOffset = getFrameOffsetInContext();
   const uint32_t frameSize = getFrameSizeInContext(runtime);
-  // Start at the lower end of the range to be copied.
+                                                      
   PinnedHermesValue *first = runtime.getCurrentFrame().ptr();
   assert(
       first + frameSize <= runtime.getStackPointer() &&
       "reading off the end of the stack");
-  // Use GCHermesValue::copy to ensure write barriers are executed.
+                                                                   
   GCHermesValue::copy(
       first,
       first + frameSize,
@@ -1432,5 +1477,5 @@ void GeneratorInnerFunction::saveStack(Runtime &runtime) {
       runtime.getHeap());
 }
 
-} // namespace vm
-} // namespace hermes
+}                
+}                    

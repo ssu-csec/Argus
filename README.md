@@ -1,325 +1,315 @@
 # Argus
 
-**Argus** is an automated pipeline for large-scale web tracking analysis.
-It crawls JavaScript from real-world websites, performs static taint analysis on the compiled IR, classifies behavioral patterns, and visualizes data-flow graphs.
+Argus is a research pipeline for identifying mixed web trackers. It collects JavaScript from websites, performs static source-to-sink taint analysis, and applies the Argus classification rules to the resulting reports.
 
----
+This is the **v4 research source package**, based on the integrated RC3. It is built locally on Linux or WSL2; a Docker image is not included. The package contains the crawler, analyzer, classifier, the 100,000-target list, and research aggregation scripts.
+
+[한국어 안내](README_KO.md)
 
 ## Pipeline Overview
 
-```
-[1] Crawling  →  [2] Taint Analysis  →  [3] Classification  →  [4] Graph Generation
-  crawler.cjs      Argus LLVM Pass        classifier.py         viz_taint.py
+```text
+[1] Crawling  →  [2] Taint Analysis  →  [3] Classification
+ crawler.cjs       analyzer/run.py       classifier/run.py
+                   mixed-hermes         Argus rules
 ```
 
----
+The normal workflow has three stages. Historical table aggregation is a separate operation on archived results.
+
+## Dependencies and Installation
+
+| Component | Requirements |
+|---|---|
+| Environment | Linux or WSL2 |
+| Crawler | Node.js 20, npm, Puppeteer/Chromium and its Linux runtime libraries |
+| Native analyzer | C++17 toolchain, CMake, Ninja, ICU development libraries |
+| Pipeline and classifier | Python 3.10+; analysis also uses the root npm dependencies |
+| Historical aggregation | Python standard library and the corresponding archived input files |
+
+After installing Node.js 20, run the following from the repository root:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y build-essential cmake ninja-build libicu-dev python3
+npm ci --ignore-scripts
+bash scripts/build.sh
+npm ci --prefix crawler
+```
+
+The build creates `build/bin/mixed-hermes` and uses two build jobs by default. The last command installs the crawler dependencies and downloads Chromium; the browser's Linux system libraries must also be available. Skip the crawler installation when analyzing already collected files. The supported native build is the configuration in `scripts/build.sh`.
 
 ## 1. Crawling
 
 **Script:** `crawler/crawler.cjs`
 
-Collects JavaScript from websites using a headless Puppeteer cluster.
+Collects JavaScript and request observations with Puppeteer/Chromium.
 
 ### What it does
-- Reads a domain list (e.g., Tranco Top 100K) from a CSV or plain-text file
-- Launches a headless Chromium instance per domain
-- Intercepts all network responses and extracts `*.js` resources
-- Decodes non-UTF-8 encoded scripts (EUC-KR, CP949) and repairs mojibake
-- Deobfuscates collected scripts using **Restringer** and transpiles to ES5 via **Babel**
-- Saves per-site scripts and a merged `wholepage.js` under `collected_scripts/<domain>/`
-- Records failed domains in `fail_scripts/failed_urls.txt` for retry
+
+- Reads targets from a domain/URL list. The included `crawler/20261005-top-100k-urls.txt` contains 100,000 unique entries, one per line.
+- Visits each target and saves captured scripts, response evidence, request observations, and hashes.
+- Preserves collected JavaScript by default. Optional `--transform babel` records transformations, skips, and failures.
+- Records `SUCCESS`, `PARTIAL`, `NO_SCRIPTS`, `FAILED`, and `NOT_STARTED` outcomes.
 
 ### Usage
+
+Check the target list without starting a browser:
+
 ```bash
-node crawler/crawler.cjs <url_list.txt>
+node crawler/crawler.cjs crawler/20261005-top-100k-urls.txt --check-input
+```
+
+Start collection in a new output directory:
+
+```bash
+node crawler/crawler.cjs crawler/20261005-top-100k-urls.txt \
+  --out runs/crawl-01 --transform preserve --concurrency 2
 ```
 
 ### Output
-```
-collected_scripts/
-  <domain>/
-    wholepage.js          # merged, transpiled scripts
-    <script>_<ts>.js      # individual script files
-    network_logs.json     # intercepted URLs
-fail_scripts/
-  failed_urls.txt
+
+```text
+runs/crawl-01/
+├── run.json
+├── progress.json
+├── outcomes.json
+└── visits/
+    └── <visit-directory>/
+        ├── visit.json
+        ├── network_logs.json
+        ├── wholepage.js
+        └── ... saved scripts and response evidence
 ```
 
----
+`wholepage.js` is created when collection and assembly succeed. `NO_SCRIPTS` means no usable script was saved; it does not prove that the website has no JavaScript. Script concatenation order does not establish frame or module execution order.
 
 ## 2. Taint Analysis
 
-**Pass:** `lib/Optimizer/Taint/`
-**Entry:** `MixedTaintAnalysis.cpp` → `TaintAnalysis.cpp`
+**Entry point:** `analyzer/run.py`  
+**Native engine:** `build/bin/mixed-hermes`
 
-Performs static taint analysis on JavaScript compiled to **Hermes IR** via the Argus LLVM-style optimization pass.
+Analyzes saved JavaScript using the Argus native engine and validates the resulting evidence.
 
 ### What it does
-- Compiles `wholepage.js` to Hermes bytecode IR
-- Registers **sources** (fingerprinting APIs: `navigator.*`, `document.URL`, `screen.*`, WebGL, etc.) and **sinks** (data exfiltration: `fetch`, `sendBeacon`, `XMLHttpRequest`, `img.src`, `innerHTML`, etc.)
-- Propagates taint through the def-use chain using a worklist algorithm
-- Tracks inter-procedural flows via **CallGraphAnalyzer** and closure variables via **DefUseAnalyzer**
-- Applies four detection rules:
-  | Rule | Description |
-  |------|-------------|
-  | Rule 1 | Direct source-to-sink taint flow |
-  | Rule 2 | Fingerprinting data stored in localStorage / cookies |
-  | Rule 3 | Event-driven function identification (`addEventListener`, `onclick`, …) |
-  | Rule 4 | DOM evasion mapping (`img.src`, `script.src` forced to `SINK_NETWORK`) |
-- Outputs a structured JSON report per domain
+
+- Validates input paths and hashes and performs bounded AST checks.
+- Compiles admitted inputs and tracks source-to-sink flows in the native IR.
+- Verifies complete reports and retains execution diagnostics and provenance.
+- Produces a manifest of verified complete reports for the classifier.
+
+This stage does not execute collected website JavaScript and does not run the final rule classifier.
+
+### Usage
+
+Analyze the crawler output:
+
+```bash
+python3 analyzer/run.py --crawl-dir runs/crawl-01 \
+  --out runs/analysis-01 --workers 2
+```
+
+Analyze one saved file without crawling again:
+
+```bash
+python3 analyzer/run.py --input /path/to/example.com/wholepage.js \
+  --domain example.com --network-log /path/to/example.com/visit.json \
+  --out runs/analysis-saved-01
+```
+
+For multiple saved files, use `--manifest inputs.json` instead of `--crawl-dir`. Paths are relative to the input manifest:
+
+```json
+[
+  {"domain":"example.com","input":"example.com/wholepage.js","network_log":"example.com/visit.json"},
+  {"domain":"example.org","input":"example.org/wholepage.js","network_log":"example.org/visit.json"}
+]
+```
+
+Pass `visit.json` or a JSON array of URL strings as network evidence. The crawler's `network_logs.json` is an array of request objects and is not accepted as this argument. Missing network evidence affects network-dependent rules. Duplicate normalized domain keys are rejected.
 
 ### Output
-```
-report/
-  <domain>_report.json      # full taint report (s2s_routes, source, sink, path)
-  <domain>_report.txt       # human-readable log
+
+```text
+runs/analysis-01/
+├── results.json
+├── progress.json
+├── final_summary.json
+├── classification_manifest.json
+└── visits/
+    └── ... per-domain analysis artifacts
 ```
 
-### JSON Report Format
-```json
-{
-  "target_url": "<domain>",
-  "s2s_routes": [
-    {
-      "route_id": 1,
-      "source_name": "navigator.userAgent",
-      "sink_name": "fetch",
-      "sink_type": "Network",
-      "trigger_context": "EVENT_DRIVEN",
-      "destination_url": "https://tracker.example.com/collect",
-      "path_length": 7,
-      "path_nodes": ["LoadPropertyInst", "CallInst", "..."]
-    }
-  ]
-}
-```
-
----
+The classification manifest includes only verified complete reports and their network snapshots. Failures and holds remain recorded separately. Exit code 2 indicates incomplete inputs after processing the other inputs; inspect the summary before classifying the completed subset.
 
 ## 3. Classification
 
-**Script:** `classifier.py`
+**Entry point:** `classifier/run.py`  
+**Rule implementation:** `classifier.py`
 
-Classifies each taint report into behavioral tracking categories using the JSON output from Phase 2.
+Applies the Argus rules to completed native reports without repeating native analysis.
 
 ### What it does
-- Reads all `*_report.json` files from `pipeline_results/` (Stage 2 output)
-- Extracts features per S2S route: source API, sink type, trigger context, destination URL, path length
-- Classifies routes into categories:
-  - `Fingerprinting` — device/browser attribute collection
-  - `Data Exfiltration` — network transmission of collected data
-  - `Cookie Tracking` — persistent identifier storage/retrieval
-  - `Event-Driven Tracking` — user interaction monitoring
-  - `Code Injection` — dynamic script execution risk
-- Writes a timestamped CSV summary to `csv_reports/`
+
+- Loads the completed-report manifest and checks report hashes when supplied.
+- Applies the R1/R2/R4/R5 finding rules and records R3 separately at the domain level.
+- Exports finding groups, domain-level rule combinations, and a combined JSON report.
 
 ### Usage
+
 ```bash
-python3 classifier.py                 # classify only
-python3 classifier.py --draw-graphs   # also render GTG/CTG PNGs for malicious domains
-python3 classifier.py --summary       # also emit a per-domain summary CSV for paper use
+python3 classifier/run.py \
+  --manifest runs/analysis-01/classification_manifest.json \
+  --out runs/classification-01
 ```
 
 ### Output
-```
-csv_reports/
-  malicious_domains_<YYYYMMDD>.csv
-pipeline_results/graphs/              # if --draw-graphs is passed
-  <domain>_<gtg|ctg>.png
-```
 
----
-
-## 4. Graph Generation
-
-**Script:** `viz_taint.py`
-
-Generates two types of data-flow graphs from a single taint report JSON, rendered as Graphviz DOT files (and PNGs when `dot` is available).
-
-### Graph Types
-
-| Graph | Description |
-|-------|-------------|
-| **GTG** (Global Threat Graph) | All S2S routes for a domain, including dynamic sources |
-| **CTG** (Core Threat Graph) | Filtered high-confidence paths only; used for publication figures |
-
-### What it does
-- Parses `s2s_routes` from the JSON report
-- Emits Graphviz DOT with color-coded nodes by sink type:
-  - 🔴 `Network` — data exfiltration
-  - 🟠 `Storage` — fingerprinting / storage
-  - 🟡 `XSS` — DOM manipulation
-  - 🟣 `CodeInjection` — code injection
-  - 🔵 `Navigation` — page redirection
-- Dynamic/unresolved sources are rendered as dashed grey nodes (`Dynamic_Source`)
-- Includes a legend for hybrid (static + dynamic) view
-
-### Usage
-```bash
-python3 viz_taint.py <report.json>
+```text
+runs/classification-01/
+├── argus_findings.csv
+├── argus_domain_summary.csv
+├── argus_final_report.json
+└── chunks/
+    └── ... underlying classifier outputs and execution records
 ```
 
-### Output
-```
-<domain>_gtg.dot / <domain>_gtg.png
-<domain>_ctg.dot / <domain>_ctg.png
+`argus_findings.csv` retains the original nine columns:
+
+```text
+Domain, Threat_Type, Trigger_Context, Leaked_Data (Source),
+Leak_Method (Sink), Destination, Observed_Trackers, Party_Check, Confidence_Score
 ```
 
----
+A domain can have multiple finding groups and match multiple rules. Domain counts, finding-group counts, and source-to-sink route counts are different units. R3-only structural observations are kept separate from qualifying mixed-tracker classifications.
+
+Use the wrapper above for the packaged workflow. When relocating analysis outputs, preserve or update all referenced paths. A manually prepared classification manifest must contain `domain`, `report`, and optionally `report_sha256` and `network_log`; completion and provenance must be established before including a report.
 
 ## Directory Structure
 
-```
+```text
 Argus/
 ├── crawler/
-│   ├── crawler.cjs                       # Puppeteer crawler
-│   └── collected_scripts/
-│       ├── run_pipeline.py               # Stage 2 batch runner
-│       └── <domain>/                     # Crawled JS per domain (runtime)
-├── lib/
-│   └── Optimizer/Taint/
-│       ├── TaintAnalysis.cpp             # Core taint analysis logic
-│       ├── MixedTaintAnalysis.cpp
-│       ├── DefUseAnalyzer.cpp            # Def-use chain propagation
-│       ├── CallGraphAnalyzer.cpp         # Inter-procedural call graph
-│       └── ...
-├── report/                               # Per-domain JSON/TXT reports
-├── pipeline_results/                     # Aggregated taint reports (Stage 2 output)
-├── csv_reports/                          # Classification CSVs (Stage 3 output)
-├── classifier.py                         # Behavioral classifier
-├── viz_taint.py                          # GTG / CTG graph generator
-├── pipeline.sh                           # End-to-end pipeline wrapper
-├── Dockerfile                            # Self-contained build environment
-└── build/bin/mixed-hermes                # Argus taint analysis binary (after build)
+│   ├── crawler.cjs
+│   ├── 20261005-top-100k-urls.txt
+│   ├── package.json
+│   ├── package-lock.json
+│   └── LICENSE
+├── analyzer/run.py
+├── classifier/run.py
+├── classifier.py
+├── argus/
+├── argus_pipeline/
+├── argus_semantics/
+├── argus_conditional/
+├── lib/Optimizer/Taint/
+├── include/, public/, external/, cmake/, tools/
+├── scripts/
+│   ├── build.sh
+│   ├── export_csv_and_tracker_counts.py
+│   ├── count_rule_overlap.py
+│   ├── compare_archived_easyprivacy.py
+│   └── recompute_appendix.py
+├── RELEASE.json
+├── REPRODUCTION_INPUTS.json
+├── LICENSE
+└── build/bin/mixed-hermes                 (created by the build)
 ```
 
----
+The supporting Python packages and native source directories are required by the three entry points. Collected website code, historical results, installed dependencies, compiled binaries, test suites, and smoke runners are not included. The earlier repository's Docker and graph-generation instructions do not apply to this package.
 
 ## Running the Full Pipeline
 
-`crawler/collected_scripts/run_pipeline.py` walks `collected_scripts/<domain>/` directories, runs `mixed-hermes` on each `wholepage.js`, and collects the resulting JSON reports under `pipeline_results/`.
-
-> **Path convention:** `run_pipeline.py` and `classifier.py` reference paths via hard-coded `~/argus/...` and `~/mixed-hermes/...` prefixes. Inside the Docker image both names are symlinked to the project root, so the scripts run unmodified. For local use outside Docker, clone the repo as `~/mixed-hermes/` (or create the equivalent symlinks) — all output directories shown below resolve to the project root.
-
-Manual three-stage invocation:
+Run these commands in order from the repository root after installation. Always choose new output directories. If a stage reports an error, inspect its results before continuing.
 
 ```bash
-# [1] Crawl
-cd ~/Argus/crawler && node crawler.cjs <url_list.txt>
+node crawler/crawler.cjs crawler/20261005-top-100k-urls.txt \
+  --out runs/crawl-01 --transform preserve --concurrency 2
 
-# [2] Taint analysis (batch)
-cd ~/Argus/crawler/collected_scripts && python3 run_pipeline.py
+python3 analyzer/run.py --crawl-dir runs/crawl-01 \
+  --out runs/analysis-01 --workers 2
 
-# [3] Classification
-cd ~/Argus && python3 classifier.py
+python3 classifier/run.py \
+  --manifest runs/analysis-01/classification_manifest.json \
+  --out runs/classification-01
 ```
 
-Or use the wrapper that chains all three:
+Monitor the relevant stage from another terminal:
 
 ```bash
-./pipeline.sh                          # default: crawler/urls_test.txt (smoke test, 2 domains)
-./pipeline.sh crawler/tranco-100K.txt    # full Tranco list
-./pipeline.sh /path/to/your_urls.txt   # custom URL list
+watch -n 10 cat runs/crawl-01/progress.json
 ```
-
----
-
-## Docker
-
-A `Dockerfile` is provided to build a self-contained image with all dependencies pre-installed (Hermes/Argus build, Node.js 22, Puppeteer/Chromium runtime, Python tooling, Graphviz, `nlohmann-json`).
-
-The build process:
-1. Installs system packages (build toolchain, Chromium runtime libs, `nlohmann-json3-dev`, Graphviz, etc.)
-2. Compiles the Argus/Hermes taint analysis binary via CMake + Ninja → `build/bin/mixed-hermes`
-3. Runs `npm install` in `crawler/` (downloads Chromium for Puppeteer into `~/.cache/puppeteer`)
-4. Creates a non-root user `user` and prepares the runtime environment
-
-### Build
 
 ```bash
-# Default build
-docker build -t argus:base .
-
-# Build with full logs (recommended)
-docker build --progress=plain -t argus:base .
-
-# Build from scratch (ignore cache)
-docker build --progress=plain --no-cache -t argus:base .
+watch -n 10 cat runs/analysis-01/progress.json
 ```
 
-> **Apple Silicon (M-series):** Puppeteer's bundled Chrome is x86_64-only on Linux as of writing. On arm64 hosts add `--platform=linux/amd64` to both `docker build` and `docker run` so the entire image (and Chrome) runs under Rosetta:
-> ```bash
-> docker build --platform=linux/amd64 -t argus:base .
-> docker run --platform=linux/amd64 --rm -it argus:base bash
-> ```
+## Optional Analysis and Limits
 
-### Run the pipeline
+`--semantics` on the analyzer adds exact Date-source-to-cookie-route semantic labels. `--conditional` adds separate pbjs conditional observations. These outputs are distinct from the main R1–R5 rule classification. `python3 -m argus analyze` also supports the combined analysis/classification workflow.
+
+- Resource bounds remain in place: at most four workers, 8 GiB address space per process, up to 60 seconds per preflight/native stage, 256 MiB per output file and 1 GiB per item. The compressed full-IR logical limit is 1 GiB. Startup checks require workers × 8 GiB plus 2 GiB available RAM and 22 GiB free disk. Resource exhaustion is not a negative result.
+- Missing module dependencies or uncertain entry/frame/global context may result in a hold or `UNKNOWN`. Concatenating scripts cannot resolve those uncertainties.
+- Native completion is distinct from semantic certainty. Absence of findings does not establish benign behavior. `DYNAMIC_URL` and `{VAR}` indicate unresolved destination information.
+- Semantic labels concern the exact emitted Date source-to-sink route; surrounding Date flows are not merged into that route's label.
+- The historical 44,882 completed domains were obtained with multiple engine versions. They are not a new full-corpus evaluation of this reduced distribution.
+
+The source cleanup preserves license notices, interpreter/encoding directives, and runtime strings. Ordinary explanatory comments are removed. Validation records and tests are maintained separately from this runtime distribution. See `RELEASE.json` for this package's validation summary and target-list hash.
+
+## Validation
+
+The reduced sources build successfully on Linux/WSL2. Validation passed 19 crawler checks, 61 authored native cases and 11 TDZ cases, plus positive/negative Date-to-cookie pipeline checks and a missing-module hold check. Python and JavaScript AST comparisons and a comment-excluded native-source comparison passed. Three saved site inputs (adblockplus.org, ampproject.org, bis.org) completed; source-to-sink route fields and rule findings matched RC3 after normalizing source-file paths. The included target list contains 100,000 unique entries and retains the supplied file hash.
+
+These checks use external validation files; the runtime archive contains no smoke or test suite. No new full-corpus run or live crawl was performed during packaging. See `RELEASE.json` for the machine-readable summary.
+
+## Research Aggregation Scripts
+
+These scripts operate on archived measurement results and are separate from the three-stage workflow. Input datasets are not bundled; their filenames and hashes are listed in `REPRODUCTION_INPUTS.json`. Publishing this source package does not claim that all paper results can be reproduced from its contents alone.
+
+### Appendix tables
+
+`scripts/recompute_appendix.py` reproduces the appendix aggregates from the archived measurement inputs. It is a research-reproduction script, not a smoke test or another stage of the normal crawler/analyzer/classifier workflow.
 
 ```bash
-# Interactive shell
-docker run --rm -it argus:base bash
-
-# Inside the container:
-./pipeline.sh                            # smoke test with 2 URLs
-./pipeline.sh crawler/tranco-100K.txt    # full dataset
+python3 scripts/recompute_appendix.py \
+  --classification /path/to/final_classification.json.gz \
+  --comparison /path/to/all_11124_domain_comparison.csv \
+  --comparison-summary /path/to/comparison_summary.json \
+  --output /path/to/new_appendix_metrics.json
 ```
 
-### Run individual stages
+The script uses only the Python standard library. Supply an existing output parent directory and a new output filename. Historical input data are not bundled in this source package. The required inputs are:
 
-Each stage can be invoked with its own `docker run`, mounting only the directories it needs. Outputs land on the host so subsequent stages can pick them up.
+- The archived gzip JSON classification dataset, with a top-level `rows` array and per-domain findings, domain findings and input hashes. This is **not** the same schema as the current CLI's `argus_final_report.json`.
+- The archived domain/list-comparison CSV, including `Domain`, `Status`, `Wholepage_SHA256`, `Network_URLs_SHA256` and `Finding_Groups`.
+- The archived comparison summary JSON. This file's hash is recorded for provenance; it is not used to derive the aggregates.
+
+The script intentionally checks the historical cohort (11,124 mixed-tracker domains and 93,902 finding groups); it is not a generic aggregator for arbitrary future runs. Do not use Python's `-O` option, which disables its assertions. `Unresolved URL` includes exact `DYNAMIC_URL` and destinations containing `{VAR}`; `All three` uses that same condition. R1/R2/R4/R5 counts use finding groups, while the maximum evidence score is computed per domain. Reproduction input filenames and hashes are recorded in `RELEASE.json`.
+
+### CSV tables, rule overlaps, and list coverage
+
+The historical measurement schema is required by these scripts. They read saved results without crawling or rerunning the native analyzer. Python assertions are part of their validation; do not use `python -O`.
 
 ```bash
-# Stage 1 — Crawl a URL list
-docker run --rm -it \
-  -v $(pwd)/urls.txt:/home/user/Argus/urls.txt \
-  -v $(pwd)/collected_scripts:/home/user/Argus/crawler/collected_scripts \
-  argus:base \
-  bash -c "cd crawler && node crawler.cjs /home/user/Argus/urls.txt"
-
-# Stage 2 — Taint analysis on a single script
-docker run --rm -it \
-  -v $(pwd)/collected_scripts:/home/user/Argus/crawler/collected_scripts \
-  -v $(pwd)/report:/home/user/Argus/report \
-  argus:base \
-  /home/user/Argus/build/bin/mixed-hermes \
-    crawler/collected_scripts/<domain>/wholepage.js
-
-# Stage 3 — Classification
-#   reads:  pipeline_results/  (Stage 2 batch output)
-#   writes: csv_reports/       (timestamped CSV)
-docker run --rm -it \
-  -v $(pwd)/pipeline_results:/home/user/Argus/pipeline_results \
-  -v $(pwd)/csv_reports:/home/user/Argus/csv_reports \
-  argus:base \
-  python3 /home/user/Argus/classifier.py
-
-# Stage 4 — Graph generation for a specific report
-docker run --rm -it \
-  -v $(pwd)/report:/home/user/Argus/report \
-  argus:base \
-  python3 /home/user/Argus/viz_taint.py report/<domain>_report.json
+mkdir -p runs
+python3 scripts/export_csv_and_tracker_counts.py \
+  --input /archive/final_classification.json.gz --output runs/csv-export
+python3 scripts/count_rule_overlap.py \
+  --input /archive/final_classification.json.gz --output runs/rule-overlap.json
+python3 scripts/compare_archived_easyprivacy.py \
+  --classification /archive/final_classification.json.gz \
+  --network-dir /archive/networks \
+  --list /archive/easyprivacy_tracker_domains.txt \
+  --output runs/list-comparison
 ```
 
-### Run the full pipeline
+Use new output paths. The network directory must contain `local_network.json.gz`, `argus1_network.json.gz`, `argus2_network.json.gz` and `argus3_network.json.gz` from the same archived measurement. `--old-csv` is optional and is needed only for comparison with the earlier study. CSV export reads `TRACKER_KEYWORDS` from the packaged classifier using Python AST parsing, without executing that classifier; `--classifier` can specify an archived classifier explicitly.
 
-```bash
-docker run --rm -it \
-  -v $(pwd)/collected_scripts:/home/user/Argus/crawler/collected_scripts \
-  -v $(pwd)/pipeline_results:/home/user/Argus/pipeline_results \
-  argus:base \
-  bash -c "cd /home/user/Argus/crawler/collected_scripts && python3 run_pipeline.py"
-```
+`REPRODUCTION_INPUTS.json` identifies required archived inputs by filename and SHA-256. These data are **not included** and no public download URL has been configured. The source ZIP alone therefore does not reproduce the paper's numerical results. Recomputed comparison JSON contains new timestamps and paths; compare its metrics and CSV hashes rather than expecting that entire JSON file to have the archived hash.
 
-> Puppeteer requires `--no-sandbox` (already configured in `crawler.cjs`).
-> If Chromium still fails to launch, try `--cap-add=SYS_ADMIN` on `docker run`.
+The list comparison checks literal hostnames and dot-boundary subdomains against the archived EasyPrivacy-derived host list. It is not full Adblock rule evaluation. The original upstream date and extraction procedure of that list have not been established. The reproduced categories contain 9,957 list-matched, 1,166 list-unmatched and one indeterminate mixed-tracker domain. These counts concern the archived observation and matching method, not proof of global novelty.
 
----
+## License
 
-## Dependencies
+The author-written crawler is released under the MIT License; see `crawler/LICENSE`. Its package metadata uses MIT. Third-party dependencies retain their own licenses.
 
-| Component | Dependency |
-|-----------|-----------|
-| Crawler | Node.js 22+, `puppeteer-cluster`, `puppeteer-extra`, `restringer`, `@babel/core`, `iconv-lite`, `js-beautify` |
-| Taint Analysis | C++14 toolchain (gcc / clang), CMake, Ninja, `libicu-dev`, `nlohmann-json3-dev`, `libreadline-dev` |
-| Classifier | Python 3.10+ (standard library only — no external packages) |
-| Graph Generation | Python 3.10+, Graphviz (`dot` CLI) |
+Keep `LICENSE` and third-party notices with redistributed source. The native engine includes Hermes, LLVH, dtoa, zip, and ICU declarations; their applicable notices remain in the relevant files and directories. npm dependencies retain their own licenses when installed.

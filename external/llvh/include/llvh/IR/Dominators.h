@@ -34,8 +34,8 @@ class Module;
 class raw_ostream;
 
 extern template class DomTreeNodeBase<BasicBlock>;
-extern template class DominatorTreeBase<BasicBlock, false>; // DomTree
-extern template class DominatorTreeBase<BasicBlock, true>; // PostDomTree
+extern template class DominatorTreeBase<BasicBlock, false>;           
+extern template class DominatorTreeBase<BasicBlock, true>;               
 
 extern template class cfg::Update<BasicBlock *>;
 
@@ -70,7 +70,7 @@ extern template bool Verify<BBDomTree>(const BBDomTree &DT,
                                        BBDomTree::VerificationLevel VL);
 extern template bool Verify<BBPostDomTree>(const BBPostDomTree &DT,
                                            BBPostDomTree::VerificationLevel VL);
-}  // namespace DomTreeBuilder
+}                             
 
 using DomTreeNode = DomTreeNodeBase<BasicBlock>;
 
@@ -96,7 +96,7 @@ public:
     return End;
   }
 
-  /// Check if this is the only edge between Start and End.
+                                                           
   bool isSingleEdge() const;
 };
 
@@ -124,24 +124,24 @@ template <> struct DenseMapInfo<BasicBlockEdge> {
   }
 };
 
-/// Concrete subclass of DominatorTreeBase that is used to compute a
-/// normal dominator tree.
-///
-/// Definition: A block is said to be forward statically reachable if there is
-/// a path from the entry of the function to the block.  A statically reachable
-/// block may become statically unreachable during optimization.
-///
-/// A forward unreachable block may appear in the dominator tree, or it may
-/// not.  If it does, dominance queries will return results as if all reachable
-/// blocks dominate it.  When asking for a Node corresponding to a potentially
-/// unreachable block, calling code must handle the case where the block was
-/// unreachable and the result of getNode() is nullptr.
-///
-/// Generally, a block known to be unreachable when the dominator tree is
-/// constructed will not be in the tree.  One which becomes unreachable after
-/// the dominator tree is initially constructed may still exist in the tree,
-/// even if the tree is properly updated. Calling code should not rely on the
-/// preceding statements; this is stated only to assist human understanding.
+                                                                    
+                          
+   
+                                                                              
+                                                                               
+                                                                
+   
+                                                                           
+                                                                               
+                                                                              
+                                                                            
+                                                       
+   
+                                                                         
+                                                                             
+                                                                            
+                                                                             
+                                                                            
 class DominatorTree : public DominatorTreeBase<BasicBlock, false> {
  public:
   using Base = DominatorTreeBase<BasicBlock, false>;
@@ -152,42 +152,42 @@ class DominatorTree : public DominatorTreeBase<BasicBlock, false> {
     recalculate(*DT.Parent, U);
   }
 
-  /// Handle invalidation explicitly.
+                                     
   bool invalidate(Function &F, const PreservedAnalyses &PA,
                   FunctionAnalysisManager::Invalidator &);
 
-  // Ensure base-class overloads are visible.
+                                             
   using Base::dominates;
 
-  /// Return true if Def dominates a use in User.
-  ///
-  /// This performs the special checks necessary if Def and User are in the same
-  /// basic block. Note that Def doesn't dominate a use in Def itself!
+                                                 
+     
+                                                                                
+                                                                      
   bool dominates(const Instruction *Def, const Use &U) const;
   bool dominates(const Instruction *Def, const Instruction *User) const;
   bool dominates(const Instruction *Def, const BasicBlock *BB) const;
 
-  /// Return true if an edge dominates a use.
-  ///
-  /// If BBE is not a unique edge between start and end of the edge, it can
-  /// never dominate the use.
+                                             
+     
+                                                                           
+                             
   bool dominates(const BasicBlockEdge &BBE, const Use &U) const;
   bool dominates(const BasicBlockEdge &BBE, const BasicBlock *BB) const;
 
-  // Ensure base class overloads are visible.
+                                             
   using Base::isReachableFromEntry;
 
-  /// Provide an overload for a Use.
+                                    
   bool isReachableFromEntry(const Use &U) const;
 
-  // Pop up a GraphViz/gv window with the Dominator Tree rendered using `dot`.
+                                                                              
   void viewGraph(const Twine &Name, const Twine &Title);
   void viewGraph();
 };
 
-//===-------------------------------------
-// DominatorTree GraphTraits specializations so the DominatorTree can be
-// iterable by generic graph iterators.
+                                          
+                                                                        
+                                       
 
 template <class Node, class ChildIterator> struct DomTreeGraphTraitsBase {
   using NodeRef = Node *;
@@ -227,20 +227,20 @@ template <> struct GraphTraits<DominatorTree*>
   }
 };
 
-/// Analysis pass which computes a \c DominatorTree.
+                                                    
 class DominatorTreeAnalysis : public AnalysisInfoMixin<DominatorTreeAnalysis> {
   friend AnalysisInfoMixin<DominatorTreeAnalysis>;
   static AnalysisKey Key;
 
 public:
-  /// Provide the result typedef for this analysis pass.
+                                                        
   using Result = DominatorTree;
 
-  /// Run the analysis pass over a function and produce a dominator tree.
+                                                                         
   DominatorTree run(Function &F, FunctionAnalysisManager &);
 };
 
-/// Printer pass for the \c DominatorTree.
+                                          
 class DominatorTreePrinterPass
     : public PassInfoMixin<DominatorTreePrinterPass> {
   raw_ostream &OS;
@@ -251,12 +251,12 @@ public:
   PreservedAnalyses run(Function &F, FunctionAnalysisManager &AM);
 };
 
-/// Verifier pass for the \c DominatorTree.
+                                           
 struct DominatorTreeVerifierPass : PassInfoMixin<DominatorTreeVerifierPass> {
   PreservedAnalyses run(Function &F, FunctionAnalysisManager &AM);
 };
 
-/// Legacy analysis pass which computes a \c DominatorTree.
+                                                           
 class DominatorTreeWrapperPass : public FunctionPass {
   DominatorTree DT;
 
@@ -282,6 +282,6 @@ public:
 
   void print(raw_ostream &OS, const Module *M = nullptr) const override;
 };
-} // end namespace llvh
+}                      
 
-#endif // LLVM_IR_DOMINATORS_H
+#endif                        

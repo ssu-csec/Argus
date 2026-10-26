@@ -118,15 +118,15 @@ JSONHiddenClass *JSONFactory::getHiddenClass(const HiddenClassKey &key) {
 }
 
 JSONString *JSONFactory::sortProps(Prop *from, Prop *to) {
-  // Sort the keys by sorting the indexes first.
+                                                
   std::sort(from, to, [](const Prop &a, const Prop &b) {
     return a.first->str() < b.first->str();
   });
 
-  // Check for duplicate keys
+                             
   JSONString *lastKey = nullptr;
   for (auto *p = from; p != to; ++p) {
-    // Duplicate?
+                 
     if (p->first == lastKey)
       return lastKey;
     lastKey = p->first;
@@ -137,18 +137,18 @@ JSONString *JSONFactory::sortProps(Prop *from, Prop *to) {
 
 JSONObject *JSONFactory::newObject(Prop *from, Prop *to, bool propsAreSorted) {
   if (!propsAreSorted) {
-    // Sort the properties. If non-null was returned, there was a duplicate.
+                                                                            
     if (sortProps(from, to))
       return nullptr;
   }
 
-  // Look for an existing hidden class.
+                                       
   llvh::SmallVector<JSONString *, 10> keys(
       makePairFirstIterator(from), makePairFirstIterator(to));
 
   auto *klazz = getHiddenClass({keys.size(), keys.begin()});
 
-  // Create the object with the class.
+                                      
   return newObject(
       klazz, makePairSecondIterator(from), makePairSecondIterator(to));
 }
@@ -161,7 +161,7 @@ bool JSONFactory::LessHiddenClassKey::operator()(
   if (a.first > b.first)
     return false;
 
-  // Same length - need to compare the contents.
+                                                
   for (size_t i = 0, e = a.first; i != e; ++i) {
     JSONString *s1 = a.second[i];
     JSONString *s2 = b.second[i];
@@ -270,7 +270,7 @@ llvh::Optional<JSONValue *> JSONParser::parseArray() {
     }
   }
 
-  lexer_.advance(); // consume the ']'
+  lexer_.advance();                   
 
   return factory_.newArray(storage.size(), storage.begin(), storage.end());
 }
@@ -312,7 +312,7 @@ llvh::Optional<JSONValue *> JSONParser::parseObject() {
     }
   }
 
-  lexer_.advance(); // consume the '}'
+  lexer_.advance();                   
 
   if (auto *duplicate = factory_.sortProps(pairs.begin(), pairs.end())) {
     error("key '" + duplicate->str() + "' is already present");
@@ -322,5 +322,5 @@ llvh::Optional<JSONValue *> JSONParser::parseObject() {
   return factory_.newObject(pairs.begin(), pairs.end(), true);
 }
 
-} // namespace parser
-} // namespace hermes
+}                    
+}                    

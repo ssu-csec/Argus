@@ -54,11 +54,11 @@ class APInt;
 class MDNode;
 class Use;
 
-/// This provides the default implementation of the IRBuilder
-/// 'InsertHelper' method that is called whenever an instruction is created by
-/// IRBuilder and needs to be inserted.
-///
-/// By default, this inserts the instruction at the insertion point.
+                                                             
+                                                                              
+                                       
+   
+                                                                    
 class IRBuilderDefaultInserter {
 protected:
   void InsertHelper(Instruction *I, const Twine &Name,
@@ -68,8 +68,8 @@ protected:
   }
 };
 
-/// Provides an 'InsertHelper' that calls a user-provided callback after
-/// performing the default insertion.
+                                                                        
+                                     
 class IRBuilderCallbackInserter : IRBuilderDefaultInserter {
   std::function<void(Instruction *)> Callback;
 
@@ -85,7 +85,7 @@ protected:
   }
 };
 
-/// Common base class shared among various IRBuilders.
+                                                      
 class IRBuilderBase {
   DebugLoc CurDbgLocation;
 
@@ -107,12 +107,12 @@ public:
     ClearInsertionPoint();
   }
 
-  //===--------------------------------------------------------------------===//
-  // Builder configuration methods
-  //===--------------------------------------------------------------------===//
+                                                                                
+                                  
+                                                                                
 
-  /// Clear the insertion point: created instructions will not be
-  /// inserted into a block.
+                                                                 
+                            
   void ClearInsertionPoint() {
     BB = nullptr;
     InsertPt = BasicBlock::iterator();
@@ -122,15 +122,15 @@ public:
   BasicBlock::iterator GetInsertPoint() const { return InsertPt; }
   LLVMContext &getContext() const { return Context; }
 
-  /// This specifies that created instructions should be appended to the
-  /// end of the specified block.
+                                                                        
+                                 
   void SetInsertPoint(BasicBlock *TheBB) {
     BB = TheBB;
     InsertPt = BB->end();
   }
 
-  /// This specifies that created instructions should be inserted before
-  /// the specified instruction.
+                                                                        
+                                
   void SetInsertPoint(Instruction *I) {
     BB = I->getParent();
     InsertPt = I->getIterator();
@@ -138,8 +138,8 @@ public:
     SetCurrentDebugLocation(I->getDebugLoc());
   }
 
-  /// This specifies that created instructions should be inserted at the
-  /// specified point.
+                                                                        
+                      
   void SetInsertPoint(BasicBlock *TheBB, BasicBlock::iterator IP) {
     BB = TheBB;
     InsertPt = IP;
@@ -147,56 +147,56 @@ public:
       SetCurrentDebugLocation(IP->getDebugLoc());
   }
 
-  /// Set location information used by debugging information.
+                                                             
   void SetCurrentDebugLocation(DebugLoc L) { CurDbgLocation = std::move(L); }
 
-  /// Get location information used by debugging information.
+                                                             
   const DebugLoc &getCurrentDebugLocation() const { return CurDbgLocation; }
 
-  /// If this builder has a current debug location, set it on the
-  /// specified instruction.
+                                                                 
+                            
   void SetInstDebugLocation(Instruction *I) const {
     if (CurDbgLocation)
       I->setDebugLoc(CurDbgLocation);
   }
 
-  /// Get the return type of the current function that we're emitting
-  /// into.
+                                                                     
+           
   Type *getCurrentFunctionReturnType() const;
 
-  /// InsertPoint - A saved insertion point.
+                                            
   class InsertPoint {
     BasicBlock *Block = nullptr;
     BasicBlock::iterator Point;
 
   public:
-    /// Creates a new insertion point which doesn't point to anything.
+                                                                      
     InsertPoint() = default;
 
-    /// Creates a new insertion point at the given location.
+                                                            
     InsertPoint(BasicBlock *InsertBlock, BasicBlock::iterator InsertPoint)
         : Block(InsertBlock), Point(InsertPoint) {}
 
-    /// Returns true if this insert point is set.
+                                                 
     bool isSet() const { return (Block != nullptr); }
 
     BasicBlock *getBlock() const { return Block; }
     BasicBlock::iterator getPoint() const { return Point; }
   };
 
-  /// Returns the current insert point.
+                                       
   InsertPoint saveIP() const {
     return InsertPoint(GetInsertBlock(), GetInsertPoint());
   }
 
-  /// Returns the current insert point, clearing it in the process.
+                                                                   
   InsertPoint saveAndClearIP() {
     InsertPoint IP(GetInsertBlock(), GetInsertPoint());
     ClearInsertionPoint();
     return IP;
   }
 
-  /// Sets the current insert point to a previously-saved location.
+                                                                   
   void restoreIP(InsertPoint IP) {
     if (IP.isSet())
       SetInsertPoint(IP.getBlock(), IP.getPoint());
@@ -204,27 +204,27 @@ public:
       ClearInsertionPoint();
   }
 
-  /// Get the floating point math metadata being used.
+                                                      
   MDNode *getDefaultFPMathTag() const { return DefaultFPMathTag; }
 
-  /// Get the flags to be applied to created floating point ops
+                                                               
   FastMathFlags getFastMathFlags() const { return FMF; }
 
-  /// Clear the fast-math flags.
+                                
   void clearFastMathFlags() { FMF.clear(); }
 
-  /// Set the floating point math metadata to be used.
+                                                      
   void setDefaultFPMathTag(MDNode *FPMathTag) { DefaultFPMathTag = FPMathTag; }
 
-  /// Set the fast-math flags to be used with generated fp-math operators
+                                                                         
   void setFastMathFlags(FastMathFlags NewFMF) { FMF = NewFMF; }
 
-  //===--------------------------------------------------------------------===//
-  // RAII helpers.
-  //===--------------------------------------------------------------------===//
+                                                                                
+                  
+                                                                                
 
-  // RAII object that stores the current insertion point and restores it
-  // when the object is destroyed. This includes the debug location.
+                                                                        
+                                                                    
   class InsertPointGuard {
     IRBuilderBase &Builder;
     AssertingVH<BasicBlock> Block;
@@ -245,8 +245,8 @@ public:
     }
   };
 
-  // RAII object that stores the current fast math settings and restores
-  // them when the object is destroyed.
+                                                                        
+                                       
   class FastMathFlagGuard {
     IRBuilderBase &Builder;
     FastMathFlags FMF;
@@ -265,142 +265,142 @@ public:
     }
   };
 
-  //===--------------------------------------------------------------------===//
-  // Miscellaneous creation methods.
-  //===--------------------------------------------------------------------===//
+                                                                                
+                                    
+                                                                                
 
-  /// Make a new global variable with initializer type i8*
-  ///
-  /// Make a new global variable with an initializer that has array of i8 type
-  /// filled in with the null terminated string value specified.  The new global
-  /// variable will be marked mergable with any others of the same contents.  If
-  /// Name is specified, it is the name of the global variable created.
+                                                          
+     
+                                                                              
+                                                                                
+                                                                                
+                                                                       
   GlobalVariable *CreateGlobalString(StringRef Str, const Twine &Name = "",
                                      unsigned AddressSpace = 0);
 
-  /// Get a constant value representing either true or false.
+                                                             
   ConstantInt *getInt1(bool V) {
     return ConstantInt::get(getInt1Ty(), V);
   }
 
-  /// Get the constant value for i1 true.
+                                         
   ConstantInt *getTrue() {
     return ConstantInt::getTrue(Context);
   }
 
-  /// Get the constant value for i1 false.
+                                          
   ConstantInt *getFalse() {
     return ConstantInt::getFalse(Context);
   }
 
-  /// Get a constant 8-bit value.
+                                 
   ConstantInt *getInt8(uint8_t C) {
     return ConstantInt::get(getInt8Ty(), C);
   }
 
-  /// Get a constant 16-bit value.
+                                  
   ConstantInt *getInt16(uint16_t C) {
     return ConstantInt::get(getInt16Ty(), C);
   }
 
-  /// Get a constant 32-bit value.
+                                  
   ConstantInt *getInt32(uint32_t C) {
     return ConstantInt::get(getInt32Ty(), C);
   }
 
-  /// Get a constant 64-bit value.
+                                  
   ConstantInt *getInt64(uint64_t C) {
     return ConstantInt::get(getInt64Ty(), C);
   }
 
-  /// Get a constant N-bit value, zero extended or truncated from
-  /// a 64-bit value.
+                                                                 
+                     
   ConstantInt *getIntN(unsigned N, uint64_t C) {
     return ConstantInt::get(getIntNTy(N), C);
   }
 
-  /// Get a constant integer value.
+                                   
   ConstantInt *getInt(const APInt &AI) {
     return ConstantInt::get(Context, AI);
   }
 
-  //===--------------------------------------------------------------------===//
-  // Type creation methods
-  //===--------------------------------------------------------------------===//
+                                                                                
+                          
+                                                                                
 
-  /// Fetch the type representing a single bit
+                                              
   IntegerType *getInt1Ty() {
     return Type::getInt1Ty(Context);
   }
 
-  /// Fetch the type representing an 8-bit integer.
+                                                   
   IntegerType *getInt8Ty() {
     return Type::getInt8Ty(Context);
   }
 
-  /// Fetch the type representing a 16-bit integer.
+                                                   
   IntegerType *getInt16Ty() {
     return Type::getInt16Ty(Context);
   }
 
-  /// Fetch the type representing a 32-bit integer.
+                                                   
   IntegerType *getInt32Ty() {
     return Type::getInt32Ty(Context);
   }
 
-  /// Fetch the type representing a 64-bit integer.
+                                                   
   IntegerType *getInt64Ty() {
     return Type::getInt64Ty(Context);
   }
 
-  /// Fetch the type representing a 128-bit integer.
+                                                    
   IntegerType *getInt128Ty() { return Type::getInt128Ty(Context); }
 
-  /// Fetch the type representing an N-bit integer.
+                                                   
   IntegerType *getIntNTy(unsigned N) {
     return Type::getIntNTy(Context, N);
   }
 
-  /// Fetch the type representing a 16-bit floating point value.
+                                                                
   Type *getHalfTy() {
     return Type::getHalfTy(Context);
   }
 
-  /// Fetch the type representing a 32-bit floating point value.
+                                                                
   Type *getFloatTy() {
     return Type::getFloatTy(Context);
   }
 
-  /// Fetch the type representing a 64-bit floating point value.
+                                                                
   Type *getDoubleTy() {
     return Type::getDoubleTy(Context);
   }
 
-  /// Fetch the type representing void.
+                                       
   Type *getVoidTy() {
     return Type::getVoidTy(Context);
   }
 
-  /// Fetch the type representing a pointer to an 8-bit integer value.
+                                                                      
   PointerType *getInt8PtrTy(unsigned AddrSpace = 0) {
     return Type::getInt8PtrTy(Context, AddrSpace);
   }
 
-  /// Fetch the type representing a pointer to an integer value.
+                                                                
   IntegerType *getIntPtrTy(const DataLayout &DL, unsigned AddrSpace = 0) {
     return DL.getIntPtrType(Context, AddrSpace);
   }
 
-  //===--------------------------------------------------------------------===//
-  // Intrinsic creation methods
-  //===--------------------------------------------------------------------===//
+                                                                                
+                               
+                                                                                
 
-  /// Create and insert a memset to the specified pointer and the
-  /// specified value.
-  ///
-  /// If the pointer isn't an i8*, it will be converted. If a TBAA tag is
-  /// specified, it will be added to the instruction. Likewise with alias.scope
-  /// and noalias tags.
+                                                                 
+                      
+     
+                                                                         
+                                                                               
+                       
   CallInst *CreateMemSet(Value *Ptr, Value *Val, uint64_t Size, unsigned Align,
                          bool isVolatile = false, MDNode *TBAATag = nullptr,
                          MDNode *ScopeTag = nullptr,
@@ -414,12 +414,12 @@ public:
                          MDNode *ScopeTag = nullptr,
                          MDNode *NoAliasTag = nullptr);
 
-  /// Create and insert an element unordered-atomic memset of the region of
-  /// memory starting at the given pointer to the given value.
-  ///
-  /// If the pointer isn't an i8*, it will be converted. If a TBAA tag is
-  /// specified, it will be added to the instruction. Likewise with alias.scope
-  /// and noalias tags.
+                                                                           
+                                                              
+     
+                                                                         
+                                                                               
+                       
   CallInst *CreateElementUnorderedAtomicMemSet(Value *Ptr, Value *Val,
                                                uint64_t Size, unsigned Align,
                                                uint32_t ElementSize,
@@ -438,11 +438,11 @@ public:
                                                MDNode *ScopeTag = nullptr,
                                                MDNode *NoAliasTag = nullptr);
 
-  /// Create and insert a memcpy between the specified pointers.
-  ///
-  /// If the pointers aren't i8*, they will be converted.  If a TBAA tag is
-  /// specified, it will be added to the instruction. Likewise with alias.scope
-  /// and noalias tags.
+                                                                
+     
+                                                                           
+                                                                               
+                       
   CallInst *CreateMemCpy(Value *Dst, unsigned DstAlign, Value *Src,
                          unsigned SrcAlign, uint64_t Size,
                          bool isVolatile = false, MDNode *TBAATag = nullptr,
@@ -461,14 +461,14 @@ public:
                          MDNode *ScopeTag = nullptr,
                          MDNode *NoAliasTag = nullptr);
 
-  /// Create and insert an element unordered-atomic memcpy between the
-  /// specified pointers.
-  ///
-  /// DstAlign/SrcAlign are the alignments of the Dst/Src pointers, respectively.
-  ///
-  /// If the pointers aren't i8*, they will be converted.  If a TBAA tag is
-  /// specified, it will be added to the instruction. Likewise with alias.scope
-  /// and noalias tags.
+                                                                      
+                         
+     
+                                                                                 
+     
+                                                                           
+                                                                               
+                       
   CallInst *CreateElementUnorderedAtomicMemCpy(
       Value *Dst, unsigned DstAlign, Value *Src, unsigned SrcAlign,
       uint64_t Size, uint32_t ElementSize, MDNode *TBAATag = nullptr,
@@ -485,12 +485,12 @@ public:
       MDNode *TBAAStructTag = nullptr, MDNode *ScopeTag = nullptr,
       MDNode *NoAliasTag = nullptr);
 
-  /// Create and insert a memmove between the specified
-  /// pointers.
-  ///
-  /// If the pointers aren't i8*, they will be converted.  If a TBAA tag is
-  /// specified, it will be added to the instruction. Likewise with alias.scope
-  /// and noalias tags.
+                                                       
+               
+     
+                                                                           
+                                                                               
+                       
   CallInst *CreateMemMove(Value *Dst, unsigned DstAlign, Value *Src, unsigned SrcAlign,
                           uint64_t Size, bool isVolatile = false,
                           MDNode *TBAATag = nullptr, MDNode *ScopeTag = nullptr,
@@ -504,15 +504,15 @@ public:
                           MDNode *ScopeTag = nullptr,
                           MDNode *NoAliasTag = nullptr);
 
-  /// \brief Create and insert an element unordered-atomic memmove between the
-  /// specified pointers.
-  ///
-  /// DstAlign/SrcAlign are the alignments of the Dst/Src pointers,
-  /// respectively.
-  ///
-  /// If the pointers aren't i8*, they will be converted.  If a TBAA tag is
-  /// specified, it will be added to the instruction. Likewise with alias.scope
-  /// and noalias tags.
+                                                                              
+                         
+     
+                                                                   
+                   
+     
+                                                                           
+                                                                               
+                       
   CallInst *CreateElementUnorderedAtomicMemMove(
       Value *Dst, unsigned DstAlign, Value *Src, unsigned SrcAlign,
       uint64_t Size, uint32_t ElementSize, MDNode *TBAATag = nullptr,
@@ -529,84 +529,84 @@ public:
       MDNode *TBAAStructTag = nullptr, MDNode *ScopeTag = nullptr,
       MDNode *NoAliasTag = nullptr);
 
-  /// Create a vector fadd reduction intrinsic of the source vector.
-  /// The first parameter is a scalar accumulator value for ordered reductions.
+                                                                    
+                                                                               
   CallInst *CreateFAddReduce(Value *Acc, Value *Src);
 
-  /// Create a vector fmul reduction intrinsic of the source vector.
-  /// The first parameter is a scalar accumulator value for ordered reductions.
+                                                                    
+                                                                               
   CallInst *CreateFMulReduce(Value *Acc, Value *Src);
 
-  /// Create a vector int add reduction intrinsic of the source vector.
+                                                                       
   CallInst *CreateAddReduce(Value *Src);
 
-  /// Create a vector int mul reduction intrinsic of the source vector.
+                                                                       
   CallInst *CreateMulReduce(Value *Src);
 
-  /// Create a vector int AND reduction intrinsic of the source vector.
+                                                                       
   CallInst *CreateAndReduce(Value *Src);
 
-  /// Create a vector int OR reduction intrinsic of the source vector.
+                                                                      
   CallInst *CreateOrReduce(Value *Src);
 
-  /// Create a vector int XOR reduction intrinsic of the source vector.
+                                                                       
   CallInst *CreateXorReduce(Value *Src);
 
-  /// Create a vector integer max reduction intrinsic of the source
-  /// vector.
+                                                                   
+             
   CallInst *CreateIntMaxReduce(Value *Src, bool IsSigned = false);
 
-  /// Create a vector integer min reduction intrinsic of the source
-  /// vector.
+                                                                   
+             
   CallInst *CreateIntMinReduce(Value *Src, bool IsSigned = false);
 
-  /// Create a vector float max reduction intrinsic of the source
-  /// vector.
+                                                                 
+             
   CallInst *CreateFPMaxReduce(Value *Src, bool NoNaN = false);
 
-  /// Create a vector float min reduction intrinsic of the source
-  /// vector.
+                                                                 
+             
   CallInst *CreateFPMinReduce(Value *Src, bool NoNaN = false);
 
-  /// Create a lifetime.start intrinsic.
-  ///
-  /// If the pointer isn't i8* it will be converted.
+                                        
+     
+                                                    
   CallInst *CreateLifetimeStart(Value *Ptr, ConstantInt *Size = nullptr);
 
-  /// Create a lifetime.end intrinsic.
-  ///
-  /// If the pointer isn't i8* it will be converted.
+                                      
+     
+                                                    
   CallInst *CreateLifetimeEnd(Value *Ptr, ConstantInt *Size = nullptr);
 
-  /// Create a call to invariant.start intrinsic.
-  ///
-  /// If the pointer isn't i8* it will be converted.
+                                                 
+     
+                                                    
   CallInst *CreateInvariantStart(Value *Ptr, ConstantInt *Size = nullptr);
 
-  /// Create a call to Masked Load intrinsic
+                                            
   CallInst *CreateMaskedLoad(Value *Ptr, unsigned Align, Value *Mask,
                              Value *PassThru = nullptr, const Twine &Name = "");
 
-  /// Create a call to Masked Store intrinsic
+                                             
   CallInst *CreateMaskedStore(Value *Val, Value *Ptr, unsigned Align,
                               Value *Mask);
 
-  /// Create a call to Masked Gather intrinsic
+                                              
   CallInst *CreateMaskedGather(Value *Ptrs, unsigned Align,
                                Value *Mask = nullptr,
                                Value *PassThru = nullptr,
                                const Twine& Name = "");
 
-  /// Create a call to Masked Scatter intrinsic
+                                               
   CallInst *CreateMaskedScatter(Value *Val, Value *Ptrs, unsigned Align,
                                 Value *Mask = nullptr);
 
-  /// Create an assume intrinsic call that allows the optimizer to
-  /// assume that the provided condition will be true.
+                                                                  
+                                                      
   CallInst *CreateAssumption(Value *Cond);
 
-  /// Create a call to the experimental.gc.statepoint intrinsic to
-  /// start a new statepoint sequence.
+                                                                  
+                                      
   CallInst *CreateGCStatepointCall(uint64_t ID, uint32_t NumPatchBytes,
                                    Value *ActualCallee,
                                    ArrayRef<Value *> CallArgs,
@@ -614,8 +614,8 @@ public:
                                    ArrayRef<Value *> GCArgs,
                                    const Twine &Name = "");
 
-  /// Create a call to the experimental.gc.statepoint intrinsic to
-  /// start a new statepoint sequence.
+                                                                  
+                                      
   CallInst *CreateGCStatepointCall(uint64_t ID, uint32_t NumPatchBytes,
                                    Value *ActualCallee, uint32_t Flags,
                                    ArrayRef<Use> CallArgs,
@@ -624,17 +624,17 @@ public:
                                    ArrayRef<Value *> GCArgs,
                                    const Twine &Name = "");
 
-  /// Conveninence function for the common case when CallArgs are filled
-  /// in using makeArrayRef(CS.arg_begin(), CS.arg_end()); Use needs to be
-  /// .get()'ed to get the Value pointer.
+                                                                        
+                                                                          
+                                         
   CallInst *CreateGCStatepointCall(uint64_t ID, uint32_t NumPatchBytes,
                                    Value *ActualCallee, ArrayRef<Use> CallArgs,
                                    ArrayRef<Value *> DeoptArgs,
                                    ArrayRef<Value *> GCArgs,
                                    const Twine &Name = "");
 
-  /// Create an invoke to the experimental.gc.statepoint intrinsic to
-  /// start a new statepoint sequence.
+                                                                     
+                                      
   InvokeInst *
   CreateGCStatepointInvoke(uint64_t ID, uint32_t NumPatchBytes,
                            Value *ActualInvokee, BasicBlock *NormalDest,
@@ -642,8 +642,8 @@ public:
                            ArrayRef<Value *> DeoptArgs,
                            ArrayRef<Value *> GCArgs, const Twine &Name = "");
 
-  /// Create an invoke to the experimental.gc.statepoint intrinsic to
-  /// start a new statepoint sequence.
+                                                                     
+                                      
   InvokeInst *CreateGCStatepointInvoke(
       uint64_t ID, uint32_t NumPatchBytes, Value *ActualInvokee,
       BasicBlock *NormalDest, BasicBlock *UnwindDest, uint32_t Flags,
@@ -651,9 +651,9 @@ public:
       ArrayRef<Use> DeoptArgs, ArrayRef<Value *> GCArgs,
       const Twine &Name = "");
 
-  // Convenience function for the common case when CallArgs are filled in using
-  // makeArrayRef(CS.arg_begin(), CS.arg_end()); Use needs to be .get()'ed to
-  // get the Value *.
+                                                                               
+                                                                             
+                     
   InvokeInst *
   CreateGCStatepointInvoke(uint64_t ID, uint32_t NumPatchBytes,
                            Value *ActualInvokee, BasicBlock *NormalDest,
@@ -661,52 +661,52 @@ public:
                            ArrayRef<Value *> DeoptArgs,
                            ArrayRef<Value *> GCArgs, const Twine &Name = "");
 
-  /// Create a call to the experimental.gc.result intrinsic to extract
-  /// the result from a call wrapped in a statepoint.
+                                                                      
+                                                     
   CallInst *CreateGCResult(Instruction *Statepoint,
                            Type *ResultType,
                            const Twine &Name = "");
 
-  /// Create a call to the experimental.gc.relocate intrinsics to
-  /// project the relocated value of one pointer from the statepoint.
+                                                                 
+                                                                     
   CallInst *CreateGCRelocate(Instruction *Statepoint,
                              int BaseOffset,
                              int DerivedOffset,
                              Type *ResultType,
                              const Twine &Name = "");
 
-  /// Create a call to intrinsic \p ID with 1 operand which is mangled on its
-  /// type.
+                                                                             
+           
   CallInst *CreateUnaryIntrinsic(Intrinsic::ID ID, Value *V,
                                  Instruction *FMFSource = nullptr,
                                  const Twine &Name = "");
 
-  /// Create a call to intrinsic \p ID with 2 operands which is mangled on the
-  /// first type.
+                                                                              
+                 
   CallInst *CreateBinaryIntrinsic(Intrinsic::ID ID, Value *LHS, Value *RHS,
                                   Instruction *FMFSource = nullptr,
                                   const Twine &Name = "");
 
-  /// Create a call to intrinsic \p ID with \p args, mangled using \p Types. If
-  /// \p FMFSource is provided, copy fast-math-flags from that instruction to
-  /// the intrinsic.
+                                                                               
+                                                                             
+                    
   CallInst *CreateIntrinsic(Intrinsic::ID ID, ArrayRef<Type *> Types,
                             ArrayRef<Value *> Args,
                             Instruction *FMFSource = nullptr,
                             const Twine &Name = "");
 
-  /// Create call to the minnum intrinsic.
+                                          
   CallInst *CreateMinNum(Value *LHS, Value *RHS, const Twine &Name = "") {
     return CreateBinaryIntrinsic(Intrinsic::minnum, LHS, RHS, nullptr, Name);
   }
 
-  /// Create call to the maxnum intrinsic.
+                                          
   CallInst *CreateMaxNum(Value *LHS, Value *RHS, const Twine &Name = "") {
     return CreateBinaryIntrinsic(Intrinsic::maxnum, LHS, RHS, nullptr, Name);
   }
 
 private:
-  /// Create a call to a masked intrinsic with given Id.
+                                                        
   CallInst *CreateMaskedIntrinsic(Intrinsic::ID Id, ArrayRef<Value *> Ops,
                                   ArrayRef<Type *> OverloadedTypes,
                                   const Twine &Name = "");
@@ -714,20 +714,20 @@ private:
   Value *getCastedInt8PtrValue(Value *Ptr);
 };
 
-/// This provides a uniform API for creating instructions and inserting
-/// them into a basic block: either at the end of a BasicBlock, or at a specific
-/// iterator location in a block.
-///
-/// Note that the builder does not expose the full generality of LLVM
-/// instructions.  For access to extra instruction properties, use the mutators
-/// (e.g. setVolatile) on the instructions after they have been
-/// created. Convenience state exists to specify fast-math flags and fp-math
-/// tags.
-///
-/// The first template argument specifies a class to use for creating constants.
-/// This defaults to creating minimally folded constants.  The second template
-/// argument allows clients to specify custom insertion hooks that are called on
-/// every newly created insertion.
+                                                                       
+                                                                                
+                                 
+   
+                                                                     
+                                                                               
+                                                               
+                                                                            
+         
+   
+                                                                                
+                                                                              
+                                                                                
+                                  
 template <typename T = ConstantFolder,
           typename Inserter = IRBuilderDefaultInserter>
 class IRBuilder : public IRBuilderBase, public Inserter {
@@ -776,10 +776,10 @@ public:
     SetInsertPoint(TheBB, IP);
   }
 
-  /// Get the constant folder being used.
+                                         
   const T &getFolder() { return Folder; }
 
-  /// Insert and return the specified instruction.
+                                                  
   template<typename InstTy>
   InstTy *Insert(InstTy *I, const Twine &Name = "") const {
     this->InsertHelper(I, Name, BB, InsertPt);
@@ -787,19 +787,19 @@ public:
     return I;
   }
 
-  /// No-op overload to handle constants.
+                                         
   Constant *Insert(Constant *C, const Twine& = "") const {
     return C;
   }
 
-  //===--------------------------------------------------------------------===//
-  // Instruction creation methods: Terminators
-  //===--------------------------------------------------------------------===//
+                                                                                
+                                              
+                                                                                
 
 private:
-  /// Helper to add branch weight and unpredictable metadata onto an
-  /// instruction.
-  /// \returns The annotated instruction.
+                                                                    
+                  
+                                         
   template <typename InstTy>
   InstTy *addBranchMetadata(InstTy *I, MDNode *Weights, MDNode *Unpredictable) {
     if (Weights)
@@ -810,23 +810,23 @@ private:
   }
 
 public:
-  /// Create a 'ret void' instruction.
+                                      
   ReturnInst *CreateRetVoid() {
     return Insert(ReturnInst::Create(Context));
   }
 
-  /// Create a 'ret <val>' instruction.
+                                       
   ReturnInst *CreateRet(Value *V) {
     return Insert(ReturnInst::Create(Context, V));
   }
 
-  /// Create a sequence of N insertvalue instructions,
-  /// with one Value from the retVals array each, that build a aggregate
-  /// return value one value at a time, and a ret instruction to return
-  /// the resulting aggregate value.
-  ///
-  /// This is a convenience function for code that uses aggregate return values
-  /// as a vehicle for having multiple return values.
+                                                      
+                                                                        
+                                                                       
+                                    
+     
+                                                                               
+                                                     
   ReturnInst *CreateAggregateRet(Value *const *retVals, unsigned N) {
     Value *V = UndefValue::get(getCurrentFunctionReturnType());
     for (unsigned i = 0; i != N; ++i)
@@ -834,13 +834,13 @@ public:
     return Insert(ReturnInst::Create(Context, V));
   }
 
-  /// Create an unconditional 'br label X' instruction.
+                                                       
   BranchInst *CreateBr(BasicBlock *Dest) {
     return Insert(BranchInst::Create(Dest));
   }
 
-  /// Create a conditional 'br Cond, TrueDest, FalseDest'
-  /// instruction.
+                                                         
+                  
   BranchInst *CreateCondBr(Value *Cond, BasicBlock *True, BasicBlock *False,
                            MDNode *BranchWeights = nullptr,
                            MDNode *Unpredictable = nullptr) {
@@ -848,8 +848,8 @@ public:
                                     BranchWeights, Unpredictable));
   }
 
-  /// Create a conditional 'br Cond, TrueDest, FalseDest'
-  /// instruction. Copy branch meta data if available.
+                                                         
+                                                      
   BranchInst *CreateCondBr(Value *Cond, BasicBlock *True, BasicBlock *False,
                            Instruction *MDSrc) {
     BranchInst *Br = BranchInst::Create(True, False, Cond);
@@ -861,9 +861,9 @@ public:
     return Insert(Br);
   }
 
-  /// Create a switch instruction with the specified value, default dest,
-  /// and with a hint for the number of cases that will be added (for efficient
-  /// allocation).
+                                                                         
+                                                                               
+                  
   SwitchInst *CreateSwitch(Value *V, BasicBlock *Dest, unsigned NumCases = 10,
                            MDNode *BranchWeights = nullptr,
                            MDNode *Unpredictable = nullptr) {
@@ -871,14 +871,14 @@ public:
                                     BranchWeights, Unpredictable));
   }
 
-  /// Create an indirect branch instruction with the specified address
-  /// operand, with an optional hint for the number of destinations that will be
-  /// added (for efficient allocation).
+                                                                      
+                                                                                
+                                       
   IndirectBrInst *CreateIndirectBr(Value *Addr, unsigned NumDests = 10) {
     return Insert(IndirectBrInst::Create(Addr, NumDests));
   }
 
-  /// Create an invoke instruction.
+                                   
   InvokeInst *CreateInvoke(Value *Callee, BasicBlock *NormalDest,
                            BasicBlock *UnwindDest,
                            ArrayRef<Value *> Args = None,
@@ -929,9 +929,9 @@ public:
     return Insert(new UnreachableInst(Context));
   }
 
-  //===--------------------------------------------------------------------===//
-  // Instruction creation methods: Binary Operators
-  //===--------------------------------------------------------------------===//
+                                                                                
+                                                   
+                                                                                
 private:
   BinaryOperator *CreateInsertNUWNSWBinOp(BinaryOperator::BinaryOps Opc,
                                           Value *LHS, Value *RHS,
@@ -1114,7 +1114,7 @@ public:
   Value *CreateAnd(Value *LHS, Value *RHS, const Twine &Name = "") {
     if (auto *RC = dyn_cast<Constant>(RHS)) {
       if (isa<ConstantInt>(RC) && cast<ConstantInt>(RC)->isMinusOne())
-        return LHS;  // LHS & -1 -> LHS
+        return LHS;                    
       if (auto *LC = dyn_cast<Constant>(LHS))
         return Insert(Folder.CreateAnd(LC, RC), Name);
     }
@@ -1132,7 +1132,7 @@ public:
   Value *CreateOr(Value *LHS, Value *RHS, const Twine &Name = "") {
     if (auto *RC = dyn_cast<Constant>(RHS)) {
       if (RC->isNullValue())
-        return LHS;  // LHS | 0 -> LHS
+        return LHS;                   
       if (auto *LC = dyn_cast<Constant>(LHS))
         return Insert(Folder.CreateOr(LC, RC), Name);
     }
@@ -1167,8 +1167,8 @@ public:
     return Insert(I, Name);
   }
 
-  /// Copy fast-math-flags from an instruction rather than using the builder's
-  /// default FMF.
+                                                                              
+                  
   Value *CreateFAddFMF(Value *L, Value *R, Instruction *FMFSource,
                        const Twine &Name = "") {
     if (Value *V = foldConstant(Instruction::FAdd, L, R, Name)) return V;
@@ -1184,8 +1184,8 @@ public:
     return Insert(I, Name);
   }
 
-  /// Copy fast-math-flags from an instruction rather than using the builder's
-  /// default FMF.
+                                                                              
+                  
   Value *CreateFSubFMF(Value *L, Value *R, Instruction *FMFSource,
                        const Twine &Name = "") {
     if (Value *V = foldConstant(Instruction::FSub, L, R, Name)) return V;
@@ -1201,8 +1201,8 @@ public:
     return Insert(I, Name);
   }
 
-  /// Copy fast-math-flags from an instruction rather than using the builder's
-  /// default FMF.
+                                                                              
+                  
   Value *CreateFMulFMF(Value *L, Value *R, Instruction *FMFSource,
                        const Twine &Name = "") {
     if (Value *V = foldConstant(Instruction::FMul, L, R, Name)) return V;
@@ -1218,8 +1218,8 @@ public:
     return Insert(I, Name);
   }
 
-  /// Copy fast-math-flags from an instruction rather than using the builder's
-  /// default FMF.
+                                                                              
+                  
   Value *CreateFDivFMF(Value *L, Value *R, Instruction *FMFSource,
                        const Twine &Name = "") {
     if (Value *V = foldConstant(Instruction::FDiv, L, R, Name)) return V;
@@ -1235,8 +1235,8 @@ public:
     return Insert(I, Name);
   }
 
-  /// Copy fast-math-flags from an instruction rather than using the builder's
-  /// default FMF.
+                                                                              
+                  
   Value *CreateFRemFMF(Value *L, Value *R, Instruction *FMFSource,
                        const Twine &Name = "") {
     if (Value *V = foldConstant(Instruction::FRem, L, R, Name)) return V;
@@ -1287,9 +1287,9 @@ public:
     return Insert(BinaryOperator::CreateNot(V), Name);
   }
 
-  //===--------------------------------------------------------------------===//
-  // Instruction creation methods: Memory Instructions
-  //===--------------------------------------------------------------------===//
+                                                                                
+                                                      
+                                                                                
 
   AllocaInst *CreateAlloca(Type *Ty, unsigned AddrSpace,
                            Value *ArraySize = nullptr, const Twine &Name = "") {
@@ -1302,8 +1302,8 @@ public:
     return Insert(new AllocaInst(Ty, DL.getAllocaAddrSpace(), ArraySize), Name);
   }
 
-  /// Provided to resolve 'CreateLoad(Ptr, "...")' correctly, instead of
-  /// converting the string to 'bool' for the isVolatile parameter.
+                                                                        
+                                                                   
   LoadInst *CreateLoad(Value *Ptr, const char *Name) {
     return Insert(new LoadInst(Ptr), Name);
   }
@@ -1324,9 +1324,9 @@ public:
     return Insert(new StoreInst(Val, Ptr, isVolatile));
   }
 
-  /// Provided to resolve 'CreateAlignedLoad(Ptr, Align, "...")'
-  /// correctly, instead of converting the string to 'bool' for the isVolatile
-  /// parameter.
+                                                                
+                                                                              
+                
   LoadInst *CreateAlignedLoad(Value *Ptr, unsigned Align, const char *Name) {
     LoadInst *LI = CreateLoad(Ptr, Name);
     LI->setAlignment(Align);
@@ -1381,7 +1381,7 @@ public:
   Value *CreateGEP(Type *Ty, Value *Ptr, ArrayRef<Value *> IdxList,
                    const Twine &Name = "") {
     if (auto *PC = dyn_cast<Constant>(Ptr)) {
-      // Every index must be constant.
+                                      
       size_t i, e;
       for (i = 0, e = IdxList.size(); i != e; ++i)
         if (!isa<Constant>(IdxList[i]))
@@ -1400,7 +1400,7 @@ public:
   Value *CreateInBoundsGEP(Type *Ty, Value *Ptr, ArrayRef<Value *> IdxList,
                            const Twine &Name = "") {
     if (auto *PC = dyn_cast<Constant>(Ptr)) {
-      // Every index must be constant.
+                                      
       size_t i, e;
       for (i = 0, e = IdxList.size(); i != e; ++i)
         if (!isa<Constant>(IdxList[i]))
@@ -1536,8 +1536,8 @@ public:
     return CreateConstInBoundsGEP2_32(nullptr, Ptr, 0, Idx, Name);
   }
 
-  /// Same as CreateGlobalString, but return a pointer with "i8*" type
-  /// instead of a pointer to array of i8.
+                                                                      
+                                          
   Constant *CreateGlobalStringPtr(StringRef Str, const Twine &Name = "",
                                   unsigned AddressSpace = 0) {
     GlobalVariable *GV = CreateGlobalString(Str, Name, AddressSpace);
@@ -1547,9 +1547,9 @@ public:
                                                   Indices);
   }
 
-  //===--------------------------------------------------------------------===//
-  // Instruction creation methods: Cast/Conversion Operators
-  //===--------------------------------------------------------------------===//
+                                                                                
+                                                            
+                                                                                
 
   Value *CreateTrunc(Value *V, Type *DestTy, const Twine &Name = "") {
     return CreateCast(Instruction::Trunc, V, DestTy, Name);
@@ -1563,8 +1563,8 @@ public:
     return CreateCast(Instruction::SExt, V, DestTy, Name);
   }
 
-  /// Create a ZExt or Trunc from the integer value V to DestTy. Return
-  /// the value untouched if the type of V is already DestTy.
+                                                                       
+                                                             
   Value *CreateZExtOrTrunc(Value *V, Type *DestTy,
                            const Twine &Name = "") {
     assert(V->getType()->isIntOrIntVectorTy() &&
@@ -1578,8 +1578,8 @@ public:
     return V;
   }
 
-  /// Create a SExt or Trunc from the integer value V to DestTy. Return
-  /// the value untouched if the type of V is already DestTy.
+                                                                       
+                                                             
   Value *CreateSExtOrTrunc(Value *V, Type *DestTy,
                            const Twine &Name = "") {
     assert(V->getType()->isIntOrIntVectorTy() &&
@@ -1726,14 +1726,14 @@ public:
     return Insert(CastInst::CreateFPCast(V, DestTy), Name);
   }
 
-  // Provided to resolve 'CreateIntCast(Ptr, Ptr, "...")', giving a
-  // compile time error, instead of converting the string to bool for the
-  // isSigned parameter.
+                                                                   
+                                                                         
+                        
   Value *CreateIntCast(Value *, Type *, const char *) = delete;
 
-  //===--------------------------------------------------------------------===//
-  // Instruction creation methods: Compare Instructions
-  //===--------------------------------------------------------------------===//
+                                                                                
+                                                       
+                                                                                
 
   Value *CreateICmpEQ(Value *LHS, Value *RHS, const Twine &Name = "") {
     return CreateICmp(ICmpInst::ICMP_EQ, LHS, RHS, Name);
@@ -1861,9 +1861,9 @@ public:
     return Insert(setFPAttrs(new FCmpInst(P, LHS, RHS), FPMathTag, FMF), Name);
   }
 
-  //===--------------------------------------------------------------------===//
-  // Instruction creation methods: Other Instructions
-  //===--------------------------------------------------------------------===//
+                                                                                
+                                                     
+                                                                                
 
   PHINode *CreatePHI(Type *Ty, unsigned NumReservedValues,
                      const Twine &Name = "") {
@@ -1984,28 +1984,28 @@ public:
     return Insert(LandingPadInst::Create(Ty, NumClauses), Name);
   }
 
-  //===--------------------------------------------------------------------===//
-  // Utility creation methods
-  //===--------------------------------------------------------------------===//
+                                                                                
+                             
+                                                                                
 
-  /// Return an i1 value testing if \p Arg is null.
+                                                   
   Value *CreateIsNull(Value *Arg, const Twine &Name = "") {
     return CreateICmpEQ(Arg, Constant::getNullValue(Arg->getType()),
                         Name);
   }
 
-  /// Return an i1 value testing if \p Arg is not null.
+                                                       
   Value *CreateIsNotNull(Value *Arg, const Twine &Name = "") {
     return CreateICmpNE(Arg, Constant::getNullValue(Arg->getType()),
                         Name);
   }
 
-  /// Return the i64 difference between two pointer values, dividing out
-  /// the size of the pointed-to objects.
-  ///
-  /// This is intended to implement C-style pointer subtraction. As such, the
-  /// pointers must be appropriately aligned for their element types and
-  /// pointing into the same object.
+                                                                        
+                                         
+     
+                                                                             
+                                                                        
+                                    
   Value *CreatePtrDiff(Value *LHS, Value *RHS, const Twine &Name = "") {
     assert(LHS->getType() == RHS->getType() &&
            "Pointer subtraction operand types must match!");
@@ -2018,13 +2018,13 @@ public:
                            Name);
   }
 
-  /// Create a launder.invariant.group intrinsic call. If Ptr type is
-  /// different from pointer to i8, it's casted to pointer to i8 in the same
-  /// address space before call and casted back to Ptr type after call.
+                                                                     
+                                                                            
+                                                                       
   Value *CreateLaunderInvariantGroup(Value *Ptr) {
     assert(isa<PointerType>(Ptr->getType()) &&
            "launder.invariant.group only applies to pointers.");
-    // FIXME: we could potentially avoid casts to/from i8*.
+                                                           
     auto *PtrType = Ptr->getType();
     auto *Int8PtrTy = getInt8PtrTy(PtrType->getPointerAddressSpace());
     if (PtrType != Int8PtrTy)
@@ -2045,14 +2045,14 @@ public:
     return Fn;
   }
 
-  /// \brief Create a strip.invariant.group intrinsic call. If Ptr type is
-  /// different from pointer to i8, it's casted to pointer to i8 in the same
-  /// address space before call and casted back to Ptr type after call.
+                                                                          
+                                                                            
+                                                                       
   Value *CreateStripInvariantGroup(Value *Ptr) {
     assert(isa<PointerType>(Ptr->getType()) &&
            "strip.invariant.group only applies to pointers.");
 
-    // FIXME: we could potentially avoid casts to/from i8*.
+                                                           
     auto *PtrType = Ptr->getType();
     auto *Int8PtrTy = getInt8PtrTy(PtrType->getPointerAddressSpace());
     if (PtrType != Int8PtrTy)
@@ -2073,23 +2073,23 @@ public:
     return Fn;
   }
 
-  /// Return a vector value that contains \arg V broadcasted to \p
-  /// NumElts elements.
+                                                                  
+                       
   Value *CreateVectorSplat(unsigned NumElts, Value *V, const Twine &Name = "") {
     assert(NumElts > 0 && "Cannot splat to an empty vector!");
 
-    // First insert it into an undef vector so we can shuffle it.
+                                                                 
     Type *I32Ty = getInt32Ty();
     Value *Undef = UndefValue::get(VectorType::get(V->getType(), NumElts));
     V = CreateInsertElement(Undef, V, ConstantInt::get(I32Ty, 0),
                             Name + ".splatinsert");
 
-    // Shuffle the value across the desired number of elements.
+                                                               
     Value *Zeros = ConstantAggregateZero::get(VectorType::get(I32Ty, NumElts));
     return CreateShuffleVector(V, Undef, Zeros, Name + ".splat");
   }
 
-  /// Return a value that has been extracted from a larger integer type.
+                                                                        
   Value *CreateExtractInteger(const DataLayout &DL, Value *From,
                               IntegerType *ExtractedTy, uint64_t Offset,
                               const Twine &Name) {
@@ -2114,9 +2114,9 @@ public:
   }
 
 private:
-  /// Helper function that creates an assume intrinsic call that
-  /// represents an alignment assumption on the provided Ptr, Mask, Type
-  /// and Offset.
+                                                                
+                                                                        
+                 
   CallInst *CreateAlignmentAssumptionHelper(const DataLayout &DL,
                                             Value *PtrValue, Value *Mask,
                                             Type *IntPtrTy,
@@ -2130,7 +2130,7 @@ private:
 
       if (!IsOffsetZero) {
         if (OffsetValue->getType() != IntPtrTy)
-          OffsetValue = CreateIntCast(OffsetValue, IntPtrTy, /*isSigned*/ true,
+          OffsetValue = CreateIntCast(OffsetValue, IntPtrTy,              true,
                                       "offsetcast");
         PtrIntValue = CreateSub(PtrIntValue, OffsetValue, "offsetptr");
       }
@@ -2143,12 +2143,12 @@ private:
   }
 
 public:
-  /// Create an assume intrinsic call that represents an alignment
-  /// assumption on the provided pointer.
-  ///
-  /// An optional offset can be provided, and if it is provided, the offset
-  /// must be subtracted from the provided pointer to get the pointer with the
-  /// specified alignment.
+                                                                  
+                                         
+     
+                                                                           
+                                                                              
+                          
   CallInst *CreateAlignmentAssumption(const DataLayout &DL, Value *PtrValue,
                                       unsigned Alignment,
                                       Value *OffsetValue = nullptr) {
@@ -2162,15 +2162,15 @@ public:
                                            OffsetValue);
   }
 
-  /// Create an assume intrinsic call that represents an alignment
-  /// assumption on the provided pointer.
-  ///
-  /// An optional offset can be provided, and if it is provided, the offset
-  /// must be subtracted from the provided pointer to get the pointer with the
-  /// specified alignment.
-  ///
-  /// This overload handles the condition where the Alignment is dependent
-  /// on an existing value rather than a static value.
+                                                                  
+                                         
+     
+                                                                           
+                                                                              
+                          
+     
+                                                                          
+                                                      
   CallInst *CreateAlignmentAssumption(const DataLayout &DL, Value *PtrValue,
                                       Value *Alignment,
                                       Value *OffsetValue = nullptr) {
@@ -2180,7 +2180,7 @@ public:
     Type *IntPtrTy = getIntPtrTy(DL, PtrTy->getAddressSpace());
 
     if (Alignment->getType() != IntPtrTy)
-      Alignment = CreateIntCast(Alignment, IntPtrTy, /*isSigned*/ true,
+      Alignment = CreateIntCast(Alignment, IntPtrTy,              true,
                                 "alignmentcast");
     Value *IsPositive =
         CreateICmp(CmpInst::ICMP_SGT, Alignment,
@@ -2195,9 +2195,9 @@ public:
   }
 };
 
-// Create wrappers for C Binding types (see CBindingWrapping.h).
+                                                                
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(IRBuilder<>, LLVMBuilderRef)
 
-} // end namespace llvh
+}                      
 
-#endif // LLVM_IR_IRBUILDER_H
+#endif                       

@@ -38,7 +38,7 @@ bool isSingleFunctionExpression(ESTree::NodePtr ast) {
       llvh::isa<ESTree::ArrowFunctionExpressionNode>(
              exprStatement->_expression);
 }
-} // namespace
+}             
 
 BCProviderFromSrc::BCProviderFromSrc(
     std::unique_ptr<hbc::BytecodeModule> module)
@@ -79,7 +79,7 @@ BCProviderFromSrc::createBCProviderFromSrc(
     llvh::StringRef sourceURL,
     const CompileFlags &compileFlags) {
   return createBCProviderFromSrc(
-      std::move(buffer), sourceURL, /*sourceMap*/ nullptr, compileFlags);
+      std::move(buffer), sourceURL,               nullptr, compileFlags);
 }
 
 std::pair<std::unique_ptr<BCProviderFromSrc>, std::string>
@@ -136,8 +136,8 @@ BCProviderFromSrc::createBCProviderFromSrcImpl(
   codeGenOpts.enableBlockScoping = compileFlags.enableBlockScoping;
 
   OptimizationSettings optSettings;
-  // If the optional value is not set, the parser will automatically detect
-  // the 'use static builtin' directive and we will set it correctly.
+                                                                           
+                                                                     
   optSettings.staticBuiltins = compileFlags.staticBuiltins.hasValue()
       ? compileFlags.staticBuiltins.getValue()
       : false;
@@ -150,15 +150,15 @@ BCProviderFromSrc::createBCProviderFromSrcImpl(
     outputManager.reset(
         new SimpleDiagHandlerRAII(context->getSourceErrorManager()));
   }
-  // If a custom diagHandler was provided, it will receive the details and we
-  // just return the string "error" on failure.
+                                                                             
+                                               
   auto getErrorString = [&outputManager]() {
     return outputManager ? outputManager->getErrorString()
                          : std::string("error");
   };
 
-  // To avoid frequent source buffer rescans, avoid emitting warnings about
-  // undefined variables.
+                                                                           
+                         
   context->getSourceErrorManager().setWarningStatus(
       Warning::UndefinedVariable, false);
 
@@ -179,7 +179,7 @@ BCProviderFromSrc::createBCProviderFromSrcImpl(
       compileFlags.debug ? DebugInfoSetting::ALL : DebugInfoSetting::THROWING);
   context->setEmitAsyncBreakCheck(compileFlags.emitAsyncBreakCheck);
 
-  // Populate the declFileList.
+                               
   DeclarationFileListTy declFileList;
   if (compileFlags.includeLibHermes) {
     auto libBuffer = llvh::MemoryBuffer::getMemBuffer(libhermes);
@@ -216,8 +216,8 @@ BCProviderFromSrc::createBCProviderFromSrcImpl(
   parser::JSParser parser(*context, fileBufId, parserMode);
   auto parsed = parser.parse();
 
-  // If we are using lazy parse mode, we should have already detected the 'use
-  // static builtin' directive and magic URLs in the pre-parsing stage.
+                                                                              
+                                                                       
   if (parsed && parserMode != parser::LazyParse) {
     useStaticBuiltinDetected = parser.getUseStaticBuiltin();
     parser.registerMagicURLs();
@@ -227,8 +227,8 @@ BCProviderFromSrc::createBCProviderFromSrcImpl(
     return {nullptr, getErrorString()};
   }
 
-  // The compiler flag is not set, automatically detect 'use static builtin'
-  // from the source.
+                                                                            
+                     
   if (!compileFlags.staticBuiltins) {
     context->setStaticBuiltinOptimization(useStaticBuiltinDetected);
   }
@@ -260,9 +260,9 @@ BCProviderFromSrc::createBCProviderFromSrcImpl(
 
 BCProviderLazy::BCProviderLazy(hbc::BytecodeFunction *bytecodeFunction)
     : bytecodeFunction_(bytecodeFunction) {
-  // Lazy module should always contain one function to begin with.
+                                                                  
   functionCount_ = 1;
 }
 
-} // namespace hbc
-} // namespace hermes
+}                 
+}                    

@@ -13,8 +13,8 @@
 
 namespace hermes {
 
-/// Promotes variables into stack allocations.
-/// Removes all trivially unreachable functions.
+                                              
+                                                
 class StackPromotion : public ModulePass {
  public:
   explicit StackPromotion() : ModulePass("StackPromotion") {}
@@ -23,6 +23,6 @@ class StackPromotion : public ModulePass {
   bool runOnModule(Module *M) override;
 };
 
-} // namespace hermes
+}                    
 
-#endif // HERMES_OPTIMIZER_SCALAR_STACKPROMOTION_H
+#endif                                            

@@ -15,9 +15,9 @@
 
 #include <string>
 
-/// This file defines flags that are specific to the Hermes runtime,
-/// independent of the Hermes compiler.  Such flags must be defined in the
-/// hermes and hvm binaries, so this file is included in all of those.
+                                                                    
+                                                                          
+                                                                      
 
 namespace cl {
 
@@ -28,11 +28,11 @@ struct MemorySize {
   hermes::vm::gcheapsize_t bytes;
 };
 
-// Define a custom parser for memory size specifications.
+                                                         
 struct MemorySizeParser : public parser<MemorySize> {
   MemorySizeParser(Option &O) : parser<MemorySize>(O) {}
 
-  // parse - Return true on error.
+                                  
   bool parse(
       cl::Option &O,
       llvh::StringRef ArgName,
@@ -40,6 +40,6 @@ struct MemorySizeParser : public parser<MemorySize> {
       MemorySize &Val);
 };
 
-} // namespace cl
+}                
 
-#endif // HERMES_SUPPORT_MEMORYSIZEPARSER_H
+#endif                                     

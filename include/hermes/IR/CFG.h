@@ -18,18 +18,18 @@ using llvh::cast;
 
 namespace hermes {
 
-//===----------------------------------------------------------------------===//
-// BasicBlock pred_iterator definition
-//===----------------------------------------------------------------------===//
+                                                                                
+                                      
+                                                                                
 
-template <class Ptr, class USER_iterator> // Predecessor Iterator
+template <class Ptr, class USER_iterator>                        
 class PredIterator {
   typedef PredIterator<Ptr, USER_iterator> Self;
   USER_iterator It;
   USER_iterator ItEnd;
 
   inline void advancePastNonTerminators() {
-    // Loop to ignore non-terminator uses (for example BlockAddresses).
+                                                                       
     while (It != ItEnd && !llvh::dyn_cast<TerminatorInst>(*It))
       ++It;
   }
@@ -68,14 +68,14 @@ class PredIterator {
     return &operator*();
   }
 
-  inline Self &operator++() { // Preincrement
+  inline Self &operator++() {                
     assert(It != ItEnd && "pred_iterator out of range!");
     ++It;
     advancePastNonTerminators();
     return *this;
   }
 
-  inline Self operator++(int) { // Postincrement
+  inline Self operator++(int) {                 
     Self tmp = *this;
     ++*this;
     return tmp;
@@ -129,9 +129,9 @@ inline unsigned pred_count_unique(const BasicBlock *BB) {
   return preds.size();
 }
 
-//===----------------------------------------------------------------------===//
-// BasicBlock succ_iterator helpers
-//===----------------------------------------------------------------------===//
+                                                                                
+                                   
+                                                                                
 
 typedef llvh::SuccIterator<TerminatorInst, BasicBlock> succ_iterator;
 typedef llvh::SuccIterator<const TerminatorInst, const BasicBlock>
@@ -175,13 +175,13 @@ inline unsigned succ_count(const BasicBlock *BB) {
   return std::distance(succ_begin(BB), succ_end(BB));
 }
 
-} // end namespace hermes
+}                        
 
 namespace llvh {
 
-//===----------------------------------------------------------------------===//
-// GraphTraits for BasicBlock
-//===----------------------------------------------------------------------===//
+                                                                                
+                             
+                                                                                
 template <>
 struct GraphTraits<hermes::BasicBlock *> {
   using NodeType = hermes::BasicBlock;
@@ -261,11 +261,11 @@ struct GraphTraits<Inverse<hermes::Function *>>
   }
 };
 
-} // namespace llvh
+}                  
 
-//===----------------------------------------------------------------------===//
-// Dominators
-//===----------------------------------------------------------------------===//
+                                                                                
+             
+                                                                                
 
 extern template class llvh::DominatorTreeBase<hermes::BasicBlock, false>;
 extern template class llvh::DomTreeNodeBase<hermes::BasicBlock>;
@@ -274,7 +274,7 @@ namespace hermes {
 
 using DominanceInfoNode = llvh::DomTreeNodeBase<BasicBlock>;
 
-/// A class for computing basic dominance info.
+                                               
 class DominanceInfo : public llvh::DominatorTreeBase<BasicBlock, false> {
  public:
   explicit DominanceInfo(Function *F);
@@ -292,6 +292,6 @@ class DominanceInfo : public llvh::DominatorTreeBase<BasicBlock, false> {
   }
 };
 
-} // end namespace hermes
+}                        
 
 #endif
