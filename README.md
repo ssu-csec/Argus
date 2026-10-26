@@ -4,8 +4,6 @@ Argus is a research pipeline for identifying mixed web trackers. It collects Jav
 
 This is the **v4 research source package**, based on the integrated RC3. It is built locally on Linux or WSL2; a Docker image is not included. The package contains the crawler, analyzer, classifier, the 100,000-target list, and research aggregation scripts.
 
-[한국어 안내](README_KO.md)
-
 ## Pipeline Overview
 
 ```text
